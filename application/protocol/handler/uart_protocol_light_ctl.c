@@ -36,7 +36,7 @@ HANDLER_DEFINE(UP_CMD_LIGHT_CTL)
     frame_light_ctl_t *param = (frame_light_ctl_t*)(packet->payload);
 
     param->event_code = BIG_LITTLE_SWAP16(param->event_code);
-    uart_msg_ack_light_ctl();
+    uart_msg_ack_light_ctl(STATUS_SUCCESS);
     OB_LOGD(TAG, "cmd[%02X] tsn[%02X]", packet->cmd, packet->TSN);
     OB_LOGD(TAG, "type[%02X] source[%02X] code[%02X] ", param->event_type, param->event_source, param->event_code);
 

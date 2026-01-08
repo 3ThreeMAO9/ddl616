@@ -173,6 +173,15 @@ typedef enum {
 
 } ota_mode_e;
 
+typedef enum {
+    EVENT_PARAM_NULL                  = 0x00,    ///< 0x00：空事件源（默认值）
+    EVENT_PARAM_TAMPER_ALARM          = 0x10,    ///< 0x10：防撬报警
+    EVENT_PARAM_LOITER_ALARM          = 0x11,    ///< 0x11：逗留报警
+    EVENT_PARAM_FACE_FUNC_SETTING     = 0x12,    ///< 0x12：人脸功能设置
+    EVENT_PARAM_HUMAN_SENSOR_SETTING  = 0x13,    ///< 0x13：人体感应设置
+} event_param_t;
+
+
 /***********Struct***********/
 #pragma pack(1)
 typedef struct
@@ -181,6 +190,12 @@ typedef struct
     uint8_t event_code;
     uint16_t data;
 } frame_work_mode_t;
+
+typedef struct
+{
+    uint8_t event_param;
+    uint8_t data;
+} frame_report_param_t;
 
 typedef struct
 {
@@ -275,6 +290,7 @@ typedef struct
         frame_heartbeat_t heartbeat; // 心跳数据体
 
         frame_ack_def_t ack_def;
+        uint8_t status;
         uint8_t data[12];            // 数据域
     };
 } frame_data_t;
@@ -309,10 +325,12 @@ void uart_msg_nfc_verify(event_code_card_t event_code, uint8_t *card_id);
 void uart_msg_tamper_key_warn(uint8_t eventType);
 void uart_msg_face(uint8_t eventType, uint8_t *face_id, uint8_t face_id_size);
 void uart_msg_heartbeat(void);
-void uart_msg_ack_word_mode(void);
-void uart_msg_ack_light_ctl(void);
+void uart_msg_param_req(void);
+void uart_msg_ack_word_mode(uint8_t status);
+void uart_msg_ack_light_ctl(uint8_t status);
 void uart_msg_ack_reset(uint8_t status);
 void uart_msg_ack_ota_request(frame_ota_request_ack_t* ota_request_ack);
+void uart_msg_ack_param_report(uint8_t status);
 
 /*****************************/
 

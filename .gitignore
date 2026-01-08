@@ -5,3 +5,8 @@ CVS/
 *.uvguix.*
 bw-output/
 .scannerwork/
+*.hex
+*.bin
+*.uvguix
+*.uvgui.*
+*.obj

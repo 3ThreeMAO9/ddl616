@@ -177,7 +177,7 @@ HANDLER_DEFINE(UP_CMD_WORK_MODE)
         OB_LOGE(TAG, "WORK_MODE: len(%d) not match group size", packet->length);
         return 0xff;
     }
-    uart_msg_ack_word_mode();
+    uart_msg_ack_word_mode(STATUS_SUCCESS);
 
     OB_LOGD(TAG, "WORK_MODE: len=%d", packet->length);
     uint8_t group_cnt = packet->length / sizeof(frame_work_mode_t);

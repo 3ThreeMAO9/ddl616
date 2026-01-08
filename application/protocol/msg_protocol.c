@@ -133,9 +133,9 @@ static void fill_ota_request_data(frame_data_t *data, va_list args)
     }
 }
 
-static void fill_heartbeat_data(frame_data_t *data, va_list args)
+static void fill_status_data(frame_data_t *data, va_list args)
 {
-    data->heartbeat.status = 0xFF;
+    data->status = 0xFF;
 }
 
 static void fill_ack_def_data(frame_data_t *data, va_list args)
@@ -190,19 +190,25 @@ void uart_msg_face(uint8_t eventType, uint8_t *face_id, uint8_t face_id_size)
 void uart_msg_heartbeat(void)
 {
     uart_msg_common_send(UP_CMD_HEART,
-                         sizeof(frame_heartbeat_t), fill_heartbeat_data);
+                         sizeof(frame_heartbeat_t), fill_status_data);
 }
 
-void uart_msg_ack_word_mode(void)
+void uart_msg_param_req(void)
+{
+    uart_msg_common_send(UP_CMD_PARAM_REQ,
+                         sizeof(frame_heartbeat_t), fill_status_data);
+}
+
+void uart_msg_ack_word_mode(uint8_t status)
 {
     uart_msg_common_send(UP_CMD_ACK_WORK_MODE,
-                         sizeof(frame_ack_def_t), fill_ack_def_data);
+                         sizeof(frame_ack_def_t), fill_ack_def_data, status);
 }
 
-void uart_msg_ack_light_ctl(void)
+void uart_msg_ack_light_ctl(uint8_t status)
 {
     uart_msg_common_send(UP_CMD_ACK_LIGHT_CTL,
-                         sizeof(frame_ack_def_t), fill_ack_def_data);
+                         sizeof(frame_ack_def_t), fill_ack_def_data, status);
 }
 
 void uart_msg_ack_reset(uint8_t status)
@@ -215,3 +221,10 @@ void uart_msg_ack_ota_request(frame_ota_request_ack_t* ota_request_ack) {
     uart_msg_common_send(UP_CMD_ACK_OTA_REQUEST,
                          sizeof(frame_ota_request_ack_t), fill_ota_request_data, ota_request_ack);
 }
+
+void uart_msg_ack_param_report(uint8_t status)
+{
+    uart_msg_common_send(UP_CMD_ACK_REPORT_PARAM,
+                         sizeof(frame_heartbeat_t), fill_ack_def_data, status);
+}
+

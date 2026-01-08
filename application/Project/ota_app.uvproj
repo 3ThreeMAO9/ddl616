@@ -149,7 +149,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>19</TargetSelection>
+          <TargetSelection>-1</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -976,6 +976,16 @@
               <FileName>uart_protocol_work_mode.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_work_mode.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_param_req.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_param_req.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_report_param.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_report_param.c</FilePath>
             </File>
           </Files>
         </Group>
