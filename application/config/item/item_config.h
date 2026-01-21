@@ -39,6 +39,8 @@ void read_device_version_info(void);
 /*************************Project Adaptation*************************/
 #if (CLIENT_ITEM_SN_12345 == CLIENT_ITEM_SN)
 #include "item_12345.h"
+#elif (CLIENT_ITEM_SN_22222 == CLIENT_ITEM_SN)
+#include "item_22222.h"
 #endif
 
 #define DEVICE_TEST_KEY_BOARD_TAB {KEY_NUM_1, KEY_NUM_2, KEY_NUM_3, KEY_NUM_4, KEY_NUM_5, KEY_NUM_6, \

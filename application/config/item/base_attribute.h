@@ -16,6 +16,7 @@
 /***********Macro***********/
 //client and item sn
 #define CLIENT_ITEM_SN_12345        (12345) //12-345
+#define CLIENT_ITEM_SN_22222        (22222) //22-222
 
 // 20XX(编译年份)-01-01
 #define SYSTEM_TIME_YEAR_DEFAULT    ((__DATE__[9] - '0')*10+(__DATE__[10] - '0'))

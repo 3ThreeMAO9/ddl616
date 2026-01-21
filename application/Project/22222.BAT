@@ -1,10 +1,7 @@
 SET PATH=E:\keil V5.36\ARM\ARMCC\Bin;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\dotnet\;C:\Program Files\TortoiseGit\bin;C:\Program Files\IVI Foundation\VISA\Win64\Bin\;C:\Program Files (x86)\IVI Foundation\VISA\WinNT\Bin\;C:\Program Files (x86)\IVI Foundation\VISA\WinNT\Bin;E:\Windows Kits\10\Windows Performance Toolkit\;C:\Users\bojian_ge\AppData\Local\Microsoft\WindowsApps;c:\JL\commtools;c:\JL\dv10\bin;c:\JL\dv12\bin;c:\JL\mc\bin;c:\JL\pi32\bin;C:\Users\bojian_ge\AppData\Local\GitHubDesktop\bin;D:\下载\PhoenixSuit11\固件升级工具PhoenixSuitV1.1\;E:\tools\ffmpeg-7.0.2-essentials_build\bin;C:\Users\bojian_ge\AppData\Local\Programs\Microsoft VS Code\bin
-SET ARMCC5_ASMOPT=--diag_suppress=9931
-SET ARMCC5_CCOPT=--diag_suppress=9931
-SET ARMCC5_LINKOPT=--diag_suppress=9931
 SET CPU_TYPE=OB90A64M1
 SET CPU_VENDOR=On-Bright
-SET UV2_TARGET=12345
+SET UV2_TARGET=22222
 SET CPU_CLOCK=0x02FAF080
 "E:\keil V5.36\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\system_ob90a64m1.__i"
 "E:\keil V5.36\ARM\ARMCC\Bin\ArmAsm" --Via "..\build\objects\startup_ob90a64m1._ia"
