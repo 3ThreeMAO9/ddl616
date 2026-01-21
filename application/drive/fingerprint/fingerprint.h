@@ -74,6 +74,7 @@ typedef enum {
 // 确认码
 typedef enum {
     FP_ACK_OK = 0x00,
+    FP_ACK_FAIL = 0x01,
     FP_ACK_NO_FINGER = 0x02,
     FP_ACK_IMAGE_FAIL = 0x03,
     FP_ACK_FEATURE_FAIL = 0x04,

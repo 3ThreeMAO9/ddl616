@@ -224,6 +224,9 @@ static void fingerprint_process_verify(fp_context_t *ctx) {
                 ctx->step = FP_STEP_4;
                 break;
             }
+            else if (FP_ACK_FAIL == ctx->ack_packet.code) {
+                fingerprint_event_callback(ctx, FP_EVENT_INVALID_FP, NULL, 0);
+            }
             else if (FP_ACK_NOT_FOUND == ctx->ack_packet.code) {
                 fingerprint_event_callback(ctx, FP_EVENT_INVALID_FP, NULL, 0);
             }
