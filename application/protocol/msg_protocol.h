@@ -103,6 +103,14 @@ typedef enum {
 } EventLightType;
 
 typedef enum {
+    EVENT_FINGER_NULL     = 0x00,  ///< 0x00：无灯效
+    EVENT_FINGER_OFF      = 0x01,  ///< 0x01：灭灯
+    EVENT_FINGER_RED      = 0x02,  ///< 0x02：红灯
+    EVENT_FINGER_GREEN    = 0x03,  ///< 0x03：绿灯
+    EVENT_FINGER_BLUE     = 0x04   ///< 0x04：蓝灯
+} EventFingerLightType;
+
+typedef enum {
     EVENT_TRIGGER_INTERRUPT  = 0x00,  ///< 0x00：立即打断
     EVENT_TRIGGER_CONTINUOUS = 0x01,  ///< 0x01：连续触发
     EVENT_TRIGGER_TIMING     = 0x02   ///< 0x02：定时触发
@@ -202,6 +210,7 @@ typedef struct
     uint8_t event_type;
     uint8_t event_source;
     uint16_t event_code;
+    uint8_t event_finger;
 } frame_light_ctl_t;
 
 typedef struct

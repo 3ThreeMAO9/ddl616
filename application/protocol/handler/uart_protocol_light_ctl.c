@@ -9,6 +9,7 @@
 
 #include "uart_protocol.h"
 #include "task_led.h"
+#include "task_fingerprint.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -39,7 +40,7 @@ HANDLER_DEFINE(UP_CMD_LIGHT_CTL)
     uart_msg_ack_light_ctl(STATUS_SUCCESS);
     OB_LOGD(TAG, "cmd[%02X] tsn[%02X]", packet->cmd, packet->TSN);
     OB_LOGD(TAG, "type[%02X] source[%02X] code[%02X] ", param->event_type, param->event_source, param->event_code);
-
+    OB_LOGD(TAG, "event_finger [%02X] ", param->event_finger);
     switch (param->event_type)
     {
     case EVENT_KEYBOARD_LED:
@@ -60,6 +61,27 @@ HANDLER_DEFINE(UP_CMD_LIGHT_CTL)
         break;
     case EVENT_WAKEUP:
         ledTaskHandle(LED_EVENT_WAKE_UP, param->event_code);
+        break;
+    default:
+        break;
+    }
+
+    switch (param->event_finger)
+    {
+    case EVENT_FINGER_NULL:
+        /* code */
+        break;
+    case EVENT_FINGER_OFF:
+        fp_task_control_led(FP_LED_CLOSE);
+        break;
+    case EVENT_FINGER_RED:
+        fp_task_control_led(FP_LED_RED);
+        break;
+    case EVENT_FINGER_GREEN:
+        fp_task_control_led(FP_LED_GREEN);
+        break;
+    case EVENT_FINGER_BLUE:
+        fp_task_control_led(FP_LED_BLUE);
         break;
     default:
         break;
