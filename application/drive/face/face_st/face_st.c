@@ -258,8 +258,7 @@ static void face_process_verify_demo(face_context_t *ctx)
                     ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
                 }
             }
-            else
-            {
+            else if (ctx->ack_packet.result == MR_SUCCESS){
                 ctx->params.verify.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
                 ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
                 ctx->step = 0;
@@ -267,6 +266,22 @@ static void face_process_verify_demo(face_context_t *ctx)
                     ctx->callback(FACE_RESULT_SUCCESS_VERIFY, (void *)&ctx->params.verify.page_id, sizeof(ctx->params.verify.page_id));
                 }
             }
+            else if (MR_FAILED4_TIMEOUT == ctx->ack_packet.result){
+                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                ctx->step = 0;
+                if (NULL != ctx->callback) {
+                    ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
+                }
+            }
+            else{
+                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                ctx->step = 0;
+                if (NULL != ctx->callback) {
+                    ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
+                }
+            }
+
+
         }
         else if (MID_NOTE == ctx->ack_packet.msgid){
             if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
