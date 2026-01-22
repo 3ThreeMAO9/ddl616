@@ -189,7 +189,12 @@ void SoftUART_RxGPIO_IRQHandler(void)
 
         // 复位并开启RX定时器通道（MR1）
         SOFT_UART_TIM->TMR16TCR = TIMER16_RESET | TIMER16_ENABLE;
-        if (SOFT_UART_TIM->TMR16MCR == 0)
+        // 关键修复：仅检查RX通道（MR1）的MCR配置
+        // 1. 计算RX通道（MR1）的移位值和掩码（和底层函数完全一致）
+        uint32_t rx_shift = 0x03; // MR1对应移位3位（和TIMER16_EnableInterrupt中一致）
+        uint32_t rx_mcr_mask = 7 << rx_shift; // 7=0b111，对应MR1的3位掩码（bit3-5）
+        // 2. 检查RX通道的MCR是否未配置（值为0）
+        if ((SOFT_UART_TIM->TMR16MCR & rx_mcr_mask) == 0)
             TIMER16_EnableInterrupt(SOFT_UART_TIM, SOFT_UART_RX_TIM_CH, (TIMER16_MR_I | TIMER16_MR_R));
         SOFT_UART_TIM->TMR16IR = 0x02;
 

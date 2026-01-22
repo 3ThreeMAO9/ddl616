@@ -894,7 +894,7 @@ uint8_t fingerprint_control_led(fp_context_t *ctx, uint8_t color) {
 
     OB_LOGD(TAG, "led color[%u]", color);
     fingerprint_reset_context(ctx);
-    ctx->tick = system_inc_time_cnt(100);
+    ctx->tick = system_inc_time_cnt(50);
     ctx->led.wait = 1;
     ctx->led.processing = 0;
     ctx->led.color = color;
