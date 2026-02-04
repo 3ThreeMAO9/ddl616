@@ -20,9 +20,9 @@ void CT16B1_IRQHandler()
     // OB_GPIO0->DATA_b.GPIOXDATA8 = ~OB_GPIO0->DATA_b.GPIOXDATA8;
     // OB_GPIO0->DATA |= GPIO_PIN8;
     // OB_GPIO0->DATA &= (~GPIO_PIN8);
-    OB_GPIO2->DATA |= GPIO_PIN2;   //test irq time
+    // OB_GPIO2->DATA |= GPIO_PIN2;   //test irq time
     SoftUART_IRQHandler();
-    OB_GPIO2->DATA &= (~GPIO_PIN2);   //test irq time
+    // OB_GPIO2->DATA &= (~GPIO_PIN2);   //test irq time
 }
 
 // void TIMER16_Enable(OB_CT16B_Type *pTimer16)

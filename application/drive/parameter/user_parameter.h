@@ -13,12 +13,14 @@ typedef uint8_t (*user_parameter_flash_callback_t)(uint16_t, uint8_t*, uint16_t)
 
 
 /*****************Enum*****************/
-typedef enum{
-    PARAMETER_ID_VOLUME = 0,
-    PARAMETER_STAY_FLAG,
-    PARAMETER_ID_CNT,           //sum id
-
-}parameter_id_e;
+typedef enum
+{
+    PARAMETER_TAMPER_ALARM          = 0,    ///< 防撬报警
+    PARAMETER_LOITER_ALARM          = 1,    ///< 逗留报警
+    PARAMETER_FACE_FUNC_SETTING     = 2,    ///< 人脸功能设置
+    PARAMETER_HUMAN_SENSOR_SETTING  = 3,    ///< 人体感应设置
+    PARAMETER_ID_CNT,                       ///< 有效参数总数
+} parameter_id_e;
 typedef enum{
     DEVICE_SN_OB_ID = 0,
     

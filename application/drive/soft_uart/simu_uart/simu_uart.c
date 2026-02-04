@@ -9,7 +9,7 @@
 
 // baudrate:115200
 void delay_simu_uart(void) {
-	for (uint16_t i = 0; i < 39; i++);
+	for (uint16_t i = 0; i < 26; i++);
 }
 
 void simu_uart_init(void) {

@@ -8,6 +8,7 @@
  */
 
 #include "uart_protocol.h"
+#include "user_parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -33,12 +34,28 @@ HANDLER_DEFINE(UP_CMD_REPORT_PARAM)
                 i + 1, param[i].event_param, param[i].data);
         switch (param[i].event_param){
         case EVENT_PARAM_TAMPER_ALARM:
+            if (param[i].data == Enabled)
+                set_user_parameter(PARAMETER_TAMPER_ALARM, Enabled);
+            else if (param[i].data == Disabled)
+                set_user_parameter(PARAMETER_TAMPER_ALARM, Disabled);
             break;
         case EVENT_PARAM_LOITER_ALARM:
+            if (param[i].data == Enabled)
+                set_user_parameter(PARAMETER_LOITER_ALARM, Enabled);
+            else if (param[i].data == Disabled)
+                set_user_parameter(PARAMETER_LOITER_ALARM, Disabled);
             break;
         case EVENT_PARAM_FACE_FUNC_SETTING:
+            if (param[i].data == Enabled)
+                set_user_parameter(PARAMETER_FACE_FUNC_SETTING, Enabled);
+            else if (param[i].data == Disabled)
+                set_user_parameter(PARAMETER_FACE_FUNC_SETTING, Disabled);
             break;
         case EVENT_PARAM_HUMAN_SENSOR_SETTING:
+            if (param[i].data == Enabled)
+                set_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING, Enabled);
+            else if (param[i].data == Disabled)
+                set_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING, Disabled);
             break;
         default:
             OB_LOGE(TAG, "[%s] not default", __func__);

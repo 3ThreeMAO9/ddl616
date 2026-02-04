@@ -7,8 +7,10 @@
 
 /***************Variable***************/
 static const parameter_range_t parameter_range[PARAMETER_ID_CNT] = {
-    {.min_value = 0, .max_value = 5, .default_value = 1},
-    {.min_value = 0, .max_value = 1, .default_value = 1},
+    {TAMPER_ALARM_FLAG_MIN, TAMPER_ALARM_FLAG_MAX, TAMPER_ALARM_FLAG_DEFAULT},
+    {LOITER_ALARM_FLAG_MIN, LOITER_ALARM_FLAG_MAX, LOITER_ALARM_FLAG_DEFAULT},
+    {FACE_FUNC_SETTING_MIN, FACE_FUNC_SETTING_MAX, FACE_FUNC_SETTING_DEFAULT},
+    {HUMAN_SENSOR_SETTING_MIN, HUMAN_SENSOR_SETTING_MAX, HUMAN_SENSOR_SETTING_DEFAULT},
 };
 
 static user_patameter_tab_t parameter_tab;
