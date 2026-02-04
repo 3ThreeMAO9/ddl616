@@ -21,58 +21,30 @@
 /************************ 全局变量 ****************************/
 #if SOFT_UART_TX_ENABLE
 SoftUART_TxStruct_t tx_struct = {0};
+volatile uint8_t softuart_txbuf[SOFT_UART_TX_BUF_LEN];   // 全局发送缓冲区
+volatile uint16_t softuart_tx_wr = 0;                    // 写指针
+volatile uint16_t softuart_tx_rd = 0;                    // 读指针
+
 #endif
 
 #if SOFT_UART_RX_ENABLE
 SoftUART_RxStruct_t rx_struct = {0};
 #endif
 
-/************************ 静态全局变量 ************************/
-#if SOFT_UART_TX_ENABLE
-static struct rt_ringbuffer tx_rb;
-#endif
-
 /************************ 私有函数声明 ************************/
 
 static void SoftUART_Tim16_Init(uint32_t period_us);
 
-/************************ 适配hal_uart的回调函数 ************************/
+/************************ 接收缓冲区操作 ************************/
 #if SOFT_UART_RX_ENABLE
 static uart_callback_t g_soft_uart2_callback = NULL;
 
-// 软件串口接收字节回调（转发给hal_uart的回调）
-static void SoftUART2_RxByteCallback(uint8_t data)
-{
-    if (g_soft_uart2_callback != NULL)
-    {
-        g_soft_uart2_callback(data); // 转发接收到的字节到上层
-    }
-}
-#endif
-
-/************************ 接收缓冲区操作 ************************/
-#if SOFT_UART_RX_ENABLE
 // 写数据到接收缓冲区（非阻塞）
-bool SoftUART_PutRxBuf(uint8_t data)
+void SoftUART_PutRxBuf(uint8_t data)
 {
-    SoftUART2_RxByteCallback(data);
-    return true;
+    g_soft_uart2_callback(data); // 转发接收到的字节到上层
 }
 
-// RX空闲超时处理
-void SoftUART_RxIdleTimeoutHandler(void)
-{
-    if (rx_struct.tick >= SOFT_UART_RX_OUTTIME)
-    {
-        // 关闭RX定时器通道，重新使能GPIO下降沿中断
-        TIMER16_CloseChannel(SOFT_UART_TIM, SOFT_UART_RX_TIM_CH);
-        HAL_GPIO_EnableIRQ(SOFT_UART_RX_GPIO, SOFT_UART_RX_PIN, HAL_GPIO_IRQ_FALLING);
-        // 复位接收状态
-        rx_struct.state = SOFT_UART_RX_STATE_IDLE;
-        rx_struct.tick = 0;
-        rx_struct.bit_cnt = 0;
-    }
-}
 #endif
 
 void SoftUart_Timer16(OB_CT16B_Type *pTimer16, uint32_t nMRSel, uint32_t nMode, uint32_t nUsec)
@@ -124,37 +96,6 @@ static void SoftUART_Tim16_Init(uint32_t period_us)
     NVIC_EnableIRQ(SOFT_UART_TIM_IRQ);
 }
 
-/************************ 启动发送缓冲区下一字节 ************************/
-#if SOFT_UART_TX_ENABLE
-void SoftUART_StartTxNextByte(void)
-{
-    __disable_irq();
-    // 发送缓冲区空 → 标记空闲，关闭TX通道
-    if (rt_ringbuffer_data_len(&tx_rb) == 0)
-    {
-        __enable_irq();
-        tx_struct.state = SOFT_UART_IDLE;
-        tx_struct.bit_cnt = 0;
-        TIMER16_CloseChannel(SOFT_UART_TIM, SOFT_UART_TX_TIM_CH);
-        return;
-    }
-
-    // 从缓冲区取一字节（环形缓冲区）
-    rt_ringbuffer_get(&tx_rb, &tx_struct.data, 1);
-    __enable_irq();
-
-    // 标记发送忙，发起始位（低电平）
-    tx_struct.state = SOFT_UART_TX_BUSY;
-    tx_struct.bit_cnt = 0;
-    SoftUART_SetTxPin(false);
-
-    // 使能TX通道 + 清除MR0标志 + 确保定时器运行
-    TIMER16_EnableChannel(SOFT_UART_TIM, SOFT_UART_TX_TIM_CH);
-    SOFT_UART_TIM->TMR16IR = 0x01; // 清除MR0中断标志
-    TIMER16_Enable(SOFT_UART_TIM);
-}
-#endif
-
 /************************ 软件串口初始化 ************************/
 void SoftUART_Init(void)
 {
@@ -165,8 +106,6 @@ void SoftUART_Init(void)
     memset(tx_struct.buf, 0, sizeof(tx_struct.buf));
     tx_struct.state = SOFT_UART_IDLE;
     tx_struct.bit_cnt = 0;
-
-    rt_ringbuffer_init(&tx_rb, tx_struct.buf, SOFT_UART_TX_BUF_LEN);
 #endif
 
 #if SOFT_UART_RX_ENABLE
@@ -252,21 +191,26 @@ uint32_t SoftUART_Write(OB_UART_Type *pUart, uint8_t *pTxBuf, uint32_t nWriteByt
     // 逐字节写入软串口发送缓冲区
     for (uint32_t i = 0; i < nWriteBytes; i++)
     {
-        __disable_irq(); // 关中断保护缓冲区操作（避免中断中读写错乱）
-        uint8_t byte = pTxBuf[i];
-        bool ret = (rt_ringbuffer_put(&tx_rb, &byte, 1) == 1);
-        if (ret)
-            send_cnt++;
-        __enable_irq(); // 恢复中断
-
-        if (!ret)
+        if (((softuart_tx_wr + 1U) & SOFTUART_TX_BUF_MASK) == softuart_tx_rd)
         {
-            break;                 // 缓冲区满则停止发送
+            break;
         }
+        softuart_txbuf[softuart_tx_wr] = pTxBuf[i]; // 直接填数，无中间拷贝
+        softuart_tx_wr = (softuart_tx_wr + 1U) & SOFTUART_TX_BUF_MASK; // 写指针自增+环形取模
+        send_cnt++;
     }
     if (tx_struct.state == SOFT_UART_IDLE && send_cnt > 0)
     {
-        SoftUART_StartTxNextByte();
+        // 从缓冲区取一字节（环形缓冲区）
+        tx_struct.data = softuart_txbuf[softuart_tx_rd];
+        softuart_tx_rd = (softuart_tx_rd + 1U) & SOFTUART_TX_BUF_MASK;
+        // 标记发送忙，发起始位（低电平）
+        tx_struct.state = SOFT_UART_TX_BUSY;
+        tx_struct.bit_cnt = 0;
+        SOFT_UART_TX_PIN_CLR;
+        TIMER16_EnableChannel(SOFT_UART_TIM, SOFT_UART_TX_TIM_CH);
+        SOFT_UART_TIM->TMR16IR = 0x01; // 清除MR0中断标志
+        TIMER16_Enable(SOFT_UART_TIM);
     }
     return send_cnt;
 }

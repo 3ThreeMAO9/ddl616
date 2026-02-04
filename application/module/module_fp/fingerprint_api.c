@@ -20,10 +20,11 @@ static fp_handle_t fp_handle;
 
 /*************** 指纹硬件配置 ***************/
 static void fingerprint_uart_IRQ(const uint8_t value) {
-    if (fp_handle.uart.lenth < FP_RX_BUFFER_SIZE) {
-        fp_handle.uart.buffer[fp_handle.uart.lenth++] = value;
+    register fingerprint_uart_t *p_uart = &fp_handle.uart;
+    if (p_uart->lenth < FP_RX_BUFFER_SIZE) {
+        p_uart->buffer[p_uart->lenth++] = value;
     }
-    fp_handle.uart.time_out = system_inc_time_cnt(UART_TIME_OUT);
+    p_uart->time_out = system_ms_get() + UART_TIME_OUT;
 }
 
 static inline void fingerprint_hw_init(void) {

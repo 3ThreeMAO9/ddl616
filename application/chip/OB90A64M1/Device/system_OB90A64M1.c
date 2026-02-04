@@ -22,7 +22,7 @@
 
 #define HIRC_FREQ           24000000                    // The HIRC frequence
 #define XTAL_FREQ           24000000                    // The XTAL frequence
-#define DPLL_FREQ           DPLL_CLK_64M                // The DPLL frequence
+#define DPLL_FREQ           DPLL_CLK_48M                // The DPLL frequence
 
 
 #if (DEFAULT_SYS_CLOCK_TYPE == SYS_CLK_TYPE_HIRC )

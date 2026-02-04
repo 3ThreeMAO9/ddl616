@@ -17,17 +17,19 @@ void CT16B0_IRQHandler()
 
 void CT16B1_IRQHandler()
 {
-    // OB_GPIO0->DATA_b.GPIOXDATA12 = ~OB_GPIO0->DATA_b.GPIOXDATA12;
-    // OB_GPIO2->DATA |= GPIO_PIN2;   //test irq time
+    // OB_GPIO0->DATA_b.GPIOXDATA8 = ~OB_GPIO0->DATA_b.GPIOXDATA8;
+    // OB_GPIO0->DATA |= GPIO_PIN8;
+    // OB_GPIO0->DATA &= (~GPIO_PIN8);
+    OB_GPIO2->DATA |= GPIO_PIN2;   //test irq time
     SoftUART_IRQHandler();
-    // OB_GPIO2->DATA &= (~GPIO_PIN2);   //test irq time
+    OB_GPIO2->DATA &= (~GPIO_PIN2);   //test irq time
 }
 
-void TIMER16_Enable(OB_CT16B_Type *pTimer16)
-{
-    pTimer16->TMR16TCR = pTimer16->TMR16TCR | TIMER16_RESET;
-    pTimer16->TMR16TCR = pTimer16->TMR16TCR | TIMER16_ENABLE; //Enable counter
-}
+// void TIMER16_Enable(OB_CT16B_Type *pTimer16)
+// {
+//     pTimer16->TMR16TCR = pTimer16->TMR16TCR | TIMER16_RESET;
+//     pTimer16->TMR16TCR = pTimer16->TMR16TCR | TIMER16_ENABLE; //Enable counter
+// }
 
 void TIMER16_Close(OB_CT16B_Type *pTimer16)
 {
@@ -189,26 +191,26 @@ void TIMER16_Delay_Interrupt(OB_CT16B_Type *pTimer16, uint32_t nMRSel, uint32_t 
     pTimer16->TMR16TCR = pTimer16->TMR16TCR | TIMER16_ENABLE; //Enable counter
 }
 
-void TIMER16_EnableInterrupt(OB_CT16B_Type *pTimer16, uint32_t nMRSel, uint32_t nMode)
-{
-    uint32_t nBuff, nShift;
-    nBuff  = 7;
-    nShift = 0x00;
+// void TIMER16_EnableInterrupt(OB_CT16B_Type *pTimer16, uint32_t nMRSel, uint32_t nMode)
+// {
+//     uint32_t nBuff, nShift;
+//     nBuff  = 7;
+//     nShift = 0x00;
 
-    if (nMRSel == TIMER16_MR0)
-        nShift = 0x00;
-    else if (nMRSel == TIMER16_MR1)
-        nShift = 0x03;
-    else if (nMRSel == TIMER16_MR2)
-        nShift = 0x06;
-    else if (nMRSel == TIMER16_MR3)
-        nShift = 0x09;
+//     if (nMRSel == TIMER16_MR0)
+//         nShift = 0x00;
+//     else if (nMRSel == TIMER16_MR1)
+//         nShift = 0x03;
+//     else if (nMRSel == TIMER16_MR2)
+//         nShift = 0x06;
+//     else if (nMRSel == TIMER16_MR3)
+//         nShift = 0x09;
 
-    nMode = nMode << nShift;
-    nBuff = nBuff << nShift;
+//     nMode = nMode << nShift;
+//     nBuff = nBuff << nShift;
 
-    pTimer16-> TMR16MCR = (pTimer16-> TMR16MCR & (~nBuff)) | nMode;
-}
+//     pTimer16-> TMR16MCR = (pTimer16-> TMR16MCR & (~nBuff)) | nMode;
+// }
 
 
 
@@ -256,15 +258,15 @@ void TIMER16_PWM_Length(OB_CT16B_Type *pTimer16, uint32_t nMatchSel ,uint32_t nU
     }
 }
 
-// 新增：单个通道关闭函数
-void TIMER16_CloseChannel(OB_CT16B_Type *pTimer16, uint32_t nMRSel)
-{
-    TIMER16_EnableInterrupt(pTimer16, nMRSel, 0x00);
-}
+// // 新增：单个通道关闭函数
+// void TIMER16_CloseChannel(OB_CT16B_Type *pTimer16, uint32_t nMRSel)
+// {
+//     TIMER16_EnableInterrupt(pTimer16, nMRSel, 0x00);
+// }
 
-// 新增：单个通道使能函数
-void TIMER16_EnableChannel(OB_CT16B_Type *pTimer16, uint32_t nMRSel)
-{
-    TIMER16_EnableInterrupt(pTimer16, nMRSel, (TIMER16_MR_I | TIMER16_MR_R));
-}
+// // 新增：单个通道使能函数
+// void TIMER16_EnableChannel(OB_CT16B_Type *pTimer16, uint32_t nMRSel)
+// {
+//     TIMER16_EnableInterrupt(pTimer16, nMRSel, (TIMER16_MR_I | TIMER16_MR_R));
+// }
 

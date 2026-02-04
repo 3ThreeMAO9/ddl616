@@ -14,13 +14,15 @@
 /************************* 外部变量声明** **************************/
 #if SOFT_UART_TX_ENABLE
 extern SoftUART_TxStruct_t tx_struct;
-extern void SoftUART_StartTxNextByte(void);
+extern volatile uint8_t softuart_txbuf[SOFT_UART_TX_BUF_LEN];
+extern volatile uint16_t softuart_tx_wr;
+extern volatile uint16_t softuart_tx_rd;
+
 #endif
 
 #if SOFT_UART_RX_ENABLE
 extern SoftUART_RxStruct_t rx_struct;
-extern bool SoftUART_PutRxBuf(uint8_t data);
-extern void SoftUART_RxIdleTimeoutHandler(void);
+extern void SoftUART_PutRxBuf(uint8_t data);
 #endif
 
 #if SOFT_UART_LOG_TX_ENABLE
@@ -52,28 +54,36 @@ void SoftUART_IRQHandler(void)
             {
                 if (rx_struct.tick < 255)
                     rx_struct.tick++;
-                SoftUART_RxIdleTimeoutHandler();
+                if (rx_struct.tick >= SOFT_UART_RX_OUTTIME)
+                {
+                    // 关闭RX定时器通道，重新使能GPIO下降沿中断
+                    TIMER16_CloseChannel(SOFT_UART_TIM, SOFT_UART_RX_TIM_CH);
+                    GPIO_EnableINT(SOFT_UART_RX_OB_GPIO,SOFT_UART_RX_OB_PIN,GPIO_INTMODE_FALLING_EDGE);
+                    // 复位接收状态
+                    // rx_struct.state = SOFT_UART_RX_STATE_IDLE;
+                    // rx_struct.tick = 0;
+                    // rx_struct.bit_cnt = 0;
+                }
             }
             break;
 
         case SOFT_UART_RX_STATE_TRANSFER:
+        {
             // 采样8位数据位（LSB先行）
-            rx_struct.bit_cnt++;
-            if (rx_bit)
-                rx_struct.data |= (1 << (rx_struct.bit_cnt - 1));
-            else
-                rx_struct.data &= ~(1 << (rx_struct.bit_cnt - 1));
-            // 8位数据采样完成，进入停止位检测
-            if (rx_struct.bit_cnt >= 8)
+            register uint8_t cnt = rx_struct.bit_cnt;  // 缓存全局cnt到寄存器，减少2次全局访问
+            uint8_t bit_mask = 1 << cnt;              // 掩码仅计算1次，两处复用，减少1次左移运算
+            // 核心采样：先清0目标位，再按rx_bit置值
+            rx_struct.data = (rx_struct.data & ~bit_mask) | ((uint8_t)rx_bit * bit_mask);
+            // 8位采样完成判断
+            if (++rx_struct.bit_cnt >= 8)
             {
                 SoftUART_EnabledINT();
                 rx_struct.state = SOFT_UART_RX_STATE_STOP;
                 rx_struct.stop_timeout = 0;
             }
             break;
-
+        }
         case SOFT_UART_RX_STATE_STOP:
-            rx_struct.stop_timeout++;
             // 检测到停止位（高电平）
             if (rx_bit)
             {
@@ -81,15 +91,15 @@ void SoftUART_IRQHandler(void)
                 SoftUART_PutRxBuf(rx_struct.data);
                 // 回到空闲态
                 rx_struct.state = SOFT_UART_RX_STATE_IDLE;
-                rx_struct.bit_cnt = 0;
-                rx_struct.tick = 0;
+                // rx_struct.bit_cnt = 0;
+                // rx_struct.tick = 0;
             }
             // 停止位超时容错（调整为3个半周期，提高兼容性）
-            else if (rx_struct.stop_timeout >= 3)
+            else if (++rx_struct.stop_timeout >= 3)
             {
                 rx_struct.state = SOFT_UART_RX_STATE_IDLE;
-                rx_struct.bit_cnt = 0;
-                rx_struct.tick = 0;
+                // rx_struct.bit_cnt = 0;
+                // rx_struct.tick = 0;
             }
             break;
 
@@ -108,24 +118,40 @@ void SoftUART_IRQHandler(void)
         if (tx_struct.state == SOFT_UART_TX_BUSY)
         {
             // 缓存局部变量，减少结构体访问
-            uint8_t bit_cnt = tx_struct.bit_cnt + 1;
-            uint8_t tx_data = tx_struct.data;
+            register uint8_t bit_cnt = tx_struct.bit_cnt;
+            register uint8_t tx_data = tx_struct.data;
+            bit_cnt++; // 单独自增，编译器生成单指令ADDS，比原合并写法更高效
+            uint8_t bit_off = bit_cnt - 1;
 
             // if替代switch，减少分支开销
             if (bit_cnt <= 8) // 数据位
             {
-                SoftUART_SetTxPin((tx_data >> (bit_cnt - 1)) & 0x01);
+                // SoftUART_SetTxPin((tx_data >> (bit_cnt - 1)) & 0x01);
+                uint8_t tx_level = (tx_data >> bit_off) & 0x01;
+                tx_level ? SOFT_UART_TX_PIN_SET : SOFT_UART_TX_PIN_CLR;
                 tx_struct.bit_cnt = bit_cnt;
             }
             else if (bit_cnt == 9) // 停止位
             {
-                SoftUART_SetTxPin(1);
+                SOFT_UART_TX_PIN_SET;
                 tx_struct.bit_cnt = bit_cnt;
             }
             else if (bit_cnt == 10) // 字节发送完成
             {
                 tx_struct.bit_cnt = 0;      // 复位计数
-                SoftUART_StartTxNextByte(); // 启动下一字节
+                if (softuart_tx_wr == softuart_tx_rd)   // 判断发送buff是否为空
+                {
+                    // 发送缓冲区空 → 标记空闲，关闭TX通道
+                    tx_struct.state = SOFT_UART_IDLE;
+                    TIMER16_CloseChannel(SOFT_UART_TIM, SOFT_UART_TX_TIM_CH);
+                }
+                else
+                {
+                    // 从缓冲区取一字节（环形缓冲区）
+                    tx_struct.data = softuart_txbuf[softuart_tx_rd];
+                    softuart_tx_rd = (softuart_tx_rd + 1U) & SOFTUART_TX_BUF_MASK;
+                    SOFT_UART_TX_PIN_CLR;
+                }
             }
             else
             {

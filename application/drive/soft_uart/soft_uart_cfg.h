@@ -37,6 +37,7 @@
 /************************ 缓冲区配置（必须是2的幂） ************************/
 #define SOFT_UART_LOG_TX_BUF_LEN    (1024)
 #define SOFT_UART_TX_BUF_LEN        (64)        // 发送缓冲区长度
+#define SOFTUART_TX_BUF_MASK        (SOFT_UART_TX_BUF_LEN - 1U) // 取模掩码，位运算用
 
 /************************ RX超时配置（单位：定时器中断周期） ************************/
 #define SOFT_UART_RX_OUTTIME        (50)        // 接收超时复位阈值  17.36us
@@ -49,11 +50,7 @@
     } while (0)
 
 //缩短中断执行时间 SOFT_UART_TX_PIN
-#define SoftUART_SetTxPin(_level)                                 \
-    do                                                            \
-    {                                                             \
-        _level ? (SOFT_UART_TX_PIN_SET) : (SOFT_UART_TX_PIN_CLR); \
-    } while (0)
+#define SoftUART_SetTxPin(_level)  _level ? SOFT_UART_TX_PIN_SET : SOFT_UART_TX_PIN_CLR
 
 //缩短中断执行时间 SOFT_UART_RX_PIN
 #define SoftUART_GetRxPin()                 ((SOFT_UART_RX_PIN_READ) ? 1 : 0)
