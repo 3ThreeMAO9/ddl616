@@ -193,7 +193,10 @@ static void fingerprint_process_verify(fp_context_t *ctx) {
                     ctx->step = FP_STEP_IDLE;
                 }
                 else {
-                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    if (ctx->status.timeout)
+                        ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    else if (ctx->ack_packet.code != FP_ACK_OK)
+                        ctx->tick = system_inc_time_cnt(FP_RX_SCAN_TIMEOUT);
                     ctx->step = FP_STEP_0;
                 }
             } 

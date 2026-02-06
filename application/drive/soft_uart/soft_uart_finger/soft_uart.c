@@ -114,7 +114,7 @@ void SoftUART_Init(void)
     HAL_GPIO_Write(SOFT_UART_RX_GPIO, SOFT_UART_RX_PIN, true);
     HAL_GPIO_EnableIRQ(SOFT_UART_RX_GPIO, SOFT_UART_RX_PIN, HAL_GPIO_IRQ_FALLING);
     // 配置RX GPIO中断优先级
-    NVIC_SetPriority(SOFT_UART_RX_IRQ, 1);
+    NVIC_SetPriority(SOFT_UART_RX_IRQ, 0);
     NVIC_EnableIRQ(SOFT_UART_RX_IRQ);
 
     rx_struct.state = SOFT_UART_RX_STATE_IDLE;

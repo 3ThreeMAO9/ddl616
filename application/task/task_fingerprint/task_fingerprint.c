@@ -209,7 +209,7 @@ void fp_task_init(void) {
         .register_count = 6,
         .repeat = 0,
         .auto_sleep = 0,
-        .idle_irq = 1,
+        .idle_irq = 0,
         .led_default = FP_LED_BLUE,
     };
 
