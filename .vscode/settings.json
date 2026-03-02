@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "nfc_spi.H": "cpp",
+        "led.h": "c",
+        "config_smarklockzql1.h": "c",
+        "ob90a64m1.h": "c",
+        "wdt.h": "c"
+    }
+}

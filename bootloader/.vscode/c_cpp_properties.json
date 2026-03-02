@@ -1,0 +1,49 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/Device",
+                "${workspaceFolder}/User",
+                "${workspaceFolder}/../common/CMSIS/5.4.0",
+                "${workspaceFolder}/../common/Device",
+                "${workspaceFolder}/../common/Driver/include",
+                "${workspaceFolder}/../common/User/include"
+            ],
+            "defines": [
+                "__UVISION_VERSION=\"536\"",
+                "BUILD_BOOTLOADER",
+                "UART_ENABLEx"
+            ],
+            "browse": {
+                "databaseFilename": "${workspaceFolder}/.vscode/db.db",
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "${workspaceFolder}",
+                    "${workspaceFolder}/../common"
+                ]
+            },
+            "compilerPath": "Z:/Keil_v5.36/ARM/ARMCLANG/bin/armclang.exe",
+            "compilerArgs": [
+                "--target=arm-arm-none-eabi",
+                "-mcpu=cortex-m0",
+                "-fno-rtti",
+                "-fsigned-char",
+                "-fshort-enums",
+                "-fshort-wchar",
+                "-Weverything",
+                "-Wno-packed",
+                "-Wno-reserved-id-macro",
+                "-Wno-unused-macros",
+                "-Wno-documentation-unknown-command",
+                "-Wno-documentation",
+                "-Wno-license-management",
+                "-Wno-parentheses-equality"
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "windows-clang-arm"
+        }
+    ],
+    "version": 4
+}

@@ -1,0 +1,7 @@
+.vscode/db.*
+build/
+Objects/
+CVS/
+*.uvguix.*
+bw-output/
+.scannerwork/

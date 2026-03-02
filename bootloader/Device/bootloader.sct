@@ -1,0 +1,22 @@
+#! armclang -E --target=arm-arm-none-eabi -mcpu=cortex-m0 -xc
+
+#include "../../common/Device/chip_config.h"
+
+BL_IROM BOOTLOADER_BEGIN_ADDR BOOTLOADER_CODE_SIZE {
+    BL_IROM_CODE BOOTLOADER_CODE_ADDR BOOTLOADER_CODE_SIZE {
+        .ANY (+RO)
+        .ANY (+XO)
+    }
+
+    RW_IRAM1 _RAM_BEGIN_ADDR _RAM_MAX_SIZE  {  ; RW data
+        .ANY (+RW +ZI)
+    }
+}
+
+BL_IROM_INTR BOOTLOADER_INTR_ADDR {
+    BL_IROM_INTR_ BOOTLOADER_INTR_ADDR {}
+}
+
+BL_IROM_USER_OPTION BOOTLOADER_USER_OPTION_ADDR {
+    BL_IROM_USER_OPTION_ BOOTLOADER_USER_OPTION_ADDR {}
+}

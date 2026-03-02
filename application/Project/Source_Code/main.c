@@ -1,0 +1,107 @@
+#include "main.h"
+#include "system_timer.h"
+#include "hal_gpio.h"
+#include "hal_uart.h"
+#include "hal_wdt.h"
+
+#include "task_key.h"
+#include "task_led.h"
+#include "task_uart.h"
+#include "task_nfc.h"
+#include "task_fingerprint.h"
+#include "task_face.h"
+#include "task_radar.h"
+#include "task_system_time.h"
+#include "task_sleep.h"
+#include "task_qp_fsm.h"
+#include "task_flash.h"
+#include "task_protocol.h"
+
+#include "user_parameter.h"
+#include "ota_helper.h"
+
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#include "ob_log.h"
+#define TAG "main"
+
+uint8_t test_buf[64] = {0};
+uint8_t rx_len = 0;
+uint32_t time_out = 0;
+
+void MainLoop(void)
+{
+    OB_LOGD(TAG, "[%s]",__func__);
+    while (1)
+    {
+        if (system_out_time_cnt(time_out))
+        {
+            time_out = system_inc_time_cnt(1000);
+        }
+        keyTaskLoop();          // Key task loop
+        ledTaskLoop();          // LED task loop
+        uartTaskLoop();         // uart task loop
+        nfc_task_loop();        // nfc task loop
+        fp_task_loop();         // finger task loop
+        face_task_loop();       // face task loop
+        radar_task_loop();      // radar task loop
+        qp_fsm_task_loop();     // fsm task loop
+        system_time_task_loop();// system time task loop
+        sleep_task_loop();      // sleep task loop
+        protocol_task_loop();   // protocol task loop
+    }
+}
+
+static void hal_init(void)
+{
+    ob_log_init();
+    system_time_task_init();
+}
+
+static void device_init(void)
+{
+    OB_LOGD(TAG, "[%s]",__func__);
+    Init_ARM_LVR_LP();
+}
+
+static void task_init(void)
+{
+    OB_LOGD(TAG, "[%s]",__func__);
+    flash_task_init();
+    keyTaskPowerOnInit();
+    ledTaskInit();
+    uartTaskInit();
+    nfc_task_init();
+    face_task_init();
+    const face_function_attr_t face_attr = {
+        .register_count = 5,
+        .repeat = 1,                // 查重
+        .register_time_out = 0x0A,  // 录入超时时间
+        .register_type = 0,         // 0：交互录入 1：单帧录入
+    };
+    face_task_set_attr((void*)(&face_attr), sizeof(face_function_attr_t));
+
+    radar_task_init();
+    fp_task_init();
+    sleep_task_init();
+}
+
+static void app_init(void)
+{
+    OB_LOGD(TAG, "[%s]",__func__);
+    read_device_version_info();
+    qp_fsm_task_init();
+}
+
+int main(void)
+{
+    SystemCoreClockUpdate();
+    hal_init();
+    device_init();
+    task_init();
+    app_init();
+
+    volatile uint8_t *boot_ota_process = (uint32_t*)(0x20000000);
+    OB_LOGD(TAG, " test [%u]", *boot_ota_process);
+
+    MainLoop();
+}

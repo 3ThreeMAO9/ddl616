@@ -1,0 +1,18 @@
+{
+    "files.associations": {
+        "ob90a64m1.h": "c",
+        "arm_compat.h": "c",
+        "limits": "c",
+        "type_traits": "c",
+        "main.h": "c",
+        "ota_file.h": "c",
+        "chip_config.h": "c",
+        "core_cm0.h": "c",
+        "fmc_flash.h": "c",
+        "boot_spi_flash.h": "c",
+        "assert.h": "c",
+        "string.h": "c",
+        "flash_util.h": "c",
+        "ota_info.h": "c"
+    }
+}
