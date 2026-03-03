@@ -225,6 +225,7 @@ void module_uart_init(void)
     uart_queue_init();
 }
 
+
 void module_uart_queue_put(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len)
 {
     if (data == NULL || len == 0) {

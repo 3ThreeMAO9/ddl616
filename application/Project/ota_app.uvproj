@@ -14,7 +14,7 @@
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>OB90A64M1</Device>
+          <Device>OB90A64M1B</Device>
           <Vendor>On-Bright</Vendor>
           <Cpu>IRAM(0x20000000-0x20001FFF) IROM(0-0x0FDFF) IROM2(0x0FE00-0x0FFFF) CLOCK(50000000) CPUTYPE("Cortex-M0")</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -177,7 +177,7 @@
           </Flash1>
           <bUseTDR>0</bUseTDR>
           <Flash2></Flash2>
-          <Flash3>"" ()</Flash3>
+          <Flash3></Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -315,7 +315,7 @@
               <OCR_RVCT4>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0xeff0</Size>
+                <Size>0xea00</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -1074,7 +1074,7 @@
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>OB90A64M1</Device>
+          <Device>OB90A64M1B</Device>
           <Vendor>On-Bright</Vendor>
           <Cpu>IRAM(0x20000000-0x20001FFF) IROM(0-0x0FDFF) IROM2(0x0FE00-0x0FFFF) CLOCK(50000000) CPUTYPE("Cortex-M0")</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -1223,7 +1223,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver>C:\Program Files (x86)\SyncMOS\ChipWatcher\SMLinkM\SMLinkM.dll</Driver>
+            <Driver></Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -1237,7 +1237,7 @@
           </Flash1>
           <bUseTDR>0</bUseTDR>
           <Flash2></Flash2>
-          <Flash3>"" ()</Flash3>
+          <Flash3></Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -1375,7 +1375,7 @@
               <OCR_RVCT4>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0xeff0</Size>
+                <Size>0xea00</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>

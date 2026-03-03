@@ -19,9 +19,9 @@
 #define DPLL_CLK_64M        64000000
 
 // System Clock (Setting by User)
-#define DEFAULT_SYS_CLOCK_TYPE  SYS_CLK_TYPE_HIRC_DPLL//SYS_CLK_TYPE_HIRC_DPLL       // Select system clock type
+#define DEFAULT_SYS_CLOCK_TYPE  SYS_CLK_TYPE_HIRC_DPLL       // Select system clock type
 
-#define HIRC_FREQ           24000000                    // The HIRC frequence                
+#define HIRC_FREQ           24000000                    // The HIRC frequence
 #define XTAL_FREQ           24000000                    // The XTAL frequence
 #define DPLL_FREQ           DPLL_CLK_48M                // The DPLL frequence
 
@@ -74,14 +74,14 @@ void SystemInit (void)
 
 	
 	pCPUCHIPCTR1 = (uint32_t *) 0x500100B4;
-	//--------------------Enable XTAL
+    //--------------------Enable XTAL
     *pCPUCHIPCTR0 = *pCPUCHIPCTR0 | 0x08;                           //Enable XTAL
-	//-------------filter
-	if(XTAL_FREQ <= 30000000)
-	 *pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x04;	
-	else
-	 *pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x08;	
-	//--------------------force HIRC
+    //-------------filter
+    if(XTAL_FREQ <= 30000000)
+        *pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x04;
+    else
+        *pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x08;
+    //--------------------force HIRC
     OB_SYSCON->CCLKCFG = OB_SYSCON->CCLKCFG & 0xFFFFF0FF;
     while((OB_SYSCON->CPUCHIPCTR0 & 0x00800000) != 0x00800000);     // Wait Ready
 
@@ -97,7 +97,7 @@ void SystemInit (void)
     uint32_t nDiv_2M = 0;
 	pCPUCHIPCTR0 = (uint32_t *) 0x500100B0;	
 	pCPUCHIPCTR1 = (uint32_t *) 0x500100B4;
-	//--------------------force HIRC
+    //--------------------force HIRC
     OB_SYSCON->CCLKCFG = OB_SYSCON->CCLKCFG & 0xFFFFF0FF;
     while((OB_SYSCON->CPUCHIPCTR0 & 0x00800000) != 0x00800000);     // Wait Ready
 
@@ -109,15 +109,15 @@ void SystemInit (void)
     }
     else
     {
-		*pCPUCHIPCTR0 = *pCPUCHIPCTR0 | 0x08;  //Enable XTAL      
-		//-------------filter
-		if(XTAL_FREQ <= 30000000)
-			*pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x04;	
-		else
-			*pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x08;
- 		//-----------------------------------------------------------------
-  
-		nDiv_2M = (XTAL_FREQ / 2000000) - 1;
+        *pCPUCHIPCTR0 = *pCPUCHIPCTR0 | 0x08;  //Enable XTAL
+        //-------------filter
+        if(XTAL_FREQ <= 30000000)
+            *pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x04;
+        else
+            *pCPUCHIPCTR1 = (*pCPUCHIPCTR1 & 0xFFFFFFF3) | 0x08;
+         //-----------------------------------------------------------------
+
+        nDiv_2M = (XTAL_FREQ / 2000000) - 1;
         nDiv_2M = (nDiv_2M << 0x04);
     }
 

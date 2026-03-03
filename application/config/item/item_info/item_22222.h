@@ -88,13 +88,12 @@
 #define FMC_PAGE_SIZE                               (0x200)
 #define FMC_SLEF_DEFINE_AREA                        (0x00100410)
 
-#define FLASH_USER_DEFINE_START_PAGE                (0xFA00)
-#define FLASH_USER_DEFINE_END_PAGE                  (0xFDFF)
+#define FLASH_USER_DEFINE_START_PAGE                (0xEA00)
+#define FLASH_USER_DEFINE_END_PAGE                  (0xEFFF)
 
 /*****************  data block size  *****************/
-#define USER_BLOCK_SIZE                             (32)
 #define PARAMETER_BLOCK_SIZE                        (sizeof(uint32_t))
-#define DATA_BLOCK_SIZE                             (MAX(USER_BLOCK_SIZE, PARAMETER_BLOCK_SIZE))
+#define DATA_BLOCK_SIZE                             (MAX(0, PARAMETER_BLOCK_SIZE))
 #define FLASH_SECTOR_SIZE                           (FMC_PAGE_SIZE)
 
 /***************  user parameter addr  ***************/
