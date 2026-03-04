@@ -4,6 +4,7 @@
 int32_t  FMC_ChipErase(void);
 int32_t  FMC_PageErase(uint32_t nPageAddr);
 void     FMC_Read(uint32_t nAddr, uint8_t *pData, uint32_t nLength);
+uint32_t FMC_Read_Boot(uint32_t addr, uint32_t *buf, uint32_t size);
 void     FMC_Write(uint32_t nAddr, uint8_t *pData, uint32_t nLength);
 uint32_t FMC_ReadCompanyID(uint32_t nPos);
 uint32_t FMC_GetBootSource(void);

@@ -56,4 +56,28 @@
 #define SFLASH_HEADER_MAX_SIZE  (4 * 1024)
 #define SFLASH_HEADER_ADDR      (SFLASH_END_ADDR - SFLASH_HEADER_MAX_SIZE)
 
+/*****************  user-defined addr  ***************/
+#define FMC_PAGE_SIZE                               (0x200)
+#define FMC_SLEF_DEFINE_AREA                        (0x00100410)
+
+#define FLASH_USER_DEFINE_START_PAGE                (0xEA00)
+#define FLASH_USER_DEFINE_END_PAGE                  (0xEFFF)
+
+/*****************  data block size  *****************/
+#define PARAMETER_BLOCK_SIZE                        (sizeof(uint32_t))
+#define DATA_BLOCK_SIZE                             (MAX(0, PARAMETER_BLOCK_SIZE))
+#define FLASH_SECTOR_SIZE                           (FMC_PAGE_SIZE)
+
+/***************  user parameter addr  ***************/
+#define PARAMETER_SECTOR_CNT                        (1)
+#define PARAMETER_SECTOR_START_ADDR                 (FLASH_USER_DEFINE_START_PAGE)
+#define PARAMETER_SECTOR_BACKUP_ADDR                (PARAMETER_SECTOR_START_ADDR + (PARAMETER_SECTOR_CNT * FMC_PAGE_SIZE))
+
+/*******************  ota addr  *********************/
+#define OTA_SECTOR_CNT                              (1)
+#define OTA_SECTOR_START_ADDR                       (PARAMETER_SECTOR_BACKUP_ADDR + (OTA_SECTOR_CNT * FMC_PAGE_SIZE))
+
+/*****************************************************/
+
+
 #endif // CHIP_CONFIG_H

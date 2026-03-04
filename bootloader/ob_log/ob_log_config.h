@@ -28,10 +28,18 @@ void ob_log_write_hex(const uint8_t* input, uint16_t lenth);
 
 #endif
 
-#define OB_LOGD(str) \
-    do { ob_log_write(str, sizeof(str)); ob_log_write("\n", 1);} while(0);
+#define OB_LOGD(str)                    \
+    do                                  \
+    {                                   \
+        ob_log_write(str, sizeof(str)); \
+        ob_log_write("\n", 1);          \
+    } while (0)
 
-#define OB_LOGD_DUMP(buffer, lenth) \
-    do { ob_log_write_hex(buffer, lenth); ob_log_write("\n", 1);} while(0);
+#define OB_LOGD_DUMP(buffer, lenth)      \
+    do                                   \
+    {                                    \
+        ob_log_write_hex(buffer, lenth); \
+        ob_log_write("\n", 1);           \
+    } while (0)
 
 #endif // _OB_LOG_CONFIG_H

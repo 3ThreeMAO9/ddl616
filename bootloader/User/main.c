@@ -26,32 +26,6 @@
 extern void soft_reset(void);
 extern void boot_main(void);
 
-static uint8_t gs_bootloader_buffer[_RAM_MAX_SIZE / 2] __ALIGNED(8);
-
-static void start_ota(void)
-{
-    ota_file_check_param_t param_out = {
-        .buffer = gs_bootloader_buffer,
-        .size = sizeof(gs_bootloader_buffer),
-        .addr = SFLASH_OTA_BEGIN_ADDR
-    };
-
-    uint32_t ret;
-    ret = ota_file_check_inner_flash(gs_bootloader_buffer,
-        sizeof(gs_bootloader_buffer));
-    if (!ret) // app is valid, do backup
-    {
-        if (start_backup()) {
-            /* backup failed, stop ota and return */
-            ota_info_set_result(OTA_INFO_RESULT_FAIL);
-            ota_sflash_header_set(0xFFFF);
-            return;
-        }
-    }
-    ota_sflash_header_set(0xFFFF);
-    ota_file_param_copy_to_fmc(&param_out);
-    ota_info_set_result(OTA_INFO_RESULT_DONE);
-}
 
 __NO_RETURN void boot_main(void)
 {
@@ -67,24 +41,19 @@ __NO_RETURN void boot_main(void)
     system_timer_init();
     ota_uart_init();
 
-    volatile uint8_t *boot_ota_process = (uint32_t*)(0x20000000);
-    uint8_t temp_value;
-
-    OB_LOGD("process: ");
-    OB_LOGD_DUMP((&boot_ota_process), 1);
-    temp_value = 5;
-    memcpy((uint8_t*)(boot_ota_process), (uint8_t*)(&temp_value), 1);
-    OB_LOGD("process: ");
-    OB_LOGD_DUMP((boot_ota_process), 1);
-
     ota_helper_init();
 
-    if (FMC_GetBootSource()) {
+    uint32_t ret;
+
+    // 检查是否需要OTA，不需要则区校验APP区，需要则直接进入OTA流程
+
+    ret = ota_helper_check_app_complete(); // 校验APP区是否完整
+    if (ret == 1)
+    {
         ota_helper_set_boot(FMC_BOOT_TO_APP);
     }
 
     OB_LOGD("enter boot loop");
-    
     while(1) {
         WDT_ReloadCounter();
         ota_uart_poll();

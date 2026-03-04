@@ -66,7 +66,7 @@ uint16_t check_sum(uint8_t *buf, uint16_t len);
 uint8_t compareArraysWithValue(const uint8_t *data, uint16_t size, const uint8_t value);
 uint8_t compare_arrays(const uint8_t *arr1, const uint8_t *arr2, uint16_t len);
 uint16_t crc16_ccitt(const uint8_t *data, uint16_t len);
-
+uint16_t crc16_ccitt_accumulate(const uint8_t *data, uint16_t len, uint16_t prev_crc);
 /*****************************/
 
 #endif /* UTILS_H */

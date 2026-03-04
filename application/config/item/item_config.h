@@ -42,6 +42,7 @@ void read_device_version_info(void);
 #elif (CLIENT_ITEM_SN_22222 == CLIENT_ITEM_SN)
 #include "item_22222.h"
 #endif
+#include "chip_config.h"
 
 #define DEVICE_TEST_KEY_BOARD_TAB {KEY_NUM_1, KEY_NUM_2, KEY_NUM_3, KEY_NUM_4, KEY_NUM_5, KEY_NUM_6, \
                                    KEY_NUM_7, KEY_NUM_8, KEY_CAN, KEY_NUM_9, KEY_NUM_0, KEY_OK}

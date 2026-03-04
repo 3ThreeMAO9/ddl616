@@ -89,6 +89,25 @@ void FMC_Read(uint32_t nAddr, uint8_t *pData, uint32_t nLength)
     memcpy(pData, (void *)nAddr, nLength);
 }
 
+uint32_t FMC_Read_Boot(uint32_t addr, uint32_t *buf, uint32_t size)
+{
+    OB_FMC->ISPCC = FMC_ISP_READ | 0xE8000001;
+    OB_FMC->ISPADR = addr;
+
+    while (size)
+    {
+        OB_FMC->ISPTS = 0xE8000001;
+        if (FMC_WaitFinish() ==  0)
+            return 0;
+
+        *buf = OB_FMC->ISPDAT;
+        buf++;
+        size--;
+    }
+
+    return 1;
+}
+
 uint32_t FMC_ReadCompanyID(uint32_t nPos)
 {
     uint32_t nID;

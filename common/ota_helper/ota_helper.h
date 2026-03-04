@@ -39,6 +39,7 @@ typedef struct {
 } ota_helper_handle_t;
 
 #pragma pack(0)
+uint8_t ota_helper_check_app_complete(void);
 
 uint8_t ota_helper_prepare(void);
 uint8_t ota_helper_set_boot(uint32_t target);

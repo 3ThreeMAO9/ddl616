@@ -67,3 +67,21 @@ uint16_t crc16_ccitt(const uint8_t *data, uint16_t len)
     }
     return crc; // 最终CRC值（可根据主控需求选择是否反转字节序）
 }
+
+uint16_t crc16_ccitt_accumulate(const uint8_t *data, uint16_t len, uint16_t prev_crc)
+{
+    uint16_t crc = prev_crc; // 初始值 = 上一次的CRC结果（不再固定0xFFFF）
+    uint8_t i;
+    while (len--)
+    {
+        crc ^= (*data++) << 8; 
+        for (i = 0; i < 8; i++)
+        {
+            if (crc & 0x8000)
+                crc = (crc << 1) ^ 0x1021; 
+            else
+                crc <<= 1;
+        }
+    }
+    return crc; 
+}
