@@ -1,5 +1,2 @@
-#<SYMDEFS># ARM Linker, 6160001: Last Updated: Wed Mar  4 18:52:50 2026
-0x0000f001 T __aeabi_memcpy
-0x0000f001 T __aeabi_memcpy4
-0x0000f001 T __aeabi_memcpy8
-0x0000f4d9 T boot_main
+#<SYMDEFS># ARM Linker, 6160001: Last Updated: Thu Mar  5 20:26:34 2026
+0x0000f4b1 T boot_main

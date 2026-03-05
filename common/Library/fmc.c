@@ -228,14 +228,8 @@ int32_t FMC_WriteConfig(uint32_t *pConfig, uint32_t nStartAddr, uint32_t nCount)
 
 void FMC_ReLoad(void)
 {
-    uint32_t nLoop;
     OB_FMC->ISPCC  = FMC_ISP_CHIP_RELOAD | 0xE8000001;
     OB_FMC->ISPADR = 0x00;
     OB_FMC->ISPTS  = 0xE8000001;
-    nLoop = 0xFFFFFF;
-    while(nLoop--)
-    {
-        if ((OB_FMC->ISPTS & 0x01) == 0x00)
-            break;
-    }
+    FMC_WaitFinish();
 }

@@ -43,19 +43,21 @@ __NO_RETURN void boot_main(void)
 
     ota_helper_init();
 
-    uint32_t ret;
-
     // 检查是否需要OTA，不需要则区校验APP区，需要则直接进入OTA流程
-
-    ret = ota_helper_check_app_complete(); // 校验APP区是否完整
-    if (ret == 1)
-    {
-        ota_helper_set_boot(FMC_BOOT_TO_APP);
-    }
+    // for (uint8_t i = 0; i < 3; i++)
+    // {
+    //     if (1 == ota_helper_check_app_complete())// 校验APP区是否完整
+    //     {
+    //         ota_helper_set_boot(FMC_BOOT_TO_APP);
+    //     }
+    // }
 
     OB_LOGD("enter boot loop");
     while(1) {
         WDT_ReloadCounter();
         ota_uart_poll();
+        
+        // ota_control_packet_ack(ota_uart_tick);
+        // ota_uart_test();
     }
 }

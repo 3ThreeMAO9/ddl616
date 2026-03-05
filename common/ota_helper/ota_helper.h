@@ -16,6 +16,10 @@
 
 #define OTA_BUFFER_SIZE (256)
 
+#define OTA_STATE_IDLE          0x00  // 空闲状态（无OTA任务，正常运行）
+#define OTA_STATE_READY         0x01  // OTA就绪（需要执行OTA升级）
+
+
 #pragma pack(1)
 typedef struct {
     uint32_t code_crc;

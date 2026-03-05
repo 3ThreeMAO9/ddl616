@@ -70,17 +70,14 @@ static uint8_t check_crc(const uint8_t *frame, uint16_t frame_len) {
     if (frame_len < MIN_FRAME_SIZE) {
         return false;
     }
-    
     // 计算CRC的数据范围：从帧头到Payload结束
     uint16_t payload_len = ((uint16_t)frame[4] << 8) | frame[5];
-    uint16_t crc_data_len = 4 + payload_len;  // Control+Cmd+Len+Payload
-    
+    uint16_t crc_data_len = 6 + payload_len;  // Control+Cmd+Len+Payload
     // 计算CRC
     uint16_t calculated_crc = crc16_ccitt(&frame[0], crc_data_len);
     
     // 获取帧中的CRC值（大端模式）
     uint16_t frame_crc = ((uint16_t)frame[frame_len - 2] << 8) | frame[frame_len - 1];
-    
     return (calculated_crc == frame_crc);
 }
 
@@ -156,13 +153,11 @@ uint8_t validate_data_packet(const uint8_t *data, uint16_t data_len) {
     
     // 4. 检查数据长度
     if (!check_length(data, data_len)) {
-
         return false;
     }
     
     // 5. 检查CRC校验
     if (!check_crc(data, data_len)) {
-
         return false;
     }
     
@@ -249,7 +244,7 @@ static uint8_t ota_protocol_packet_ack(void* buffer, uint16_t lenth) {
     memcpy(&send_buffer[index], buffer, lenth);
     index += payload_lenth;
 
-    uint16_t crc_data_len = 4 + payload_lenth;  // Control+Cmd+Len+Payload
+    uint16_t crc_data_len = 6 + payload_lenth;  // Control+Cmd+Len+Payload
     uint16_t crc = crc16_ccitt(&send_buffer[0], crc_data_len);
     send_buffer[index++] = (crc >> 8) & 0xFF;
     send_buffer[index++] = crc & 0xFF;
@@ -311,10 +306,10 @@ uint16_t ota_request_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t l
         0x70,       // 命令字: 0x70
         0x00, (6 + 8), // 数据长度: 2字节
         0x00, 0x00, 0x01, 0x01, 0x02, 0x03,
-        0x00, 0x03, 0x80, 0x00, 0x01, 0x02, 0x03, 0x04,
+        0x00, 0x00, 0x00, 0x00, // 固件总字节数（这里需要计算正确文件的长度）
+        0x00, 0x00, 0x00, 0x00, // 固件整体CRC32校验（这里需要计算正确文件的CRC）
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-        // CRC（这里需要计算正确的CRC值）
-        0x00, 0x00
+        0x00, 0x00  // CRC（这里需要计算正确的CRC值）
     };
     
     test_packet[6] = (++parsed_packet.tsn);

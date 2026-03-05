@@ -16,6 +16,8 @@ static ota_fmc_area_t ota_fmc_area;
 #define MAX_APP_SIZE         0x0000EA00   // APP最大长度
 #define READ_BUFFER_SIZE     512          // 512字节缓存（4的倍数，可调整为1024）
 
+#define FLASH_PAGE_SIZE      0x00000200   // 单页大小（512字节=0x200)
+
 const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
     .code_crc = OTA_CRC32_DEFAULT,
     .code_size = OTA_LENGTH_DEFAULT,
@@ -27,13 +29,21 @@ const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00
 //=============================================================
 uint8_t ota_helper_check_app_complete(void)
 {
-    const ota_fmc_area_t *param = &ota_core_param;
+    ota_fmc_area_t param;
     uint16_t calc_crc = 0xFFFF;
     uint8_t read_buffer[READ_BUFFER_SIZE] = {0}; 
     uint32_t read_word = 0;              
     uint32_t app_addr = FLASH_APP_BEGIN_ADDR;
-    uint32_t remain_bytes = param->code_size;
+    uint32_t remain_bytes = 0;
     uint32_t buf_idx = 0;                // 缓存写入索引
+    uint32_t param_word_len = sizeof(param) / 4;
+
+    FMC_Read_Boot(OTA_SECTOR_START_ADDR, &param, param_word_len);
+
+    if(param.state == OTA_STATE_READY)
+        return 0;
+
+    remain_bytes = param.code_size;
 
     // 1. 基础长度合法性校验
     if (remain_bytes < MIN_APP_SIZE || remain_bytes > MAX_APP_SIZE)
@@ -89,7 +99,7 @@ uint8_t ota_helper_check_app_complete(void)
     // OB_LOGD_DUMP((uint8_t*)&calc_crc, 2);
 
     // 4. 对比CRC值
-    return (calc_crc == (uint16_t)param->code_crc) ? 1 : 0;
+    return (calc_crc == (uint16_t)param.code_crc) ? 1 : 0;
 }
 
 
@@ -104,9 +114,19 @@ uint8_t ota_helper_set_boot(uint32_t target) {
 }
 
 uint8_t ota_helper_prepare(void) {
-    FMC_ReLoad();
+    // FMC_ReLoad();
     memset((uint8_t*)(&ota_helper_handle), 0, sizeof(ota_helper_handle_t));
     ota_helper_handle.addr = FLASH_APP_BEGIN_ADDR;
+
+    uint32_t current_erase_addr = FLASH_APP_BEGIN_ADDR;
+    while (current_erase_addr <= MAX_APP_SIZE)
+    {
+        if (FMC_PageErase(current_erase_addr) != 0)
+        {
+            return 0;
+        }
+        current_erase_addr += FLASH_PAGE_SIZE;
+    }
 
     return 1;
 }

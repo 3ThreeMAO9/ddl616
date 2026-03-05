@@ -9,15 +9,10 @@ static uart_callback_t uart0_callback;
 
 void UART0_IRQHandler(void)
 {
-    uint8_t value;
-    
     if ((OB_UART0->ULSR & UART_INT_RBR) == UART_INT_RBR)
     {
-        value = OB_UART0->URBR;
         if (NULL != uart0_callback)
-        {
-            uart0_callback(value);
-        }
+            uart0_callback(OB_UART0->URBR);
     }
     else if ((OB_UART0->ULSR & UART_INT_TEMT) == UART_INT_TEMT)
     {
@@ -55,10 +50,7 @@ void UART_Open(OB_UART_Type* pUart, uint32_t nBaudRate, uart_callback_t callback
     if (pUart == OB_UART0)
     {
         nClock = GetPeripheralClock(APB_UART0);
-        if (NULL == uart0_callback)
-        {
-            uart0_callback = callback;
-        }
+        uart0_callback = callback;
     }
     else
     {
