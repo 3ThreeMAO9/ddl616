@@ -106,6 +106,24 @@ void soft_reset(void)
 }
 
 /**
+ * @brief 保存OTA参数结构体到FLASH指定地址
+ * @param ota_param 待保存的OTA参数结构体指针
+ * @return 0-保存成功，1-入参为空失败
+ */
+uint8_t ota_helper_save_fmc_area(const ota_fmc_area_t *ota_param)
+{
+    // 仅做最基础的空指针校验
+    if (ota_param == NULL) 
+        return 1;
+
+    // 擦除扇区 + 写入结构体（核心逻辑）
+    FMC_PageErase(OTA_SECTOR_START_ADDR);
+    FMC_Write(OTA_SECTOR_START_ADDR, (uint32_t *)ota_param, sizeof(ota_fmc_area_t));
+    
+    return 0;
+}
+
+/**
  * @brief 读取OTA参数到全局缓存
  * @details 从FLASH指定地址读取OTA参数（CRC、长度、状态）到ota_fmc_area
  * @return 0-读取成功，1-读取失败（当前默认返回0，可扩展FMC返回值校验）
@@ -117,6 +135,26 @@ static uint8_t ota_helper_read_param(void)
     /* 从FLASH读取参数到全局变量 */
     FMC_Read_Boot(OTA_SECTOR_START_ADDR, &ota_fmc_area, param_word_len);
     return 0;
+}
+
+/**
+ * @brief 校验OTA参数区域的16位累加和（sum1）
+ * @details 计算指定OTA参数结构体中magic到state前的16位累加和，与checksum1对比
+ * @param ota_param 待校验的OTA参数结构体指针
+ * @return 1-校验通过，0-校验失败
+ */
+uint8_t ota_helper_check_param_checksum1(const ota_fmc_area_t *ota_param)
+{
+    uint16_t sum1 = 0;
+    // 计算magic到state前的区域的16位累加和
+    sum1 = ota_file_calc_checksum_u16((uint16_t *)(&ota_param->magic),
+        sizeof(ota_fmc_area_t) - sizeof(ota_param->checksum1) - sizeof(ota_param->state));
+    
+    // 对比校验值
+    if (sum1 != ota_param->checksum1)
+        return 0;
+    
+    return 1;
 }
 
 /**
@@ -190,18 +228,15 @@ static uint32_t ota_helper_calc_app_checksum_u32(uint32_t app_start_addr, uint32
  */
 uint8_t ota_helper_check_app_complete(void)
 {
-    uint16_t sum1 = 0;
-    sum1 = ota_file_calc_checksum_u16((uint16_t *)(&ota_fmc_area.magic),
-        sizeof(ota_fmc_area_t) - sizeof(ota_fmc_area.checksum1) - sizeof(ota_fmc_area.state));
-
-    if (sum1 != ota_fmc_area.checksum1)
+    // 1. 先校验OTA参数的16位累加和（sum1）
+    if (!ota_helper_check_param_checksum1(&ota_fmc_area))
         return 0;
 
-    // 1. 校验APP长度合法性（防止非法长度）
+    // 2. 校验APP长度合法性（防止非法长度）
     if ((ota_fmc_area.size < MIN_APP_SIZE) || (ota_fmc_area.size > MAX_APP_SIZE))
         return 0;
 
-    // 2. 批量计算APP区域32位累加和
+    // 3. 批量计算APP区域32位累加和
     uint32_t sum2 = 0;
     sum2 = ota_helper_calc_app_checksum_u32(FLASH_APP_BEGIN_ADDR, ota_fmc_area.size);
 
@@ -323,8 +358,7 @@ uint8_t ota_helper_set_state(uint8_t state)
 {
     ota_fmc_area.state = state; /* 更新内存中的状态值 */
 
-    FMC_PageErase(OTA_SECTOR_START_ADDR);
-    FMC_Write(OTA_SECTOR_START_ADDR, (uint32_t *)&ota_fmc_area, sizeof(ota_fmc_area_t));
+    ota_helper_save_fmc_area(&ota_fmc_area);
     return 0;
 }
 

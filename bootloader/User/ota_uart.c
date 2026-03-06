@@ -69,6 +69,14 @@ static void ota_request_handle(parsed_packet_t *parsed)
         .ota_mode = OTA_MODE_SINGLE_BOOT,
     };
 
+    ota_fmc_area_t *recv_ota_param = (ota_fmc_area_t *)parsed->data_content;
+
+    // if (!ota_helper_check_param_checksum1(recv_ota_param))
+    // {
+
+    // }
+    ota_helper_save_fmc_area(recv_ota_param);
+
     if (ota_helper_prepare())
     {
         ota_response_ack.status = OTA_RESPONSE_STATUS_READY;

@@ -69,5 +69,7 @@ uint32_t ota_helper_is_ota_running(void);
 void ota_helper_init(void);
 uint8_t ota_helper_get_state(void);
 uint8_t ota_helper_set_state(uint8_t state);
+uint8_t ota_helper_check_param_checksum1(const ota_fmc_area_t *ota_param);
+uint8_t ota_helper_save_fmc_area(const ota_fmc_area_t *ota_param);
 
 #endif // _OTA_HELPER_H
