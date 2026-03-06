@@ -56,8 +56,6 @@ void ota_uart_init(void)
 
     ota_uart_handle.lenth = 0;
     ota_uart_tick = 0;
-
-    ota_uart_test();
 }
 
 static void ota_request_handle(parsed_packet_t *parsed)
@@ -92,10 +90,10 @@ static void ota_transfer_handle(parsed_packet_t *parsed)
     memcpy((uint8_t *)(&addr), parsed->data_content, sizeof(addr));
     addr = BIG_LITTLE_SWAP32(addr);
 
-    OB_LOGD("data_lenth: ");
-    OB_LOGD_DUMP(&parsed->data_len, 2);
-    OB_LOGD("data_content: ");
-    OB_LOGD_DUMP(parsed->data_content, parsed->data_len);
+    // OB_LOGD("data_lenth: ");
+    // OB_LOGD_DUMP(&parsed->data_len, 2);
+    // OB_LOGD("data_content: ");
+    // OB_LOGD_DUMP(parsed->data_content, parsed->data_len);
 
     if (ota_helper_write(addr, code_ptr, (parsed->data_len - 4)))
     {
@@ -106,9 +104,39 @@ static void ota_transfer_handle(parsed_packet_t *parsed)
         ota_transfer_ack.status = OTA_TRANSFER_STATUS_ADDR_ERROR;
     }
 
-    memcpy((uint8_t *)(&ota_transfer_ack.addr), addr, sizeof(ota_transfer_ack.addr));
+    memcpy((uint8_t *)(&ota_transfer_ack.addr), &addr, sizeof(ota_transfer_ack.addr));
 
     ota_transfer_packet_ack((void *)(&ota_transfer_ack));
+}
+
+static void ota_control_handle(parsed_packet_t *parsed)
+{
+    uint8_t status = 0;
+    memcpy((uint8_t *)(&status), parsed->data_content, sizeof(status));
+
+    if (status == 0x03)
+    {
+        // 核心逻辑：调用APP完整性校验函数
+        // uint8_t app_complete = ota_helper_check_app_complete();
+        
+        // if (app_complete == 1) {
+        //     // APP完整：发送成功应答
+        //     OB_LOGD("OTA success");
+        //     ota_helper_set_state(OTA_STATE_IDLE);
+        //     ota_control_packet_ack(OTA_CONTROL_STATUS_SUCCESS);
+        //     soft_reset();
+        // } else {
+        //     // APP不完整：发送失败应答
+        //     OB_LOGD("OTA failed");
+        //     ota_control_packet_ack(OTA_CONTROL_STATUS_FAIL);
+        // }
+
+        ota_helper_set_state(OTA_STATE_IDLE);
+        ota_control_packet_ack(OTA_CONTROL_STATUS_SUCCESS);
+        soft_reset();
+
+        return;
+    }
 }
 
 void ota_uart_poll(void)
@@ -127,7 +155,7 @@ void ota_uart_poll(void)
                 ota_transfer_handle(&parsed);
                 break;
             case PRIVATE_CMD_OTA_CONTROL:
-                ota_control_packet_ack(OTA_CONTROL_STATUS_SUCCESS);
+                ota_control_handle(&parsed);
                 break;
 
             default:
@@ -137,24 +165,4 @@ void ota_uart_poll(void)
 
         ota_uart_handle.lenth = 0;
     }
-}
-
-void ota_uart_test(void)
-{
-
-    ota_uart_handle.lenth = ota_request_pkt_test(ota_uart_handle.buffer, NULL, 0);
-    ota_uart_poll();
-
-    const uint8_t buffer1[] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-    ota_uart_handle.lenth = ota_transfer_pkt_test(ota_uart_handle.buffer, buffer1, sizeof(buffer1));
-    ota_uart_poll();
-    // const uint8_t buffer2[] = {0x00, 0x00, 0x00, 0x00, 0x11, 0x12, 0x13, 0x14};
-    // ota_uart_handle.lenth = ota_transfer_pkt_test(ota_uart_handle.buffer, buffer2, sizeof(buffer2));
-    // ota_uart_poll();
-    // const uint8_t buffer3[] = {0x00, 0x00, 0x00, 0x08, 0x11, 0x12, 0x13, 0x14};
-    // ota_uart_handle.lenth = ota_transfer_pkt_test(ota_uart_handle.buffer, buffer3, sizeof(buffer3));
-    // ota_uart_poll();
-
-    // ota_uart_handle.lenth = ota_control_pkt_test(ota_uart_handle.buffer);
-    // ota_uart_poll();
 }

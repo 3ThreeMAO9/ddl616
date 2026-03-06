@@ -1,2 +1,2 @@
-#<SYMDEFS># ARM Linker, 6160001: Last Updated: Thu Mar  5 20:26:34 2026
-0x0000f4b1 T boot_main
+#<SYMDEFS># ARM Linker, 6160001: Last Updated: Fri Mar  6 15:43:43 2026
+0x0000f4fd T boot_main

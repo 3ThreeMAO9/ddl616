@@ -43,13 +43,16 @@ typedef struct {
 } ota_helper_handle_t;
 
 #pragma pack(0)
-uint8_t ota_helper_check_app_complete(void);
 
+uint8_t ota_helper_check_app_complete(void);
+void soft_reset(void);
 uint8_t ota_helper_prepare(void);
 uint8_t ota_helper_set_boot(uint32_t target);
 uint8_t ota_helper_write(uint32_t addr, uint8_t* buffer, uint32_t lenth);
 void ota_helper_set_ota_process(uint8_t mask);
 uint32_t ota_helper_is_ota_running(void);
 void ota_helper_init(void);
+uint8_t ota_helper_get_state(void);
+uint8_t ota_helper_set_state(uint8_t state);
 
 #endif // _OTA_HELPER_H

@@ -205,7 +205,7 @@ parsed_packet_t parse_data_packet(const uint8_t *data, uint16_t data_len) {
     if (payload_len >= PRIVATE_HEADER_SIZE) {
         const uint8_t *payload = &data[6];
         
-        OB_LOGD("payload is valid");
+        // OB_LOGD("payload is valid");
     
         parsed_packet.tsn = payload[0];
         parsed_packet.command = payload[1];
@@ -250,8 +250,8 @@ static uint8_t ota_protocol_packet_ack(void* buffer, uint16_t lenth) {
     send_buffer[index++] = crc & 0xFF;
 
     if (ota_send_packet_callback) {
-        OB_LOGD("send packet: ");
-        OB_LOGD_DUMP(send_buffer, index);
+        // OB_LOGD("send packet: ");
+        // OB_LOGD_DUMP(send_buffer, index);
 
         return ota_send_packet_callback(send_buffer, index);
     }
