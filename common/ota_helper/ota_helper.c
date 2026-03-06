@@ -7,6 +7,7 @@
 #include "fmc.h"
 #include "chip_config.h"
 #include "ob_log.h"
+#include <string.h>  // 补充memset所需头文件
 
 //=============================================================
 // 全局变量定义
@@ -20,14 +21,16 @@ static ota_fmc_area_t ota_fmc_area;
 // 宏定义（OTA核心配置）
 //=============================================================
 /******** 前期固定参数（后期可通过脚本覆盖） **********/
-#define OTA_CRC32_DEFAULT     (0x4432)    /* 默认APP CRC值 */
+#define CHECKSUM_U16_MASK     ((uint16_t)~0x01)
+#define CHECKSUM_U32_MASK     ((uint32_t)~0x03)
+
 #define OTA_LENGTH_DEFAULT    (53932)     /* 默认APP长度 */
 #define OTA_APP_VALID_DEFAULT (1)         /* 默认APP有效状态 */
 
 #define FLASH_APP_BEGIN_ADDR  (0x00000000)/* APP存储起始地址 */
 #define MIN_APP_SIZE          (256)       /* APP最小长度（防止空固件） */
 #define MAX_APP_SIZE          (0x0000EA00)/* APP最大长度限制 */
-#define READ_BUFFER_SIZE      (512)       /* CRC计算缓存大小（4的倍数） */
+#define READ_BUFFER_SIZE      (512)       /* 校验计算缓存大小（4的倍数） */
 #define FLASH_PAGE_SIZE       (0x00000200)/* FLASH单页大小（512字节） */
 #define OTA_SECTOR_START_ADDR (0x0000EE00)/* OTA参数存储起始地址 */
 /********************************************************/
@@ -37,14 +40,59 @@ static ota_fmc_area_t ota_fmc_area;
  * @note 段属性：将该结构体存储到0x0000EE00地址
  */
 const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
-    .code_crc  = OTA_CRC32_DEFAULT,
-    .code_size = OTA_LENGTH_DEFAULT,
+    .checksum1 = (0x2755),
+    .magic = OTA_FILE_MAGIC,
+    .file_type = 1,
+    .version[0] = 0,
+    .version[1] = 0,
+    .version[2] = 0,
+    .size = OTA_LENGTH_DEFAULT,
+    .checksum2 = (0x76bf1efa),
     .state     = OTA_APP_VALID_DEFAULT,
 };
 
 //=============================================================
 // 私有工具函数（内部调用，对外隐藏）
 //=============================================================
+uint16_t ota_file_calc_checksum_u16(uint16_t *ptr, uint32_t size)
+{
+    uint16_t sum;
+    for (sum = 0; size & CHECKSUM_U16_MASK; ptr++)
+    {
+        sum += *ptr;
+        size -= sizeof(*ptr);
+    }
+
+    if (size)
+        sum += *ptr & 0xFF;
+
+    return sum;
+}
+
+uint32_t ota_file_calc_checksum_u32(uint32_t *ptr, uint32_t size)
+{
+    uint32_t sum;
+    for (sum = 0; size & CHECKSUM_U32_MASK; ptr++)
+    {
+        sum += *ptr;
+        size -= sizeof(*ptr);
+    }
+
+    switch (size)
+    {
+    case 3:
+        sum += *ptr & 0xFFFFFF;
+        break;
+    case 2:
+        sum += *ptr & 0xFFFF;
+        break;
+    case 1:
+        sum += *ptr & 0xFF;
+        break;
+    }
+
+    return sum;
+}
 
 /**
  * @brief 软件复位函数
@@ -72,32 +120,29 @@ static uint8_t ota_helper_read_param(void)
 }
 
 /**
- * @brief 批量计算APP区域的CRC16值
- * @details 分块读取APP区域FLASH数据，累计计算CRC16（CCITT标准）
+ * @brief 批量计算APP区域的32位累加和校验值
+ * @details 分块读取APP区域FLASH数据，调用ota_file_calc_checksum_u32计算累加和
  * @param app_start_addr APP起始地址（固定为FLASH_APP_BEGIN_ADDR）
  * @param app_total_len  APP总长度（从OTA参数中获取）
- * @return 计算完成的CRC16值（初始值0xFFFF）
+ * @return 计算完成的32位累加和校验值
  */
-static uint16_t ota_helper_calc_app_crc(uint32_t app_start_addr, uint32_t app_total_len)
+static uint32_t ota_helper_calc_app_checksum_u32(uint32_t app_start_addr, uint32_t app_total_len)
 {
-    uint16_t calc_crc = 0xFFFF;    /* CRC16初始值（CCITT标准） */
-    uint8_t read_buffer[READ_BUFFER_SIZE] = {0}; /* 数据缓存 */
-    uint32_t read_word = 0;        /* 按字读取的临时变量 */
-    uint32_t app_addr = app_start_addr; /* 当前读取地址 */
-    uint32_t remain_bytes = app_total_len; /* 剩余未计算的字节数 */
-    uint32_t buf_idx = 0;          /* 缓存写入索引 */
+    uint32_t sum2 = 0;                      /* 32位累加和结果 */
+    uint32_t read_buffer[READ_BUFFER_SIZE / 4] = {0}; /* 按字缓存（4字节/字） */
+    uint32_t read_word = 0;                 /* 按字读取的临时变量 */
+    uint32_t app_addr = app_start_addr;     /* 当前读取地址 */
+    uint32_t remain_bytes = app_total_len;  /* 剩余未计算的字节数 */
+    uint32_t buf_idx = 0;                   /* 缓存写入索引（按字计数） */
+    uint32_t buf_words = READ_BUFFER_SIZE / 4; /* 缓存总字数 */
 
     while (remain_bytes > 0)
     {
         // 1. 读取4字节（按字读取，提升效率）
         if (remain_bytes >= 4)
         {
-            FMC_Read_Boot(app_addr, &read_word, 1);
-            /* 小端拆分32位数据为4个字节（与Python端字节序对齐） */
-            read_buffer[buf_idx++] = (read_word >> 0)  & 0xFF;
-            read_buffer[buf_idx++] = (read_word >> 8)  & 0xFF;
-            read_buffer[buf_idx++] = (read_word >> 16) & 0xFF;
-            read_buffer[buf_idx++] = (read_word >> 24) & 0xFF;
+            FMC_Read_Boot(app_addr, &read_word, 1);  // 读取1个字（4字节）
+            read_buffer[buf_idx++] = read_word;      // 存入缓存
 
             app_addr += 4;          /* 地址偏移4字节 */
             remain_bytes -= 4;      /* 剩余字节数减4 */
@@ -105,34 +150,32 @@ static uint16_t ota_helper_calc_app_crc(uint32_t app_start_addr, uint32_t app_to
         // 2. 处理剩余不足4字节的情况
         else
         {
-            uint8_t last_buf[4] = {0}; /* 不足4字节的临时缓存 */
-            FMC_Read_Boot(app_addr, &read_word, 1);
-            /* 仅提取剩余的有效字节 */
-            for (uint32_t i = 0; i < remain_bytes; i++)
-            {
-                last_buf[i] = (read_word >> (i * 8)) & 0xFF;
-            }
-            /* 计算剩余字节的CRC */
-            calc_crc = crc16_ccitt_accumulate(last_buf, (uint16_t)remain_bytes, calc_crc);
+            FMC_Read_Boot(app_addr, &read_word, 1);  // 读取最后1个字
+            read_buffer[buf_idx++] = read_word;      // 存入缓存
+            
+            // 调用ota_file_calc_checksum_u32计算剩余字节的累加和
+            sum2 += ota_file_calc_checksum_u32(&read_buffer[0], remain_bytes);
             remain_bytes = 0;       /* 结束循环 */
             continue;
         }
 
-        // 3. 缓存满时计算CRC，避免内存溢出
-        if (buf_idx >= READ_BUFFER_SIZE)
+        // 3. 缓存满时调用ota_file_calc_checksum_u32计算
+        if (buf_idx >= buf_words)
         {
-            calc_crc = crc16_ccitt_accumulate(read_buffer, READ_BUFFER_SIZE, calc_crc);
+            // 缓存满，计算整段缓存的累加和（4字节对齐）
+            sum2 += ota_file_calc_checksum_u32(read_buffer, READ_BUFFER_SIZE);
             buf_idx = 0;            /* 重置缓存索引 */
         }
     }
 
-    // 4. 处理缓存中未计算的最后一批数据（不足READ_BUFFER_SIZE的部分）
+    // 4. 处理缓存中未计算的最后一批数据（不足buf_words的部分）
     if (buf_idx > 0)
     {
-        calc_crc = crc16_ccitt_accumulate(read_buffer, (uint16_t)buf_idx, calc_crc);
+        // 计算剩余缓存数据的累加和（按实际字数转换为字节数）
+        sum2 += ota_file_calc_checksum_u32(read_buffer, buf_idx * 4);
     }
 
-    return calc_crc;
+    return sum2;
 }
 
 //=============================================================
@@ -140,31 +183,32 @@ static uint16_t ota_helper_calc_app_crc(uint32_t app_start_addr, uint32_t app_to
 //=============================================================
 
 /**
- * @brief 检查APP固件是否完整（CRC校验）
- * @details 校验APP长度合法性，并计算CRC与OTA参数中的值对比
- * @return 1-APP完整（CRC匹配），0-APP不完整/校验失败
+ * @brief 检查APP固件是否完整
+ * @details 校验APP长度合法性 + 32位累加和校验
+ * @return 1-APP完整，0-APP不完整/校验失败
  * @note 需先调用ota_helper_init读取OTA参数到全局缓存
  */
 uint8_t ota_helper_check_app_complete(void)
 {
-    uint16_t calc_crc = 0; /* 计算得到的APP CRC值 */
+    uint16_t sum1 = 0;
+    sum1 = ota_file_calc_checksum_u16((uint16_t *)(&ota_fmc_area.magic),
+        sizeof(ota_fmc_area_t) - sizeof(ota_fmc_area.checksum1) - sizeof(ota_fmc_area.state));
+
+    if (sum1 != ota_fmc_area.checksum1)
+        return 0;
 
     // 1. 校验APP长度合法性（防止非法长度）
-    if (ota_fmc_area.code_size < MIN_APP_SIZE || ota_fmc_area.code_size > MAX_APP_SIZE)
-    {
+    if ((ota_fmc_area.size < MIN_APP_SIZE) || (ota_fmc_area.size > MAX_APP_SIZE))
         return 0;
-    }
 
-    // 2. 批量计算APP的CRC16值
-    calc_crc = ota_helper_calc_app_crc(FLASH_APP_BEGIN_ADDR, ota_fmc_area.code_size);
+    // 2. 批量计算APP区域32位累加和
+    uint32_t sum2 = 0;
+    sum2 = ota_helper_calc_app_checksum_u32(FLASH_APP_BEGIN_ADDR, ota_fmc_area.size);
 
-    OB_LOGD("calc_crc: ");
-    OB_LOGD_DUMP(&calc_crc, 2);
-    OB_LOGD("ota_fmc_area.code_crc: ");
-    OB_LOGD_DUMP(&ota_fmc_area.code_crc, 2);
+    if (sum2 != ota_fmc_area.checksum2)
+        return 0;
 
-    // 3. 对比CRC值（低16位匹配则认为完整）
-    return (calc_crc == (uint16_t)ota_fmc_area.code_crc) ? 1 : 0;
+    return 1;
 }
 
 //=============================================================
@@ -201,10 +245,10 @@ uint8_t ota_helper_prepare(void)
  * @details 校验写入地址合法性后，将数据写入指定FLASH地址
  * @param addr    目标写入地址（需与当前句柄地址一致）
  * @param buffer  待写入的数据缓存
- * @param lenth   写入数据长度（字节）
+ * @param length  写入数据长度（字节）
  * @return 1-写入成功，0-写入失败（地址不匹配）
  */
-uint8_t ota_helper_write(uint32_t addr, uint8_t *buffer, uint32_t lenth)
+uint8_t ota_helper_write(uint32_t addr, uint8_t *buffer, uint32_t length)
 {
     /* 校验写入地址：必须与当前待写入地址一致（防止地址错乱） */
     if (ota_helper_handle.addr != addr)
@@ -212,8 +256,8 @@ uint8_t ota_helper_write(uint32_t addr, uint8_t *buffer, uint32_t lenth)
         return 0;
     }
     /* 写入数据到FLASH（按字写入） */
-    FMC_Write(addr, (uint32_t *)buffer, lenth);
-    ota_helper_handle.addr += lenth; /* 更新下一次写入地址 */
+    FMC_Write(addr, (uint32_t *)buffer, length);
+    ota_helper_handle.addr += length; /* 更新下一次写入地址 */
 
     return 1;
 }

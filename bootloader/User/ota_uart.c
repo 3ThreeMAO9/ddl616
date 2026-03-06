@@ -103,7 +103,8 @@ static void ota_transfer_handle(parsed_packet_t *parsed)
     {
         ota_transfer_ack.status = OTA_TRANSFER_STATUS_ADDR_ERROR;
     }
-
+    
+    addr = BIG_LITTLE_SWAP32(addr);
     memcpy((uint8_t *)(&ota_transfer_ack.addr), &addr, sizeof(ota_transfer_ack.addr));
 
     ota_transfer_packet_ack((void *)(&ota_transfer_ack));

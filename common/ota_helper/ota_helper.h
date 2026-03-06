@@ -14,17 +14,32 @@
 
 #include <stdint.h>
 
-#define OTA_BUFFER_SIZE (256)
+#define OTA_BUFFER_SIZE     (256)
+#define OTA_STATE_IDLE      (0x00)  // 空闲状态（无OTA任务，正常运行）
+#define OTA_STATE_READY     (0x01)  // OTA就绪（需要执行OTA升级）
 
-#define OTA_STATE_IDLE          0x00  // 空闲状态（无OTA任务，正常运行）
-#define OTA_STATE_READY         0x01  // OTA就绪（需要执行OTA升级）
-
+#define OTA_FILE_MAGIC      (0xBEEF)
 
 #pragma pack(1)
 typedef struct {
-    uint32_t code_crc;
-    uint32_t code_size;
-    
+    /* 校验和1, sum(magic, file_type, version, size, checksum2) */
+    uint16_t checksum1;
+
+    /* 魔数 */
+    uint16_t magic;
+
+    /* 文件类型 */
+    uint8_t file_type;
+
+    /* 版本号 */
+    uint8_t version[3];
+
+    /* data的大小 */
+    uint32_t size;
+
+    /* 校验和2, sum(data) */
+    uint32_t checksum2;
+
     uint32_t state;
     
 }ota_fmc_area_t;
