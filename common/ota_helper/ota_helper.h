@@ -20,6 +20,9 @@
 
 #define OTA_FILE_MAGIC      (0xBEEF)
 
+#define FMC_BOOT_TO_APP     (0)
+#define FMC_BOOT_TO_OTA     (1)
+
 #pragma pack(1)
 typedef struct {
     /* 校验和1, sum(magic, file_type, version, size, checksum2) */

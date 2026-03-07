@@ -27,5 +27,6 @@ typedef struct {
 
 void ota_uart_init(void);
 void ota_uart_poll(void);
+void ota_request_ack_handle(void);
 
 #endif // UART_H

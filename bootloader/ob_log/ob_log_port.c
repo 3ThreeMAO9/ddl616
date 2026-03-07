@@ -13,13 +13,15 @@
 #include "ob_log_config.h"
 #include "OB90A64M1.h"
 #include "uart.h"
-#include "gpio.h"
+// #include "gpio.h"
 #include <string.h>
 
 void ob_log_init(void)
 {
-    GPIO_SetPinMFType(OB_GPIO2, GPIO_PIN11, GPIO_MF_UART1_RX, GPIO_PINMODE_PULL_UP);
-    GPIO_SetPinMFType(OB_GPIO0, GPIO_PIN3, GPIO_MF_UART1_TX, GPIO_PINMODE_PULL_UP);
+    OB_GPIO2->MF1_b.PORT_11 = 4; 
+    OB_GPIO2->MODE_b.MODEPIN11 = 0;
+    OB_GPIO0->MF0_b.PORT_3 = 4;
+    OB_GPIO0->MODE_b.MODEPIN3 = 0;
     UART_Open(OB_UART1, 115200, NULL);
 }
 

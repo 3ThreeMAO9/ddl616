@@ -483,11 +483,6 @@
               <FilePath>..\Library\Uart.c</FilePath>
             </File>
             <File>
-              <FileName>gpio.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Library\gpio.c</FilePath>
-            </File>
-            <File>
               <FileName>timer16.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Library\timer16.c</FilePath>

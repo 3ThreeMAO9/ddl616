@@ -20,12 +20,8 @@ static ota_fmc_area_t ota_fmc_area;
 //=============================================================
 // 宏定义（OTA核心配置）
 //=============================================================
-/******** 前期固定参数（后期可通过脚本覆盖） **********/
 #define CHECKSUM_U16_MASK     ((uint16_t)~0x01)
 #define CHECKSUM_U32_MASK     ((uint32_t)~0x03)
-
-#define OTA_LENGTH_DEFAULT    (53932)     /* 默认APP长度 */
-#define OTA_APP_VALID_DEFAULT (1)         /* 默认APP有效状态 */
 
 #define FLASH_APP_BEGIN_ADDR  (0x00000000)/* APP存储起始地址 */
 #define MIN_APP_SIZE          (256)       /* APP最小长度（防止空固件） */
@@ -34,22 +30,6 @@ static ota_fmc_area_t ota_fmc_area;
 #define FLASH_PAGE_SIZE       (0x00000200)/* FLASH单页大小（512字节） */
 #define OTA_SECTOR_START_ADDR (0x0000EE00)/* OTA参数存储起始地址 */
 /********************************************************/
-
-/**
- * @brief OTA参数默认配置（固化到FLASH指定地址）
- * @note 段属性：将该结构体存储到0x0000EE00地址
- */
-const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
-    .checksum1 = (0x2755),
-    .magic = OTA_FILE_MAGIC,
-    .file_type = 1,
-    .version[0] = 0,
-    .version[1] = 0,
-    .version[2] = 0,
-    .size = OTA_LENGTH_DEFAULT,
-    .checksum2 = (0x76bf1efa),
-    .state     = OTA_APP_VALID_DEFAULT,
-};
 
 //=============================================================
 // 私有工具函数（内部调用，对外隐藏）
@@ -356,6 +336,7 @@ uint8_t ota_helper_get_state(void)
  */
 uint8_t ota_helper_set_state(uint8_t state)
 {
+    ota_helper_read_param();
     ota_fmc_area.state = state; /* 更新内存中的状态值 */
 
     ota_helper_save_fmc_area(&ota_fmc_area);

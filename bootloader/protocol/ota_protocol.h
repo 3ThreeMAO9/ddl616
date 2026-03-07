@@ -39,6 +39,11 @@ typedef uint8_t (*ota_send_packet_callback_t)(uint8_t*, uint16_t);
 #define PRIVATE_CMD_OTA_RESPONSE                0x70
 #define PRIVATE_CMD_OTA_TRANSFER                0x71
 #define PRIVATE_CMD_OTA_CONTROL                 0x72
+#define PRIVATE_CMD_OTA_BACK2FRONT              0x73        // 请求OTA    背板->前板
+#define PRIVATE_CMD_OTA_FRONT2BACK              0x74        // 请求OTA    前板->背板
+        
+#define PRIVATE_CMD_ACK_OTA_BACK2FRONT          0xF3        // 请求OTA ack 背板->前板
+#define PRIVATE_CMD_ACK_OTA_FRONT2BACK          0xF4        // 请求OTA ack 前板->背板
 
 #define OTA_FRAME_BUFFER_SIZE                   (256)
 
@@ -139,10 +144,13 @@ typedef struct {
 void ota_register_callback(ota_send_packet_callback_t callback);
 parsed_packet_t parse_data_packet(const uint8_t *data, uint16_t data_len);
 uint8_t ota_packet_ack(uint8_t cmd, void* data_content, uint16_t lenth);
+uint8_t ota_packet_send(uint8_t cmd, void* data_content, uint16_t lenth);
 
 uint8_t ota_request_packet_ack(ota_response_ack_t* ota_response_ack);
 uint8_t ota_transfer_packet_ack(ota_transfer_ack_t* ota_transfer_ack);
 uint8_t ota_control_packet_ack(uint8_t status);
+void ota_control_request(void);
+uint8_t ota_back2front_packet_ack(uint8_t status);
 
 uint16_t ota_request_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth);
 uint16_t ota_transfer_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth);

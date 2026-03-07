@@ -259,18 +259,31 @@ static uint8_t ota_protocol_packet_ack(void* buffer, uint16_t lenth) {
     return false;
 }
 
-uint8_t ota_packet_ack(uint8_t cmd, void* data_content, uint16_t lenth) {
+uint8_t ota_packet(uint8_t cmd, void* data_content, uint16_t length, uint8_t with_ack_flag) {
     uint8_t buffer[OTA_FRAME_BUFFER_SIZE - 8];
     uint16_t index = 0;
 
     buffer[index++] = parsed_packet.tsn;
-    buffer[index++] = (cmd | PRIVATE_CMD_ACK_FLAG);
-    buffer[index++] = ((lenth >> 8) & 0xFF);
-    buffer[index++] = (lenth & 0xFF);
-    memcpy(&buffer[index], (uint8_t*)data_content, lenth);
-    index += lenth;
+    // 根据参数决定是否拼接ACK标识
+    buffer[index++] = with_ack_flag ? (cmd | PRIVATE_CMD_ACK_FLAG) : cmd;
+    // 数据长度大端存储
+    buffer[index++] = ((length >> 8) & 0xFF);
+    buffer[index++] = (length & 0xFF);
+    // 拷贝数据内容（增加空指针校验，避免崩溃）
+    if (data_content != NULL && length > 0) {
+        memcpy(&buffer[index], (uint8_t*)data_content, length);
+    }
+    index += length;
 
-    return ota_protocol_packet_ack(buffer, (lenth + 4));
+    return ota_protocol_packet_ack(buffer, (length + 4));
+}
+
+uint8_t ota_packet_send(uint8_t cmd, void* data_content, uint16_t length) {
+    return ota_packet(cmd, data_content, length, 0);
+}
+
+uint8_t ota_packet_ack(uint8_t cmd, void* data_content, uint16_t length) {
+    return ota_packet(cmd, data_content, length, 1);
 }
 
 uint8_t ota_request_packet_ack(ota_response_ack_t* ota_response_ack) {
@@ -288,6 +301,17 @@ uint8_t ota_transfer_packet_ack(ota_transfer_ack_t* ota_transfer_ack) {
 uint8_t ota_control_packet_ack(uint8_t status) {
     
     ota_packet_ack(PRIVATE_CMD_OTA_CONTROL, (void*)(&status), sizeof(status));
+}
+
+uint8_t ota_back2front_packet_ack(uint8_t status) {
+    
+    ota_packet_ack(PRIVATE_CMD_ACK_OTA_BACK2FRONT, (void*)(&status), sizeof(status));
+}
+
+void ota_control_request(void)
+{
+    uint8_t status = 0xff;
+    ota_packet_send(PRIVATE_CMD_OTA_FRONT2BACK, (void *)(&status), sizeof(status));
 }
 
 uint16_t ota_request_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth) {

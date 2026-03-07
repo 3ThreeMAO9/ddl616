@@ -274,6 +274,14 @@ typedef struct {
     uint8_t status;
 } frame_ack_def_t;
 
+typedef struct {
+    uint16_t checksum1;
+    uint16_t magic;
+    uint8_t file_type;
+    uint8_t version[3];
+    uint32_t size;
+    uint32_t checksum2;
+}frame_fmc_area_def_t;
 typedef struct
 {
     uint16_t frame_start;        // 帧起始标志
@@ -315,7 +323,8 @@ typedef struct
 
 typedef struct {
     uint8_t status;
-    uint8_t version[6];
+    uint8_t scheme_code[3];
+    uint8_t version[3];
     uint32_t flash_size;
     uint32_t pkt_size;
     uint8_t ota_mode;

@@ -16,9 +16,20 @@
 #define TAG "uart_protocol_ota_request"
 
 HANDLER_DEFINE(UP_CMD_OTA_REQUEST) {
-    OB_LOGI(TAG, "[%s]  UP_CMD_OTA_REQUEST received",__func__);
-    ota_helper_set_ota_process(1);
-    ota_helper_set_boot(FMC_BOOT_TO_OTA);
+    ota_fmc_area_t *param = (ota_fmc_area_t*)(packet->payload);
+    uint8_t status = STATUS_FAILED;
+
+    OB_LOGD(TAG, "cmd[%02X] tsn[%02X]", packet->cmd, packet->TSN);
+    OB_LOGD(TAG, "checksum1[%08X]", param->checksum1);
+    OB_LOGD(TAG, "magic[%08X]", param->magic);
+    OB_LOGD(TAG, "file_type[%02X]", param->file_type);
+    OB_LOGD(TAG, "size[%08X]", param->size);
+    OB_LOGD(TAG, "checksum2[%08X]", param->checksum2);
+
+    param->state = 1;
+    ota_helper_save_fmc_area(param);
+
+    ota_helper_set_boot(1);
 
     return 0;
 }

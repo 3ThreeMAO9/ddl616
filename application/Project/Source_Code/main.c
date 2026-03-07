@@ -100,8 +100,7 @@ int main(void)
     task_init();
     app_init();
 
-    volatile uint8_t *boot_ota_process = (uint32_t*)(0x20000000);
-    OB_LOGD(TAG, " test [%u]", *boot_ota_process);
-
+    OB_LOGD(TAG, "OB_FMC->BSCSR_b.BS[%02X]", OB_FMC->BSCSR_b.BS);
+    
     MainLoop();
 }

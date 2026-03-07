@@ -12,7 +12,6 @@
 #include "OB90A64M1.h"
 #include "ota_uart.h"
 #include "uart.h"
-#include "gpio.h"
 #include "ota_protocol.h"
 #include "ota_helper.h"
 #include "system_timer.h"
@@ -43,10 +42,11 @@ static uint8_t ota_uart_send_packet(uint8_t *packet, uint16_t lenth)
 
 void ota_uart_init(void)
 {
-    OB_GPIO3->DATA |= GPIO_PIN0;
-    OB_GPIO3->DATA |= GPIO_PIN1;
-    GPIO_SetPinMFType(OB_GPIO3, GPIO_PIN0, GPIO_MF_UART0_RX, GPIO_PINMODE_PULL_UP);
-    GPIO_SetPinMFType(OB_GPIO3, GPIO_PIN1, GPIO_MF_UART0_TX, GPIO_PINMODE_PUSH_PULL);
+    OB_GPIO3->MF0_b.PORT_0 = 4; 
+    OB_GPIO3->MODE_b.MODEPIN0 = 0;
+    OB_GPIO3->MF0_b.PORT_1 = 4;
+    OB_GPIO3->MODE_b.MODEPIN1 = 0;
+
     UART_Open(OB_UART0, 115200, ota_uart_irq_callback);
     UART_EnableInt(OB_UART0, UART_INT_RBR);
     NVIC_SetPriority(UART0_IRQn, 0);
@@ -58,7 +58,7 @@ void ota_uart_init(void)
     ota_uart_tick = 0;
 }
 
-static void ota_request_handle(parsed_packet_t *parsed)
+void ota_request_ack_handle(void)
 {
     ota_response_ack_t ota_response_ack = {
         .status = OTA_RESPONSE_STATUS_READY,
@@ -68,14 +68,6 @@ static void ota_request_handle(parsed_packet_t *parsed)
         .pkt_size = 128,
         .ota_mode = OTA_MODE_SINGLE_BOOT,
     };
-
-    ota_fmc_area_t *recv_ota_param = (ota_fmc_area_t *)parsed->data_content;
-
-    // if (!ota_helper_check_param_checksum1(recv_ota_param))
-    // {
-
-    // }
-    ota_helper_save_fmc_area(recv_ota_param);
 
     if (ota_helper_prepare())
     {
@@ -87,6 +79,19 @@ static void ota_request_handle(parsed_packet_t *parsed)
     }
 
     ota_request_packet_ack((void *)(&ota_response_ack));
+}
+
+static void ota_request_handle(parsed_packet_t *parsed)
+{
+    ota_fmc_area_t *recv_ota_param = (ota_fmc_area_t *)parsed->data_content;
+
+    // if (!ota_helper_check_param_checksum1(recv_ota_param))
+    // {
+
+    // }
+    ota_helper_save_fmc_area(recv_ota_param);
+
+    ota_request_ack_handle();
 }
 
 static void ota_transfer_handle(parsed_packet_t *parsed)
@@ -166,7 +171,12 @@ void ota_uart_poll(void)
             case PRIVATE_CMD_OTA_CONTROL:
                 ota_control_handle(&parsed);
                 break;
-
+            case PRIVATE_CMD_OTA_BACK2FRONT:        // 7258请求更新
+                ota_back2front_packet_ack(OTA_CONTROL_STATUS_SUCCESS);
+                break;
+            case PRIVATE_CMD_ACK_OTA_FRONT2BACK:
+                
+                break;
             default:
                 break;
             }
