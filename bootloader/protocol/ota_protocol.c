@@ -134,8 +134,6 @@ static uint8_t is_encrypted(const uint8_t *frame) {
 uint8_t validate_data_packet(const uint8_t *data, uint16_t data_len) {
     // 1. 检查最小长度
     if (data_len < MIN_FRAME_SIZE) {
-        OB_LOGD("fail: data len");
-
         return false;
     }
     
@@ -298,14 +296,10 @@ uint8_t ota_transfer_packet_ack(ota_transfer_ack_t* ota_transfer_ack) {
     ota_packet_ack(PRIVATE_CMD_OTA_TRANSFER, (void*)(ota_transfer_ack), sizeof(ota_transfer_ack_t));
 }
 
-uint8_t ota_control_packet_ack(uint8_t status) {
-    
-    ota_packet_ack(PRIVATE_CMD_OTA_CONTROL, (void*)(&status), sizeof(status));
-}
 
-uint8_t ota_back2front_packet_ack(uint8_t status) {
-    
-    ota_packet_ack(PRIVATE_CMD_ACK_OTA_BACK2FRONT, (void*)(&status), sizeof(status));
+uint8_t ota_control_ack(uint8_t cmd, uint8_t status)
+{
+    ota_packet_ack(cmd, (void *)(&status), sizeof(status));
 }
 
 void ota_control_request(void)

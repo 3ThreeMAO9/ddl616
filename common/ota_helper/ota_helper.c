@@ -242,7 +242,6 @@ uint8_t ota_helper_prepare(void)
     /* 初始化OTA句柄，重置写入地址 */
     memset((uint8_t *)(&ota_helper_handle), 0, sizeof(ota_helper_handle_t));
     ota_helper_handle.addr = FLASH_APP_BEGIN_ADDR;
-    OB_LOGD("!!");
     uint32_t current_erase_addr = FLASH_APP_BEGIN_ADDR; /* 当前擦除地址 */
     while (current_erase_addr <= MAX_APP_SIZE)
     {

@@ -148,9 +148,8 @@ uint8_t ota_packet_send(uint8_t cmd, void* data_content, uint16_t lenth);
 
 uint8_t ota_request_packet_ack(ota_response_ack_t* ota_response_ack);
 uint8_t ota_transfer_packet_ack(ota_transfer_ack_t* ota_transfer_ack);
-uint8_t ota_control_packet_ack(uint8_t status);
+uint8_t ota_control_ack(uint8_t cmd, uint8_t status);
 void ota_control_request(void);
-uint8_t ota_back2front_packet_ack(uint8_t status);
 
 uint16_t ota_request_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth);
 uint16_t ota_transfer_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth);

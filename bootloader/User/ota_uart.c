@@ -105,12 +105,12 @@ static void ota_transfer_handle(parsed_packet_t *parsed)
     memcpy((uint8_t *)(&addr), parsed->data_content, sizeof(addr));
     addr = BIG_LITTLE_SWAP32(addr);
 
-    OB_LOGD("data_lenth: ");
-    OB_LOGD_DUMP(&parsed->data_len, 2);
+    // OB_LOGD("data_lenth: ");
+    // OB_LOGD_DUMP(&parsed->data_len, 2);
     // OB_LOGD("data_content: ");
     // OB_LOGD_DUMP(parsed->data_content, parsed->data_len);
 
-    if (ota_helper_write(addr, code_ptr, (parsed->data_len - 4)))
+    if (ota_helper_write(addr, code_ptr, (parsed->data_len)))
     {
         ota_transfer_ack.status = OTA_TRANSFER_STATUS_SUCCESS;
     }
@@ -148,7 +148,7 @@ static void ota_control_handle(parsed_packet_t *parsed)
         // }
 
         ota_helper_set_state(OTA_STATE_IDLE);
-        ota_control_packet_ack(OTA_CONTROL_STATUS_SUCCESS);
+        ota_control_ack(PRIVATE_CMD_OTA_CONTROL, OTA_CONTROL_STATUS_SUCCESS);
         soft_reset();
 
         return;
@@ -176,6 +176,9 @@ static void ota_uart_rx_poll(void)
         {
             switch (parsed.command)
             {
+            case PRIVATE_CMD_ACK_OTA_FRONT2BACK:
+                ota_uart_handle.request_flag = 1;
+                break;
             case PRIVATE_CMD_OTA_RESPONSE:
                 ota_request_handle(&parsed);
                 break;
@@ -186,10 +189,7 @@ static void ota_uart_rx_poll(void)
                 ota_control_handle(&parsed);
                 break;
             case PRIVATE_CMD_OTA_BACK2FRONT:        // 7258请求更新
-                ota_back2front_packet_ack(OTA_CONTROL_STATUS_SUCCESS);
-                break;
-            case PRIVATE_CMD_ACK_OTA_FRONT2BACK:
-                ota_uart_handle.request_flag = 1;
+                ota_control_ack(PRIVATE_CMD_ACK_OTA_BACK2FRONT, OTA_CONTROL_STATUS_SUCCESS);
                 break;
             default:
                 break;
