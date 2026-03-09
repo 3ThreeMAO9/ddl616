@@ -51,6 +51,8 @@ static uint8_t enter_sleep_event_deal(void){
     }
     ledTaskSleep();
     uartTaskSleep();
+    HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 0); // 前板喇叭功放
+
     OB_LOGD(TAG, "Enter Sleep");
     system_time_task_sleep(ENTER_SLEEP);
     sleep_task_driver.attribute.wake_source = WAKE_SOURCE_NULL;
@@ -101,6 +103,8 @@ static uint8_t exit_sleep_event_scan(void){
     system_time_task_sleep(EXIT_SLEEP);
     uartTaskWake();
     ledTaskWake();
+    HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 1); // 前板喇叭功放
+
     baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_WAKE);
 #if (Enabled == WAKE_STAT_ENABLE)
     OB_LOGD(TAG, "all[%u] keyBoard[%u] setKey[%u] switchKey[%u] NFC[%u] doorState[%u] hotWarn[%u] remote[%u]", \

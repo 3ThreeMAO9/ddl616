@@ -57,6 +57,9 @@ typedef enum
 #define TAMPER_KEY_GPIO                 (HAL_GPIO_PORT1)
 #define TAMPER_KEY_PIN                  (HAL_GPIO_PIN1)
 
+// voice en
+#define VOICE_EN_GPIO                   (HAL_GPIO_PORT1)
+#define VOICE_EN_PIN                    (HAL_GPIO_PIN4)
 
 //NFC
 #define NFC_NRST_GPIO                   (HAL_GPIO_PORT0)

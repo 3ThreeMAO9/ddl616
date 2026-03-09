@@ -24,7 +24,7 @@ User Options (Setting by User)
 
 #define UOP_DATA_P0         0xFFFF      // GPIO output data.
 #define UOP_DATA_P1         0xFFFF      // GPIO output data.
-#define UOP_DATA_P2         0xFCFF      // GPIO output data.
+#define UOP_DATA_P2         0xFEFF      // GPIO output data.
 #define UOP_DATA_P3         0xFFFF      // GPIO output data.
         
 // GPIO Mode : Determine IO mode of the GPIO PortX_X.

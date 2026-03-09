@@ -80,8 +80,6 @@ void sleep_loop(void)
 void unused_gpio_init(void)
 {
     // <不使用IO
-    HAL_GPIO_Write(HAL_GPIO_PORT1, HAL_GPIO_PIN4, 0); // 前板喇叭功放
-    HAL_GPIO_Init(HAL_GPIO_PORT1, HAL_GPIO_PIN4, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
 
     HAL_GPIO_Write(HAL_GPIO_PORT1, HAL_GPIO_PIN1, 0); // 防撬
     HAL_GPIO_Init(HAL_GPIO_PORT1, HAL_GPIO_PIN1, HAL_GPIO_MODE_INPUT, HAL_GPIO_PULL_NONE);
