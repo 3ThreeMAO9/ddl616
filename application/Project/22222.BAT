@@ -328,3 +328,4 @@ SET CPU_CLOCK=0x02FAF080
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmLink" --Via "..\Build\Objects\ota_app.l2p"
 "C:\Keil_v5\ARM\ARMCC\Bin\fromelf.exe" "..\Build\Objects\ota_app.axf" --i32combined --output "..\Build\Objects\ota_app.hex"
 .\packer2.exe ..\Build\Objects\ota_app.hex
+.\OTA_Process.exe

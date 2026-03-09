@@ -23,22 +23,22 @@
 
 extern void boot_main(void);
 
-/**
- * @brief OTA参数默认配置（固化到FLASH指定地址）
- * @note 段属性：将该结构体存储到0x0000EE00地址
- */
-/******** 前期固定参数（后期可通过脚本覆盖） **********/
-const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
-    .checksum1 = (0x51d7),
-    .magic = 0xBEEF,
-    .file_type = 1,
-    .version[0] = 0,
-    .version[1] = 0,
-    .version[2] = 0,
-    .size = (0xd4b8),
-    .checksum2 = (0x5700672f),
-    .state     = 0,
-};
+// /**
+//  * @brief OTA参数默认配置（固化到FLASH指定地址）
+//  * @note 段属性：将该结构体存储到0x0000EE00地址
+//  */
+// /******** 前期固定参数（后期可通过脚本覆盖） **********/
+// const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
+//     .checksum1 = (0x51d7),
+//     .magic = 0xBEEF,
+//     .file_type = 1,
+//     .version[0] = 0,
+//     .version[1] = 0,
+//     .version[2] = 0,
+//     .size = (0xd4b8),
+//     .checksum2 = (0x5700672f),
+//     .state     = 0,
+// };
 
 __NO_RETURN void boot_main(void)
 {
