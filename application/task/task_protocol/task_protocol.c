@@ -17,5 +17,6 @@
 
 void protocol_task_loop(void)
 {
+    uart_protocol_ota_poll();
     uart_protocol_poll();
 }

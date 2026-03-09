@@ -347,7 +347,7 @@ void uart_msg_param_req(void);
 void uart_msg_ack_word_mode(uint8_t status);
 void uart_msg_ack_light_ctl(uint8_t status);
 void uart_msg_ack_reset(uint8_t status);
-void uart_msg_ack_ota_request(frame_ota_request_ack_t* ota_request_ack);
+void uart_msg_ack_ota_request(uint8_t status);
 void uart_msg_ack_param_report(uint8_t status);
 
 /*****************************/

@@ -15,15 +15,16 @@
 #include <stdint.h>
 
 #define OTA_UART_TIME_OUT                   (5)         // unit: ms
-#define OTA_UART_BUFFER_SIZE                (2 * 1024)
+#define OTA_UART_BUFFER_SIZE                (3 * 512)
 
 typedef struct {
     uint8_t time_out;
     uint8_t buffer[OTA_UART_BUFFER_SIZE];
     uint16_t lenth;
+    uint8_t request_flag;
+    uint32_t request_time_out;
     
 } ota_uart_handle_t;
-
 
 void ota_uart_init(void);
 void ota_uart_poll(void);

@@ -11,17 +11,15 @@
 
 #include "OB90A64M1.h"
 #include "chip_config.h"
-#include "fmc_flash.h"
-#include "ota_file.h"
 #include <assert.h>
 #include <string.h>
-#include "ota_info.h"
 #include "ob_log.h"
 #include "ota_uart.h"
 #include "system_timer.h"
 #include "wdt.h"
 #include "ota_helper.h"
-#include "ota_info.h"
+#include "ota_protocol.h"
+#include "system_OB90A64M1.h"
 
 extern void boot_main(void);
 
@@ -30,23 +28,20 @@ extern void boot_main(void);
  * @note 段属性：将该结构体存储到0x0000EE00地址
  */
 /******** 前期固定参数（后期可通过脚本覆盖） **********/
-// const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
-//     .checksum1 = (0x780c),
-//     .magic = 0xBEEF,
-//     .file_type = 1,
-//     .version[0] = 0,
-//     .version[1] = 0,
-//     .version[2] = 0,
-//     .size = (0xd2d4),
-//     .checksum2 = (0x547891d0),
-//     .state     = 1,
-// };
+const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
+    .checksum1 = (0x51d7),
+    .magic = 0xBEEF,
+    .file_type = 1,
+    .version[0] = 0,
+    .version[1] = 0,
+    .version[2] = 0,
+    .size = (0xd4b8),
+    .checksum2 = (0x5700672f),
+    .state     = 0,
+};
 
 __NO_RETURN void boot_main(void)
 {
-    static_assert(
-        sizeof(ota_file_t) == OTA_FILE_HEADER_SIZE,
-        "OTA_FILE_HEADER_SIZE not match");
     SystemInit();
     SystemCoreClockUpdate();
     WDT_Open(WDT_PRESCALER_1024, 0x3F, 1, NULL);
@@ -68,16 +63,8 @@ __NO_RETURN void boot_main(void)
         }
     }
 
-
     OB_LOGD("enter boot loop");
     while(1) {
-        // if (ota_helper_get_state() != OTA_STATE_IDLE)
-        // {
-        //     OB_LOGD("OTA_STATE_READY");
-        //     ota_control_request();
-        // }
-
-
         WDT_ReloadCounter();
         ota_uart_poll();
     }

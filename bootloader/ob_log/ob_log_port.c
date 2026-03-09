@@ -18,11 +18,13 @@
 
 void ob_log_init(void)
 {
+#if (OB_LOG_ENABLE)
     OB_GPIO2->MF1_b.PORT_11 = 4; 
     OB_GPIO2->MODE_b.MODEPIN11 = 0;
     OB_GPIO0->MF0_b.PORT_3 = 4;
     OB_GPIO0->MODE_b.MODEPIN3 = 0;
     UART_Open(OB_UART1, 115200, NULL);
+#endif
 }
 
 void ob_log_write(const char *str, uint32_t lenth)

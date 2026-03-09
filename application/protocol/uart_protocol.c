@@ -31,11 +31,23 @@
 
 static uint32_t protocol_time_out = 0;
 
+static uint8_t ota_to_boot_flag = 0;
+static uint32_t ota_to_boot_time_out = 0;
 void uart_protocol_heart_inc_time_out(void)
 {
     protocol_time_out = system_inc_time_cnt(HEART_TIME_OUT);
 }
 
+void uart_protocol_ota_to_boot_inc_time_out(void)
+{
+    ota_to_boot_flag = 1;
+    ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
+}
+
+// void uart_protocol_set_ota_to_boot_flag(uint8_t data)
+// {
+//     ota_to_boot_flag = data;
+// }
 
 uint8_t get_tsn(void)
 {
@@ -52,9 +64,9 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_LIGHT_CTL)        // (0x04)   // 灯控命令
         HANDLER_IMPORT(UP_CMD_WORK_MODE)        // (0x05)   // 工作模式命令
         HANDLER_IMPORT(UP_CMD_RESET)            // (0x06)    // 重置命令
-        HANDLER_IMPORT(UP_CMD_OTA_REQUEST)      // (0x70)   // OTA升级请求
+        HANDLER_IMPORT(UP_CMD_OTA_REQUEST)      // (0x73)   // OTA升级请求
         HANDLER_IMPORT(UP_CMD_REPORT_PARAM)     // (0x08)   // 参数上报指令
-        
+
 
         HANDLER_IMPORT(UP_CMD_ACK_REPORT_ORDER) // (0x83)   // 锁操作上报应答
         HANDLER_IMPORT(UP_CMD_ACK_PARAM_REQ)    // (0x87)   // 参数请求应答指令
@@ -162,5 +174,16 @@ void uart_protocol_poll(void)
     {
         uart_protocol_heart_inc_time_out();
         uart_msg_heartbeat();
+    }
+}
+
+void uart_protocol_ota_poll(void)
+{
+    if (ota_to_boot_flag == 1)
+    {
+        if (system_out_time_cnt(ota_to_boot_time_out))
+        {
+            ota_helper_set_boot(1);
+        }
     }
 }

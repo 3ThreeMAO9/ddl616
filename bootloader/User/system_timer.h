@@ -18,5 +18,8 @@ extern uint8_t ota_uart_tick;
 
 
 void system_timer_init(void);
+uint32_t system_ms_get(void);
+uint8_t system_out_time_cnt(const uint32_t out_cnt);
+uint32_t system_inc_time_cnt(const uint32_t inc_cnt);
 
 #endif // UART_H

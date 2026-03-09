@@ -4,9 +4,11 @@
  * @details 包含APP完整性校验、FLASH擦写、OTA状态管理、系统复位等核心功能
  */
 #include "ota_helper.h"
+// #include "ota_protocol.h"
 #include "fmc.h"
 #include "chip_config.h"
 #include "ob_log.h"
+#include "system_timer.h"
 #include <string.h>  // 补充memset所需头文件
 
 //=============================================================
@@ -212,9 +214,9 @@ uint8_t ota_helper_check_app_complete(void)
     if (!ota_helper_check_param_checksum1(&ota_fmc_area))
         return 0;
 
-    // 2. 校验APP长度合法性（防止非法长度）
-    if ((ota_fmc_area.size < MIN_APP_SIZE) || (ota_fmc_area.size > MAX_APP_SIZE))
-        return 0;
+    // // 2. 校验APP长度合法性（防止非法长度）
+    // if ((ota_fmc_area.size < MIN_APP_SIZE) || (ota_fmc_area.size > MAX_APP_SIZE))
+    //     return 0;
 
     // 3. 批量计算APP区域32位累加和
     uint32_t sum2 = 0;
@@ -240,7 +242,7 @@ uint8_t ota_helper_prepare(void)
     /* 初始化OTA句柄，重置写入地址 */
     memset((uint8_t *)(&ota_helper_handle), 0, sizeof(ota_helper_handle_t));
     ota_helper_handle.addr = FLASH_APP_BEGIN_ADDR;
-
+    OB_LOGD("!!");
     uint32_t current_erase_addr = FLASH_APP_BEGIN_ADDR; /* 当前擦除地址 */
     while (current_erase_addr <= MAX_APP_SIZE)
     {
@@ -304,15 +306,6 @@ uint32_t ota_helper_is_ota_running(void)
     return (ota_helper_handle.status.process);
 }
 
-/**
- * @brief 设置OTA升级进程状态
- * @details 标记OTA是否正在运行（预留接口，暂无具体实现）
- * @param mask 状态掩码：1-运行中，0-停止
- */
-void ota_helper_set_ota_process(uint8_t mask)
-{
-    // *ota_process = (mask ? 1 : 0); /* 预留逻辑，暂未实现 */
-}
 
 //=============================================================
 // OTA状态（state）操作接口（新增核心）
@@ -323,7 +316,7 @@ void ota_helper_set_ota_process(uint8_t mask)
  * @details 获取全局缓存中ota_fmc_area.state的值
  * @return 当前OTA状态值（如OTA_APP_VALID_DEFAULT/OTA_STATE_READY）
  */
-uint8_t ota_helper_get_state(void)
+uint32_t ota_helper_get_state(void)
 {
     return ota_fmc_area.state;
 }
@@ -334,7 +327,7 @@ uint8_t ota_helper_get_state(void)
  * @param state 新的OTA状态值
  * @return 0-修改成功，1-修改失败（当前默认返回0）
  */
-uint8_t ota_helper_set_state(uint8_t state)
+uint32_t ota_helper_set_state(uint32_t state)
 {
     ota_helper_read_param();
     ota_fmc_area.state = state; /* 更新内存中的状态值 */

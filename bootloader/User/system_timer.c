@@ -11,10 +11,12 @@
 
 #include "OB90A64M1.h"
 #include "system_timer.h"
+#include "utils.h"
 #include "timer16.h"
+#include "ob_log.h"
 
 uint8_t ota_uart_tick;
-uint8_t system_tick;
+static uint32_t system_tick;
 
 static void timer16_irq_callback(void) {
     if (ota_uart_tick) {
@@ -32,3 +34,17 @@ void system_timer_init(void) {
     system_tick = 0;
 }
 
+uint32_t system_ms_get(void)
+{
+    return system_tick;
+}
+
+uint8_t system_out_time_cnt(const uint32_t out_cnt)
+{
+    return ((system_tick - out_cnt) < (UINT32_MAX / 2)) ? 1 : 0;
+}
+
+uint32_t system_inc_time_cnt(const uint32_t inc_cnt)
+{
+    return (inc_cnt >= UINT32_MAX) ? system_tick : (system_tick + inc_cnt);
+}

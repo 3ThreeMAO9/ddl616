@@ -135,7 +135,7 @@ typedef struct {
 
 } ota_transfer_ack_t;
 
-#pragma pack()
+// #pragma pack()
 
 /***************Variable***************/
 

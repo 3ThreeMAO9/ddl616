@@ -22,6 +22,7 @@
 #define HANDLER_DEFINE(cmd) uint32_t HANDLER_NAME(_##cmd)(uart_packet_t *packet)
 
 #define HEART_TIME_OUT                      (3000)   // 心跳间隔 ms
+#define OTA_TO_BOOT_TIME_OUT                (1000)   // OTA重启 ms
 
 #define UP_CMD_AUTH                         (0x01)   // 鉴权命令
 #define UP_CMD_LOCK_CTL                     (0x02)   // 锁控命令
@@ -34,7 +35,7 @@
 
 #define UP_CMD_HEART                        (0x2A)   // 心跳命令
 
-#define UP_CMD_OTA_REQUEST                  (0x70)  // OTA升级请求
+#define UP_CMD_OTA_REQUEST                  (0x73)  // OTA升级请求
 #define UP_CMD_OTA_TRANSFER                 (0x71)  // OTA升级数据传输
 #define UP_CMD_OTA_CONTROL                  (0x72)  // OTA升级控制
 
@@ -48,7 +49,7 @@
 #define UP_CMD_ACK_REPORT_PARAM             (0x88)   // 参数上报应答指令
 #define UP_CMD_ACK_HEART                    (0xAA)   // 心跳应答
 
-#define UP_CMD_ACK_OTA_REQUEST              (0xF0)  // OTA升级请求应答
+#define UP_CMD_ACK_OTA_REQUEST              (0xF3)  // OTA升级请求应答
 #define UP_CMD_ACK_OTA_TRANSFER             (0xF1)  // OTA升级数据传输应答
 #define UP_CMD_ACK_OTA_CONTROL              (0xF2)  // OTA升级控制应答
 
@@ -71,6 +72,8 @@ uint8_t get_tsn(void);
 uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len);
 void uart_protocol_heart_inc_time_out(void);
 void uart_protocol_poll(void);
+void uart_protocol_ota_to_boot_inc_time_out(void);
+void uart_protocol_ota_poll(void);
 
 /*****************************/
 

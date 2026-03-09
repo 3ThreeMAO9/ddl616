@@ -55,6 +55,8 @@ void ota_uart_init(void)
     ota_register_callback(ota_uart_send_packet);
 
     ota_uart_handle.lenth = 0;
+    ota_uart_handle.request_time_out = 0;
+    ota_uart_handle.request_flag = 0;
     ota_uart_tick = 0;
 }
 
@@ -103,8 +105,8 @@ static void ota_transfer_handle(parsed_packet_t *parsed)
     memcpy((uint8_t *)(&addr), parsed->data_content, sizeof(addr));
     addr = BIG_LITTLE_SWAP32(addr);
 
-    // OB_LOGD("data_lenth: ");
-    // OB_LOGD_DUMP(&parsed->data_len, 2);
+    OB_LOGD("data_lenth: ");
+    OB_LOGD_DUMP(&parsed->data_len, 2);
     // OB_LOGD("data_content: ");
     // OB_LOGD_DUMP(parsed->data_content, parsed->data_len);
 
@@ -153,7 +155,19 @@ static void ota_control_handle(parsed_packet_t *parsed)
     }
 }
 
-void ota_uart_poll(void)
+static void ota_uart_tx_poll(void)
+{
+    if (ota_uart_handle.request_flag == 0)
+    {
+        if (system_out_time_cnt(ota_uart_handle.request_time_out))
+        {
+            ota_uart_handle.request_time_out = system_inc_time_cnt(1000);
+            ota_control_request();
+        }
+    }
+}
+
+static void ota_uart_rx_poll(void)
 {
     if (ota_uart_handle.lenth && (!ota_uart_tick))
     {
@@ -175,7 +189,7 @@ void ota_uart_poll(void)
                 ota_back2front_packet_ack(OTA_CONTROL_STATUS_SUCCESS);
                 break;
             case PRIVATE_CMD_ACK_OTA_FRONT2BACK:
-                
+                ota_uart_handle.request_flag = 1;
                 break;
             default:
                 break;
@@ -184,4 +198,10 @@ void ota_uart_poll(void)
 
         ota_uart_handle.lenth = 0;
     }
+}
+
+void ota_uart_poll(void)
+{
+    ota_uart_tx_poll();
+    ota_uart_rx_poll();
 }

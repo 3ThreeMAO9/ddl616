@@ -24,10 +24,6 @@ void ob_log_init(void);
 void ob_log_write(const char *str, uint32_t lenth);
 void ob_log_write_hex(const uint8_t* input, uint16_t lenth);
 
-#else
-
-#endif
-
 #define OB_LOGD(str)                    \
     do                                  \
     {                                   \
@@ -41,5 +37,13 @@ void ob_log_write_hex(const uint8_t* input, uint16_t lenth);
         ob_log_write_hex(buffer, lenth); \
         ob_log_write("\n", 1);           \
     } while (0)
+#else
+
+#define OB_LOGD(str)
+#define OB_LOGD_DUMP(buffer, lenth)
+
+#endif
+
+
 
 #endif // _OB_LOG_CONFIG_H
