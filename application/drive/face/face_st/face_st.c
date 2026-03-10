@@ -350,7 +350,7 @@ static void face_process_register(face_context_t *ctx)
     case 3:
         if (MID_REPLY == ctx->ack_packet.msgid){
             if (ctx->ack_packet.result == MR_SUCCESS){
-                if(ctx->func_attr.register_type == 1){
+                if(ctx->func_attr.register_type == 0){
                     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
                     ctx->step = 0;
                     ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
@@ -372,6 +372,26 @@ static void face_process_register(face_context_t *ctx)
                         ctx->callback(FACE_RESULT_SUCCESS_REGISTER_UP, NULL, 0);
                     }
                 }
+            }
+            else if (ctx->ack_packet.result == MR_FAILED4_MAXUSER)
+            {
+                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                ctx->step = 0;
+                if (NULL != ctx->callback) {
+                    ctx->callback(FACE_RESULT_FAIL_FULL, NULL, 0);
+                }
+            }
+            else if (ctx->ack_packet.result == MR_FAILED4_FACEENROLLED)
+            {
+                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                ctx->step = 0;
+                if (NULL != ctx->callback) {
+                    ctx->callback(FACE_RESULT_FAIL_REPEAT, NULL, 0);
+                }
+            }
+            else
+            {
+                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
             }
         }
         else if (MID_NOTE == ctx->ack_packet.msgid){
@@ -397,6 +417,10 @@ static void face_process_register(face_context_t *ctx)
                     ctx->callback(FACE_RESULT_SUCCESS_REGISTER_DOWN, NULL, 0);
                 }
             }
+            else
+            {
+                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
+            }
         }
         else if (MID_NOTE == ctx->ack_packet.msgid){
             if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
@@ -420,6 +444,10 @@ static void face_process_register(face_context_t *ctx)
                 if (NULL != ctx->callback) {
                     ctx->callback(FACE_RESULT_SUCCESS_REGISTER_LEFT, NULL, 0);
                 }
+            }
+            else
+            {
+                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
             }
         }
         else if (MID_NOTE == ctx->ack_packet.msgid){
@@ -445,6 +473,10 @@ static void face_process_register(face_context_t *ctx)
                     ctx->callback(FACE_RESULT_SUCCESS_REGISTER_RIGHT, NULL, 0);
                 }
             }
+            else
+            {
+                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
+            }
         }
         else if (MID_NOTE == ctx->ack_packet.msgid){
             if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
@@ -462,6 +494,10 @@ static void face_process_register(face_context_t *ctx)
                 if (NULL != ctx->callback) {
                     ctx->callback(FACE_RESULT_SUCCESS_REGISTER, (void *)&ctx->params.reg.page_id, sizeof(ctx->params.reg.page_id));
                 }
+            }
+            else
+            {
+                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
             }
         }
         else if (MID_NOTE == ctx->ack_packet.msgid){
@@ -665,6 +701,8 @@ static uint8_t face_parse_response(face_context_t *ctx, uint8_t *buffer, uint8_t
     }
     else{
         memcpy(out,&buffer[2],lenth);
+        OB_LOGE(TAG, "RX:  encryption 0");
+        OB_LOGE_DUMP(out, lenth + 2);
     }
 
     ctx->ack_packet.msgid = out[0];
@@ -677,6 +715,12 @@ static uint8_t face_parse_response(face_context_t *ctx, uint8_t *buffer, uint8_t
 
         if (pkg_len > 2){
             uint8_t param_len = pkg_len - 2;
+            if (param_len > FACE_RX_BUFFER_SIZE)
+            {
+                OB_LOGE(TAG, "RX: len fail!! param_len [%d]",param_len);
+                param_len = FACE_RX_BUFFER_SIZE;
+            }
+
             memcpy(ctx->ack_packet.buffer, (&out[5]), param_len);
             ctx->ack_packet.lenth = param_len;
             OB_LOGD(TAG, "param[%u]: ", ctx->ack_packet.lenth);

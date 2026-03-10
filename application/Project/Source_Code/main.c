@@ -72,13 +72,6 @@ static void task_init(void)
     uartTaskInit();
     nfc_task_init();
     face_task_init();
-    const face_function_attr_t face_attr = {
-        .register_count = 5,
-        .repeat = 1,                // 查重
-        .register_time_out = 0x0A,  // 录入超时时间
-        .register_type = 0,         // 0：交互录入 1：单帧录入
-    };
-    face_task_set_attr((void*)(&face_attr), sizeof(face_function_attr_t));
 
     HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 1); // 前板喇叭功放
     HAL_GPIO_Init(VOICE_EN_GPIO, VOICE_EN_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
