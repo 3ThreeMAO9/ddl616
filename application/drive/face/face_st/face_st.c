@@ -350,7 +350,7 @@ static void face_process_register(face_context_t *ctx)
     case 3:
         if (MID_REPLY == ctx->ack_packet.msgid){
             if (ctx->ack_packet.result == MR_SUCCESS){
-                if(ctx->func_attr.register_type == 0){
+                if(ctx->func_attr.register_type == 1){
                     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
                     ctx->step = 0;
                     ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);

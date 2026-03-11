@@ -89,7 +89,8 @@ typedef enum {
     EVENT_CODE_FACE_REGISTER_RIGHT = 0x08,          ///< 0x08：人脸录入过程--提示用户脸部向右调整
     EVENT_CODE_FACE_DELETE_SUCCESS = 0x09,          ///< 0x09：人脸模板删除成功
     EVENT_CODE_FACE_DELETE_FAIL    = 0x0A,          ///< 0x0A：人脸模板删除失败（ID不存在/存储异常）
-    EVENT_CODE_FACE_TIME_OUT       = 0x0B           ///< 0x0B：人脸超时
+    EVENT_CODE_FACE_TIME_OUT       = 0x0B,          ///< 0x0B：人脸超时
+    EVENT_CODE_FACE_EXISTS         = 0x0C           ///< 0x0C：重复用户
 } event_code_face_e;
 
 typedef enum {

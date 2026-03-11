@@ -120,7 +120,7 @@ static void face_mode_handler(frame_work_mode_t* param)
         face_attr.register_count = 5;
         face_attr.repeat = 0;                // 0：不查重	1：查重
         face_attr.register_time_out = 0x0A;  // 录入超时默认值
-        face_attr.register_type = 1;         // 0：单帧录入	1：多帧录入
+        face_attr.register_type = 0;         // 0：多帧录入	1：单帧录入
 
         // 步骤2：从param->data解析位域，赋值给结构体（现在可修改）
         // bit0~bit3：录入超时时间（低4位）
@@ -131,6 +131,7 @@ static void face_mode_handler(frame_work_mode_t* param)
         face_attr.register_type = ((param->data >> 5) & 0x01);
 
         face_attr.repeat = !face_attr.repeat;
+        face_attr.register_type = !face_attr.register_type;
 
         OB_LOGD(TAG, "face_attr.register_time_out[%02X]", face_attr.register_time_out);
         OB_LOGD(TAG, "face_attr.repeat           [%02X]", face_attr.repeat);

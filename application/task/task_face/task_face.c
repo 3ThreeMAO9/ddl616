@@ -82,6 +82,10 @@ static void face_register_event_callback(uint8_t result, void* para, uint8_t len
         OB_LOGD(TAG, "FACE_RESULT_SUCCESS_REGISTER_RIGHT");
         uart_msg_face(EVENT_CODE_FACE_REGISTER_RIGHT, NULL, 0);
         break;
+    case FACE_RESULT_FAIL_REPEAT:
+        OB_LOGD(TAG, "FACE_RESULT_FAIL_REPEAT");
+        uart_msg_face(EVENT_CODE_FACE_EXISTS, NULL, 0);
+        break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
         break;
