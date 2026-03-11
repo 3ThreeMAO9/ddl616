@@ -811,7 +811,20 @@ void fingerprint_process(fp_context_t *ctx) {
 
     // 检查超时
     if (system_out_time_cnt(ctx->tick)) {
-        fp_handle_timeout(ctx);
+        if (ctx->status.waiting == 1)
+        {
+            OB_LOGE(TAG, "TIME_OUT!!!!!!!!!!!!");
+            ctx->config->ops.power(0);
+            ctx->config->ops.power(1);
+            ctx->status.handshake = 0;
+            ctx->status.waiting = 0;
+#if (FP_ENABLE_LED_CONTROL)
+            fingerprint_control_led(ctx, ctx->led.color);
+#endif
+            ctx->tick = system_inc_time_cnt(FP_RX_TIMEOUT);
+        }
+        else
+            fp_handle_timeout(ctx);
     }
     else if (NULL != ctx->config->ops.receive) {
         uint8_t buffer[FP_RX_BUFFER_SIZE];
