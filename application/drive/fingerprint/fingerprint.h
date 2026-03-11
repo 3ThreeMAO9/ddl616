@@ -43,7 +43,7 @@ typedef uint8_t (*fingerprint_callback_t)(uint8_t result, void* para, uint8_t le
 #define FP_PACKET_HEADER         0xEF01
 #define FP_DEVICE_ADDRESS        0xFFFFFFFF
 #define FP_DEFAULT_TIMEOUT       2000    // 2秒超时
-#define FP_RX_TIMEOUT            500      // 500ms接收超时
+#define FP_RX_TIMEOUT            600      // 600ms接收超时
 #define FP_RX_SCAN_TIMEOUT       100      // 100ms接收超时
 
 /*****************Enum*****************/
