@@ -32,6 +32,7 @@
 #define UP_CMD_RESET                        (0x06)   // 恢复出厂设置命令
 #define UP_CMD_PARAM_REQ                    (0x07)   // 参数请求指令
 #define UP_CMD_REPORT_PARAM                 (0x08)   // 参数上报指令
+#define UP_CMD_SLEEP                        (0x09)   // 休眠命令
 
 #define UP_CMD_HEART                        (0x2A)   // 心跳命令
 
@@ -47,6 +48,8 @@
 #define UP_CMD_ACK_RESET                    (0x86)   // 恢复出厂设置应答
 #define UP_CMD_ACK_PARAM_REQ                (0x87)   // 参数请求应答指令
 #define UP_CMD_ACK_REPORT_PARAM             (0x88)   // 参数上报应答指令
+#define UP_CMD_ACK_SLEEP                    (0x89)   // 休眠命令
+
 #define UP_CMD_ACK_HEART                    (0xAA)   // 心跳应答
 
 #define UP_CMD_ACK_OTA_REQUEST              (0xF3)  // OTA升级请求应答

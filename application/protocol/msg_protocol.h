@@ -221,6 +221,11 @@ typedef struct
 
 typedef struct
 {
+    uint8_t status;
+} frame_sleep_t;
+
+typedef struct
+{
     uint8_t event_type;
     uint8_t event_source;
     uint8_t event_code;
@@ -348,6 +353,7 @@ void uart_msg_param_req(void);
 void uart_msg_ack_word_mode(uint8_t status);
 void uart_msg_ack_light_ctl(uint8_t status);
 void uart_msg_ack_reset(uint8_t status);
+void uart_msg_ack_sleep(uint8_t status);
 void uart_msg_ack_ota_request(uint8_t status);
 void uart_msg_ack_param_report(uint8_t status);
 

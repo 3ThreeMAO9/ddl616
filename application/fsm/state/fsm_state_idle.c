@@ -44,6 +44,9 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             }
+            else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP){
+                state = Q_TRAN(lock_fsm_sleep);
+            }
             break;
         case Q_USER_KEY_SIG:
             break;

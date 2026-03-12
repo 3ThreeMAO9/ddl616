@@ -217,6 +217,12 @@ void uart_msg_ack_reset(uint8_t status)
                          sizeof(frame_ack_def_t), fill_ack_def_data, status);
 }
 
+void uart_msg_ack_sleep(uint8_t status)
+{
+    uart_msg_common_send(UP_CMD_ACK_SLEEP,
+                         sizeof(frame_ack_def_t), fill_ack_def_data, status);
+}
+
 void uart_msg_ack_ota_request(uint8_t status)
 {
     uart_msg_common_send(UP_CMD_ACK_OTA_REQUEST,
