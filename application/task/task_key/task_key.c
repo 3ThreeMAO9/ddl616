@@ -62,7 +62,7 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
             if(ledTaskCheckLed(key_value))    //对应的灯是否使能
                 ledTaskHandle(LED_EVENT_KEY_BOARD, key_value);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-            // baseEventPush(Q_KEY_BOARD_PRESS_SIG, key_value);
+            baseEventPush(Q_KEY_BOARD_PRESS_SIG, key_value);
         }
         break;
     case KEY_TYPE_LONG_RELEASE:

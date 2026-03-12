@@ -10,7 +10,7 @@
 #include "fingerprint.h"
 #include "utils.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "fp"
 
@@ -666,7 +666,7 @@ static uint8_t fp_parse_response(fp_context_t *ctx, uint8_t* buffer, uint8_t len
     if (buffer[6] != PKG_ACK) {
         //模拟串口问题，此字节容易出错，大概率是前面连续4个字节都是0xFF
         buffer[6] = PKG_ACK;
-        OB_LOGE(TAG, "PKG_ACK!!");
+        OB_LOGE(TAG, "PKG_ACK!!!!!!!!!!!!!");
         // return false;
     }
     
@@ -725,7 +725,7 @@ static void fp_process_step(fp_context_t *ctx) {
 
     if (step_temp != ctx->step) {
         step_temp = ctx->step;
-        OB_LOGD(TAG, "step[%u]", step_temp);
+        // OB_LOGD(TAG, "step[%u]", step_temp);
     }
 
 #if (FP_ENABLE_LED_CONTROL)
@@ -867,7 +867,7 @@ uint8_t fp_is_ready(fp_context_t *ctx, uint8_t mode) {
 
 
     fingerprint_reset_context(ctx);
-
+    ctx->status.waiting = 0;
     if (!ctx->status.power) {
         if (FP_MODE_SLEEP == mode) {
             return true;

@@ -10,7 +10,7 @@
 #include "fingerprint_api.h"
 #include "fingerprint_config.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "fp_api"
 
@@ -86,10 +86,10 @@ static inline uint8_t fingerprint_send_packet(uint8_t* buffer, uint8_t lenth) {
     if (!fp_handle.ctx.status.power) {
         return false;       // 如果改为串口复用，则需在此重新映射串口，并完成发送；
     }
-    // if (FP_CMD_GET_IMAGE != fp_handle.ctx.ack_packet.cmd) {
+    if (FP_CMD_GET_IMAGE != fp_handle.ctx.ack_packet.cmd) {
         OB_LOGD(TAG, "fp send[%u]: ", lenth);
         OB_LOGD_DUMP(buffer, lenth);
-    // }
+    }
 
     hal_uartSendBuff(FINGER_UART_SEL, buffer, lenth);
 	return true;
@@ -108,10 +108,10 @@ static inline uint8_t fingerprint_receive_packet(uint8_t* buffer) {
         lenth = fp_handle.uart.lenth;
         fp_handle.uart.lenth = 0;
 
-        // if (FP_CMD_GET_IMAGE != fp_handle.ctx.ack_packet.cmd) {
+        if (FP_CMD_GET_IMAGE != fp_handle.ctx.ack_packet.cmd) {
             OB_LOGD(TAG, "fp receive[%u]: ", lenth);
             OB_LOGD_DUMP(buffer, lenth);
-        // }
+        }
 
     }
     else {

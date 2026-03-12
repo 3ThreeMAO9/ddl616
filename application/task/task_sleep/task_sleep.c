@@ -46,6 +46,11 @@ static uint8_t enter_sleep_event_deal(void){
     // if (!motor_task_sleep(ENTER_SLEEP)){
     //     return false;
     // }
+
+    if (fp_task_is_busy()) {
+        return false;
+    }
+
     if (!key_task_sleep(KEY_TYPE_KEY_BOARD)) {
         return false;
     }

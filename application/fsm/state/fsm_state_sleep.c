@@ -34,6 +34,9 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            if (KEY_CNT >= e->dynamic_[0]){
+                state = Q_TRAN(lock_fsm_idle);
+            }
             break;
         case Q_KEY_PRESS_SIG:
             break;
@@ -47,10 +50,10 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
         case Q_FUNCTION_TIME_OUT_SIG:
             break;
         case Q_WORK_TIME_OUT_SIG:
-            if (fp_task_is_busy()) {
-                system_time_task_set_work_time(250);
-                break;
-            }
+            // if (fp_task_is_busy()) {
+            //     system_time_task_set_work_time(250);
+            //     break;
+            // }
             sleep_task_set_flag();
             break;
         default:
