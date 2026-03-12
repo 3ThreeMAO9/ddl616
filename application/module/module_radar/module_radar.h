@@ -42,6 +42,8 @@ void module_radar_loop(void);
  */
 uint8_t module_radar_wake(void);
 
+uint8_t module_radar_is_wake_API(void);
+
 /**
  * @brief 雷达使能/禁用切换
  * @param handle 雷达处理

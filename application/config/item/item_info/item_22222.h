@@ -72,6 +72,10 @@
 #define RADAR_MIDDLE_VALUE              (30)
 #define RADAR_LOW_VALUE                 (40)
 
+#define RADAR_CHECK_IO                  (0x01)
+#define RADAR_CHECK_IIC                 (0x02)
+#define RADAR_CHECK_SEL                 RADAR_CHECK_IO
+
 /*******************  wake source  *******************/
 #define WAKE_SOURCE_NULL                            0x0000
 #define WAKE_SOURCE_KEY_BOARD                       0x0001

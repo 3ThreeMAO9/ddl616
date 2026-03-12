@@ -29,6 +29,7 @@ typedef struct {
     void (*loop)(void);
     void (*set_detect)(uint8_t);
     uint8_t (*wake)(void);
+    uint8_t (*is_wake)(void);
     void (*handle)(uint8_t, uint8_t);
     void (*pause)(uint32_t);
     void (*stay_scan)(uint32_t);

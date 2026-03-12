@@ -16,6 +16,7 @@ const bsp_radar_drive_io_t bsp_radar = {
     .loop = module_radar_loop,
     .set_detect = module_radar_setting_detect,
     .wake = module_radar_wake,
+    .is_wake = module_radar_is_wake_API,
     .handle = module_radar_switch,
     .pause = module_radar_pause,
     .stay_scan = module_radar_stay_scan,

@@ -9,7 +9,7 @@
 
 #include "iic_radar_api.h"
 #include "iic_radar_driver.h"
-#include "iic_radar_config.h"
+#include "radar_config.h"
 #include "target_config.h"  // 修正拼写错误：target_conifg.h → target_config.h
 #include "hal_gpio.h"
 #include "delay.h"          // 增加延时头文件（复位需要）
@@ -18,6 +18,7 @@
 #include "ob_log.h"
 #define TAG "radar_api"
 
+#if (RADAR_CHECK_SEL == RADAR_CHECK_IIC)
 /****************IIC Device*************/
 // 雷达模块运行状态句柄
 static radar_handle_t radar_handle = {0};
@@ -273,3 +274,5 @@ void iic_radar_init(void)
 
     OB_LOGI(TAG, "[%s] Radar init completed", __func__);
 }
+
+#endif

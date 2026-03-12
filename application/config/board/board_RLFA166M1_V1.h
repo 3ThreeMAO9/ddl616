@@ -176,13 +176,22 @@ typedef enum
 #define FACE_POWER_PIN                  (HAL_GPIO_PIN12)
 #define FACE_UART_SEL                   (UART_1)            
 
-// iic radar
-#define RADAR_I2C_SDA_GPIO              (HAL_GPIO_PORT0)
-#define RADAR_I2C_SDA_PIN               (HAL_GPIO_PIN4)
-#define RADAR_I2C_SCL_GPIO              (HAL_GPIO_PORT0)
-#define RADAR_I2C_SCL_PIN               (HAL_GPIO_PIN5)
+// // iic radar
+// #define RADAR_PB3_SDA_GPIO              (HAL_GPIO_PORT0)
+// #define RADAR_PB3_SDA_PIN               (HAL_GPIO_PIN4)
+// #define RADAR_PB2_SCL_GPIO              (HAL_GPIO_PORT0)
+// #define RADAR_PB2_SCL_PIN               (HAL_GPIO_PIN5)
+// #define RADAR_INT_GPIO                  (HAL_GPIO_PORT0)
+// #define RADAR_INT_PIN                   (HAL_GPIO_PIN12)
+
+// io radar
+#define RADAR_PB3_SDA_GPIO              (HAL_GPIO_PORT0)
+#define RADAR_PB3_SDA_PIN               (HAL_GPIO_PIN12)
+#define RADAR_PB2_SCL_GPIO              (HAL_GPIO_PORT0)
+#define RADAR_PB2_SCL_PIN               (HAL_GPIO_PIN4)
 #define RADAR_INT_GPIO                  (HAL_GPIO_PORT0)
-#define RADAR_INT_PIN                   (HAL_GPIO_PIN12)
+#define RADAR_INT_PIN                   (HAL_GPIO_PIN5)
+
 
 //touch key
 #define TOUCH_CH_CNT                    (14)

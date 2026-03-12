@@ -33,6 +33,17 @@ extern u8 Wake_hotWarnCnt;
 extern u8 Wake_remoteCnt;
 
 #endif
+typedef enum{
+    WAKE_UP_TYPE_NULL,
+    WAKE_UP_TYPE_KEY_BOARD,
+    WAKE_UP_TYPE_FINGER,
+    WAKE_UP_TYPE_NFC,
+    WAKE_UP_TYPE_TAMPER_KEY,
+    WAKE_UP_TYPE_RADAR,
+    WAKE_UP_TYPE_CNT
+}wake_up_type_e;
+
+
 
 typedef struct{
     uint8_t flag;

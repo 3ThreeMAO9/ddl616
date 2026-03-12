@@ -15,6 +15,7 @@
 #include "task_face.h"
 #include "task_uart.h"
 #include "task_fingerprint.h"
+#include "task_radar.h"
 
 #include "event.h"
 
@@ -70,6 +71,8 @@ static uint8_t exit_sleep_event_scan(void){
     sleep_task_driver.attribute.wake_source |= fp_task_is_wake();
     // sleep_task_driver.attribute.wake_source |= nfc_task_is_wake();
     sleep_task_driver.attribute.wake_source |= system_timer_loop();
+    sleep_task_driver.attribute.wake_source |= radar_task_is_wake();
+
 #if (Enabled == WAKE_STAT_ENABLE)
     switch (sleep_task_driver.attribute.wake_source)    {
         case WAKE_SOURCE_KEY_BOARD:
@@ -110,7 +113,10 @@ static uint8_t exit_sleep_event_scan(void){
     ledTaskWake();
     HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 1); // 前板喇叭功放
 
-    baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_WAKE);
+    uint8_t wake_type = WAKE_UP_TYPE_NULL;
+    if (sleep_task_driver.attribute.wake_source & WAKE_SOURCE_RADAR)
+        wake_type = WAKE_UP_TYPE_RADAR;
+    handleEventPush(HANDLE_EVENT_WAKE, wake_type);
 #if (Enabled == WAKE_STAT_ENABLE)
     OB_LOGD(TAG, "all[%u] keyBoard[%u] setKey[%u] switchKey[%u] NFC[%u] doorState[%u] hotWarn[%u] remote[%u]", \
             Wake_allCnt, Wake_keyBoardCnt, Wake_setKeyCnt, \

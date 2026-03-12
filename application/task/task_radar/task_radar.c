@@ -53,6 +53,14 @@ uint8_t radar_task_wake(void)
     return g_radar_task_driver.io->wake();
 }
 
+uint8_t radar_task_is_wake(void)
+{
+    if (g_radar_task_driver.io->is_wake())
+        return WAKE_SOURCE_RADAR;
+
+    return WAKE_SOURCE_NULL;
+}
+
 /**
  * @brief 处理雷达任务使能/禁用
  * @param handle 雷达处理

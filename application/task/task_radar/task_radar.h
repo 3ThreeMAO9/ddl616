@@ -57,6 +57,8 @@ void radar_task_loop(void);
  */
 uint8_t radar_task_wake(void);
 
+uint8_t radar_task_is_wake(void);
+
 /**
  * @brief 处理雷达任务使能/禁用
  * @param handle 雷达处理

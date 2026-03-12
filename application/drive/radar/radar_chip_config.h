@@ -11,8 +11,9 @@
 #define RADAR_CHIP_CONFIG_H
 
 #include "iic_radar_api.h"
-#include "iic_radar_config.h"
+#include "radar_config.h"
 #include "target_config.h"
+#include "radar.h"
 
 #include "radar_stay.h"
 

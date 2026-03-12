@@ -1,44 +1,36 @@
 /**
- * Copyright (c) 2025 GZ-OB, All rights reserved.
- * File name: iic_radar_config.h
+ * Copyright (c) 2026 GZ-OB, All rights reserved.
+ * File name: io_radar_config.h
  * Desc: I2C雷达模块硬件配置头文件
  * Version: 1.0.0
  * Revision: James_Zhang
- * Date: 2025-12-01
+ * Date: 2026-03-12
  */
 
-#ifndef __IIC_RADAR_CONFIG_H__
-#define __IIC_RADAR_CONFIG_H__
+#ifndef __IO_RADAR_CONFIG_H__
+#define __IO_RADAR_CONFIG_H__
 
 #include "config.h"
 #include "hal_gpio.h"
 
 /***********Macro***********/
-// 雷达模块I2C从机地址（二进制地址右移1位，适配7位地址格式）
-#define IIC_RADAR_IIC_ADDR      (0x50 >> 1)
-#define I2C_CLK_DELAY_US        (0)         // I2C时钟延时
-#define I2C_BYTE_DELAY_US       (5)         // 字节间延时
-#define I2C_ACK_TIME_OUT        (100)       // 字节间延时
-#define I2C_RETRY_TIMES         (2)         // I2C重试次数
-
 // 雷达I2C引脚电平读取
 #define READ_RADAR_INT()     (HAL_GPIO_Read(RADAR_INT_GPIO, RADAR_INT_PIN))
 
-
 // 雷达I2C SCL引脚初始化（初始电平+引脚模式配置）
-#define RADAR_I2C_SCL_INIT(_level)                                                                            \
+#define RADAR_PB2_SCL_INIT(_level)                                                                            \
     do                                                                                                        \
     {                                                                                                         \
-        HAL_GPIO_Write(RADAR_I2C_SCL_GPIO, RADAR_I2C_SCL_PIN, _level);                                        \
-        HAL_GPIO_Init(RADAR_I2C_SCL_GPIO, RADAR_I2C_SCL_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_NONE); \
+        HAL_GPIO_Write(RADAR_PB2_SCL_GPIO, RADAR_PB2_SCL_PIN, _level);                                        \
+        HAL_GPIO_Init(RADAR_PB2_SCL_GPIO, RADAR_PB2_SCL_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_NONE); \
     } while (0)
 
 // 雷达I2C SDA引脚初始化（初始电平+引脚模式配置）
-#define RADAR_I2C_SDA_INIT(_level)                                                                            \
+#define RADAR_PB3_SDA_INIT(_level)                                                                            \
     do                                                                                                        \
     {                                                                                                         \
-        HAL_GPIO_Write(RADAR_I2C_SDA_GPIO, RADAR_I2C_SDA_PIN, _level);                                        \
-        HAL_GPIO_Init(RADAR_I2C_SDA_GPIO, RADAR_I2C_SDA_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_NONE); \
+        HAL_GPIO_Write(RADAR_PB3_SDA_GPIO, RADAR_PB3_SDA_PIN, _level);                                        \
+        HAL_GPIO_Init(RADAR_PB3_SDA_GPIO, RADAR_PB3_SDA_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_NONE); \
     } while (0)
 
 // 雷达中断引脚初始化（初始电平+输入模式配置）
@@ -58,7 +50,7 @@
     } while (0)
 
 // 雷达中断引脚中断控制
-#define RADAR_INT_PIN_ENABLE()  (HAL_GPIO_EnableIRQ(RADAR_INT_GPIO, RADAR_INT_PIN, HAL_GPIO_IRQ_FALLING))
+#define RADAR_INT_PIN_ENABLE()  (HAL_GPIO_EnableIRQ(RADAR_INT_GPIO, RADAR_INT_PIN, HAL_GPIO_IRQ_RISING))
 #define RADAR_INT_PIN_DISABLE() (HAL_GPIO_DisableIRQ(RADAR_INT_GPIO, RADAR_INT_PIN))
 
 // 雷达中断状态管理
@@ -75,4 +67,4 @@
 
 /*****************************/
 
-#endif /* __IIC_RADAR_CONFIG_H__ */
+#endif /* __IO_RADAR_CONFIG_H__ */

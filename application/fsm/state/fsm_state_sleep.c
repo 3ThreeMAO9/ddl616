@@ -42,6 +42,12 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
             break;
         case Q_HANDLE_SIG:
             if (HANDLE_EVENT_WAKE == e->dynamic_[0]){
+                OB_LOGW(TAG,"wake [%08X]",e->dynamic_[1]);
+                if (e->dynamic_[1] == WAKE_UP_TYPE_RADAR)
+                {
+                    radar_task_wake();
+                }
+                
                 state = Q_TRAN(lock_fsm_idle);
             }
             break;

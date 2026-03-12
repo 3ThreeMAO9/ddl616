@@ -48,7 +48,7 @@ void radar_event_register_callback(radar_event_callback_t callback)
 uint8_t module_radar_init(void)
 {
     OB_LOGD(TAG, "[%s]", __func__);
-    iic_radar_init();
+    radar_init();
     radarEvent_callback(RADAR_EVENT_INIT_OK, NULL);
     return true;
 }
@@ -87,13 +87,13 @@ void module_radar_setting_detect(uint8_t type)
     switch (type)
     {
     case RADAR_HIGH:
-        set_distance(POWER_SELECT, LS_STATUS, ((RADAR_GAIN << 4) | 0X03), RADAR_HIGH_VALUE);
+        radar_set_distance(RADAR_HIGH);
         break;
     case RADAR_MIDDLE:
-        set_distance(POWER_SELECT, LS_STATUS, ((RADAR_GAIN << 4) | 0X03), RADAR_MIDDLE_VALUE);
+        radar_set_distance(RADAR_MIDDLE);
         break;
     case RADAR_LOW:
-        set_distance(POWER_SELECT, LS_STATUS, ((RADAR_GAIN << 4) | 0X03), RADAR_LOW_VALUE);
+        radar_set_distance(RADAR_LOW);
         break;
     case RADAR_NULL:
         break;
@@ -132,6 +132,24 @@ uint8_t module_radar_wake(void)
     radarEvent_callback(RADAR_EVENT_WAKE, NULL);
     return false;
 }
+
+/**
+ * @brief 雷达触发判断
+ * @return 唤醒结果（true-成功，false-失败）
+ */
+uint8_t module_radar_is_wake_API(void)
+{
+    if (RADAR_INT_READ_INTSTATE()) {
+        RADAR_INT_CLEAR_INTSTATE();
+
+        if (READ_RADAR_INT()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 /**
  * @brief 雷达模块扫描主循环

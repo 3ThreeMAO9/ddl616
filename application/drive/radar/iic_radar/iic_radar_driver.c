@@ -8,6 +8,7 @@
  */
 
 #include "iic_radar_config.h"
+ #include "radar_config.h"
 #include "iic_radar_driver.h"
 #include "hal_gpio.h"
 
@@ -15,13 +16,15 @@
 #include "ob_log.h"
 #define TAG "radar_driver"
 
+#if (RADAR_CHECK_SEL == RADAR_CHECK_IIC)
+
  /**
   * @brief 设置雷达I2C SCL引脚电平
   * @param level 电平状态（true-高电平，false-低电平）
   */
  static inline void RADAR_I2C_SetSCL(bool level)
  {
-     HAL_GPIO_Write(RADAR_I2C_SCL_GPIO, RADAR_I2C_SCL_PIN, level);
+     HAL_GPIO_Write(RADAR_PB2_SCL_GPIO, RADAR_PB2_SCL_PIN, level);
  }
 
 /**
@@ -30,7 +33,7 @@
  */
 static inline void RADAR_I2C_SetSDA(bool level)
 {
-    HAL_GPIO_Write(RADAR_I2C_SDA_GPIO, RADAR_I2C_SDA_PIN, level);
+    HAL_GPIO_Write(RADAR_PB3_SDA_GPIO, RADAR_PB3_SDA_PIN, level);
 }
 
 /**
@@ -39,7 +42,7 @@ static inline void RADAR_I2C_SetSDA(bool level)
  */
 static inline bool RADAR_I2C_GetSDA()
 {
-    return HAL_GPIO_Read(RADAR_I2C_SDA_GPIO, RADAR_I2C_SDA_PIN);
+    return HAL_GPIO_Read(RADAR_PB3_SDA_GPIO, RADAR_PB3_SDA_PIN);
 }
 
 
@@ -66,8 +69,8 @@ void radar_driver_init(void)
     // 初始化I2C总线
     I2C_Init(&radar_i2c_config);
     // I2C引脚初始化（上拉）
-    RADAR_I2C_SCL_INIT(1);
-    RADAR_I2C_SDA_INIT(1);
+    RADAR_PB2_SCL_INIT(1);
+    RADAR_PB3_SDA_INIT(1);
     // OUT引脚初始化（输入）
     RADAR_INT_INIT(1);
 }
@@ -77,8 +80,8 @@ void radar_driver_init(void)
  */
 void radar_driver_uninit(void)
 {
-    RADAR_I2C_SCL_INIT(0);
-    RADAR_I2C_SDA_INIT(0);
+    RADAR_PB2_SCL_INIT(0);
+    RADAR_PB3_SDA_INIT(0);
     RADAR_INT_PULL_INIT(0);
 }
 
@@ -120,5 +123,5 @@ uint8_t AT10LP_WriteOneByte(uint8_t address, uint8_t data)
     return radar_write_register(address, (uint8_t *)(&data), 1);
 }
 
-
+#endif
 
