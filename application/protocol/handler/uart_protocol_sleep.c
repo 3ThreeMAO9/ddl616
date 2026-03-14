@@ -24,7 +24,7 @@ HANDLER_DEFINE(UP_CMD_SLEEP)
     OB_LOGD(TAG, "status[%02X]", param->status);
     if (param->status == 0xff){
 
-        baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP);
+        // baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP);
         status = STATUS_SUCCESS;
     }
     uart_msg_ack_sleep(status);

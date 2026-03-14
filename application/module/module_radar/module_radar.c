@@ -162,4 +162,9 @@ void module_radar_loop(void)
         radarEvent_callback(RADAR_EVENT_STAY_TRIGGER, NULL);
         radar_stay_reset();
     }
+
+    if (true == module_radar_is_wake_API())
+    {
+        module_radar_wake();
+    }
 }
