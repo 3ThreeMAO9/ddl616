@@ -155,10 +155,49 @@ void sleep_task_init(void){
     }
 }
 
+static uint32_t reset7258_time_out = 0;
+static uint8_t reset7258_step = 0;
+void reset7258_handle(void)
+{
+    reset7258_step = 1;
+    reset7258_time_out =  system_inc_time_cnt(10);
+    HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 0); // WEN
+    HAL_GPIO_Init(HAL_GPIO_PORT2, HAL_GPIO_PIN9, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
+
+}
+
+static void reset7258_loop(void)
+{
+    if(!reset7258_step || !system_out_time_cnt(reset7258_time_out))
+        return;
+
+    switch (reset7258_step)
+    {
+        case 1:
+            reset7258_time_out =  system_inc_time_cnt(50);
+            HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 1); // WEN
+            reset7258_step = 2;
+            break;
+
+        case 2:
+            HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 0); // WEN
+            reset7258_step = 0;
+            break;
+        
+        default:
+            HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 0); // WEN
+            reset7258_step = 0;
+            break;
+    }
+} 
+
+
 void sleep_task_loop(void){
     if (NULL == sleep_task_driver.io){
         return;
     }
+
+    reset7258_loop();
 
     if (sleep_task_driver.attribute.flag){
         sleep_task_driver.attribute.flag = false;

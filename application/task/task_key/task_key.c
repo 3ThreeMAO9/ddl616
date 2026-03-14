@@ -22,6 +22,33 @@
 
 static key_task_driver_t g_key_task_driver;
 
+#include <stdint.h>
+
+// 功能：检测是否连续输入 1 -> 5 -> 9 -> #
+// 输入：num  0~9 的数字
+// 返回：1 = 连续输入；0 = 不满足
+uint8_t check_rest_7258_test(uint8_t num)
+{
+    // 用静态变量保存最近4次的输入
+    static uint8_t buf[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+    
+    // 旧数据前移，新数据放最后
+    buf[0] = buf[1];
+    buf[1] = buf[2];
+    buf[2] = buf[3];
+    buf[3] = num;
+
+    // 判断是否连续 1 -> 5 -> 9 -> #
+    if (buf[0] == 1 && buf[1] == 5 && buf[2] == 9 && buf[3] == 11)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 static void key_task_callback(uint8_t keyType,uint8_t key_value)
 {
     // OB_LOGD(TAG, "[%s]  keyType=%d,key_value=%d",__func__, keyType,key_value);
@@ -63,6 +90,11 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
                 ledTaskHandle(LED_EVENT_KEY_BOARD, key_value);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             baseEventPush(Q_KEY_BOARD_PRESS_SIG, key_value);
+
+            if(check_rest_7258_test(key_value))
+            {
+                reset7258_handle();
+            }
         }
         break;
     case KEY_TYPE_LONG_RELEASE:
