@@ -19,22 +19,24 @@
 
 
 /***********Enum***********/
-#define TOUCH_IC_CH0    0x20
-#define TOUCH_IC_CH1    0x20
-#define TOUCH_IC_CH2    0x20
-#define TOUCH_IC_CH3    0x20
-#define TOUCH_IC_CH4    0x20
-#define TOUCH_IC_CH5    0x20
-#define TOUCH_IC_CH6    0x20
-#define TOUCH_IC_CH7    0x20
-#define TOUCH_IC_CH8    0x20
-#define TOUCH_IC_CH9    0x20
-#define TOUCH_IC_CH10   0x20
-#define TOUCH_IC_CH11   0x20
-#define TOUCH_IC_CH12   0x20
-#define TOUCH_IC_CH13   0x20
-#define TOUCH_IC_CH14   0x20
-#define TOUCH_IC_CH15   0x20
+
+#define TOUCH_IC_CH0    0x3F    //KEY_NULL
+#define TOUCH_IC_CH1    0x35    //KEY_CAN
+#define TOUCH_IC_CH2    0x35    //KEY_NUM_7
+#define TOUCH_IC_CH3    0x2F    //KEY_NUM_4
+#define TOUCH_IC_CH4    0x2F    //KEY_NUM_1
+#define TOUCH_IC_CH5    0x2F    //KEY_NUM_2
+#define TOUCH_IC_CH6    0x2F    //KEY_NUM_3
+#define TOUCH_IC_CH7    0x35    //KEY_NUM_6
+#define TOUCH_IC_CH8    0x35    //KEY_NUM_5
+#define TOUCH_IC_CH9    0x35    //KEY_NUM_8
+#define TOUCH_IC_CH10   0x35    //KEY_NUM_9
+#define TOUCH_IC_CH11   0x35    //KEY_OK
+#define TOUCH_IC_CH12   0x35    //KEY_NUM_0
+#define TOUCH_IC_CH13   0x35    //KEY_NUM_13
+#define TOUCH_IC_CH14   0x3F    //无对应按键
+#define TOUCH_IC_CH15   0x3F    //无对应按键
+
 
 #define NFC_CHECK_ADC                   0x01
 #define NFC_CHECK_LPCD                  0x02

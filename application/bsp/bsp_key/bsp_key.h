@@ -23,8 +23,9 @@ typedef key_event_callback_t bsp_key_callback_t;
 typedef struct {
     uint8_t (*init)(uint8_t);
     void (*scan)(void);
-    uint8_t (*sleep)(uint8_t);
+    uint8_t (*sleep)(uint8_t);  
     uint8_t (*check_wake)(void);
+    void (*wake_config)(uint8_t);
     uint8_t (*busy)(uint8_t);
     void (*handle)(uint8_t, uint8_t);
     void (*pause)(uint32_t);

@@ -15,6 +15,7 @@ const bsp_key_drive_io_t bsp_key = {
     .scan = module_keyScanLoop,
     .sleep = module_keySleep,
     .check_wake = module_keyWake,
+    .wake_config = module_keyWakeConfig,
     .busy = module_isBusyKey,
     .handle = module_keySwitch,
     .pause = module_key_pause,

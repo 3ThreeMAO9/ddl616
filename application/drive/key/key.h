@@ -83,6 +83,7 @@ void module_keyScanLoop(void);
 void keyEventRegister_callback(key_event_callback_t callback);
 uint8_t module_keyWake(void);
 uint8_t module_keySleep(uint8_t type);
+void module_keyWakeConfig(uint8_t keyboard_wake);
 uint8_t module_isBusyKey(uint8_t type);
 uint8_t module_keyInit(uint8_t type);
 void module_keySwitch(uint8_t type, uint8_t flag);

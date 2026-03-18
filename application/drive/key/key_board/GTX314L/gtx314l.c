@@ -226,6 +226,7 @@ uint8_t touch_sleep_config(void)
         }
     }
 
+    OB_LOGD(TAG, "touch_sleep_config");
     return true;
 }
 
@@ -249,9 +250,10 @@ uint8_t touch_wake_config(uint8_t touch_wake)
                 return false;
             }
         }
+        OB_LOGD(TAG, "touch_wake_config");
         return true;
     }
-
+    OB_LOGD(TAG, "touch_wake_other!");
     return touch_reset_renew_state(true);
 }
 

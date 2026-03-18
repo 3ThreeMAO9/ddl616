@@ -255,6 +255,11 @@ uint8_t module_keySleep(uint8_t type)
     return false;
 }
 
+void module_keyWakeConfig(uint8_t keyboard_wake)
+{
+    keyboard_wake_config(keyboard_wake);
+}
+
 uint8_t module_isBusyKey(uint8_t type)
 {
     if (KEY_TYPE_TAMPER_KEY == type)

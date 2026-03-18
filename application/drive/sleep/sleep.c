@@ -120,5 +120,4 @@ void unused_gpio_init(void)
     HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN3, 1); // XTAL
     HAL_GPIO_Init(HAL_GPIO_PORT2, HAL_GPIO_PIN3, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
 
-    reset7258_handle();
 }

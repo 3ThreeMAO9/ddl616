@@ -115,6 +115,11 @@ uint8_t key_task_check_wake(void)
     return g_key_task_driver.io->check_wake();
 }
 
+void key_task_wake_config(uint8_t keyboard_wake)
+{
+    g_key_task_driver.io->wake_config(keyboard_wake);
+}
+
 uint8_t keyTaskBusy(uint8_t type)
 {
     return g_key_task_driver.io->busy(type);

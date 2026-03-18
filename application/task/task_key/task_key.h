@@ -35,6 +35,7 @@ void keyTaskInit(uint8_t type);
 void keyTaskPowerOnInit(void);
 void keyTaskLoop(void);
 uint8_t key_task_check_wake(void);
+void key_task_wake_config(uint8_t keyboard_wake);
 uint8_t key_task_sleep(uint8_t type);
 void keyTaskHandle(uint8_t keyType, uint8_t enable);
 uint8_t keyTaskIsBusy(uint8_t type);

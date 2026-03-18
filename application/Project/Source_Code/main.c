@@ -66,6 +66,7 @@ static void device_init(void)
 static void task_init(void)
 {
     OB_LOGD(TAG, "[%s]",__func__);
+    reset7258_handle();
     flash_task_init();
     keyTaskPowerOnInit();
     ledTaskInit();

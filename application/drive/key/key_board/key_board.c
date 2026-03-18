@@ -30,7 +30,7 @@ uint8_t read_keyboard_value(void) {
 // 数字键盘的休眠配置（GTX314L配置进入休眠模式）
 uint8_t keyboard_sleep_config(void) {
     if (NULL == keyboard_handle.sleep) {
-        return true;
+        return false;
     }
     return keyboard_handle.sleep();
 }
@@ -38,7 +38,7 @@ uint8_t keyboard_sleep_config(void) {
 // 数字键盘的唤醒配置（GTX314L配置退出休眠模式/非触摸唤醒会复位触摸IC）
 uint8_t keyboard_wake_config(uint8_t keyboard_wake) {
     if (NULL == keyboard_handle.wake) {
-        return true;
+        return false;
     }
     return keyboard_handle.wake(keyboard_wake);
 }

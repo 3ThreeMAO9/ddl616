@@ -104,6 +104,16 @@ static uint8_t exit_sleep_event_scan(void){
     if (WAKE_SOURCE_NULL == sleep_task_driver.attribute.wake_source){
         return false;
     }
+
+    if(WAKE_SOURCE_KEY_BOARD & sleep_task_driver.attribute.wake_source)
+    {
+        key_task_wake_config(1);
+    }
+    else
+    {
+        key_task_wake_config(0);
+    }
+
 #if (Enabled == WAKE_STAT_ENABLE)
     Wake_allCnt++;
 #endif
@@ -123,7 +133,7 @@ static uint8_t exit_sleep_event_scan(void){
             Wake_switchKeyCnt, Wake_NFCCnt, Wake_doorStateCnt, \
             Wake_hotWarnCnt, Wake_remoteCnt);
 #endif
-    OB_LOGD(TAG, "Sleep[%s]", "Exit");
+    OB_LOGD(TAG, "Sleep[%s][%x]", "Exit", sleep_task_driver.attribute.wake_source);
 
     return true;
 }
