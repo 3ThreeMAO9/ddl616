@@ -44,7 +44,8 @@ __NO_RETURN void boot_main(void)
 {
     SystemInit();
     SystemCoreClockUpdate();
-    WDT_Open(WDT_PRESCALER_1024, 0x3F, 1, NULL);
+    WDT_Close();
+    // WDT_Open(WDT_PRESCALER_1024, 0x3F, 1, NULL);
     ob_log_init();
     system_timer_init();
     ota_uart_init();
@@ -65,7 +66,7 @@ __NO_RETURN void boot_main(void)
 
     OB_LOGD("enter boot loop");
     while(1) {
-        WDT_ReloadCounter();
+        // WDT_ReloadCounter();
         ota_uart_poll();
     }
 }

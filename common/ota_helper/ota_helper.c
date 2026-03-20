@@ -267,8 +267,12 @@ uint8_t ota_helper_prepare(void)
 uint8_t ota_helper_write(uint32_t addr, uint8_t *buffer, uint32_t length)
 {
     /* 校验写入地址：必须与当前待写入地址一致（防止地址错乱） */
+    // OB_LOGD_DUMP(&ota_helper_handle.addr, 2);
+    // OB_LOGD_DUMP(&addr, 2);
+    // OB_LOGD_DUMP(&length, 2);
     if (ota_helper_handle.addr != addr)
     {
+        // OB_LOGD("FAIL");
         return 0;
     }
     /* 写入数据到FLASH（按字写入） */

@@ -308,125 +308,125 @@ void ota_control_request(void)
     ota_packet_send(PRIVATE_CMD_OTA_FRONT2BACK, (void *)(&status), sizeof(status));
 }
 
-uint16_t ota_request_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth) {
-    // 示例：创建一个测试数据包
-    uint8_t test_packet[] = {
-        // 帧头
-        0x55, 0xAA,
-        // Control: 版本1，未加密
-        0x01,
-        // Cmd: 透传指令
-        0xFB,
-        // Len: Payload长度6字节（大端）
-        0x00, 0x20,
-        // Payload: 私有数据
-        0x01,       // TSN: 1
-        0x70,       // 命令字: 0x70
-        0x00, (6 + 8), // 数据长度: 2字节
-        0x00, 0x00, 0x01, 0x01, 0x02, 0x03,
-        0x00, 0x00, 0x00, 0x00, // 固件总字节数（这里需要计算正确文件的长度）
-        0x00, 0x00, 0x00, 0x00, // 固件整体CRC32校验（这里需要计算正确文件的CRC）
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00  // CRC（这里需要计算正确的CRC值）
-    };
+// uint16_t ota_request_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth) {
+//     // 示例：创建一个测试数据包
+//     uint8_t test_packet[] = {
+//         // 帧头
+//         0x55, 0xAA,
+//         // Control: 版本1，未加密
+//         0x01,
+//         // Cmd: 透传指令
+//         0xFB,
+//         // Len: Payload长度6字节（大端）
+//         0x00, 0x20,
+//         // Payload: 私有数据
+//         0x01,       // TSN: 1
+//         0x70,       // 命令字: 0x70
+//         0x00, (6 + 8), // 数据长度: 2字节
+//         0x00, 0x00, 0x01, 0x01, 0x02, 0x03,
+//         0x00, 0x00, 0x00, 0x00, // 固件总字节数（这里需要计算正确文件的长度）
+//         0x00, 0x00, 0x00, 0x00, // 固件整体CRC32校验（这里需要计算正确文件的CRC）
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+//         0x00, 0x00  // CRC（这里需要计算正确的CRC值）
+//     };
     
-    test_packet[6] = (++parsed_packet.tsn);
-    test_packet[9] = lenth;
-    memcpy(&test_packet[10], data_content, lenth);
+//     test_packet[6] = (++parsed_packet.tsn);
+//     test_packet[9] = lenth;
+//     memcpy(&test_packet[10], data_content, lenth);
 
-    // 计算并设置正确的CRC
-    uint16_t payload_len = (uint16_t)test_packet[5] + ((uint16_t)test_packet[4] << 8);
-    uint16_t crc_data_len = 4 + payload_len;  // Control+Cmd+Len+Payload
-    uint16_t crc = crc16_ccitt(&test_packet[0], crc_data_len);
-    test_packet[sizeof(test_packet) - 2] = (crc >> 8) & 0xFF;
-    test_packet[sizeof(test_packet) - 1] = crc & 0xFF;
+//     // 计算并设置正确的CRC
+//     uint16_t payload_len = (uint16_t)test_packet[5] + ((uint16_t)test_packet[4] << 8);
+//     uint16_t crc_data_len = 4 + payload_len;  // Control+Cmd+Len+Payload
+//     uint16_t crc = crc16_ccitt(&test_packet[0], crc_data_len);
+//     test_packet[sizeof(test_packet) - 2] = (crc >> 8) & 0xFF;
+//     test_packet[sizeof(test_packet) - 1] = crc & 0xFF;
 
-    OB_LOGD("test pkt lenth: ");
-    OB_LOGD_DUMP(&payload_len, 2);
-    OB_LOGD("test pkt: ");
-    OB_LOGD_DUMP(test_packet, sizeof(test_packet));
+//     OB_LOGD("test pkt lenth: ");
+//     OB_LOGD_DUMP(&payload_len, 2);
+//     OB_LOGD("test pkt: ");
+//     OB_LOGD_DUMP(test_packet, sizeof(test_packet));
     
-    memcpy(packet, test_packet, sizeof(test_packet));
-    return sizeof(test_packet);
-}
+//     memcpy(packet, test_packet, sizeof(test_packet));
+//     return sizeof(test_packet);
+// }
 
-uint16_t ota_transfer_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth) {
-    // 示例：创建一个测试数据包
-    uint8_t test_packet[] = {
-        // 帧头
-        0x55, 0xAA,
-        // Control: 版本1，未加密
-        0x01,
-        // Cmd: 透传指令
-        0xFB,
-        // Len: Payload长度6字节（大端）
-        0x00, 0x10,
-        // Payload: 私有数据
-        0x01,       // TSN: 1
-        0x71,       // 命令字: 0x71
-        0x00, (4 + 8), // 数据长度: 2字节
-        0x00, 0x00, 0x00, 0x00,
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-        // CRC（这里需要计算正确的CRC值）
-        0x00, 0x00
-    };
+// uint16_t ota_transfer_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth) {
+//     // 示例：创建一个测试数据包
+//     uint8_t test_packet[] = {
+//         // 帧头
+//         0x55, 0xAA,
+//         // Control: 版本1，未加密
+//         0x01,
+//         // Cmd: 透传指令
+//         0xFB,
+//         // Len: Payload长度6字节（大端）
+//         0x00, 0x10,
+//         // Payload: 私有数据
+//         0x01,       // TSN: 1
+//         0x71,       // 命令字: 0x71
+//         0x00, (4 + 8), // 数据长度: 2字节
+//         0x00, 0x00, 0x00, 0x00,
+//         0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+//         // CRC（这里需要计算正确的CRC值）
+//         0x00, 0x00
+//     };
     
-    test_packet[6] = (++parsed_packet.tsn);
-    test_packet[9] = lenth;
-    memcpy(&test_packet[10], data_content, lenth);
+//     test_packet[6] = (++parsed_packet.tsn);
+//     test_packet[9] = lenth;
+//     memcpy(&test_packet[10], data_content, lenth);
 
-    // 计算并设置正确的CRC
-    uint16_t payload_len = (uint16_t)test_packet[5] + ((uint16_t)test_packet[4] << 8);
-    uint16_t crc_data_len = 4 + payload_len;  // Control+Cmd+Len+Payload
-    uint16_t crc = crc16_ccitt(&test_packet[0], crc_data_len);
-    test_packet[sizeof(test_packet) - 2] = (crc >> 8) & 0xFF;
-    test_packet[sizeof(test_packet) - 1] = crc & 0xFF;
+//     // 计算并设置正确的CRC
+//     uint16_t payload_len = (uint16_t)test_packet[5] + ((uint16_t)test_packet[4] << 8);
+//     uint16_t crc_data_len = 4 + payload_len;  // Control+Cmd+Len+Payload
+//     uint16_t crc = crc16_ccitt(&test_packet[0], crc_data_len);
+//     test_packet[sizeof(test_packet) - 2] = (crc >> 8) & 0xFF;
+//     test_packet[sizeof(test_packet) - 1] = crc & 0xFF;
 
-    OB_LOGD("test pkt: ");
-    OB_LOGD_DUMP(test_packet, sizeof(test_packet));
+//     OB_LOGD("test pkt: ");
+//     OB_LOGD_DUMP(test_packet, sizeof(test_packet));
 
-    memcpy(packet, test_packet, sizeof(test_packet));
-    return sizeof(test_packet);
-}
+//     memcpy(packet, test_packet, sizeof(test_packet));
+//     return sizeof(test_packet);
+// }
 
-uint16_t ota_control_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth) {
-    // 示例：创建一个测试数据包
-    uint8_t test_packet[] = {
-        // 帧头
-        0x55, 0xAA,
-        // Control: 版本1，未加密
-        0x01,
-        // Cmd: 透传指令
-        0xFB,
-        // Len: Payload长度6字节（大端）
-        0x00, 0x10,
-        // Payload: 私有数据
-        0x01,       // TSN: 1
-        0x72,       // 命令字: 0x71
-        0x00, (1), // 数据长度: 2字节
-        0x03,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        // CRC（这里需要计算正确的CRC值）
-        0x00, 0x00
-    };
+// uint16_t ota_control_pkt_test(uint8_t* packet, uint8_t* data_content, uint16_t lenth) {
+//     // 示例：创建一个测试数据包
+//     uint8_t test_packet[] = {
+//         // 帧头
+//         0x55, 0xAA,
+//         // Control: 版本1，未加密
+//         0x01,
+//         // Cmd: 透传指令
+//         0xFB,
+//         // Len: Payload长度6字节（大端）
+//         0x00, 0x10,
+//         // Payload: 私有数据
+//         0x01,       // TSN: 1
+//         0x72,       // 命令字: 0x71
+//         0x00, (1), // 数据长度: 2字节
+//         0x03,
+//         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//         // CRC（这里需要计算正确的CRC值）
+//         0x00, 0x00
+//     };
     
-    test_packet[6] = (++parsed_packet.tsn);
-    test_packet[9] = lenth;
-    memcpy(&test_packet[10], data_content, lenth);
+//     test_packet[6] = (++parsed_packet.tsn);
+//     test_packet[9] = lenth;
+//     memcpy(&test_packet[10], data_content, lenth);
 
-    // 计算并设置正确的CRC
-    uint16_t payload_len = (uint16_t)test_packet[5] + ((uint16_t)test_packet[4] << 8);
-    uint16_t crc_data_len = 4 + payload_len;  // Control+Cmd+Len+Payload
-    uint16_t crc = crc16_ccitt(&test_packet[0], crc_data_len);
-    test_packet[sizeof(test_packet) - 2] = (crc >> 8) & 0xFF;
-    test_packet[sizeof(test_packet) - 1] = crc & 0xFF;
+//     // 计算并设置正确的CRC
+//     uint16_t payload_len = (uint16_t)test_packet[5] + ((uint16_t)test_packet[4] << 8);
+//     uint16_t crc_data_len = 4 + payload_len;  // Control+Cmd+Len+Payload
+//     uint16_t crc = crc16_ccitt(&test_packet[0], crc_data_len);
+//     test_packet[sizeof(test_packet) - 2] = (crc >> 8) & 0xFF;
+//     test_packet[sizeof(test_packet) - 1] = crc & 0xFF;
 
-    OB_LOGD("test pkt lenth: ");
-    OB_LOGD_DUMP(&payload_len, 2);
+//     OB_LOGD("test pkt lenth: ");
+//     OB_LOGD_DUMP(&payload_len, 2);
 
-    OB_LOGD("test pkt: ");
-    OB_LOGD_DUMP(test_packet, sizeof(test_packet));
+//     OB_LOGD("test pkt: ");
+//     OB_LOGD_DUMP(test_packet, sizeof(test_packet));
 
-    memcpy(packet, test_packet, sizeof(test_packet));
-    return sizeof(test_packet);
-}
+//     memcpy(packet, test_packet, sizeof(test_packet));
+//     return sizeof(test_packet);
+// }
