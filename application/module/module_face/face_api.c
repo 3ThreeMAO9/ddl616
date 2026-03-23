@@ -180,6 +180,7 @@ uint8_t face_set_mode_API(uint8_t mode, face_api_callback_t callback, void *para
     case FACE_MODE_VERIFY_DELETE:
 #endif
     case FACE_MODE_SLEEP:
+    case FACE_MODE_REGISTER_PALM:
         face_is_ready(&face_handle.ctx, mode);
         if (lenth <= sizeof(face_handle.ctx.params))
         {

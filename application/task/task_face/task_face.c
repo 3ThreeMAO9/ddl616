@@ -40,6 +40,10 @@ static void face_verify_event_callback(uint8_t result, void* para, uint8_t lenth
         OB_LOGD(TAG, "FACE_RESULT_SUCCESS_VERIFY");
         uart_msg_face(EVENT_CODE_FACE_VERIFY_SUCCESS, (uint8_t *)(para), lenth);
         break;
+    case PALM_RESULT_SUCCESS_VERIFY:
+        OB_LOGD(TAG, "PALM_RESULT_SUCCESS_VERIFY");
+        uart_msg_face(EVENT_CODE_PALM_VERIFY_SUCCESS, (uint8_t *)(para), lenth);
+        break;
     case FACE_RESULT_FAIL_UNKNOWNUSER:
         OB_LOGD(TAG, "FACE_RESULT_FAIL_UNKNOWNUSER");
         uart_msg_face(EVENT_CODE_FACE_VERIFY_FAIL, NULL, 0);
@@ -81,6 +85,27 @@ static void face_register_event_callback(uint8_t result, void* para, uint8_t len
     case FACE_RESULT_SUCCESS_REGISTER_RIGHT:
         OB_LOGD(TAG, "FACE_RESULT_SUCCESS_REGISTER_RIGHT");
         uart_msg_face(EVENT_CODE_FACE_REGISTER_RIGHT, NULL, 0);
+        break;
+    case FACE_RESULT_FAIL_REPEAT:
+        OB_LOGD(TAG, "FACE_RESULT_FAIL_REPEAT");
+        uart_msg_face(EVENT_CODE_FACE_EXISTS, NULL, 0);
+        break;
+    default:
+        OB_LOGE(TAG, "[%s] not default", __func__);
+        break;
+    }
+    system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+}
+
+static void face_register_palm_event_callback(uint8_t result, void* para, uint8_t lenth) {
+    // OB_LOGI(TAG, "register palm event: result[%u]", result);
+    // OB_LOGI_DUMP((uint8_t*)(para), lenth);
+    switch (result)
+    {
+    case FACE_RESULT_SUCCESS_REGISTER:
+        OB_LOGD(TAG, "FACE_RESULT_SUCCESS_REGISTER");
+        uart_msg_face(EVENT_CODE_FACE_REGISTER_SUCCESS, (uint8_t *)(para), lenth);
+        face_task_set_mode(FACE_MODE_SLEEP);
         break;
     case FACE_RESULT_FAIL_REPEAT:
         OB_LOGD(TAG, "FACE_RESULT_FAIL_REPEAT");
@@ -182,7 +207,9 @@ void face_task_set_mode(uint8_t mode) {
         case FACE_MODE_SLEEP:     // 休眠
             face_task_driver.io->set_mode(mode, NULL, NULL, 0);
             break;
-        
+        case FACE_MODE_REGISTER_PALM:  // 注册模式(掌静脉)
+            face_task_driver.io->set_mode(mode, face_register_palm_event_callback, NULL, 0);
+            break;
         default:
             break;
     }

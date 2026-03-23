@@ -90,7 +90,8 @@ typedef enum {
     EVENT_CODE_FACE_DELETE_SUCCESS = 0x09,          ///< 0x09：人脸模板删除成功
     EVENT_CODE_FACE_DELETE_FAIL    = 0x0A,          ///< 0x0A：人脸模板删除失败（ID不存在/存储异常）
     EVENT_CODE_FACE_TIME_OUT       = 0x0B,          ///< 0x0B：人脸超时
-    EVENT_CODE_FACE_EXISTS         = 0x0C           ///< 0x0C：重复用户
+    EVENT_CODE_FACE_EXISTS         = 0x0C,          ///< 0x0C：重复用户
+    EVENT_CODE_PALM_VERIFY_SUCCESS = 0x0D           ///< 0x0D：掌静脉验证通过
 } event_code_face_e;
 
 typedef enum {
@@ -144,7 +145,9 @@ typedef enum {
     FACE_WORK_MODE_ADD_USER     = 0x03,    ///< 0x03：添加用户
     FACE_WORK_MODE_ID_DELETE    = 0x04,    ///< 0x04：ID删除
     FACE_WORK_MODE_VERIFY_DELETE= 0x05,    ///< 0x05：验证删除
-    FACE_WORK_MODE_SLEEP        = 0x06     ///< 0x06：休眠
+    FACE_WORK_MODE_SLEEP        = 0x06,    ///< 0x06：休眠
+    FACE_WORK_MODE_ADD_USER_PALM= 0x07,    ///< 0x07：添加用户（掌）
+
 } face_work_mode_t;
 
 typedef enum {

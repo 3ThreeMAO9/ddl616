@@ -121,6 +121,7 @@ typedef enum {
 #if (FACE_ENABLE_VERIFY_DELETE)
     FACE_MODE_VERIFY_DELETE,  // 验证后删除
 #endif
+    FACE_MODE_REGISTER_PALM,
 
 }face_mode_e;
 
@@ -142,6 +143,8 @@ typedef enum
     FACE_RESULT_FAIL_DELETE,           // 删除失败
     FACE_RESULT_FAIL_UNKNOWNUSER,      // 用户不存在
     FACE_RESULT_FAIL_TIMEOUT,          // 超时
+
+    PALM_RESULT_SUCCESS_VERIFY = 0x81, // 掌静脉验证成功
 } face_result_e;
 
 /****************Struct****************/
@@ -186,8 +189,8 @@ typedef struct {
     uint8_t register_count : 3;                             // 注册次数
     uint8_t repeat : 1;                                     // 查重
     uint8_t register_time_out : 4;                          // 录入超时（单位：秒）
-    uint8_t register_type : 1;                              // 录入类型 0-交互录入 1-单帧录入
-    uint8_t reserved    : 2;                                // 保留
+    uint8_t register_type : 2;                              // 录入类型 0-交互录入 1-单帧录入
+    uint8_t reserved    : 1;                                // 保留
 
 }face_function_attr_t;
 
