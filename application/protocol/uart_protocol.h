@@ -33,6 +33,7 @@
 #define UP_CMD_PARAM_REQ                    (0x07)   // 参数请求指令
 #define UP_CMD_REPORT_PARAM                 (0x08)   // 参数上报指令
 #define UP_CMD_SLEEP                        (0x09)   // 休眠命令
+#define UP_CMD_VERSION                      (0x0A)   // 版本号命令
 
 #define UP_CMD_HEART                        (0x2A)   // 心跳命令
 
@@ -49,6 +50,7 @@
 #define UP_CMD_ACK_PARAM_REQ                (0x87)   // 参数请求应答指令
 #define UP_CMD_ACK_REPORT_PARAM             (0x88)   // 参数上报应答指令
 #define UP_CMD_ACK_SLEEP                    (0x89)   // 休眠命令
+#define UP_CMD_ACK_VERSION                  (0x8A)   // 版本号应答命令
 
 #define UP_CMD_ACK_HEART                    (0xAA)   // 心跳应答
 

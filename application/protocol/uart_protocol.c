@@ -67,7 +67,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_OTA_REQUEST)      // (0x73)   // OTA升级请求
         HANDLER_IMPORT(UP_CMD_REPORT_PARAM)     // (0x08)   // 参数上报指令
         HANDLER_IMPORT(UP_CMD_SLEEP)            // (0x09)   // 休眠命令
-
+        HANDLER_IMPORT(UP_CMD_VERSION)          // (0x0A)   // 版本号命令
 
         HANDLER_IMPORT(UP_CMD_ACK_REPORT_ORDER) // (0x83)   // 锁操作上报应答
         HANDLER_IMPORT(UP_CMD_ACK_PARAM_REQ)    // (0x87)   // 参数请求应答指令

@@ -275,6 +275,21 @@ typedef struct
     uint8_t event_id;
 } frame_tamper_t;
 
+typedef struct
+{
+    uint8_t status;
+} frame_version_t;
+
+typedef struct
+{
+    uint8_t status;
+    uint16_t fw_funcode;
+    uint16_t fw_ver;
+    uint16_t flash_ver;
+    uint16_t reserved1;
+    uint16_t reserved2;
+} frame_version_ack_def_t;
+
 typedef struct {
     uint8_t status;
 } frame_heartbeat_t;
@@ -315,6 +330,7 @@ typedef struct
         frame_face_t face;           // 人脸帧结构体
         frame_heartbeat_t heartbeat; // 心跳数据体
 
+        frame_version_ack_def_t version;     // 版本号数据体
         frame_ack_def_t ack_def;
         uint8_t status;
         uint8_t data[12];            // 数据域
@@ -359,6 +375,7 @@ void uart_msg_ack_reset(uint8_t status);
 void uart_msg_ack_sleep(uint8_t status);
 void uart_msg_ack_ota_request(uint8_t status);
 void uart_msg_ack_param_report(uint8_t status);
+void uart_msg_version(uint8_t status, uint8_t *data, uint8_t size);
 
 /*****************************/
 

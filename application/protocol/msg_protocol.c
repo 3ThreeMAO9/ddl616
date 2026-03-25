@@ -124,6 +124,20 @@ static void fill_face_data(frame_data_t *data, va_list args)
     }
 }
 
+static void fill_version_data(frame_data_t *data, va_list args)
+{
+    uint8_t eventType = va_arg(args, int);
+    uint8_t *version_data = va_arg(args, uint8_t*);
+    int size = va_arg(args, int);
+    
+    // data->version.fw_funcode = 0;
+    // data->version.fw_ver = 0;
+    // data->version.flash_ver = 0;
+    if (version_data != NULL) {
+        memcpy(&data->version, version_data, size);
+    }
+}
+
 static void fill_ota_request_data(frame_data_t *data, va_list args)
 {
     uint8_t *ptr = va_arg(args, uint8_t*);
@@ -235,3 +249,13 @@ void uart_msg_ack_param_report(uint8_t status)
                          sizeof(frame_heartbeat_t), fill_ack_def_data, status);
 }
 
+void uart_msg_version(uint8_t status, uint8_t *data, uint8_t size)
+{
+    if (data == NULL || size != sizeof(frame_version_ack_def_t)) {
+        OB_LOGE(TAG, "uart_msg_version param error");
+        return;
+    }
+    uart_msg_common_send(UP_CMD_ACK_VERSION,
+                         sizeof(frame_version_ack_def_t), fill_version_data,
+                         status, data, size);
+}

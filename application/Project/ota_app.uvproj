@@ -1007,6 +1007,11 @@
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_sleep.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_protocol_version.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_version.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2086,6 +2091,11 @@
               <FileName>uart_protocol_sleep.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_sleep.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_version.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_version.c</FilePath>
             </File>
           </Files>
         </Group>
