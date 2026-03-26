@@ -37,6 +37,13 @@ typedef enum {
     UART_GROUP_CNT,
 }Uart_Group_t;
 
+// ===================== 通用复用类型 =====================
+typedef enum {
+    UART_OWNER_NONE = 0,
+    UART_OWNER_DEV1,
+    UART_OWNER_DEV2,
+} uart_owner_t;
+
 /*************************Struct*************************/
 #pragma pack(1)
 typedef struct
@@ -72,6 +79,8 @@ void hal_uart_sleep(hal_uart_sleep_config_t *uart_cfg);
 void hal_uartSendBuff(Uart_Group_t uart_group, uint8_t *data, uint16_t len);
 uint8_t hal_uart_receive_deal(Uart_Group_t uart_group, uint8_t *buf);
 void hal_uart_isr(Uart_Group_t uart_group);
+void hal_uart_switch(uart_owner_t owner, hal_uart_config_t *cfg);
+uart_owner_t hal_uart_get_owner(void);
 /**********************************************************/
 #endif
 

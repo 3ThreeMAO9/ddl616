@@ -209,7 +209,7 @@ void fp_task_init(void) {
         .register_count = 6,
         .repeat = 0,
         .auto_sleep = 0,
-        .idle_irq = 0,
+        .idle_irq = 1,
         .led_default = FP_LED_BLUE,
     };
 
@@ -283,46 +283,46 @@ uint8_t fp_task_control_led(uint8_t color) {
 }
 #endif
 
-uint8_t fp_task_test_mode(uint8_t handle_id) {
-    const fp_delete_params_t delete_params = {
-        .page_id = 0,
-        .count = 10,
-    };
-    const fp_function_attr_t fp_func_attr = {
-        .register_count = 6,
-        .repeat = 0,
-        .auto_sleep = 0,
-        .idle_irq = 0,
-        .led_default = 0,
-    };
+// uint8_t fp_task_test_mode(uint8_t handle_id) {
+//     const fp_delete_params_t delete_params = {
+//         .page_id = 0,
+//         .count = 10,
+//     };
+//     const fp_function_attr_t fp_func_attr = {
+//         .register_count = 6,
+//         .repeat = 0,
+//         .auto_sleep = 0,
+//         .idle_irq = 0,
+//         .led_default = 0,
+//     };
 
-    OB_LOGD(TAG, "fp test mode[%u]", handle_id);
+//     OB_LOGD(TAG, "fp test mode[%u]", handle_id);
 
-    switch (handle_id) {
-        case 0:
-            fp_task_set_mode(FP_MODE_SLEEP);
-            break;
-        case 1:
-            fp_task_set_mode(FP_MODE_IDLE);
-            break;
-        case 2:
-            fp_task_set_mode(FP_MODE_VERIFY);
-            break;
-        case 3:
-            fp_task_set_mode(FP_MODE_REGISTER);
-            break;
-        case 4:
-            fp_task_set_mode(FP_MODE_VERIFY_DELETE);
-            break;
-        case 5:
-            fp_task_delete_fp(delete_params);
-            break;
-        case 6:
-            fp_task_set_attr((void*)(&fp_func_attr), sizeof(fp_function_attr_t));
-            break;
-        default:
-            return false;
-    }
+//     switch (handle_id) {
+//         case 0:
+//             fp_task_set_mode(FP_MODE_SLEEP);
+//             break;
+//         case 1:
+//             fp_task_set_mode(FP_MODE_IDLE);
+//             break;
+//         case 2:
+//             fp_task_set_mode(FP_MODE_VERIFY);
+//             break;
+//         case 3:
+//             fp_task_set_mode(FP_MODE_REGISTER);
+//             break;
+//         case 4:
+//             fp_task_set_mode(FP_MODE_VERIFY_DELETE);
+//             break;
+//         case 5:
+//             fp_task_delete_fp(delete_params);
+//             break;
+//         case 6:
+//             fp_task_set_attr((void*)(&fp_func_attr), sizeof(fp_function_attr_t));
+//             break;
+//         default:
+//             return false;
+//     }
 		
-		return true;
-}
+// 		return true;
+// }

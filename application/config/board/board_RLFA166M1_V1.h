@@ -165,7 +165,7 @@ typedef enum
 #define FP_POWER_PIN                    (HAL_GPIO_PIN6)
 #define FP_WAKE_GPIO                    (HAL_GPIO_PORT0)
 #define FP_WAKE_PIN                     (HAL_GPIO_PIN7)
-#define FINGER_UART_SEL                 (UART_SOFT_0) // UART_1  //UART_SOFT_0
+#define FINGER_UART_SEL                 (UART_1) // UART_1  //UART_SOFT_0
 
 // face
 #define FACE_TX_GPIO                    (HAL_GPIO_PORT0)

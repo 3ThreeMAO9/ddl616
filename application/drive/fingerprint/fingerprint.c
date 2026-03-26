@@ -10,7 +10,7 @@
 #include "fingerprint.h"
 #include "utils.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "fp"
 
@@ -735,6 +735,8 @@ static void fp_process_step(fp_context_t *ctx) {
     }
 	
     if (ctx->led.processing) {
+        ctx->config->ops.uart_init(1);
+        
         fingerprint_process_control_led(ctx);
         ctx->status.processing = 0;
         ctx->status.timeout = 0;
@@ -754,6 +756,8 @@ static void fp_process_step(fp_context_t *ctx) {
             if (NULL != ctx->config->ops.is_wake) {
 
                 if (ctx->config->ops.is_wake()) {
+                    ctx->config->ops.uart_init(1);
+
                     if (ctx->mode == FP_MODE_REGISTER)
                     {
                         OB_LOGI(TAG, "FP_MODE_REGISTER reg.count: %u", ctx->params.reg.count);
@@ -811,20 +815,20 @@ void fingerprint_process(fp_context_t *ctx) {
 
     // 检查超时
     if (system_out_time_cnt(ctx->tick)) {
-        if (ctx->status.waiting == 1)
-        {
-            OB_LOGE(TAG, "TIME_OUT!!!!!!!!!!!!");
-            ctx->config->ops.power(0);
-            ctx->config->ops.power(1);
-            ctx->status.handshake = 0;
-            ctx->status.waiting = 0;
-#if (FP_ENABLE_LED_CONTROL)
-            fingerprint_control_led(ctx, ctx->led.color);
-#endif
-            ctx->tick = system_inc_time_cnt(FP_RX_TIMEOUT);
-        }
-        else
-            fp_handle_timeout(ctx);
+//         if (ctx->status.waiting == 1)
+//         {
+//             OB_LOGE(TAG, "TIME_OUT!!!!!!!!!!!!");
+//             ctx->config->ops.power(0);
+//             ctx->config->ops.power(1);
+//             ctx->status.handshake = 0;
+//             ctx->status.waiting = 0;
+// #if (FP_ENABLE_LED_CONTROL)
+//             fingerprint_control_led(ctx, ctx->led.color);
+// #endif
+//             ctx->tick = system_inc_time_cnt(FP_RX_TIMEOUT);
+//         }
+//         else
+        fp_handle_timeout(ctx);
     }
     else if (NULL != ctx->config->ops.receive) {
         uint8_t buffer[FP_RX_BUFFER_SIZE];
@@ -865,6 +869,10 @@ uint8_t fp_is_ready(fp_context_t *ctx, uint8_t mode) {
     OB_LOGD(TAG, "fp is ready: %u", mode);
     ctx->mode = mode;
 
+    if (FP_MODE_SLEEP == mode) {
+        // 确保休眠的时候串口是在指纹上
+        ctx->config->ops.uart_init(1);
+    }
 
     fingerprint_reset_context(ctx);
     ctx->status.waiting = 0;

@@ -166,6 +166,7 @@ typedef enum {
 typedef struct {
     void (*init)(void);                     // GPIO初始化
     void (*power)(uint8_t);                 // 供电使能： true，供电； false，断电
+    void (*uart_init)(uint8_t);             // 串口初始化
     uint8_t (*send)(uint8_t*, uint8_t);     // 串口发送
     uint8_t (*receive)(uint8_t*);           // 串口接收
     uint8_t (*is_wake)(void);               // 唤醒检测

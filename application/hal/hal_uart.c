@@ -2,7 +2,7 @@
 #include "hal_gpio.h"
 #include "system_timer.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "hal_uart"
 
@@ -17,7 +17,34 @@ static volatile uint32_t uart_timeOut[UART_GROUP_CNT];
 static const uint16_t uart_len_max[UART_GROUP_CNT] = {UART0_BUF_LEN, UART1_BUF_LEN, UART2_BUF_LEN};
 static volatile uint8_t *pt[UART_GROUP_CNT] = {uart0_buf, uart1_buf, uart2_buf};
 
-// -------------------------------------------------
+/************************* UART 通用复用管理 *************************/
+static uart_owner_t g_uart_owner = UART_OWNER_NONE;
+
+// 切换 UART 为指定设备（自动配置 IO + 波特率 + 回调）
+void hal_uart_switch(uart_owner_t owner, hal_uart_config_t *cfg)
+{
+    if (cfg == NULL) {
+        g_uart_owner = UART_OWNER_NONE;
+        return;
+    }
+
+    if (g_uart_owner == owner) {
+        return;
+    }
+
+    Uart_Group_t uart_group = cfg->uart_group;
+
+    hal_uart_sotp(uart_group);
+    hal_uart_Init(cfg);
+
+    g_uart_owner = owner;
+}
+
+// 获取当前 UART 归属
+uart_owner_t hal_uart_get_owner(void)
+{
+    return g_uart_owner;
+}
 
 void hal_uart_receive_buff_callback(Uart_Group_t uart_group, uint8_t data)
 {

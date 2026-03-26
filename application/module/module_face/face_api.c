@@ -9,7 +9,7 @@
 #include "face_api.h"
 #include "face_config.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_ERROR
 #include "ob_log.h"
 #define TAG "face_api"
 
@@ -20,8 +20,12 @@ static face_handle_t face_handle;
 /*************** 人脸硬件配置 ***************/
 static void face_uart_IRQ(const uint8_t value)
 {
-    if (face_handle.uart.lenth < FACE_RX_BUFFER_SIZE)
-    {
+    // 仅当人脸占用 UART 时才处理，防止串扰
+    if (hal_uart_get_owner() != UART_OWNER_DEV2) {
+        return;
+    }
+
+    if (face_handle.uart.lenth < FACE_RX_BUFFER_SIZE) {
         face_handle.uart.buffer[face_handle.uart.lenth++] = value;
     }
     face_handle.uart.time_out = system_inc_time_cnt(UART_TIME_OUT);
@@ -40,31 +44,35 @@ static inline void face_power(uint8_t turn_on)
     if (turn_on)
     {
         SET_FACE_POWER(1);
-        hal_uart_config_t uart_cfg = {
-            .tx_port = FACE_TX_GPIO,
-            .tx_pin = FACE_TX_PIN,
-            .rx_port = FACE_RX_GPIO,
-            .rx_pin = FACE_RX_PIN,
-            .baudrate = FACE_UART_BAUDRATE,
-            .uart_group = FACE_UART_SEL,
-            .callback = face_uart_IRQ
-        };
-        hal_uart_Init(&uart_cfg);
+        // hal_uart_config_t uart_cfg = {
+        //     .tx_port    = FACE_TX_GPIO,
+        //     .tx_pin     = FACE_TX_PIN,
+        //     .rx_port    = FACE_RX_GPIO,
+        //     .rx_pin     = FACE_RX_PIN,
+        //     .baudrate   = FACE_UART_BAUDRATE,
+        //     .uart_group = FACE_UART_SEL,
+        //     .callback   = face_uart_IRQ
+        // };
+        // hal_uart_switch(UART_OWNER_DEV2, &uart_cfg);
+        OB_LOGI(TAG,"face uart on");
         face_handle.ctx.status.power = 1;
     }
     else
     {
         SET_FACE_POWER(0);
-        hal_uart_sleep_config_t uart_sleep_cfg = {
-            .tx_port = FACE_TX_GPIO,
-            .tx_pin = FACE_TX_PIN,
-            .rx_port = FACE_RX_GPIO,
-            .rx_pin = FACE_RX_PIN,
-            .uart_group = FACE_UART_SEL,
-            .mode = HAL_GPIO_MODE_OUTPUT_PP,
-            .level = 0
-        };
-        hal_uart_sleep(&uart_sleep_cfg);
+        // hal_uart_sleep_config_t uart_sleep_cfg = {
+        //     .tx_port    = FACE_TX_GPIO,
+        //     .tx_pin     = FACE_TX_PIN,
+        //     .rx_port    = FACE_RX_GPIO,
+        //     .rx_pin     = FACE_RX_PIN,
+        //     .uart_group = FACE_UART_SEL,
+        //     .mode       = HAL_GPIO_MODE_OUTPUT_PP,
+        //     .level      = 0
+        // };
+        // hal_uart_sleep(&uart_sleep_cfg);
+
+        // hal_uart_switch(UART_OWNER_NONE, NULL);
+        OB_LOGE(TAG,"face uart off");
         face_handle.ctx.status.power = 0;
         face_handle.ctx.status.encryption = 0;
         face_handle.ctx.status.wait_detect = 0; // 人脸特有：等待检测标志

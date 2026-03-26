@@ -10,7 +10,7 @@
 #include "fingerprint_api.h"
 #include "fingerprint_config.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "fp_api"
 
@@ -20,6 +20,11 @@ static fp_handle_t fp_handle;
 
 /*************** 指纹硬件配置 ***************/
 static void fingerprint_uart_IRQ(const uint8_t value) {
+    // 仅当指纹占用 UART 时才处理，防止串扰
+    if (hal_uart_get_owner() != UART_OWNER_DEV1) {
+        return;
+    }
+
     register fingerprint_uart_t *p_uart = &fp_handle.uart;
     if (p_uart->lenth < FP_RX_BUFFER_SIZE) {
         p_uart->buffer[p_uart->lenth++] = value;
@@ -34,6 +39,39 @@ static inline void fingerprint_hw_init(void) {
     FINGERPRINT_POWER_INIT(0);
 }
 
+static inline void fingerprint_uart_init(uint8_t turn_on)
+{
+    if (turn_on) {
+        if (hal_uart_get_owner() != UART_OWNER_DEV1){
+            const hal_uart_config_t uart_cfg = {
+                .tx_port    = FP_TX_GPIO,
+                .tx_pin     = FP_TX_PIN,
+                .rx_port    = FP_RX_GPIO,
+                .rx_pin     = FP_RX_PIN,
+                .baudrate   = FINGER_UART_BAUDRATE,
+                .uart_group = FINGER_UART_SEL,
+                .callback   = fingerprint_uart_IRQ
+            };
+            hal_uart_switch(UART_OWNER_DEV1, &uart_cfg);
+            OB_LOGI(TAG,"finger uart on");
+        }
+    }
+    else{
+        const hal_uart_sleep_config_t uart_sleep_cfg = {
+            .tx_port    = FP_TX_GPIO,
+            .tx_pin     = FP_TX_PIN,
+            .rx_port    = FP_RX_GPIO,
+            .rx_pin     = FP_RX_PIN,
+            .mode       = HAL_GPIO_MODE_OUTPUT_PP,
+            .uart_group = FINGER_UART_SEL,
+            .level      = 0
+        };
+        hal_uart_sleep(&uart_sleep_cfg);
+        hal_uart_switch(UART_OWNER_NONE, NULL);
+        OB_LOGE(TAG,"finger uart off");
+    }
+}
+
 static inline void fingerprint_power(uint8_t turn_on) {
     OB_LOGD(TAG, "power: %u", turn_on);
     if (turn_on) {
@@ -46,31 +84,11 @@ static inline void fingerprint_power(uint8_t turn_on) {
             FINGERPRINT_WAKE_ENABLE();
         }
         SET_FINGERPRINT_POWER(1);
-        const hal_uart_config_t uart_cfg = {
-            .tx_port = FP_TX_GPIO,
-            .tx_pin = FP_TX_PIN,
-            .rx_port = FP_RX_GPIO,
-            .rx_pin = FP_RX_PIN,
-            .baudrate = FINGER_UART_BAUDRATE,
-            .uart_group = FINGER_UART_SEL,
-            .callback = fingerprint_uart_IRQ
-        };
-        hal_uart_Init((hal_uart_config_t*)(&uart_cfg));
+        fingerprint_uart_init(1);
         fp_handle.ctx.status.power = 1;
-
-        // 关闭中断
     }
     else {
-        const hal_uart_sleep_config_t uart_sleep_cfg = {
-            .tx_port = FP_TX_GPIO,
-            .tx_pin = FP_TX_PIN,
-            .rx_port = FP_RX_GPIO,
-            .rx_pin = FP_RX_PIN,
-            .mode = HAL_GPIO_MODE_OUTPUT_PP,
-            .uart_group = FINGER_UART_SEL,
-            .level = 0
-        };
-        hal_uart_sleep((hal_uart_sleep_config_t*)(&uart_sleep_cfg));
+        fingerprint_uart_init(0);
         SET_FINGERPRINT_POWER(0);
         FINGERPRINT_WAKE_ENABLE();
         fp_handle.ctx.status.power = 0;
@@ -124,6 +142,7 @@ static inline uint8_t fingerprint_receive_packet(uint8_t* buffer) {
 static const fingerprint_Config_t fingerprint_Config = {
     .ops.init = fingerprint_hw_init,
     .ops.power = fingerprint_power,
+    .ops.uart_init = fingerprint_uart_init,
     .ops.send = fingerprint_send_packet,
     .ops.receive = fingerprint_receive_packet,
     .ops.is_wake = fp_is_wake_API,
