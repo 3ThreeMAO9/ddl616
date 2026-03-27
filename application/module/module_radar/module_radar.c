@@ -18,7 +18,7 @@
 
 /*************************Variable*************************/
 static radar_event_callback_t radar_callback;
-
+static uint32_t radar_wake_tick = 0;
 // ---------------------------------------------------------
 // @brief 雷达事件回调
 // @param radarType，雷达类型
@@ -130,6 +130,7 @@ void module_radar_stay_scan(uint32_t value)
 uint8_t module_radar_wake(void)
 {
     radarEvent_callback(RADAR_EVENT_WAKE, NULL);
+    radar_wake_tick = system_inc_time_cnt(5000);
     return false;
 }
 
@@ -163,8 +164,12 @@ void module_radar_loop(void)
         radar_stay_reset();
     }
 
-    if (true == module_radar_is_wake_API())
+    // 每次触发最短5s
+    if (system_out_time_cnt(radar_wake_tick))
     {
-        module_radar_wake();
+        if (true == module_radar_is_wake_API())
+        {
+            module_radar_wake();
+        }
     }
 }

@@ -26,22 +26,22 @@ static radar_task_driver_t g_radar_task_driver;
  */
 static void radar_task_callback(uint8_t event, uint8_t value)
 {
-    // OB_LOGD(TAG, "[%s] event[%d]  value[%d]", __func__, event, value);
-    // switch (event)
-    // {
-    // case RADAR_EVENT_INIT_OK:
-    //     break;
-    // case RADAR_EVENT_PAUSE:
-    //     break;
-    // case RADAR_EVENT_STAY_TRIGGER:
-    //     uart_msg_stay_warn(EVENT_CODE_RADAR_STAY,value);
-    //     break;
-    // case RADAR_EVENT_WAKE:
-    //     uart_msg_stay_warn(EVENT_CODE_RADAR_WAKE,value);
-    //     break;
-    // default:
-    //     break;
-    // }
+    OB_LOGD(TAG, "[%s] event[%d]  value[%d]", __func__, event, value);
+    switch (event)
+    {
+    case RADAR_EVENT_INIT_OK:
+        break;
+    case RADAR_EVENT_PAUSE:
+        break;
+    case RADAR_EVENT_STAY_TRIGGER:
+        uart_msg_stay_warn(EVENT_CODE_RADAR_STAY,value);
+        break;
+    case RADAR_EVENT_WAKE:
+        uart_msg_stay_warn(EVENT_CODE_RADAR_WAKE,value);
+        break;
+    default:
+        break;
+    }
 }
 
 /**

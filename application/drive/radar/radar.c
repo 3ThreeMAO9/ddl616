@@ -31,6 +31,14 @@ void radar_init(void)
 #endif
 }
 
+void radar_set_out_int(uint8_t enable)
+{
+    if (enable == Enabled)
+        RADAR_INT_PIN_ENABLE();
+    else
+        RADAR_INT_PIN_DISABLE();
+}
+
 void radar_set_distance(uint8_t type)
 {
     switch (type)

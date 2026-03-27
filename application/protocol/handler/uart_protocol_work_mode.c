@@ -144,6 +144,7 @@ static void face_mode_handler(frame_work_mode_t* param)
         OB_LOGD(TAG, "face ID delete mode ,del_id = 0x%04X",param->data);
         face_delete_params_t del_id;
         del_id.page_id = param->data;
+        del_id.page_id = BIG_LITTLE_SWAP16(del_id.page_id); // 大小端转换
         face_task_delete_face(del_id);
         break;
     case FACE_WORK_MODE_VERIFY_DELETE:

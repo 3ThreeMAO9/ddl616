@@ -21,6 +21,7 @@
 
 /***********Function***********/
 void radar_init(void);
+void radar_set_out_int(uint8_t enable);
 void radar_set_distance(uint8_t type);
 /*****************************/
 
