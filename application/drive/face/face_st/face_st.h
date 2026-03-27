@@ -122,7 +122,7 @@ typedef enum {
     FACE_MODE_VERIFY_DELETE,  // 验证后删除
 #endif
     FACE_MODE_REGISTER_PALM,
-
+    FACE_MODE_RESET_ALL,
 }face_mode_e;
 
 // 操作结果码（
@@ -235,6 +235,10 @@ typedef struct {
 
     uint32_t tick;                          // 计时
     uint16_t timeout_ms;                    // 超时时间
+
+    uint8_t encryption_count;               // 加密次数
+    uint8_t  delay_power_en;
+    uint32_t delay_tick;
 
     face_module_attr_t mdl_attr;            // 模块属性（固定）
     face_function_attr_t func_attr;         // 功能属性（软件功能决定）

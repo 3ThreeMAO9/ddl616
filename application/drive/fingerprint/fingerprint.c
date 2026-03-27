@@ -704,6 +704,7 @@ static void fp_process_mode(fp_context_t *ctx) {
             break;
 #if (FP_ENABLE_DELETE)
         case FP_MODE_DELETE:
+        case FP_MODE_RESET_ALL:
             fingerprint_process_delete(ctx);
             break;
 #endif
@@ -736,7 +737,7 @@ static void fp_process_step(fp_context_t *ctx) {
 	
     if (ctx->led.processing) {
         ctx->config->ops.uart_init(1);
-        
+        fingerprint_event_callback(ctx, FP_EVENT_POWER_ON, NULL, 0);
         fingerprint_process_control_led(ctx);
         ctx->status.processing = 0;
         ctx->status.timeout = 0;
@@ -757,7 +758,7 @@ static void fp_process_step(fp_context_t *ctx) {
 
                 if (ctx->config->ops.is_wake()) {
                     ctx->config->ops.uart_init(1);
-
+                    fingerprint_event_callback(ctx, FP_EVENT_POWER_ON, NULL, 0);
                     if (ctx->mode == FP_MODE_REGISTER)
                     {
                         OB_LOGI(TAG, "FP_MODE_REGISTER reg.count: %u", ctx->params.reg.count);
@@ -872,6 +873,7 @@ uint8_t fp_is_ready(fp_context_t *ctx, uint8_t mode) {
     if (FP_MODE_SLEEP == mode) {
         // 确保休眠的时候串口是在指纹上
         ctx->config->ops.uart_init(1);
+        fingerprint_event_callback(ctx, FP_EVENT_POWER_ON, NULL, 0);
     }
 
     fingerprint_reset_context(ctx);

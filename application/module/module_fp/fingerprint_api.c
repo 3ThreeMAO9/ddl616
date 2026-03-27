@@ -53,6 +53,7 @@ static inline void fingerprint_uart_init(uint8_t turn_on)
                 .callback   = fingerprint_uart_IRQ
             };
             hal_uart_switch(UART_OWNER_DEV1, &uart_cfg);
+            delay_ms(10);
             OB_LOGI(TAG,"finger uart on");
         }
     }
@@ -195,6 +196,7 @@ uint8_t fp_set_mode_API(uint8_t mode, fingerprint_api_callback_t callback, void*
         case FP_MODE_REGISTER:
 #if (FP_ENABLE_DELETE)
         case FP_MODE_DELETE:
+        case FP_MODE_RESET_ALL:
 #endif
 #if (FP_ENABLE_VERIFY_DELETE)
         case FP_MODE_VERIFY_DELETE:

@@ -105,7 +105,7 @@ typedef enum {
     FP_MODE_REGISTER,           // 注册
     FP_MODE_DELETE,             // 按编号删除
     FP_MODE_VERIFY_DELETE,      // 验证删除
-
+    FP_MODE_RESET_ALL,         // 恢复出厂
 }fp_mode_e;
 
 typedef enum {
@@ -128,6 +128,7 @@ typedef enum{
     FP_EVENT_PROCESSING = 10,    // 过程
     FP_EVENT_CHIP_SN = 11,       // 读取Chip SN
     FP_EVENT_DELETE_ALL = 12,    // 删除所有指纹
+    FP_EVENT_POWER_ON = 13,      // 指纹上电
 
 } fingerprint_event_e;
 

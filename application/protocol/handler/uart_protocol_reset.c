@@ -29,13 +29,7 @@ HANDLER_DEFINE(UP_CMD_RESET)
             .count = 0,
         };
         OB_LOGD(TAG, "finger ID delete mode ,data=0x%04X",delete_params.page_id);
-        fp_task_delete_fp(delete_params);
-
-
-        face_delete_params_t del_id;
-        del_id.page_id = 0xFFFF;
-        face_task_delete_face(del_id);
-
+        fp_task_reset_all_fp(delete_params);    // 由于指纹和人脸复用，这个指纹全部删除处理完成后，自动跑人脸全部删除
 
         status = STATUS_SUCCESS;
     }

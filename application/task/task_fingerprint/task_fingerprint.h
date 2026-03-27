@@ -101,6 +101,8 @@ void fp_task_set_attr(void* attr, uint8_t lenth);
  * @note : 按照index删除单个或多个连续指纹/指静脉
  */
 void fp_task_delete_fp(fp_delete_params_t params);      // 按Index删除
+
+void fp_task_reset_all_fp(fp_delete_params_t params);
 #endif
 
 #if (FP_ENABLE_LED_CONTROL)

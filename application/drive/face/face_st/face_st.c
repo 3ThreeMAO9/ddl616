@@ -9,7 +9,7 @@
 #include "face_st.h"
 #include "utils.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "face"
 
@@ -89,6 +89,8 @@ static void face_process_verify(face_context_t *ctx)
                 face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
                 ctx->status.encryption = 1;     //密钥种子发送及当加密成功
                 ctx->step = 1;
+                ctx->encryption_count++;
+                OB_LOGD(TAG,"ctx->encryption_count %d",ctx->encryption_count);
             }
             else{
                 face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
@@ -100,6 +102,13 @@ static void face_process_verify(face_context_t *ctx)
         if (ctx->ack_packet.result == MR_SUCCESS)
         {
             ctx->step = 5;
+            ctx->encryption_count = 0;
+            face_send_command(ctx, FACE_CMD_VERIFY, (uint8_t[]){0x00, 0x05}, 2);
+        }
+        else if ((ctx->status.timeout) && (ctx->encryption_count >= 3))
+        {
+            ctx->step = 5;
+            ctx->encryption_count = 0;
             face_send_command(ctx, FACE_CMD_VERIFY, (uint8_t[]){0x00, 0x05}, 2);
         }
         else
@@ -593,6 +602,14 @@ static void face_process_register_palm(face_context_t *ctx)
                     ctx->callback(FACE_RESULT_FAIL_REPEAT, NULL, 0);
                 }
             }
+            else if (ctx->ack_packet.result == MR_FAILED4_TIMEOUT)
+            {
+                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                ctx->step = 0;
+                if (NULL != ctx->callback) {
+                    ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
+                }
+            }
             else
             {
                 OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
@@ -646,10 +663,10 @@ static void face_process_delete(face_context_t *ctx)
     case 2:
         if (NULL != ctx->callback)
         {
-            if (MR_SUCCESS == ctx->ack_packet.code)
+            if (MR_SUCCESS == ctx->ack_packet.result)
             {
                 if (ctx->params.del.page_id == 0xFFFF)
-                    ctx->callback(FACE_RESULT_SUCCESS_DELETE_ALL, NULL, 0);
+                    ctx->callback(FACE_RESULT_SUCCESS_DELETE_ALL, (&ctx->params.del), sizeof(face_delete_params_t));
                 else
                     ctx->callback(FACE_RESULT_SUCCESS_DELETE, (&ctx->params.del), sizeof(face_delete_params_t));
             }
@@ -673,6 +690,8 @@ static void face_process_sleep(face_context_t *ctx)
         if (NULL != ctx->config->ops.power)
         {
             ctx->config->ops.power(0);
+            ctx->status.handshake = 0;
+            ctx->delay_power_en = 0;
         }
         ctx->step = 1;
         break;
@@ -870,6 +889,7 @@ static void face_process_step(face_context_t *ctx)
             face_process_register_palm(ctx);
             break;
         case FACE_MODE_DELETE:
+        case FACE_MODE_RESET_ALL:
             face_process_delete(ctx);
             break;
         case FACE_MODE_SLEEP:
@@ -920,7 +940,21 @@ void face_process(face_context_t *ctx)
         return;
     }
 
-    // 检查超时
+    // ====================== 非阻塞 2s 延时上电 ======================
+    if (ctx->delay_power_en && !ctx->status.power)
+    {
+        if (system_out_time_cnt(ctx->delay_tick))
+        {
+            OB_LOGD(TAG, "delay 1s arrive, power on");
+            ctx->config->ops.power(1);
+            ctx->status.handshake = 0;
+            ctx->delay_power_en = 0;
+            ctx->tick = system_inc_time_cnt(FACE_READY_TIMEOUT);
+        }
+        return; // 延时未到，直接返回，不跑后续流程
+    }
+
+    // 原来的超时处理
     if (system_out_time_cnt(ctx->tick))
     {
         if (!ctx->status.handshake)
@@ -950,7 +984,8 @@ void face_process(face_context_t *ctx)
         }
     }
 
-    if (ctx->status.processing || (ctx->status.timeout && (0 == ctx->step)))
+    // if (ctx->status.processing || (ctx->status.timeout && (0 == ctx->step)))
+    if (ctx->status.processing || ctx->status.timeout)
     {
         face_process_step(ctx);
     }
@@ -974,8 +1009,28 @@ uint8_t face_is_ready(face_context_t *ctx, uint8_t mode)
         {
             return false;
         }
-        ctx->config->ops.power(1);
-        ctx->status.handshake = 0;
+        // 验证模式 → 非阻塞延时2s上电
+        if (mode == FACE_MODE_VERIFY 
+            || mode == FACE_MODE_INIT
+            || mode == FACE_MODE_VERIFY_DEMO 
+            || mode == FACE_MODE_REGISTER
+            || mode == FACE_MODE_REGISTER_PALM
+            || mode == FACE_MODE_VERIFY_DELETE)
+        {
+            OB_LOGD(TAG, "verify mode, delay power on 1s");
+            ctx->delay_power_en = 1;
+            ctx->delay_tick = system_inc_time_cnt(1000);
+        }
+        else if (mode == FACE_MODE_SLEEP)
+        {
+
+        }
+        else
+        {
+            // 其他模式立即上电
+            ctx->config->ops.power(1);
+            ctx->status.handshake = 0;
+        }
     }
 
     if (!ctx->status.handshake)

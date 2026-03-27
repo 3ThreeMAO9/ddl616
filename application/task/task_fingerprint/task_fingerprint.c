@@ -8,6 +8,7 @@
  * Date: 2025-12-10
  */
 #include "task_fingerprint.h"
+#include "task_face.h"
 #include "task_system_time.h"
 
 #include "user_parameter.h"
@@ -55,11 +56,14 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
         OB_LOGI(TAG, "FP_EVENT_INVALID_MODULE");
         uart_msg_finger(EVENT_CODE_FINGER_VERIFY_FAIL_MODULE, 0);
         break;
+    case FP_EVENT_POWER_ON:
+        break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
         break;
     }
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+    face_task_set_mode(FACE_MODE_SLEEP);
     // fp_task_set_mode(FP_MODE_IDLE);
     return true;
 }
@@ -99,12 +103,14 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
     case FP_EVENT_FAIL_STORE:
         OB_LOGI(TAG, "FP_EVENT_FAIL_STORE");
         break;
+    case FP_EVENT_POWER_ON:
+        break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
         break;
     }
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-
+    face_task_set_mode(FACE_MODE_SLEEP);
     return true;
 }
 
@@ -122,12 +128,52 @@ static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t len
         OB_LOGI(TAG, "FP_EVENT_FAIL_DELETE");
         uart_msg_finger(EVENT_CODE_FINGER_DELETE_FAIL, 0);
         break;
+    case FP_EVENT_POWER_ON:
+        break;
     default:
-        OB_LOGE(TAG, "[%s] not default", __func__);
+        OB_LOGE(TAG, "[%s] not default event[%d]", __func__, event);
         break;
     }
 
     fp_task_set_mode(FP_MODE_IDLE);
+    face_task_set_mode(FACE_MODE_SLEEP);
+    system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+
+    return true;
+}
+
+static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t lenth) {
+    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
+
+    switch (event)
+    {
+    case FP_EVENT_SUCCESS_HANDLE:
+        OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE   del_finger_id %d", ptr->page_id);
+        uart_msg_finger(EVENT_CODE_FINGER_DELETE_SUCCESS, ptr->page_id);
+        break;
+    case FP_EVENT_DELETE_ALL:
+        OB_LOGI(TAG, "FP_EVENT_DELETE_ALL");
+        uart_msg_finger(EVENT_CODE_FINGER_DELETE_SUCCESS, 0xff);
+
+        face_delete_params_t del_id;
+        del_id.page_id = 0xFFFF;
+        OB_LOGD(TAG, "face ID delete mode ,data=0x%04X",del_id.page_id);
+        face_task_reset_all_face(del_id);
+        break;
+    case FP_EVENT_FAIL_DELETE:
+        OB_LOGI(TAG, "FP_EVENT_FAIL_DELETE");
+        uart_msg_finger(EVENT_CODE_FINGER_DELETE_FAIL, 0);
+        break;
+    case FP_EVENT_POWER_ON:
+        break;
+    default:
+        OB_LOGE(TAG, "[%s] not default event[%d]", __func__, event);
+        break;
+    }
+
+    fp_task_set_mode(FP_MODE_IDLE);
+    if (event != FP_EVENT_DELETE_ALL)
+        face_task_set_mode(FACE_MODE_SLEEP);
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
 
     return true;
@@ -152,6 +198,8 @@ static uint8_t fp_verify_delete_event_callback(uint8_t event, void* params, uint
         OB_LOGI(TAG, "FP_EVENT_FAIL_DELETE");
         uart_msg_finger(EVENT_CODE_FINGER_DELETE_FAIL, 0);
         break;
+    case FP_EVENT_POWER_ON:
+        break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
         break;
@@ -159,7 +207,7 @@ static uint8_t fp_verify_delete_event_callback(uint8_t event, void* params, uint
 
     // fp_task_set_mode(FP_MODE_IDLE);
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-
+    face_task_set_mode(FACE_MODE_SLEEP);
     return true;
 }
 #endif
@@ -171,6 +219,14 @@ void fp_task_delete_fp(fp_delete_params_t params) {
     }
 
     fp_task_driver.io->set_mode(FP_MODE_DELETE, fp_delete_event_callback, (&params), sizeof(fp_delete_params_t));
+}
+
+void fp_task_reset_all_fp(fp_delete_params_t params) {
+    if (NULL == fp_task_driver.io->set_mode) {
+        return;
+    }
+
+    fp_task_driver.io->set_mode(FP_MODE_RESET_ALL, fp_reset_all_event_callback, (&params), sizeof(fp_delete_params_t));
 }
 #endif
 

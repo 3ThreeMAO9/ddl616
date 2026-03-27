@@ -33,6 +33,23 @@ void hal_uart_switch(uart_owner_t owner, hal_uart_config_t *cfg)
     }
 
     Uart_Group_t uart_group = cfg->uart_group;
+  
+    if (owner == UART_OWNER_DEV1){
+        OB_GPIO0->MODE_b.MODEPIN3 = GPIO_PINMODE_PULL_UP;
+        OB_GPIO2->MODE_b.MODEPIN11 = GPIO_PINMODE_PULL_UP;
+        OB_GPIO0->DATA |= (GPIO_PIN3);
+        OB_GPIO2->DATA |= (GPIO_PIN11);
+        OB_GPIO0->MF0_b.PORT_3 = GPIO_MF_TYPE_GPIO;
+        OB_GPIO2->MF1_b.PORT_11 = GPIO_MF_TYPE_GPIO; 
+    }
+    else if (owner == UART_OWNER_DEV2){
+        OB_GPIO2->MODE_b.MODEPIN1 = GPIO_PINMODE_PULL_UP;
+        OB_GPIO2->MODE_b.MODEPIN0 = GPIO_PINMODE_PULL_UP;
+        OB_GPIO2->DATA |= (GPIO_PIN1);
+        OB_GPIO2->DATA |= (GPIO_PIN0);
+        OB_GPIO2->MF0_b.PORT_1 = GPIO_MF_TYPE_GPIO;
+        OB_GPIO2->MF0_b.PORT_0 = GPIO_MF_TYPE_GPIO; 
+    }
 
     hal_uart_sotp(uart_group);
     hal_uart_Init(cfg);
@@ -119,6 +136,7 @@ static void hw_uart_io_init(hal_uart_config_t *cfg)
     GPIO_SetPinMFType(ob_tx_port, ob_tx_pin, tx_mf, GPIO_PINMODE_PUSH_PULL);
     GPIO_SetPinMFType(ob_rx_port, ob_rx_pin, rx_mf, GPIO_PINMODE_PULL_UP);
 
+    delay_ms(10);
     OB_UART_Type *uart_dev = (cfg->uart_group == UART_0) ? OB_UART0 : OB_UART1;
     IRQn_Type irq_num = (cfg->uart_group == UART_0) ? UART0_IRQn : UART1_IRQn;
     UART_Open(uart_dev, cfg->baudrate, cfg->callback);
@@ -167,14 +185,21 @@ void hal_uart_sotp(Uart_Group_t uart_group)
     }
 }
 
-static void hw_uart_sleep(hal_uart_sleep_config_t *cfg)
+void hal_uart_gpio_sleep(hal_uart_sleep_config_t *cfg)
 {
+    if (cfg == NULL)
+        return;
     HAL_GPIO_Write(cfg->tx_port, cfg->tx_pin, cfg->level);
     HAL_GPIO_Init(cfg->tx_port, cfg->tx_pin, cfg->mode, HAL_GPIO_PULL_NONE);
     HAL_GPIO_Write(cfg->rx_port, cfg->rx_pin, cfg->level);
-    HAL_GPIO_Init(cfg->rx_port, cfg->rx_pin, cfg->mode, HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Init(cfg->rx_port, cfg->rx_pin, cfg->mode, HAL_GPIO_PULL_NONE); 
+}
 
-    hal_uart_sotp(cfg->uart_group);
+static void hw_uart_sleep(hal_uart_sleep_config_t *uart_cfg)
+{
+    hal_uart_gpio_sleep(uart_cfg);
+
+    hal_uart_sotp(uart_cfg->uart_group);
 }
 
 void hal_uart_sleep(hal_uart_sleep_config_t *uart_cfg)

@@ -11,7 +11,7 @@
 #include "task_fingerprint.h"
 #include "task_face.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "up_work_mode"
 

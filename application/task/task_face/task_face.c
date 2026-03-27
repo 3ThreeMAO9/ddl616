@@ -90,6 +90,10 @@ static void face_register_event_callback(uint8_t result, void* para, uint8_t len
         OB_LOGD(TAG, "FACE_RESULT_FAIL_REPEAT");
         uart_msg_face(EVENT_CODE_FACE_EXISTS, NULL, 0);
         break;
+    case FACE_RESULT_FAIL_TIMEOUT:
+        OB_LOGD(TAG, "FACE_RESULT_FAIL_TIMEOUT");
+        uart_msg_face(EVENT_CODE_FACE_TIME_OUT, NULL, 0);
+        break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
         break;
@@ -110,6 +114,10 @@ static void face_register_palm_event_callback(uint8_t result, void* para, uint8_
     case FACE_RESULT_FAIL_REPEAT:
         OB_LOGD(TAG, "FACE_RESULT_FAIL_REPEAT");
         uart_msg_face(EVENT_CODE_FACE_EXISTS, NULL, 0);
+        break;
+    case FACE_RESULT_FAIL_TIMEOUT:
+        OB_LOGD(TAG, "FACE_RESULT_FAIL_TIMEOUT");
+        uart_msg_face(EVENT_CODE_FACE_TIME_OUT, NULL, 0);
         break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
@@ -132,7 +140,31 @@ static void face_delete_event_callback(uint8_t result, void* para, uint8_t lenth
         uart_msg_face(EVENT_CODE_FACE_DELETE_FAIL, NULL, 0);
         break;
     default:
-        OB_LOGE(TAG, "[%s] not default", __func__);
+        OB_LOGE(TAG, "[%s] not default event[%d]", __func__, result);
+        break;
+    }
+    face_task_set_mode(FACE_MODE_IDLE);
+}
+
+static void face_reset_all_event_callback(uint8_t result, void* para, uint8_t lenth) {
+    // OB_LOGI(TAG, "delete event: result[%u]", result);
+    // OB_LOGI_DUMP((uint8_t*)(para), lenth);
+    switch (result)
+    {
+    case FACE_RESULT_SUCCESS_DELETE:
+        OB_LOGD(TAG, "FACE_RESULT_SUCCESS_DELETE");
+        uart_msg_face(EVENT_CODE_FACE_DELETE_SUCCESS, (uint8_t *)(para), lenth);
+        break;
+    case FACE_RESULT_SUCCESS_DELETE_ALL:
+        OB_LOGD(TAG, "FACE_RESULT_SUCCESS_DELETE");
+        uart_msg_face(EVENT_CODE_FACE_DELETE_SUCCESS, (uint8_t *)(para), lenth);
+        break;
+    case FACE_RESULT_FAIL_DELETE:
+        OB_LOGD(TAG, "FACE_RESULT_FAIL_DELETE");
+        uart_msg_face(EVENT_CODE_FACE_DELETE_FAIL, NULL, 0);
+        break;
+    default:
+        OB_LOGE(TAG, "[%s] not default event[%d]", __func__, result);
         break;
     }
     face_task_set_mode(FACE_MODE_IDLE);
@@ -166,6 +198,14 @@ void face_task_delete_face(face_delete_params_t params) {
     }
 
     face_task_driver.io->set_mode(FACE_MODE_DELETE, face_delete_event_callback, (&params), sizeof(face_delete_params_t));
+}
+
+void face_task_reset_all_face(face_delete_params_t params) {
+    if (NULL == face_task_driver.io->set_mode) {
+        return;
+    }
+
+    face_task_driver.io->set_mode(FACE_MODE_RESET_ALL, face_reset_all_event_callback, (&params), sizeof(face_delete_params_t));
 }
 
 /**
