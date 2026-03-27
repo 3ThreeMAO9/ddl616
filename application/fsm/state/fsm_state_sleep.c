@@ -47,7 +47,10 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
                 {
                     radar_task_wake();
                 }
-                
+                else if (e->dynamic_[1] == WAKE_UP_TYPE_KEY_BOARD)
+                {
+                    key_task_wake();
+                }
                 state = Q_TRAN(lock_fsm_idle);
             }
             break;

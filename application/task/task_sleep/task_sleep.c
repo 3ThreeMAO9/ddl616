@@ -126,6 +126,8 @@ static uint8_t exit_sleep_event_scan(void){
     uint8_t wake_type = WAKE_UP_TYPE_NULL;
     if (sleep_task_driver.attribute.wake_source & WAKE_SOURCE_RADAR)
         wake_type = WAKE_UP_TYPE_RADAR;
+    else if (sleep_task_driver.attribute.wake_source & WAKE_SOURCE_KEY_BOARD)
+        wake_type = WAKE_UP_TYPE_KEY_BOARD;
     handleEventPush(HANDLE_EVENT_WAKE, wake_type);
 #if (Enabled == WAKE_STAT_ENABLE)
     OB_LOGD(TAG, "all[%u] keyBoard[%u] setKey[%u] switchKey[%u] NFC[%u] doorState[%u] hotWarn[%u] remote[%u]", \
