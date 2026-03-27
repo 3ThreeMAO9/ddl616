@@ -19,7 +19,7 @@
 #define DPLL_CLK_64M        64000000
 
 // System Clock (Setting by User)
-#define DEFAULT_SYS_CLOCK_TYPE  SYS_CLK_TYPE_HIRC_DPLL       // Select system clock type
+#define DEFAULT_SYS_CLOCK_TYPE  SYS_CLK_TYPE_HIRC       // Select system clock type
 
 #define HIRC_FREQ           24000000                    // The HIRC frequence
 #define XTAL_FREQ           24000000                    // The XTAL frequence

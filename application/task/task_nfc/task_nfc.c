@@ -10,24 +10,24 @@
 static nfc_task_driver_t nfc_task_driver;
 
 // ------------------------------------------
-static void nfc_event_func_card(const func_card_pkt_t* ptr) {
-    uint8_t func_card_cmd = read_func_card_pkt_cmd(ptr);
+// static void nfc_event_func_card(const func_card_pkt_t* ptr) {
+//     uint8_t func_card_cmd = read_func_card_pkt_cmd(ptr);
 
-    switch (func_card_cmd) {
-        case FUNC_CARD_CMD_VERSION:     // 版本卡校验
-            break;
-        case FUNC_CARD_CMD_AGING:
-            break;
-        case FUNC_CARD_CMD_SENSITY:
-            OB_LOGD(TAG, "lenth[%u]", ptr->buffer[1]);
-            OB_LOGD_DUMP((uint8_t*)(&ptr->buffer[2]), ptr->buffer[1]);
-            break;
-        case FUNC_CARD_CMD_FT:
-            break;
-        default:
-            break;
-    }
-}
+//     switch (func_card_cmd) {
+//         case FUNC_CARD_CMD_VERSION:     // 版本卡校验
+//             break;
+//         case FUNC_CARD_CMD_AGING:
+//             break;
+//         case FUNC_CARD_CMD_SENSITY:
+//             OB_LOGD(TAG, "lenth[%u]", ptr->buffer[1]);
+//             OB_LOGD_DUMP((uint8_t*)(&ptr->buffer[2]), ptr->buffer[1]);
+//             break;
+//         case FUNC_CARD_CMD_FT:
+//             break;
+//         default:
+//             break;
+//     }
+// }
 
 static void nfc_task_callback(nfc_event_t* event) {
     OB_LOGD(TAG, "event: size[%u]", event->size);

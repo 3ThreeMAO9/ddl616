@@ -12,7 +12,7 @@
 #include "task_led.h"
 #include "task_fingerprint.h"
 #include "task_system_time.h"
-
+#include "task_sleep.h"
 #include "event.h"
 #include "msg_protocol.h"
 

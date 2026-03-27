@@ -249,7 +249,7 @@ uint8_t SoftUART_RxHandler(uint8_t *buf, uint8_t *len, uint8_t buf_len)
     (void)buf_len;
     return 0;
 }
-void SoftUART_IRQHandler(void) {}
+// void SoftUART_IRQHandler(void) {}
 void soft_uart2_init(uint32_t baudrate, uart_callback_t callback)
 {
     (void)baudrate;

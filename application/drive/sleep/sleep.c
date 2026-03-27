@@ -46,14 +46,14 @@ static void mcuSleep(void)
 {
     volatile uint32_t *pAddr;
 
-    OB_SYSCON->CCLKCFG = (OB_SYSCON->CCLKCFG & 0xFFFFFC00) | 0x01;  // 切换成HIRC 24M，再2分频
+    OB_SYSCON->CCLKCFG = (OB_SYSCON->CCLKCFG & 0xFFFFFC00) | 0x01;
     while((OB_SYSCON->CPUCHIPCTR0 & 0x00800000) != 0x00800000);
     //--------sleep mode ---------------------
     pAddr = (uint32_t *) SBR_ADDR;
     *pAddr = *pAddr | 0x04;
     __wfi();  //sleep
 
-    OB_SYSCON->CCLKCFG = (OB_SYSCON->CCLKCFG & 0xFFFFFC00) | (0x01 << 8);// 切换回HIRC_DPLL 48M
+    OB_SYSCON->CCLKCFG = (OB_SYSCON->CCLKCFG & 0xFFFFFC00);
     while((OB_SYSCON->CPUCHIPCTR0 & 0x00800000) != 0x00800000);
 }
 
