@@ -23,7 +23,7 @@ static fp_task_driver_t fp_task_driver;
 
 // ------------------------------------------
 static uint8_t fp_init_event_callback(uint8_t event, void* params, uint8_t lenth) {
-    fp_module_attr_t* ptr = (fp_module_attr_t*)(params);
+    // fp_module_attr_t* ptr = (fp_module_attr_t*)(params);
 
     OB_LOGI(TAG, "init event[%u]", event);
     // OB_LOGI_DUMP((uint8_t*)(params), lenth);

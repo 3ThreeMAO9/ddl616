@@ -138,14 +138,14 @@ static void fill_version_data(frame_data_t *data, va_list args)
     }
 }
 
-static void fill_ota_request_data(frame_data_t *data, va_list args)
-{
-    uint8_t *ptr = va_arg(args, uint8_t*);
+// static void fill_ota_request_data(frame_data_t *data, va_list args)
+// {
+//     uint8_t *ptr = va_arg(args, uint8_t*);
     
-    if (ptr != NULL) {
-        memcpy(data->data, ptr, sizeof(frame_ota_request_ack_t));
-    }
-}
+//     if (ptr != NULL) {
+//         memcpy(data->data, ptr, sizeof(frame_ota_request_ack_t));
+//     }
+// }
 
 static void fill_status_data(frame_data_t *data, va_list args)
 {

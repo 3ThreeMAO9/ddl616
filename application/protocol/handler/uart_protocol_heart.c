@@ -18,6 +18,6 @@ HANDLER_DEFINE(UP_CMD_ACK_HEART)
     // OB_LOGD(TAG,"cmd 0x%02X tsn 0x%02X",packet->cmd,packet->TSN);
     uartTaskRetryClean((packet->cmd & (~0x80)),packet->TSN);    //清空UartTx的重发数据
 
-    
+    uart_protocol_clean_heart_send_cnt();
     return 0;
 }

@@ -5,6 +5,8 @@
 #include "task_system_time.h"
 #include "task_face.h"
 #include "task_fingerprint.h"
+#include "task_radar.h"
+#include "task_key.h"
 
 #include "event.h"
 

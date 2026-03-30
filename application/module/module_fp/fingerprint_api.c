@@ -43,7 +43,7 @@ static inline void fingerprint_uart_init(uint8_t turn_on)
 {
     if (turn_on) {
         if (hal_uart_get_owner() != UART_OWNER_DEV1){
-            const hal_uart_config_t uart_cfg = {
+            hal_uart_config_t uart_cfg = {
                 .tx_port    = FP_TX_GPIO,
                 .tx_pin     = FP_TX_PIN,
                 .rx_port    = FP_RX_GPIO,
@@ -58,7 +58,7 @@ static inline void fingerprint_uart_init(uint8_t turn_on)
         }
     }
     else{
-        const hal_uart_sleep_config_t uart_sleep_cfg = {
+        hal_uart_sleep_config_t uart_sleep_cfg = {
             .tx_port    = FP_TX_GPIO,
             .tx_pin     = FP_TX_PIN,
             .rx_port    = FP_RX_GPIO,

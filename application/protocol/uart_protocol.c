@@ -12,6 +12,8 @@
 #include "hal_uart.h"
 #include "uart_queue.h"
 #include "system_timer.h"
+#include "ota_helper.h"
+#include "task_sleep.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -169,12 +171,22 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
     return ret;
 }
 
+
+static uint8_t uart_protocol_heart_send_cnt = 0;
+void uart_protocol_clean_heart_send_cnt(void)
+{
+    uart_protocol_heart_send_cnt = 0;
+}
+
 void uart_protocol_poll(void)
 {
     if (system_out_time_cnt(protocol_time_out))
     {
         uart_protocol_heart_inc_time_out();
         uart_msg_heartbeat();
+        uart_protocol_heart_send_cnt++;
+        if (uart_protocol_heart_send_cnt > 3)
+            reset7258_handle();
     }
 }
 

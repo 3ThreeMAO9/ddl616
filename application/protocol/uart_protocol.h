@@ -79,7 +79,7 @@ void uart_protocol_heart_inc_time_out(void);
 void uart_protocol_poll(void);
 void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);
-
+void uart_protocol_clean_heart_send_cnt(void);
 /*****************************/
 
 #endif // UART_PROTOCOL_HH

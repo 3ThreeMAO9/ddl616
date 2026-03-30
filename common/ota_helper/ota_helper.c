@@ -25,12 +25,12 @@ static ota_fmc_area_t ota_fmc_area;
 #define CHECKSUM_U16_MASK     ((uint16_t)~0x01)
 #define CHECKSUM_U32_MASK     ((uint32_t)~0x03)
 
-#define FLASH_APP_BEGIN_ADDR  (0x00000000)/* APP存储起始地址 */
+// #define FLASH_APP_BEGIN_ADDR  (0x00000000)/* APP存储起始地址 */
 #define MIN_APP_SIZE          (256)       /* APP最小长度（防止空固件） */
 #define MAX_APP_SIZE          (0x0000EA00)/* APP最大长度限制 */
 #define READ_BUFFER_SIZE      (512)       /* 校验计算缓存大小（4的倍数） */
 #define FLASH_PAGE_SIZE       (0x00000200)/* FLASH单页大小（512字节） */
-#define OTA_SECTOR_START_ADDR (0x0000EE00)/* OTA参数存储起始地址 */
+// #define OTA_SECTOR_START_ADDR (0x0000EE00)/* OTA参数存储起始地址 */
 /********************************************************/
 
 //=============================================================
@@ -100,7 +100,7 @@ uint8_t ota_helper_save_fmc_area(const ota_fmc_area_t *ota_param)
 
     // 擦除扇区 + 写入结构体（核心逻辑）
     FMC_PageErase(OTA_SECTOR_START_ADDR);
-    FMC_Write(OTA_SECTOR_START_ADDR, (uint32_t *)ota_param, sizeof(ota_fmc_area_t));
+    FMC_Write(OTA_SECTOR_START_ADDR, (uint8_t *)ota_param, sizeof(ota_fmc_area_t));
     
     return 0;
 }
@@ -115,7 +115,7 @@ static uint8_t ota_helper_read_param(void)
     /* 计算参数结构体的字长度（FMC按字读取，1字=4字节） */
     uint32_t param_word_len = sizeof(ota_fmc_area_t) / 4;
     /* 从FLASH读取参数到全局变量 */
-    FMC_Read_Boot(OTA_SECTOR_START_ADDR, &ota_fmc_area, param_word_len);
+    FMC_Read_Boot(OTA_SECTOR_START_ADDR, (uint32_t *)&ota_fmc_area, param_word_len);
     return 0;
 }
 
@@ -276,7 +276,7 @@ uint8_t ota_helper_write(uint32_t addr, uint8_t *buffer, uint32_t length)
         return 0;
     }
     /* 写入数据到FLASH（按字写入） */
-    FMC_Write(addr, (uint32_t *)buffer, length);
+    FMC_Write(addr, (uint8_t *)buffer, length);
     ota_helper_handle.addr += length; /* 更新下一次写入地址 */
 
     return 1;

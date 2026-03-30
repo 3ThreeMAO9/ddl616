@@ -82,6 +82,8 @@ void face_task_set_attr(void* attr, uint8_t lenth);
  */
 void face_task_delete_face(face_delete_params_t params);      // 按Index删除
 
+void face_task_reset_all_face(face_delete_params_t params);
+
 /**************************************/
 
 #endif /* __TASK_FACE_H */

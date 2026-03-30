@@ -108,19 +108,19 @@ uint32_t FMC_Read_Boot(uint32_t addr, uint32_t *buf, uint32_t size)
     return 1;
 }
 
-uint32_t FMC_ReadCompanyID(uint32_t nPos)
-{
-    uint32_t nID;
-    uint8_t  RBuff[4];
+// uint32_t FMC_ReadCompanyID(uint32_t nPos)
+// {
+//     uint32_t nID;
+//     uint8_t  RBuff[4];
 
-    if (nPos == 0x00)
-        FMC_Read(0x00100000, 4, RBuff);
-    else
-        FMC_Read(0x00100004, 4, RBuff);
+//     if (nPos == 0x00)
+//         FMC_Read(0x00100000, 4, RBuff);
+//     else
+//         FMC_Read(0x00100004, 4, RBuff);
 
-    nID = *((uint32_t*)RBuff);
-    return nID;
-}
+//     nID = *((uint32_t*)RBuff);
+//     return nID;
+// }
 
 
 void FMC_Write(uint32_t nAddr, uint8_t *pData, uint32_t nLength)

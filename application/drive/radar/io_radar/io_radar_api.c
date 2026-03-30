@@ -8,6 +8,7 @@
  */
 
 #include "io_radar_api.h"
+#include "io_radar_driver.h"
 #include "radar_config.h"
 #include "hal_gpio.h"
 

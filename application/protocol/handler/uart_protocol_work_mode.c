@@ -114,6 +114,7 @@ static void face_mode_handler(frame_work_mode_t* param)
             face_task_set_mode(FACE_MODE_VERIFY);
         break;
     case FACE_WORK_MODE_ADD_USER:
+    {
         face_function_attr_t face_attr;
         
         // 步骤1：先初始化结构体默认值
@@ -140,6 +141,7 @@ static void face_mode_handler(frame_work_mode_t* param)
         OB_LOGD(TAG, "face add user mode");
         face_task_set_mode(FACE_MODE_REGISTER);
         break;
+    }
     case FACE_WORK_MODE_ID_DELETE:
         OB_LOGD(TAG, "face ID delete mode ,del_id = 0x%04X",param->data);
         face_delete_params_t del_id;
@@ -163,6 +165,7 @@ static void face_mode_handler(frame_work_mode_t* param)
         OB_LOGD(TAG, "face idle/null mode, ignore");
         break;
     case FACE_WORK_MODE_ADD_USER_PALM:
+    {
         face_function_attr_t palm_attr;
         
         // 步骤1：先初始化结构体默认值
@@ -190,6 +193,7 @@ static void face_mode_handler(frame_work_mode_t* param)
         OB_LOGD(TAG, "palm add user mode");
         face_task_set_mode(FACE_MODE_REGISTER_PALM);
         break;
+    }
     default:
         OB_LOGE(TAG, "unknown face event code: %d", param->event_code);
         break;
