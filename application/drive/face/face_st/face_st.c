@@ -9,7 +9,7 @@
 #include "face_st.h"
 #include "utils.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "face"
 
@@ -69,8 +69,27 @@ static void face_process_idle(face_context_t *ctx)
     case 0:
         if (ctx->status.timeout)
         {
+            if (ctx->status.encryption == 0){
+                face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
+                ctx->status.encryption = 1;     //密钥种子发送及当加密成功
+                ctx->step = 1;
+            }
+            else{
+                face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
+                ctx->step = 1;
+            }
+        }
+        break;
+    case 1:
+        if (ctx->ack_packet.result == MR_SUCCESS)
+        {
             face_is_ready(ctx, FACE_MODE_SLEEP);
             ctx->callback = NULL;
+        }
+        else
+        {
+            ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+            ctx->step = 0;
         }
         break;
     default:
