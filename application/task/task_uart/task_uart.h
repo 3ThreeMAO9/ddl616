@@ -38,6 +38,7 @@ uint8_t uartTaskRetryClean(uint8_t cmd, uint8_t tsn);
 void uartTaskWake(void);
 void uartTaskSleep(void);
 void uartTaskLoop(void);
+uint8_t uart_task_is_wake(void);
 /*****************************/
 
  #endif // TASK_UART_H

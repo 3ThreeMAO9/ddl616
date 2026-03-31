@@ -89,4 +89,11 @@ void uartTaskLoop(void)
     }
 }
 
+uint8_t uart_task_is_wake(void)
+{
+    if (uartTaskDriver.io->is_wake())
+        return WAKE_SOURCE_LOCK_UART;
+
+    return WAKE_SOURCE_NULL;
+}
 

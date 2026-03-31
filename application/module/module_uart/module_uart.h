@@ -75,6 +75,7 @@ void module_uart_init(void);
 void module_uart_queue_put(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len);
 uint8_t module_uart_retry_clean(uint8_t cmd, uint8_t tsn);
 void module_uart_poll(void);
+uint8_t module_uart_is_wake(void);
 
 /*****************************/
 

@@ -14,6 +14,7 @@ const bsp_uart_drive_io_t bsp_uart = {
     .init = module_uart_init,
     .queue_put = module_uart_queue_put,
     .retry_clean = module_uart_retry_clean,
+    .is_wake = module_uart_is_wake,
     .loop = module_uart_poll,
     .sleep = module_uart_sleep,
 };

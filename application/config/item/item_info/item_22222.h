@@ -79,12 +79,13 @@
 #define RADAR_CHECK_SEL                 RADAR_CHECK_IO
 
 /*******************  wake source  *******************/
-#define WAKE_SOURCE_NULL                            0x0000
-#define WAKE_SOURCE_KEY_BOARD                       0x0001
-#define WAKE_SOURCE_FINGER                          0x0002
-#define WAKE_SOURCE_NFC                             0x0004
-#define WAKE_SOURCE_TAMPER_KEY                      0x0008
-#define WAKE_SOURCE_RADAR                           0x0040
+#define WAKE_SOURCE_NULL                            (0x0000)
+#define WAKE_SOURCE_KEY_BOARD                       (0x0001)
+#define WAKE_SOURCE_FINGER                          (0x0002)
+#define WAKE_SOURCE_NFC                             (0x0004)
+#define WAKE_SOURCE_TAMPER_KEY                      (0x0008)
+#define WAKE_SOURCE_RADAR                           (0x0040)
+#define WAKE_SOURCE_LOCK_UART                       (0x0080)
 
 /********************  time out  *********************/
 #define WORK_TIME_OUT_VAULE                         (10 * 1000)       // ms

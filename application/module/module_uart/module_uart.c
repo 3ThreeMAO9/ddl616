@@ -14,6 +14,7 @@
 #include "uart_queue.h"
 #include "uart_packet.h"
 #include "system_timer.h"
+#include "lock_uart.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -207,8 +208,22 @@ void module_uart_sleep(void)
         .level = 1
     };
     hal_uart_sleep(&uart_sleep_cfg);
+
+    LOCK_UART_INT_PIN_ENABLE();
 }
 
+uint8_t module_uart_is_wake(void)
+{
+    if (LOCK_UART_INT_READ_INTSTATE()){
+        LOCK_UART_INT_CLEAR_INTSTATE();
+
+        if (!READ_LOCK_UART_INT()){
+            return true;
+        }
+    }
+
+    return false;
+}
 
 void module_uart_init(void)
 {

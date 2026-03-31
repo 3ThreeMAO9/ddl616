@@ -72,6 +72,7 @@ static uint8_t exit_sleep_event_scan(void){
     // sleep_task_driver.attribute.wake_source |= nfc_task_is_wake();
     sleep_task_driver.attribute.wake_source |= system_timer_loop();
     sleep_task_driver.attribute.wake_source |= radar_task_is_wake();
+    sleep_task_driver.attribute.wake_source |= uart_task_is_wake();
 
 #if (Enabled == WAKE_STAT_ENABLE)
     switch (sleep_task_driver.attribute.wake_source)    {

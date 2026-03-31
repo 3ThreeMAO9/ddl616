@@ -124,6 +124,10 @@ typedef enum
 #define UART0_RX_GPIO                   (HAL_GPIO_PORT3)
 #define UART0_RX_PIN                    (HAL_GPIO_PIN0)
 
+#define UART_INT_GPIO                   (UART0_RX_GPIO)
+#define UART_INT_PIN                    (UART0_RX_PIN)
+
+
 #define UART1_TX_GPIO                   (HAL_GPIO_PORT0)
 #define UART1_TX_PIN                    (HAL_GPIO_PIN3)
 #define UART1_RX_GPIO                   (HAL_GPIO_PORT2)
