@@ -53,7 +53,8 @@ __NO_RETURN void boot_main(void)
     ota_helper_init();
 
     // 检查是否需要OTA，不需要则区校验APP区，需要则直接进入OTA流程
-    if (ota_helper_get_state() == OTA_STATE_IDLE)
+    uint32_t state = ota_helper_get_state();
+    if ((state == OTA_STATE_IDLE) || (state == OTA_STATE_END))
     {
         for (uint8_t i = 0; i < 3; i++)
         {

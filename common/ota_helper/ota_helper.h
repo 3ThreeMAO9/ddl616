@@ -18,6 +18,7 @@
 #define OTA_STATE_IDLE      (0x00)  // 空闲状态（无OTA任务，正常运行）
 #define OTA_STATE_READY     (0x01)  // OTA就绪（需要执行OTA升级）
 #define OTA_STATE_ING       (0x02)  // OTA中
+#define OTA_STATE_END       (0x03)  // OTA完成
 
 #define OTA_FILE_MAGIC      (0xBEEF)
 

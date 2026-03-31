@@ -42,6 +42,7 @@ typedef uint8_t (*ota_send_packet_callback_t)(uint8_t*, uint16_t);
 #define PRIVATE_CMD_OTA_BACK2FRONT              0x73        // 请求OTA    背板->前板
 #define PRIVATE_CMD_OTA_FRONT2BACK              0x74        // 请求OTA    前板->背板
         
+#define PRIVATE_CMD_ACK_OTA_RESPONSE            0xF0
 #define PRIVATE_CMD_ACK_OTA_BACK2FRONT          0xF3        // 请求OTA ack 背板->前板
 #define PRIVATE_CMD_ACK_OTA_FRONT2BACK          0xF4        // 请求OTA ack 前板->背板
 

@@ -62,25 +62,16 @@ void ota_uart_init(void)
 
 void ota_request_ack_handle(void)
 {
-    ota_response_ack_t ota_response_ack = {
-        .status = OTA_RESPONSE_STATUS_READY,
-        .scheme_code = {0, 0, 1},
-        .version = {0, 0, 2},
-        .flash_size = (FLASH_APP_MAX_SIZE),
-        .pkt_size = 128,
-        .ota_mode = OTA_MODE_SINGLE_BOOT,
-    };
-
+    uint8_t status;
     if (ota_helper_prepare())
     {
-        ota_response_ack.status = OTA_RESPONSE_STATUS_READY;
+        status = OTA_RESPONSE_STATUS_READY;
     }
     else
     {
-        ota_response_ack.status = OTA_RESPONSE_STATUS_SYSTEM_BUSY;
+        status = OTA_RESPONSE_STATUS_SYSTEM_BUSY;
     }
-
-    ota_request_packet_ack((void *)(&ota_response_ack));
+    ota_control_ack(PRIVATE_CMD_ACK_OTA_RESPONSE, status);
 }
 
 static void ota_request_handle(parsed_packet_t *parsed)
@@ -149,7 +140,7 @@ static void ota_control_handle(parsed_packet_t *parsed)
         //     ota_control_packet_ack(OTA_CONTROL_STATUS_FAIL);
         // }
 
-        ota_helper_set_state(OTA_STATE_IDLE);
+        ota_helper_set_state(OTA_STATE_END);
         ota_control_ack(PRIVATE_CMD_OTA_CONTROL, OTA_CONTROL_STATUS_SUCCESS);
         soft_reset();
 
@@ -197,6 +188,7 @@ static void ota_uart_rx_poll(void)
                 ota_uart_handle.request_flag = 0;
                 break;
             default:
+                ota_control_ack((parsed.command | 0x80), OTA_CONTROL_STATUS_SUCCESS);
                 break;
             }
         }

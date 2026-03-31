@@ -8,6 +8,7 @@
  */
 
 #include "uart_protocol.h"
+#include "ota_helper.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -18,6 +19,10 @@ HANDLER_DEFINE(UP_CMD_ACK_HEART)
     // OB_LOGD(TAG,"cmd 0x%02X tsn 0x%02X",packet->cmd,packet->TSN);
     uartTaskRetryClean((packet->cmd & (~0x80)),packet->TSN);    //清空UartTx的重发数据
 
-    uart_protocol_clean_heart_send_cnt();
+    if (ota_helper_get_state() == OTA_STATE_END)
+    {
+        ota_helper_set_state(OTA_STATE_IDLE);
+    }
+
     return 0;
 }

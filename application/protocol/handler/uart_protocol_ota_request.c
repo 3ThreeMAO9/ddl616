@@ -32,7 +32,7 @@ HANDLER_DEFINE(UP_CMD_OTA_REQUEST) {
     OB_LOGD(TAG, "checksum2[%08X]", param.checksum2);
 
     // 4. 给state赋值（操作本地变量，而非payload越界地址）
-    param.state = 1; 
+    param.state = OTA_STATE_READY; 
 
     // 5. 保存完整结构体到FMC/Flash（包含state）
     ota_helper_save_fmc_area(&param);

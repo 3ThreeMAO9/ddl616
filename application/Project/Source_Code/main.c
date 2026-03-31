@@ -66,7 +66,11 @@ static void device_init(void)
 static void task_init(void)
 {
     OB_LOGD(TAG, "[%s]",__func__);
-    reset7258_handle();
+    ota_helper_init();
+    if (ota_helper_get_state() == OTA_STATE_IDLE)
+    {
+        reset7258_handle();
+    }
     flash_task_init();
     keyTaskPowerOnInit();
     ledTaskInit();

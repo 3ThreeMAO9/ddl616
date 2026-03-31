@@ -31,7 +31,7 @@
     ((BACK_UART_SEL == UART_0) ? UART0_BUF_LEN : \
      (BACK_UART_SEL == UART_1) ? UART1_BUF_LEN : 0)
 
-static uint32_t protocol_time_out = 0;
+static uint32_t protocol_time_out = HEART_TIME_OUT;
 
 static uint8_t ota_to_boot_flag = 0;
 static uint32_t ota_to_boot_time_out = 0;
@@ -167,7 +167,7 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
     // ========== 6. 协议业务处理 ==========
     uart_protocol_try_handle(&uart_packet);
     uart_protocol_heart_inc_time_out();
-
+    uart_protocol_clean_heart_send_cnt();
     return ret;
 }
 
@@ -184,9 +184,12 @@ void uart_protocol_poll(void)
     {
         uart_protocol_heart_inc_time_out();
         uart_msg_heartbeat();
-        uart_protocol_heart_send_cnt++;
-        if (uart_protocol_heart_send_cnt > 3)
-            reset7258_handle();
+        if (ota_helper_get_state() == OTA_STATE_IDLE)
+        {
+            uart_protocol_heart_send_cnt++;
+            if (uart_protocol_heart_send_cnt > 3)
+                reset7258_handle();
+        }
     }
 }
 

@@ -257,11 +257,11 @@ static uint8_t ota_protocol_packet_ack(void* buffer, uint16_t lenth) {
     return false;
 }
 
-uint8_t ota_packet(uint8_t cmd, void* data_content, uint16_t length, uint8_t with_ack_flag) {
+uint8_t ota_packet(uint8_t cmd, void* data_content, uint16_t length, uint8_t tsn, uint8_t with_ack_flag) {
     uint8_t buffer[OTA_FRAME_BUFFER_SIZE - 8];
     uint16_t index = 0;
 
-    buffer[index++] = parsed_packet.tsn;
+    buffer[index++] = tsn;
     // 根据参数决定是否拼接ACK标识
     buffer[index++] = with_ack_flag ? (cmd | PRIVATE_CMD_ACK_FLAG) : cmd;
     // 数据长度大端存储
@@ -276,12 +276,16 @@ uint8_t ota_packet(uint8_t cmd, void* data_content, uint16_t length, uint8_t wit
     return ota_protocol_packet_ack(buffer, (length + 4));
 }
 
+static uint8_t send_tsn = 0xFF;
+
 uint8_t ota_packet_send(uint8_t cmd, void* data_content, uint16_t length) {
-    return ota_packet(cmd, data_content, length, 0);
+    ota_packet(cmd, data_content, length, send_tsn, 0);
+    send_tsn++;
+    return 0;
 }
 
 uint8_t ota_packet_ack(uint8_t cmd, void* data_content, uint16_t length) {
-    return ota_packet(cmd, data_content, length, 1);
+    return ota_packet(cmd, data_content, length, parsed_packet.tsn, 1);
 }
 
 uint8_t ota_request_packet_ack(ota_response_ack_t* ota_response_ack) {
