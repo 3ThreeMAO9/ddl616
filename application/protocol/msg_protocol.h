@@ -283,11 +283,11 @@ typedef struct
 typedef struct
 {
     uint8_t status;
-    uint16_t fw_funcode;
-    uint16_t fw_ver;
-    uint16_t flash_ver;
-    uint16_t reserved1;
-    uint16_t reserved2;
+    uint8_t reserved1;
+    uint8_t fw_funcode;
+    uint8_t boot_ver : 4;
+    uint8_t flash_ver : 4;
+    uint8_t fw_ver;
 } frame_version_ack_def_t;
 
 typedef struct {

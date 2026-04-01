@@ -40,6 +40,10 @@ extern void boot_main(void);
 //     .state     = 0,
 // };
 
+#define BOOT_VERSION        (1)     // 1~15
+
+const uint32_t boot_version   __attribute__((section(".ARM.__at_0x0000F000"), used)) = BOOT_VERSION;
+
 __NO_RETURN void boot_main(void)
 {
     SystemInit();

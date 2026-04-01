@@ -1,15 +1,15 @@
 /**
  * Copyright (c) 2025 GZ-OB, All rights reserved.
- * File name: item_22222.h
+ * File name: item_1.h
  * Desc:
  * Version: 1.0.0
  * Revision: James_Zhang
  * Date: 2025-12-01
  */
 
-#ifndef _ITEM_22222_H_
-#define _ITEM_22222_H_
-#if (CLIENT_ITEM_SN_22222 == CLIENT_ITEM_SN)
+#ifndef _ITEM_1_H_
+#define _ITEM_1_H_
+#if (CLIENT_ITEM_SN_1 == CLIENT_ITEM_SN)
 #include "board_RLFA166M1_V1.h"
 
 /***********Macro***********/
@@ -98,5 +98,5 @@
 /*****************************/
 
 
-#endif /* CLIENT_ITEM_SN_22222 == CLIENT_ITEM_SN */
-#endif /* _ITEM_22222_H_ */
+#endif /* CLIENT_ITEM_SN_1 == CLIENT_ITEM_SN */
+#endif /* _ITEM_1_H_ */

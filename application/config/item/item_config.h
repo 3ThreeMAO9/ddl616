@@ -39,8 +39,8 @@ void read_device_version_info(void);
 /*************************Project Adaptation*************************/
 #if (CLIENT_ITEM_SN_12345 == CLIENT_ITEM_SN)
 #include "item_12345.h"
-#elif (CLIENT_ITEM_SN_22222 == CLIENT_ITEM_SN)
-#include "item_22222.h"
+#elif (CLIENT_ITEM_SN_1 == CLIENT_ITEM_SN)
+#include "item_1.h"
 #endif
 #include "chip_config.h"
 

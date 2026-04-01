@@ -10,6 +10,7 @@
 #include "uart_protocol.h"
 #include "task_system_time.h"
 #include "event.h"
+#include "fmc.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -25,11 +26,14 @@ HANDLER_DEFINE(UP_CMD_VERSION)
     frame_version_ack_def_t version_param;
     memset(&version_param, 0, sizeof(frame_version_ack_def_t));
 
+    uint32_t boot_verstion = 0;
+    FMC_Read(0xF000, (uint8_t *)&boot_verstion, sizeof(boot_verstion));
     if (param->status == 0xff)
     {
         version_param.fw_funcode = CLIENT_ITEM_SN;
-        version_param.fw_ver = PATCH_VERSION;
+        version_param.boot_ver = boot_verstion;
         version_param.flash_ver = 0;
+        version_param.fw_ver = PATCH_VERSION;
         status = STATUS_SUCCESS;
     }
     uart_msg_version(status, (uint8_t *)&version_param, sizeof(frame_version_ack_def_t));
