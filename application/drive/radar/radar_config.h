@@ -41,8 +41,15 @@
         HAL_GPIO_Init(RADAR_INT_GPIO, RADAR_INT_PIN, HAL_GPIO_MODE_INPUT, HAL_GPIO_PULL_NONE); \
     } while (0)
 
+#define RADAR_INT_PULL_INIT(_level)                                                                \
+    do                                                                                             \
+    {                                                                                              \
+        HAL_GPIO_Write(RADAR_INT_GPIO, RADAR_INT_PIN, _level);                                     \
+        HAL_GPIO_Init(RADAR_INT_GPIO, RADAR_INT_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
+    } while (0)
+
 // 雷达中断引脚初始化（初始电平+推挽模式配置）
-#define RADAR_INT_PULL_INIT(_level)                                                                   \
+#define RADAR_INT_PULLUP_INIT(_level)                                                                 \
     do                                                                                                \
     {                                                                                                 \
         HAL_GPIO_Write(RADAR_INT_GPIO, RADAR_INT_PIN, _level);                                        \

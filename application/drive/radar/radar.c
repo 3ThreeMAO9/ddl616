@@ -14,10 +14,14 @@
 #include "hal_gpio.h"
 #include "delay.h"          // 增加延时头文件（复位需要）
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "radar"
 
+
+// 雷达状态
+static uint8_t g_radar_exist = 0;    // 最终是否存在
+static uint8_t g_radar_check_done = 0; // 初始化检测是否完成
 /****************IIC Device*************/
 
 /***************************************/
@@ -29,6 +33,20 @@ void radar_init(void)
 #elif (RADAR_CHECK_SEL == RADAR_CHECK_IO)
     io_radar_init();
 #endif
+}
+
+void radar_check_exist_loop(void)
+{
+    if (g_radar_check_done)
+        return;
+
+    if (READ_RADAR_INT() == 0) {
+        g_radar_exist = 1;
+        g_radar_check_done = 1;
+        OB_LOGD(TAG,"g_radar_exist = 1");
+        // OUT引脚初始化（输入）
+        RADAR_INT_INIT(1);
+    }
 }
 
 void radar_set_out_int(uint8_t enable)
@@ -71,3 +89,7 @@ void radar_set_distance(uint8_t type)
     }
 }
 
+uint8_t radar_is_exist(void)
+{
+    return g_radar_exist;
+}

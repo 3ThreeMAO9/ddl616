@@ -24,14 +24,14 @@
  */
 void radar_driver_init(void)
 {
+    // OUT引脚初始化（输入）
+    // RADAR_INT_INIT(1);
+
+    // OUT引脚上拉判断是否存在雷达-----如果电平被拉低 说明有雷达，则后续修改成输入模式
+    RADAR_INT_PULLUP_INIT(1);
     // I2C引脚初始化（上拉）
     RADAR_PB2_SCL_INIT(1);
     RADAR_PB3_SDA_INIT(1);
-    // OUT引脚初始化（输入）
-    RADAR_INT_INIT(1);
-    
-    // // OUT引脚上拉判断是否存在雷达-----如果电平被拉低 说明有雷达，则后续修改成输入模式
-    // RADAR_INT_PULL_INIT(1);
 
 }
 

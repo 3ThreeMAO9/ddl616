@@ -172,4 +172,6 @@ void module_radar_loop(void)
             module_radar_wake();
         }
     }
+
+    radar_check_exist_loop();   // 雷达存在判断
 }
