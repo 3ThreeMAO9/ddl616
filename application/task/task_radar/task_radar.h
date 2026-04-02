@@ -80,6 +80,12 @@ uint8_t radar_task_is_busy(uint8_t type);
 void radar_task_pause(uint32_t value);
 
 /**
+ * @brief 雷达任务休眠
+ * @return NULL
+ */
+void radar_task_sleep(void);
+
+/**
  * @brief 雷达逗留扫描
  * @param value 
  */

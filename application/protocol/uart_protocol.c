@@ -15,7 +15,7 @@
 #include "ota_helper.h"
 #include "task_sleep.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "uart_protocol"
 

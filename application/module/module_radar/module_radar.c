@@ -122,6 +122,15 @@ void module_radar_stay_scan(uint32_t value)
     radar_stay_scan();
 }
 
+/**
+ * @brief 雷达模块休眠
+ * @param value 
+ */
+void module_radar_sleep(uint8_t data)
+{
+    radar_set_out_int(data);
+}
+
 
 /**
  * @brief 雷达模块唤醒

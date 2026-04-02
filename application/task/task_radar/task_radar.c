@@ -9,7 +9,7 @@
 #include "task_radar.h"
 #include "bsp_radar.h"
 #include "msg_protocol.h"
-
+#include "user_parameter.h"
 #include "task_system_time.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
@@ -53,8 +53,26 @@ uint8_t radar_task_wake(void)
     return g_radar_task_driver.io->wake();
 }
 
+/**
+ * @brief 雷达任务休眠
+ * @return NULL
+ */
+void radar_task_sleep(void)
+{
+    uint8_t data = Enabled;
+    if (get_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING) == OB_LOCK_MOTION_DETECT_SETTINGS_DISABLE){
+        data = Disabled;
+    }
+    radar_task_handle(RADAR_HANDLE_STAY, data);
+    g_radar_task_driver.io->sleep(data);
+}
+
+
 uint8_t radar_task_is_wake(void)
 {
+    if (get_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING) == OB_LOCK_MOTION_DETECT_SETTINGS_DISABLE)
+        return WAKE_SOURCE_NULL;
+
     if (g_radar_task_driver.io->is_wake())
         return WAKE_SOURCE_RADAR;
 

@@ -33,6 +33,7 @@ typedef struct {
     void (*handle)(uint8_t, uint8_t);
     void (*pause)(uint32_t);
     void (*stay_scan)(uint32_t);
+    void (*sleep)(uint8_t);
 } bsp_radar_drive_io_t;
 
 /*************************Variable*************************/

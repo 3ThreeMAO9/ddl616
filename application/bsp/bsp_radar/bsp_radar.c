@@ -20,6 +20,7 @@ const bsp_radar_drive_io_t bsp_radar = {
     .handle = module_radar_switch,
     .pause = module_radar_pause,
     .stay_scan = module_radar_stay_scan,
+    .sleep = module_radar_sleep,
 };
 
 //--------------------------------------------------

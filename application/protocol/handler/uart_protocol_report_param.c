@@ -20,14 +20,14 @@ HANDLER_DEFINE(UP_CMD_REPORT_PARAM)
     frame_report_param_t *param = (frame_report_param_t *)(packet->payload);
     packet->length = BIG_LITTLE_SWAP16(packet->length); // 大小端转换
 
-    if (packet->length % sizeof(frame_work_mode_t) != 0) {
+    if (packet->length % sizeof(frame_report_param_t) != 0) {
         OB_LOGE(TAG, "PARAM: len(%d) not match group size", packet->length);
         return 0xff;
     }
     uart_msg_ack_param_report(STATUS_SUCCESS);
 
     OB_LOGD(TAG, "PARAM: len=%d", packet->length);
-    uint8_t group_cnt = packet->length / sizeof(frame_work_mode_t);
+    uint8_t group_cnt = packet->length / sizeof(frame_report_param_t);
     // 循环解析每组参数
     for(uint8_t i = 0; i < group_cnt; i++) {
         OB_LOGD(TAG, "PARAM[%d]: src=0x%02X, data=0x%02X",
@@ -52,13 +52,11 @@ HANDLER_DEFINE(UP_CMD_REPORT_PARAM)
                 set_user_parameter(PARAMETER_FACE_FUNC_SETTING, Disabled);
             break;
         case EVENT_PARAM_HUMAN_SENSOR_SETTING:
-            if (param[i].data == Enabled)
-                set_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING, Enabled);
-            else if (param[i].data == Disabled)
-                set_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING, Disabled);
+            if (param[i].data < OB_LOCK_MOTION_DETECT_SETTINGS_MAX)
+                set_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING, param[i].data);
             break;
         default:
-            OB_LOGE(TAG, "[%s] not default", __func__);
+            OB_LOGE(TAG, "[%s] not default [%ld]", __func__, param[i].event_param);
             break;
         }
     }

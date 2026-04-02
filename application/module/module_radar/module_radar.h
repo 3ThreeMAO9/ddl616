@@ -76,6 +76,12 @@ void radar_event_register_callback(radar_event_callback_t callback);
  */
 void module_radar_stay_scan(uint32_t value);
 
+/**
+ * @brief 雷达模块休眠
+ * @param value 
+ */
+void module_radar_sleep(uint8_t data);
+
 /*****************************/
 
 #endif // MODULE_RADAR_H
