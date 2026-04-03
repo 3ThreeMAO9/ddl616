@@ -15,6 +15,7 @@
 #include "task_sleep.h"
 #include "event.h"
 #include "msg_protocol.h"
+#include "user_parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -59,7 +60,9 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
         {
             OB_LOGD(TAG, "KEY_TYPE_TAMPER_KEY event=%d", key_value);
             if(key_value == KEY_EVENT_TAMPER_PRESS){
-                uart_msg_tamper_key_warn(EVENT_CODE_TAMPER_WARN);
+                if (get_user_parameter(PARAMETER_TAMPER_ALARM) == Enabled){
+                    uart_msg_tamper_key_warn(EVENT_CODE_TAMPER_WARN);
+                }
                 // baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_TAMPER_WARN);
             }
         }

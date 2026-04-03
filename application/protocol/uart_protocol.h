@@ -23,6 +23,7 @@
 
 #define HEART_TIME_OUT                      (3000)   // 心跳间隔 ms
 #define OTA_TO_BOOT_TIME_OUT                (1000)   // OTA重启 ms
+#define PARAM_DATA_TIME_OUT                 (1000)   // 参数数据同步 ms
 
 #define UP_CMD_AUTH                         (0x01)   // 鉴权命令
 #define UP_CMD_LOCK_CTL                     (0x02)   // 锁控命令
@@ -80,6 +81,7 @@ void uart_protocol_poll(void);
 void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);
 void uart_protocol_clean_heart_send_cnt(void);
+void c(uint8_t data);
 /*****************************/
 
 #endif // UART_PROTOCOL_HH

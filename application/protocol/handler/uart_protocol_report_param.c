@@ -25,6 +25,7 @@ HANDLER_DEFINE(UP_CMD_REPORT_PARAM)
         return 0xff;
     }
     uart_msg_ack_param_report(STATUS_SUCCESS);
+    uart_protocol_set_param_data_flag(true);
 
     OB_LOGD(TAG, "PARAM: len=%d", packet->length);
     uint8_t group_cnt = packet->length / sizeof(frame_report_param_t);

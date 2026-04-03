@@ -35,6 +35,11 @@ static uint32_t protocol_time_out = HEART_TIME_OUT;
 
 static uint8_t ota_to_boot_flag = 0;
 static uint32_t ota_to_boot_time_out = 0;
+
+
+static uint8_t param_data_flag = false;// 参数同步
+static uint32_t param_data_time_out = 0;
+
 void uart_protocol_heart_inc_time_out(void)
 {
     protocol_time_out = system_inc_time_cnt(HEART_TIME_OUT);
@@ -44,6 +49,11 @@ void uart_protocol_ota_to_boot_inc_time_out(void)
 {
     ota_to_boot_flag = 1;
     ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
+}
+
+void uart_protocol_set_param_data_flag(uint8_t data)
+{
+    param_data_flag = data;
 }
 
 // void uart_protocol_set_ota_to_boot_flag(uint8_t data)
@@ -203,3 +213,18 @@ void uart_protocol_ota_poll(void)
         }
     }
 }
+
+void uart_protocol_param_poll(void)
+{
+    // 如果数据没同步，则需要发送0x07指令请求
+    if (param_data_flag == false)
+    {
+        if (system_out_time_cnt(param_data_time_out))
+        {
+            param_data_time_out = system_inc_time_cnt(PARAM_DATA_TIME_OUT);
+            uart_msg_param_req();
+        }
+    }
+}
+
+
