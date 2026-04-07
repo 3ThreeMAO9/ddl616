@@ -35,6 +35,7 @@
 #define UP_CMD_REPORT_PARAM                 (0x08)   // 参数上报指令
 #define UP_CMD_SLEEP                        (0x09)   // 休眠命令
 #define UP_CMD_VERSION                      (0x0A)   // 版本号命令
+#define UP_CMD_ENCRYPT                      (0x0B)   // 加密指令
 
 #define UP_CMD_HEART                        (0x2A)   // 心跳命令
 
@@ -52,6 +53,7 @@
 #define UP_CMD_ACK_REPORT_PARAM             (0x88)   // 参数上报应答指令
 #define UP_CMD_ACK_SLEEP                    (0x89)   // 休眠命令
 #define UP_CMD_ACK_VERSION                  (0x8A)   // 版本号应答命令
+#define UP_CMD_ACK_ENCRYPT                  (0x8B)   // 加密应答命令
 
 #define UP_CMD_ACK_HEART                    (0xAA)   // 心跳应答
 
@@ -82,6 +84,7 @@ void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);
 void uart_protocol_clean_heart_send_cnt(void);
 void uart_protocol_set_param_data_flag(uint8_t data);
+void uart_protocol_param_poll(void);
 /*****************************/
 
 #endif // UART_PROTOCOL_HH

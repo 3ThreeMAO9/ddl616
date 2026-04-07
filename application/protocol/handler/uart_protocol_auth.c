@@ -13,9 +13,13 @@
 #include "ob_log.h"
 #define TAG "uart_protocol_auth"
 
-HANDLER_DEFINE(UP_CMD_AUTH)
+HANDLER_DEFINE(UP_CMD_ACK_AUTH)
 {
-    OB_LOGI(TAG, "[%s]  UP_CMD_AUTH received",__func__);
+    OB_LOGD(TAG,"cmd 0x%02X tsn 0x%02X",packet->cmd,packet->TSN);
+
+    uartTaskRetryClean((packet->cmd & (~0x80)),packet->TSN);    //清空UartTx的重发数据
+
+    // set_auth_data_flag(true);
 
     return 0;
 }

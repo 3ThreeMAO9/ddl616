@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include "uart_protocol.h"
 #include "uart_packet.h"
+#include "encrypt.h"
 #include "config.h"
 /***********Macro***********/
 
@@ -219,6 +220,12 @@ typedef struct
 
 typedef struct
 {
+    uint8_t random[16]; // 随机数
+} frame_encrypt_t;
+
+
+typedef struct
+{
     uint8_t status;
 } frame_reset_t;
 
@@ -310,7 +317,7 @@ typedef struct
 {
     uint16_t frame_start;        // 帧起始标志
     uint8_t control_version : 7; // 版本号
-    uint8_t control_sm4 : 1;     // sm4加密控制位
+    uint8_t encrypt : 1;         // 加密控制位
     uint8_t cmd;                 // 命令字
     uint16_t length;             // 数据长度
 } frame_header_t;
@@ -332,6 +339,7 @@ typedef struct
 
         frame_version_ack_def_t version;     // 版本号数据体
         frame_ack_def_t ack_def;
+        // frame_encrypt_t encrypt;     // 加密回复结构体
         uint8_t status;
         uint8_t data[12];            // 数据域
     };
@@ -367,6 +375,7 @@ void uart_msg_stay_warn(uint8_t eventType, uint8_t eventId);
 void uart_msg_nfc_verify(event_code_card_t event_code, uint8_t *card_id);
 void uart_msg_tamper_key_warn(uint8_t eventType);
 void uart_msg_face(uint8_t eventType, uint8_t *face_id, uint8_t face_id_size);
+void uart_msg_auth(void);
 void uart_msg_heartbeat(void);
 void uart_msg_param_req(void);
 void uart_msg_ack_word_mode(uint8_t status);
@@ -376,7 +385,7 @@ void uart_msg_ack_sleep(uint8_t status);
 void uart_msg_ack_ota_request(uint8_t status);
 void uart_msg_ack_param_report(uint8_t status);
 void uart_msg_version(uint8_t status, uint8_t *data, uint8_t size);
-
+void uart_msg_ack_encrypt_req(uint8_t status, uint8_t *data, uint8_t size);
 /*****************************/
 
 #endif // MSG_PROTOCOL_HH

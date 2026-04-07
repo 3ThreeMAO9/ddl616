@@ -71,7 +71,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
 {
     switch (packet->cmd)
     {
-        HANDLER_IMPORT(UP_CMD_AUTH)             // (0x01)   // 鉴权命令
+        HANDLER_IMPORT(UP_CMD_ACK_AUTH)         // (0x01)   // 鉴权命令
         HANDLER_IMPORT(UP_CMD_LOCK_CTL)         // (0x02)   // 锁控命令
         HANDLER_IMPORT(UP_CMD_LIGHT_CTL)        // (0x04)   // 灯控命令
         HANDLER_IMPORT(UP_CMD_WORK_MODE)        // (0x05)   // 工作模式命令
@@ -80,6 +80,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_REPORT_PARAM)     // (0x08)   // 参数上报指令
         HANDLER_IMPORT(UP_CMD_SLEEP)            // (0x09)   // 休眠命令
         HANDLER_IMPORT(UP_CMD_VERSION)          // (0x0A)   // 版本号命令
+        HANDLER_IMPORT(UP_CMD_ENCRYPT)          // (0x0B)   // 加密指令
 
         HANDLER_IMPORT(UP_CMD_ACK_REPORT_ORDER) // (0x83)   // 锁操作上报应答
         HANDLER_IMPORT(UP_CMD_ACK_PARAM_REQ)    // (0x87)   // 参数请求应答指令
@@ -124,7 +125,7 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
         OB_LOGE(TAG, "[%s] len=%d exceed max size(%d)", __func__, len, max_buf_len);
         return ret;
     }
-
+#if (ENCRYPT_EN == false)
     // ========== 3. 安全打印日志（避免数组越界） ==========
     // 仅当数据长度≥8时才打印cmd（data[7]），否则提示长度不足
     if (len >= 8)
@@ -137,7 +138,7 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
     }
     // 打印原始数据（日志接口需确保data非NULL、len>0，此处已校验）
     OB_LOGW_DUMP(data, len);
-
+#endif
     // ========== 4. 初始化接收结构体 ==========
     memset(&uart_packet, 0, sizeof(uart_packet_t));
 
@@ -150,6 +151,23 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
         OB_LOGE(TAG, "[%s] CRC check failed! calc=0x%04X, recv=0x%04X", __func__, calc_crc, recv_crc);
         return ret;
     }
+
+#if (ENCRYPT_EN == true)
+    if (data[2] & 0x80){
+        data_decrypt(data[6], &data[8], (data[5] - 2));
+    }
+
+    if (len >= 8)
+    {
+        OB_LOGW(TAG, "[uart rx]cmd: 0x%02X, len=%d", data[7], len);
+    }
+    else
+    {
+        OB_LOGW(TAG, "[uart rx]len=%d < 8, skip cmd print", len);
+    }
+
+    OB_LOGW_DUMP(data, len);
+#endif
 
     // ========== 5. 数据拷贝（区分加密/未加密，简化冗余逻辑） ==========
     // 原代码中if(1)/else分支逻辑完全一致，可合并；若后续需扩展加密校验，再补充

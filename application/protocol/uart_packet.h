@@ -22,7 +22,7 @@ typedef struct
 {
     uint16_t frame_start;        // 帧起始标志
     uint8_t control_version : 7; // 版本号
-    uint8_t control_sm4 : 1;     // sm4加密控制位
+    uint8_t encrypt : 1;         // 加密控制位
     uint8_t tycmd;               // 命令字
     uint16_t tylength;           // 数据长度
     uint8_t TSN;                 // 时间序列号

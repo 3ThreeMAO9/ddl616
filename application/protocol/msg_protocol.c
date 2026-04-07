@@ -32,7 +32,7 @@ static void uart_msg_common_send(uint8_t data_cmd,
 
     // 1. 填充帧头（公共逻辑）
     frame->header.frame_start = 0xAA55;
-    frame->header.control_sm4 = Disabled;
+    frame->header.encrypt = Disabled;
     frame->header.control_version = 0;
     frame->header.cmd = 0xFB;
     frame->header.length = BIG_LITTLE_SWAP16(sizeof(frame_data_t));
@@ -55,6 +55,50 @@ static void uart_msg_common_send(uint8_t data_cmd,
     uint16_t send_len = sizeof(frame_dl_t);
     uartTaskQueuePut(buf, frame->data.TSN, frame->data.cmd, send_len);
 }
+
+#if (ENCRYPT_EN == true)
+
+static void uart_msg_common_send_encrypt(uint8_t data_cmd, 
+                                         uint16_t data_body_len, fill_data_body_t fill_func, ...)
+{
+    if (get_auth_data_flag() == false)
+        return;
+
+    uint8_t buf[64] = {0};
+    frame_dl_t *frame = (frame_dl_t *)buf;
+
+    // 1. 填充帧头（公共逻辑）
+    frame->header.frame_start = 0xAA55;
+    frame->header.encrypt = Enabled;  // 加密标记
+    frame->header.control_version = 0;
+    frame->header.cmd = 0xFB;
+    if (data_body_len >= 12)
+        frame->header.length = BIG_LITTLE_SWAP16((sizeof(uint8_t) * 32));
+    else
+        frame->header.length = BIG_LITTLE_SWAP16((sizeof(uint8_t) * 16));
+
+    // 2. 填充数据体
+    frame->data.TSN = get_tsn();
+    frame->data.cmd = data_cmd;
+    frame->data.length = BIG_LITTLE_SWAP16(data_body_len);
+    
+    va_list args;
+    va_start(args, fill_func);
+    if (fill_func != NULL) {
+        fill_func(&frame->data, args);
+    }
+    va_end(args);
+
+    // OB_LOGW_DUMP(&frame->data.length,(BIG_LITTLE_SWAP16(frame->header.length) - 2));  // 待加密的数据
+		data_encrypt(frame->data.TSN, (uint8_t*)&frame->data.length, (BIG_LITTLE_SWAP16(frame->header.length) - 2));
+
+    // 3. 计算CRC+入队发送（公共逻辑）
+    uint16_t crc_data_len = FRAME_HEADER_LEN + BIG_LITTLE_SWAP16(frame->header.length);
+    frame->crc = BIG_LITTLE_SWAP16(crc16_ccitt(buf, crc_data_len));
+    uint16_t send_len = crc_data_len + sizeof(frame->crc);
+    uartTaskQueuePut(buf, frame->data.TSN, frame->data.cmd, send_len);
+}
+#endif
 
 // ------------------------------ 差异化数据体填充函数 ------------------------------
 static void fill_key_board_data(frame_data_t *data, va_list args)
@@ -138,6 +182,19 @@ static void fill_version_data(frame_data_t *data, va_list args)
     }
 }
 
+#if (ENCRYPT_EN == true)
+static void fill_encrypt_data(frame_data_t *data, va_list args)
+{
+    uint8_t eventType = va_arg(args, int);
+    uint8_t *encrypt_data = va_arg(args, uint8_t*);
+    int size = va_arg(args, int);
+    
+    if (encrypt_data != NULL) {
+        memcpy(&data->encrypt, encrypt_data, size);
+    }
+}
+#endif
+
 // static void fill_ota_request_data(frame_data_t *data, va_list args)
 // {
 //     uint8_t *ptr = va_arg(args, uint8_t*);
@@ -201,6 +258,13 @@ void uart_msg_face(uint8_t eventType, uint8_t *face_id, uint8_t face_id_size)
                          eventType, face_id, face_id_size);
 }
 
+void uart_msg_auth(void)
+{
+    uart_msg_common_send(UP_CMD_AUTH,
+                         sizeof(frame_heartbeat_t), fill_status_data);
+}
+
+
 void uart_msg_heartbeat(void)
 {
     uart_msg_common_send(UP_CMD_HEART,
@@ -259,3 +323,12 @@ void uart_msg_version(uint8_t status, uint8_t *data, uint8_t size)
                          sizeof(frame_version_ack_def_t), fill_version_data,
                          status, data, size);
 }
+
+#if (ENCRYPT_EN == true)
+void uart_msg_ack_encrypt_req(uint8_t status, uint8_t *data, uint8_t size)
+{
+    uart_msg_common_send_encrypt(UP_CMD_ACK_ENCRYPT,
+                         sizeof(frame_encrypt_t), fill_encrypt_data,
+                         status, data, size);
+}
+#endif

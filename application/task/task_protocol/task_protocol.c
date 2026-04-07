@@ -17,6 +17,10 @@
 
 void protocol_task_loop(void)
 {
+#if (ENCRYPT_EN == true)
+    uart_protocol_auth_poll();
+#endif
     uart_protocol_ota_poll();
     uart_protocol_poll();
+    uart_protocol_param_poll();
 }
