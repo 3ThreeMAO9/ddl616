@@ -59,12 +59,21 @@ uint8_t radar_task_wake(void)
  */
 void radar_task_sleep(void)
 {
-    uint8_t data = Enabled;
     if (get_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING) == OB_LOCK_MOTION_DETECT_SETTINGS_DISABLE){
-        data = Disabled;
+        radar_task_handle(RADAR_HANDLE_STAY, Disabled);
+        g_radar_task_driver.io->sleep(Disabled);
+        return;
     }
-    radar_task_handle(RADAR_HANDLE_STAY, data);
-    g_radar_task_driver.io->sleep(data);
+    else{
+        g_radar_task_driver.io->sleep(Enabled);
+    }
+
+    if (get_user_parameter(PARAMETER_LOITER_ALARM) == LOITER_ALARM_FLAG_MIN){
+        radar_task_handle(RADAR_HANDLE_STAY, Disabled);
+    }
+    else{
+        radar_task_handle(RADAR_HANDLE_STAY, Enabled);
+    }
 }
 
 
