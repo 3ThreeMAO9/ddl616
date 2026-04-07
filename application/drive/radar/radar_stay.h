@@ -17,7 +17,7 @@
 /***********Macro***********/
 // 逗留检测核心配置（对外导出，便于上层调整参数）
 #define STAY_TOTAL_PERIODS    4       /* 逗留检测总周期数*/
-#define PERIOD_DURATION_SEC   3       /* 单个检测周期时长（秒） */
+#define PERIOD_DURATION_SEC   5       /* 单个检测周期时长（秒） */
 #define PERIOD_HIGH_THRESHOLD 1       /* 单个周期内判定有效所需的高电平次数阈值 */
 
 /***********Enum***********/
