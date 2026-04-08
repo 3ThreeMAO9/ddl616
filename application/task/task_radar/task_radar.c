@@ -64,6 +64,9 @@ void radar_task_sleep(void)
         g_radar_task_driver.io->sleep(Disabled);
         return;
     }
+    else if (get_user_parameter(PARAMETER_FACE_FUNC_SETTING) == FACE_FUNC_SETTING_MIN){
+        g_radar_task_driver.io->sleep(Disabled);
+    }
     else{
         g_radar_task_driver.io->sleep(Enabled);
     }
@@ -81,7 +84,10 @@ uint8_t radar_task_is_wake(void)
 {
     if (get_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING) == OB_LOCK_MOTION_DETECT_SETTINGS_DISABLE)
         return WAKE_SOURCE_NULL;
-
+    
+    if (get_user_parameter(PARAMETER_FACE_FUNC_SETTING) == FACE_FUNC_SETTING_MIN)
+        return WAKE_SOURCE_NULL;
+    
     if (g_radar_task_driver.io->is_wake())
         return WAKE_SOURCE_RADAR;
 

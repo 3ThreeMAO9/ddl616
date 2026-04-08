@@ -10,6 +10,7 @@
 #include "uart_protocol.h"
 #include "task_fingerprint.h"
 #include "task_face.h"
+#include "user_parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
@@ -108,10 +109,15 @@ static void face_mode_handler(frame_work_mode_t* param)
     {
     case FACE_WORK_MODE_VERIFY:
         OB_LOGD(TAG, "face verify mode");
-        if (param->data == VERIFY_SUB_MODE_DEMO)
-            face_task_set_mode(FACE_MODE_VERIFY_DEMO);
-        else if(param->data == VERIFY_SUB_MODE_NORMAL)
-            face_task_set_mode(FACE_MODE_VERIFY);
+        if (get_user_parameter(PARAMETER_FACE_FUNC_SETTING) == FACE_FUNC_SETTING_MAX){
+            if (param->data == VERIFY_SUB_MODE_DEMO)
+                face_task_set_mode(FACE_MODE_VERIFY_DEMO);
+            else if(param->data == VERIFY_SUB_MODE_NORMAL)
+                face_task_set_mode(FACE_MODE_VERIFY);
+        }
+        else{
+            face_task_set_mode(FACE_MODE_IDLE);
+        }
         break;
     case FACE_WORK_MODE_ADD_USER:
     {
