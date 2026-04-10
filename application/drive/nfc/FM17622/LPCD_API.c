@@ -43,7 +43,7 @@ static void Lpcd_Set_Mode(unsigned char mode) {
 unsigned char Lpcd_Init_Register(unsigned char period, unsigned char thresh) {
     SetReg_Ext(0x24, 0x14);                                                        //请勿修改
     SetReg_Ext(0x25, 0x3A);                                                        //请勿修改
-    SetReg_Ext(JREG_LPCDCTRLMODE, (RF_DET_DISABLE | RF_DET_SEN_00 | LPCD_ENABLE)); //场检测使能，场检测灵敏度0，LPCD使能
+    SetReg_Ext(JREG_LPCDCTRLMODE, (RF_DET_ENABLE | RF_DET_SEN_00 | LPCD_ENABLE)); //场检测使能，场检测灵敏度0，LPCD使能
 
     SetReg_Ext(JREG_LPCDSLEEPTIMER, (period & 0x3F));
     SetReg_Ext(JREG_LPCDRFTIMER, (LPCD_IRQINV_ENABLE | LPCD_IRQ_PUSHPULL | LPCD_RFTIME_5us)); //探测使用5us，LPCD探测总时间18us

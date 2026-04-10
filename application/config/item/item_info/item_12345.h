@@ -56,14 +56,14 @@
 #define NFC_CHECK_CARD_POWER            (0x08)        //This is nfc sleep check the card power
 #define NFC_CHECK_CARD_THRESHOLD_VALUE  (10)          //This is nfc sleep check the card threshold value
 
-#define LPCD_THRESHOLD                  (80)          // LPCD参考ADC值
-#define LPCD_THRESHOLD_MAX              (90)          // LPCD检测阈值设置
+#define LPCD_THRESHOLD                  (70)          // LPCD参考ADC值
+// #define LPCD_THRESHOLD_MAX              (90)          // LPCD检测阈值设置
 #define LPCD_CWP                        (50)          // LPCD P管功率 0~63
 #define LPCD_CWN                        (13)          // LPCD N管功率 0~15
 #define LPCD_SLEEPTIME                  (16)          // LPCD 唤醒间隔时间，每一档为32ms，休眠时间：（16+1）*32=544ms
 
-#define DELAT                           (10)          //灵敏度 1-15  读取ADC值与设定的参考ADC值，ADC变化值
-#define SWINGSCNT                       (7)           //+1+2us,探卡时，发射波形时长
+// #define DELAT                           (10)          //灵敏度 1-15  读取ADC值与设定的参考ADC值，ADC变化值
+// #define SWINGSCNT                       (7)           //+1+2us,探卡时，发射波形时长
 
 #endif
 

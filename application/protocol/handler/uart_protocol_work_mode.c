@@ -10,6 +10,7 @@
 #include "uart_protocol.h"
 #include "task_fingerprint.h"
 #include "task_face.h"
+#include "task_nfc.h"
 #include "user_parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
@@ -74,24 +75,31 @@ static void card_mode_handler(frame_work_mode_t* param)
     {
     case CARD_WORK_MODE_NULL:
         OB_LOGD(TAG, "card idle/null mode, ignore");
+        nfc_task_set_state(NFC_STATE_SLEEP);
         break;
     case CARD_WORK_MODE_IDLE:
         OB_LOGD(TAG, "card idle mode");
+        nfc_task_set_state(NFC_STATE_SLEEP);
         break;
     case CARD_WORK_MODE_VERIFY:
         OB_LOGD(TAG, "card verify mode");
+        nfc_task_set_state(NFC_STATE_VERIFY);
         break;
     case CARD_WORK_MODE_ADD_USER:
         OB_LOGD(TAG, "card add user mode");
+        nfc_task_set_state(NFC_STATE_REGISTER);
         break;
     case CARD_WORK_MODE_ID_DELETE:
         OB_LOGD(TAG, "card ID delete mode ,del_id = 0x%04X",param->data);
+        nfc_task_set_state(NFC_STATE_VERIFY);
         break;
     case CARD_WORK_MODE_VERIFY_DELETE:
         OB_LOGD(TAG, "card verify delete mode");
+        nfc_task_set_state(NFC_STATE_VERIFY);
         break;
     case CARD_WORK_MODE_READ_SECTOR:
         OB_LOGD(TAG, "card read sector mode");
+        nfc_task_set_state(NFC_STATE_FUNCTION);
         break;
     default:
         OB_LOGE(TAG, "unknown card event code: %d", param->event_code);

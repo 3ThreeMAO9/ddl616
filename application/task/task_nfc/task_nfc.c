@@ -112,7 +112,7 @@ void nfc_task_init(void) {
     }
 
     set_nfc_encrypt_type(NFC_ENCRYPT_DEFAULT);
-    nfc_task_set_state(NFC_STATE_REGISTER);
+    nfc_task_set_state(NFC_STATE_VERIFY);
 }
 
 void nfc_task_loop(void) {
