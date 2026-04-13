@@ -27,7 +27,7 @@ typedef void (*fill_data_body_t)(frame_data_t *data, va_list args);
 static void uart_msg_common_send(uint8_t data_cmd, 
                                  uint16_t data_body_len, fill_data_body_t fill_func, ...)
 {
-    uint8_t buf[32] = {0};
+    uint8_t buf[128] = {0};
     frame_dl_t *frame = (frame_dl_t *)buf;
 
     // 1. 填充帧头（公共逻辑）
@@ -35,25 +35,42 @@ static void uart_msg_common_send(uint8_t data_cmd,
     frame->header.encrypt = Disabled;
     frame->header.control_version = 0;
     frame->header.cmd = 0xFB;
-    frame->header.length = BIG_LITTLE_SWAP16(sizeof(frame_data_t));
+
+    uint16_t payload_lenth = (data_body_len / 16 * 16);
+    payload_lenth += (data_body_len % 16) ? 16 : 0;
+
+    frame->header.length = BIG_LITTLE_SWAP16(payload_lenth);
+
+    frame_data_t *data = (frame_data_t *)frame->data;
 
     // 2. 填充数据体（差异化逻辑，通过函数指针实现）
-    frame->data.TSN = get_tsn();
-    frame->data.cmd = data_cmd; // 抽离为入参，适配不同cmd
-    frame->data.length = BIG_LITTLE_SWAP16(data_body_len);
+    data->TSN = get_tsn();
+    data->cmd = data_cmd; // 抽离为入参，适配不同cmd
+    data->length = BIG_LITTLE_SWAP16(data_body_len);
     
     va_list args;
     va_start(args, fill_func);
     if (fill_func != NULL) {
-        fill_func(&frame->data, args);
+        fill_func(data, args);
     }
     va_end(args);
 
     // 3. 计算CRC+入队发送（公共逻辑）
-    uint16_t crc_data_len = FRAME_HEADER_LEN + sizeof(frame_data_t);
-    frame->crc = BIG_LITTLE_SWAP16(crc16_ccitt(buf, crc_data_len));
-    uint16_t send_len = sizeof(frame_dl_t);
-    uartTaskQueuePut(buf, frame->data.TSN, frame->data.cmd, send_len);
+    uint16_t crc_data_len = sizeof(frame_header_t) + payload_lenth;
+    uint16_t crc = crc16_ccitt(buf, crc_data_len);
+
+    uint8_t *crc_ptr = buf + crc_data_len;
+    *(uint16_t *)crc_ptr = BIG_LITTLE_SWAP16(crc);
+
+    uint16_t send_len = crc_data_len + 2;
+
+    // OB_LOGE(TAG,"length               %ld",payload_lenth);
+    // OB_LOGE(TAG,"data_body_len        %ld",data_body_len);
+    // OB_LOGE(TAG,"crc_data_len         %ld",crc_data_len);
+    // OB_LOGE(TAG,"FRAME_HEADER_LEN     %ld",FRAME_HEADER_LEN);
+    // OB_LOGE(TAG,"send_len             %ld",send_len);
+
+    uartTaskQueuePut(buf, data->TSN, data->cmd, send_len);
 }
 
 #if (ENCRYPT_EN == true)
@@ -142,6 +159,21 @@ static void fill_nfc_verify_data(frame_data_t *data, va_list args)
     data->card.event_source = EVENT_SOURCE_CARD;
     data->card.event_code = event_code;
     memcpy(data->card.card_id, card_id, sizeof(data->card.card_id));
+}
+
+static void fill_nfc_read_sector_data(frame_data_t *data, va_list args)
+{
+    uint8_t event_code = va_arg(args, int);
+    uint8_t *card_id = va_arg(args, uint8_t*);
+    uint8_t *read_sector = va_arg(args, uint8_t*);
+
+
+    data->read_card.event_type = EVENT_TYPE_NULL;
+    data->read_card.event_source = EVENT_SOURCE_CARD;
+    data->read_card.event_code = event_code;
+    memcpy(data->read_card.card_id, card_id, sizeof(data->read_card.card_id));
+    memcpy(data->read_card.read_sector, read_sector, sizeof(data->read_card.read_sector));
+
 }
 
 static void fill_tamper_key_warn_data(frame_data_t *data, va_list args)
@@ -242,6 +274,13 @@ void uart_msg_nfc_verify(event_code_card_t event_code, uint8_t *card_id)
     uart_msg_common_send(UP_CMD_REPORT_ORDER, 
                          sizeof(frame_card_t), fill_nfc_verify_data, 
                          event_code, card_id);
+}
+
+void uart_msg_nfc_read_sector(event_code_card_t event_code, uint8_t *card_id, uint8_t *read_sector)
+{
+    uart_msg_common_send(UP_CMD_REPORT_ORDER, 
+                         sizeof(frame_read_card_t), fill_nfc_read_sector_data, 
+                         event_code, card_id, read_sector);
 }
 
 void uart_msg_tamper_key_warn(uint8_t eventType)

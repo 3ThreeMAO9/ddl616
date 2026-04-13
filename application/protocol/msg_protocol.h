@@ -48,7 +48,8 @@ typedef enum{
     EVENT_CODE_CARD_REGISTER_FAIL    = 0x04,  ///< 0x04：录入失败
     EVENT_CODE_CARD_USER_DUPLICATE   = 0x05,  ///< 0x05：重复用户
     EVENT_CODE_CARD_INVALID          = 0x06,  ///< 0x06：非法卡
-    EVENT_CODE_CARD_ENCRYPT_FAIL     = 0x07   ///< 0x07：加密失败
+    EVENT_CODE_CARD_ENCRYPT_FAIL     = 0x07,  ///< 0x07：加密失败
+    EVENT_CODE_CARD_READ_SECTOR      = 0x08   ///< 0x08：读取扇区
 } event_code_card_t;
 
 typedef enum {
@@ -263,6 +264,15 @@ typedef struct
     uint8_t event_type;
     uint8_t event_source;
     uint8_t event_code;
+    uint8_t card_id[4];
+    uint8_t read_sector[48];
+} frame_read_card_t;
+
+typedef struct
+{
+    uint8_t event_type;
+    uint8_t event_source;
+    uint8_t event_code;
     uint8_t face_id[2];
 } frame_face_t;
 
@@ -333,6 +343,7 @@ typedef struct
         frame_finger_t finger;       // 指纹帧结构体
         frame_radar_t radar;         // 雷达帧结构体
         frame_card_t card;           // 卡片帧结构体
+        frame_read_card_t read_card; // 读卡片扇区结构体
         frame_tamper_t tamper;       // 防撬帧结构体
         frame_face_t face;           // 人脸帧结构体
         frame_heartbeat_t heartbeat; // 心跳数据体
@@ -347,11 +358,9 @@ typedef struct
 
 #define FRAME_HEADER_LEN sizeof(frame_header_t)
 
-typedef struct
-{
-    frame_header_t header; // 帧头
-    frame_data_t data;     // 帧处理数据
-    uint16_t crc;          // CRC校验码
+typedef struct {
+    frame_header_t header;
+    uint8_t data[];
 } frame_dl_t;
 
 typedef struct {
@@ -373,6 +382,7 @@ void uart_msg_key_board(uint8_t eventType, uint8_t keyValue);
 void uart_msg_finger(uint8_t event_code, uint8_t finger_id);
 void uart_msg_stay_warn(uint8_t eventType, uint8_t eventId);
 void uart_msg_nfc_verify(event_code_card_t event_code, uint8_t *card_id);
+void uart_msg_nfc_read_sector(event_code_card_t event_code, uint8_t *card_id, uint8_t *read_sector);
 void uart_msg_tamper_key_warn(uint8_t eventType);
 void uart_msg_face(uint8_t eventType, uint8_t *face_id, uint8_t face_id_size);
 void uart_msg_auth(void);

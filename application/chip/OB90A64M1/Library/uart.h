@@ -52,7 +52,7 @@ uint32_t UART_Read(OB_UART_Type* pUart, uint8_t *pRxBuf, uint32_t nReadBytes);
 #define UART_STATUS_TEMT        0x40
 #define UART_STATUS_RXFE        0x80
 
-#define UART_RX_SIZE  100
+#define UART_RX_SIZE  128
 
 extern volatile uint8_t  g_UartRxData[];
 extern volatile uint32_t g_UartRxCounter;

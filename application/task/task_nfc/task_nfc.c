@@ -43,6 +43,9 @@ static void nfc_task_callback(nfc_event_t* event) {
             OB_LOGI(TAG, "register success");
             uart_msg_nfc_verify(EVENT_CODE_CARD_REGISTER_SUCCESS,event->card_id);
             break;
+        case NFC_STATE_FUNCTION:
+            OB_LOGI(TAG, "state function");
+            break;
         default:
             OB_LOGE(TAG, "[%s] not default", __func__);
             break;
@@ -59,12 +62,16 @@ static void nfc_task_callback(nfc_event_t* event) {
             OB_LOGI(TAG, "register fail");
             uart_msg_nfc_verify(EVENT_CODE_CARD_REGISTER_FAIL,event->card_id);
             break;
+        case NFC_STATE_FUNCTION:
+            OB_LOGI(TAG, "state function");
+            if (event->sector_valid) {
+                OB_LOGD_DUMP(event->sector_pt, 48);
+                uart_msg_nfc_read_sector(EVENT_CODE_CARD_READ_SECTOR,event->card_id,event->sector_pt);
+            }
+            break;
         default:
             OB_LOGE(TAG, "[%s] not default", __func__);
             break;
-        }
-        if (event->sector_valid) {
-            OB_LOGD_DUMP(event->sector_pt, 48);
         }
         OB_LOGD(TAG, "Fail: The card is invalid");
     }
