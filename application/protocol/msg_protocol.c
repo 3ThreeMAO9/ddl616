@@ -129,6 +129,14 @@ static void fill_key_board_data(frame_data_t *data, va_list args)
     data->key_broad.key_value = keyValue;
 }
 
+static void fill_wake_data(frame_data_t *data, va_list args)
+{
+    uint8_t wake_data = va_arg(args, int); // va_arg不支持uint8_t，需用int中转
+    
+    memset(data->wake.data, wake_data, sizeof(frame_wake_t));
+}
+
+
 static void fill_finger_data(frame_data_t *data, va_list args)
 {
     uint8_t event_code = va_arg(args, int); // va_arg不支持uint8_t，需用int中转
@@ -253,6 +261,13 @@ void uart_msg_key_board(uint8_t eventType, uint8_t keyValue)
     uart_msg_common_send(UP_CMD_REPORT_ORDER, 
                          sizeof(frame_key_broad_t), fill_key_board_data, 
                          eventType, keyValue);
+}
+
+void uart_msg_wake(uint8_t data)
+{
+    uart_msg_common_send(UP_CMD_REPORT_ORDER, 
+                         sizeof(frame_wake_t), fill_wake_data, 
+                         data);
 }
 
 void uart_msg_finger(uint8_t event_code, uint8_t finger_id)

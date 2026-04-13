@@ -245,6 +245,11 @@ typedef struct
 
 typedef struct
 {
+    uint8_t data[12];
+} frame_wake_t;
+
+typedef struct
+{
     uint8_t event_type;
     uint8_t event_source;
     uint8_t event_code;
@@ -347,10 +352,12 @@ typedef struct
         frame_tamper_t tamper;       // 防撬帧结构体
         frame_face_t face;           // 人脸帧结构体
         frame_heartbeat_t heartbeat; // 心跳数据体
+        frame_wake_t wake;           // 唤醒结构体
 
         frame_version_ack_def_t version;     // 版本号数据体
         frame_ack_def_t ack_def;
         // frame_encrypt_t encrypt;     // 加密回复结构体
+        
         uint8_t status;
         uint8_t data[12];            // 数据域
     };
@@ -379,6 +386,7 @@ typedef struct {
 
 /***********Function***********/
 void uart_msg_key_board(uint8_t eventType, uint8_t keyValue);
+void uart_msg_wake(uint8_t data);
 void uart_msg_finger(uint8_t event_code, uint8_t finger_id);
 void uart_msg_stay_warn(uint8_t eventType, uint8_t eventId);
 void uart_msg_nfc_verify(event_code_card_t event_code, uint8_t *card_id);

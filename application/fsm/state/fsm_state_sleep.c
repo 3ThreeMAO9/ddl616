@@ -1,5 +1,6 @@
 #include "fsm_state.h"
 #include "state_inside.h"
+#include "msg_protocol.h"
 
 #include "task_sleep.h"
 #include "task_system_time.h"
@@ -19,7 +20,10 @@
 
 /***************Function***************/
 
-
+void lock_wake(void)
+{
+    uart_msg_wake(0x80);
+}
 // ------------------------------------------
 
 QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
@@ -45,13 +49,13 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
         case Q_HANDLE_SIG:
             if (HANDLE_EVENT_WAKE == e->dynamic_[0]){
                 OB_LOGW(TAG,"wake [%08X]",e->dynamic_[1]);
+                lock_wake();
                 if (e->dynamic_[1] == WAKE_UP_TYPE_RADAR)
                 {
                     radar_task_wake();
                 }
                 else if (e->dynamic_[1] == WAKE_UP_TYPE_KEY_BOARD)
                 {
-                    key_task_wake();
                 }
                 state = Q_TRAN(lock_fsm_idle);
             }
