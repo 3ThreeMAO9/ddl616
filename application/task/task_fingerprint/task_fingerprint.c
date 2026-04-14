@@ -57,6 +57,7 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
         uart_msg_finger(EVENT_CODE_FINGER_VERIFY_FAIL_MODULE, 0);
         break;
     case FP_EVENT_POWER_ON:
+        OB_LOGI(TAG, "FP_EVENT_POWER_ON");
         break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
@@ -104,6 +105,7 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
         OB_LOGI(TAG, "FP_EVENT_FAIL_STORE");
         break;
     case FP_EVENT_POWER_ON:
+        OB_LOGI(TAG, "FP_EVENT_POWER_ON");
         break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);
@@ -129,6 +131,7 @@ static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t len
         uart_msg_finger(EVENT_CODE_FINGER_DELETE_FAIL, 0);
         break;
     case FP_EVENT_POWER_ON:
+        OB_LOGI(TAG, "FP_EVENT_POWER_ON");
         break;
     case FP_EVENT_DELETE_ALL:
         OB_LOGI(TAG, "FP_EVENT_DELETE_ALL");
@@ -168,6 +171,7 @@ static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t 
         uart_msg_finger(EVENT_CODE_FINGER_DELETE_FAIL, 0);
         break;
     case FP_EVENT_POWER_ON:
+        OB_LOGI(TAG, "FP_EVENT_POWER_ON");
         break;
     default:
         OB_LOGE(TAG, "[%s] not default event[%d]", __func__, event);
@@ -176,7 +180,7 @@ static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t 
 
     fp_task_set_mode(FP_MODE_IDLE);
     if (event != FP_EVENT_DELETE_ALL)
-        face_task_set_mode(FACE_MODE_SLEEP);
+    face_task_set_mode(FACE_MODE_SLEEP);
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
 
     return true;
@@ -202,6 +206,7 @@ static uint8_t fp_verify_delete_event_callback(uint8_t event, void* params, uint
         uart_msg_finger(EVENT_CODE_FINGER_DELETE_FAIL, 0);
         break;
     case FP_EVENT_POWER_ON:
+        OB_LOGI(TAG, "FP_EVENT_POWER_ON");
         break;
     default:
         OB_LOGE(TAG, "[%s] not default", __func__);

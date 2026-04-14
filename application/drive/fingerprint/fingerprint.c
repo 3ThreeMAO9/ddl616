@@ -664,10 +664,7 @@ static uint8_t fp_parse_response(fp_context_t *ctx, uint8_t* buffer, uint8_t len
     
     // 检查包标识
     if (buffer[6] != PKG_ACK) {
-        //模拟串口问题，此字节容易出错，大概率是前面连续4个字节都是0xFF
-        buffer[6] = PKG_ACK;
-        OB_LOGE(TAG, "PKG_ACK!!!!!!!!!!!!!");
-        // return false;
+        return false;
     }
     
     // 提取确认码

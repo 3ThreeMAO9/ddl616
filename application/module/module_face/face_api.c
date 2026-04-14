@@ -172,10 +172,10 @@ uint8_t face_loop_API(void)
 uint8_t face_read_mode_API(void)
 {
     // 检查模块是否已初始化
-    if (!face_handle.ctx.status.init)
-    {
-        return 0xFF; // 返回非法值标识未初始化
-    }
+    // if (!face_handle.ctx.status.init)
+    // {
+    //     return 0xFF; // 返回非法值标识未初始化
+    // }
 
     return face_handle.ctx.mode;
 }

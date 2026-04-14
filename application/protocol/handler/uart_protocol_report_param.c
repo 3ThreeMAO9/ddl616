@@ -10,7 +10,7 @@
 #include "uart_protocol.h"
 #include "user_parameter.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "uart_protocol_report_param"
 
