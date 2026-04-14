@@ -130,6 +130,9 @@ static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t len
         break;
     case FP_EVENT_POWER_ON:
         break;
+    case FP_EVENT_DELETE_ALL:
+        OB_LOGI(TAG, "FP_EVENT_DELETE_ALL");
+        break;
     default:
         OB_LOGE(TAG, "[%s] not default event[%d]", __func__, event);
         break;
