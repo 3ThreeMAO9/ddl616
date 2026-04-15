@@ -11,10 +11,13 @@
 #include "msg_protocol.h"
 #include "user_parameter.h"
 #include "task_system_time.h"
+#include "task_face.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "task_radar"
+
+extern uint8_t get_sleep_radar_en(void);
 
 // 雷达任务驱动句柄
 static radar_task_driver_t g_radar_task_driver;
@@ -54,23 +57,30 @@ uint8_t radar_task_wake(void)
 }
 
 /**
- * @brief 雷达任务休眠
- * @return NULL
+ * @brief 雷达任务休眠控制函数
+ * @note 根据用户配置参数，控制雷达模块休眠状态和逗留检测功能开关
  */
 void radar_task_sleep(void)
 {
+    // 判断人体传感器功能是否被禁用
     if (get_user_parameter(PARAMETER_HUMAN_SENSOR_SETTING) == OB_LOCK_MOTION_DETECT_SETTINGS_DISABLE){
         radar_task_handle(RADAR_HANDLE_STAY, Disabled);
         g_radar_task_driver.io->sleep(Disabled);
         return;
     }
-    else if (get_user_parameter(PARAMETER_FACE_FUNC_SETTING) == FACE_FUNC_SETTING_MIN){
+
+    // 判断人脸功能设置是否关闭
+    if (get_user_parameter(PARAMETER_FACE_FUNC_SETTING) == FACE_FUNC_SETTING_MIN){
+        g_radar_task_driver.io->sleep(Disabled);
+    }
+    else if (get_sleep_radar_en() == Disabled){
         g_radar_task_driver.io->sleep(Disabled);
     }
     else{
         g_radar_task_driver.io->sleep(Enabled);
     }
 
+    // 判断逗留报警功能是否关闭
     if (get_user_parameter(PARAMETER_LOITER_ALARM) == LOITER_ALARM_FLAG_MIN){
         radar_task_handle(RADAR_HANDLE_STAY, Disabled);
     }
@@ -87,7 +97,10 @@ uint8_t radar_task_is_wake(void)
     
     if (get_user_parameter(PARAMETER_FACE_FUNC_SETTING) == FACE_FUNC_SETTING_MIN)
         return WAKE_SOURCE_NULL;
-    
+
+    if (get_sleep_radar_en() == Disabled)
+        return WAKE_SOURCE_NULL;
+
     if (g_radar_task_driver.io->is_wake())
         return WAKE_SOURCE_RADAR;
 

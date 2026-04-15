@@ -195,7 +195,10 @@ typedef enum {
     EVENT_PARAM_HUMAN_SENSOR_SETTING  = 0x13,    ///< 0x13：人体感应设置
 } event_param_t;
 
-
+typedef enum {
+    SLEEP_NULL              = 0x00,  ///<0x00: NULL
+    SLEEP_MOTION_DETECTION  = 0x13,  ///<0x13：人体感应设置
+} lock_sleep_t;
 /***********Struct***********/
 #pragma pack(1)
 typedef struct
@@ -232,7 +235,8 @@ typedef struct
 
 typedef struct
 {
-    uint8_t status;
+    uint8_t event;
+    uint8_t data;
 } frame_sleep_t;
 
 typedef struct
