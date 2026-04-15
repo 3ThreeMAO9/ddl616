@@ -36,13 +36,13 @@ static void face_process_init(face_context_t *ctx)
     case 0:
         if (ctx->status.timeout || ctx->status.processing)
         {
-            face_send_command(ctx, FACE_CMD_SET_ENC_KEY, 
-                (uint8_t[]){0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F}, 16);
+            face_send_command(ctx, FACE_CMD_SET_ENC_KEY,
+                              (uint8_t[]){0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F}, 16);
             ctx->step = 1;
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             ctx->step = 0;
             if (NULL != ctx->callback)
@@ -69,19 +69,21 @@ static void face_process_idle(face_context_t *ctx)
     case 0:
         if (ctx->status.timeout)
         {
-            if (ctx->status.encryption == 0){
+            if (ctx->status.encryption == 0)
+            {
                 face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
-                ctx->status.encryption = 1;     //密钥种子发送及当加密成功
+                ctx->status.encryption = 1; // 密钥种子发送及当加密成功
                 ctx->step = 1;
             }
-            else{
+            else
+            {
                 face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
                 ctx->step = 1;
             }
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             face_is_ready(ctx, FACE_MODE_SLEEP);
             ctx->callback = NULL;
@@ -104,21 +106,23 @@ static void face_process_verify(face_context_t *ctx)
     case 0:
         if (ctx->status.timeout)
         {
-            if (ctx->status.encryption == 0){
+            if (ctx->status.encryption == 0)
+            {
                 face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
-                ctx->status.encryption = 1;     //密钥种子发送及当加密成功
+                ctx->status.encryption = 1; // 密钥种子发送及当加密成功
                 ctx->step = 1;
                 ctx->encryption_count++;
-                OB_LOGD(TAG,"ctx->encryption_count %d",ctx->encryption_count);
+                OB_LOGD(TAG, "ctx->encryption_count %d", ctx->encryption_count);
             }
-            else{
+            else
+            {
                 face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
                 ctx->step = 1;
             }
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             ctx->step = 5;
             ctx->encryption_count = 0;
@@ -137,30 +141,42 @@ static void face_process_verify(face_context_t *ctx)
         }
         break;
     case 5:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                uint16_t face_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
-                if (NULL != ctx->callback){
-                    if (0x12 == ctx->ack_packet.mid)
-                        ctx->callback(FACE_RESULT_SUCCESS_VERIFY, (void *)&face_id, sizeof(face_id));
-                    else if (0x81 == ctx->ack_packet.mid)
-                        ctx->callback(PALM_RESULT_SUCCESS_VERIFY, (void *)&face_id, sizeof(face_id));
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    uint16_t face_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1], ctx->ack_packet.buffer[0]);
+                    if (NULL != ctx->callback)
+                    {
+                        if (0x12 == ctx->ack_packet.mid)
+                            ctx->callback(FACE_RESULT_SUCCESS_VERIFY, (void *)&face_id, sizeof(face_id));
+                        else if (0x81 == ctx->ack_packet.mid)
+                            ctx->callback(PALM_RESULT_SUCCESS_VERIFY, (void *)&face_id, sizeof(face_id));
+                    }
+                }
+                else if (MR_FAILED4_TIMEOUT == ctx->ack_packet.result)
+                {
+                    ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
+                }
+                else
+                {
+                    ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
                 }
             }
-            else if (MR_FAILED4_TIMEOUT == ctx->ack_packet.result){
-                ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
-            }
-            else{
-                ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
-            }
-
-        }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+            else if (MID_NOTE == ctx->ack_packet.msgid)
             {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                }
             }
         }
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
         break;
     default:
         break;
@@ -174,19 +190,21 @@ static void face_process_verify_delete(face_context_t *ctx)
     case 0:
         if (ctx->status.timeout)
         {
-            if (ctx->status.encryption == 0){
+            if (ctx->status.encryption == 0)
+            {
                 face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
-                ctx->status.encryption = 1;     //密钥种子发送及当加密成功
+                ctx->status.encryption = 1; // 密钥种子发送及当加密成功
                 ctx->step = 1;
             }
-            else{
+            else
+            {
                 face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
                 ctx->step = 1;
             }
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             ctx->step = 5;
             face_send_command(ctx, FACE_CMD_VERIFY, (uint8_t[]){0x00, 0x05}, 2);
@@ -198,34 +216,51 @@ static void face_process_verify_delete(face_context_t *ctx)
         }
         break;
     case 5:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            uint16_t face_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                // 发送删除指令
-                ctx->params.del.page_id = face_id;
-                face_send_command(ctx, FACE_CMD_DELUSER, (const uint8_t *)&ctx->params.del, sizeof(face_delete_params_t));
-                ctx->step = 6;
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                uint16_t face_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1], ctx->ack_packet.buffer[0]);
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    // 发送删除指令
+                    ctx->params.del.page_id = face_id;
+                    face_send_command(ctx, FACE_CMD_DELUSER, (const uint8_t *)&ctx->params.del, sizeof(face_delete_params_t));
+                    ctx->step = 6;
+                }
+                else if (MR_FAILED4_TIMEOUT == ctx->ack_packet.result)
+                {
+                    ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
+                }
+                else
+                {
+                    ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
+                }
             }
-            else if (MR_FAILED4_TIMEOUT == ctx->ack_packet.result){
-                ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
-            }
-            else{
-                ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
+            else if (MID_NOTE == ctx->ack_packet.msgid)
+            {
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                }
             }
         }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-            }
+        else
+        {
+            ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+            ctx->step = 0;
         }
         break;
     case 6:
-        if (NULL != ctx->callback) {
-            if (MR_SUCCESS == ctx->ack_packet.result) {
+        if (NULL != ctx->callback)
+        {
+            // if (MR_SUCCESS == ctx->ack_packet.result) {
+            if ((MR_SUCCESS == ctx->ack_packet.result) && (!ctx->status.timeout))
+            {
                 ctx->callback(FACE_RESULT_SUCCESS_DELETE, (&ctx->params.del), sizeof(face_delete_params_t));
             }
-            else {
+            else
+            {
                 ctx->callback(FACE_RESULT_FAIL_DELETE, NULL, 0);
             }
         }
@@ -243,21 +278,32 @@ static void face_process_verify_demo(face_context_t *ctx)
     case 0:
         if (ctx->status.timeout)
         {
-            if (ctx->status.encryption == 0){
+            if (ctx->status.encryption == 0)
+            {
                 face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
-                ctx->status.encryption = 1;     //密钥种子发送及当加密成功
+                ctx->status.encryption = 1; // 密钥种子发送及当加密成功
                 ctx->step = 1;
+                ctx->encryption_count++;
+                OB_LOGD(TAG, "ctx->encryption_count %d", ctx->encryption_count);
             }
-            else{
+            else
+            {
                 face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
                 ctx->step = 1;
             }
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             ctx->step = 5;
+            ctx->encryption_count = 0;
+            face_send_command(ctx, FACE_CMD_DEMOMODE, (uint8_t[]){0x01}, 1);
+        }
+        else if ((ctx->status.timeout) && (ctx->encryption_count >= 3))
+        {
+            ctx->step = 5;
+            ctx->encryption_count = 0;
             face_send_command(ctx, FACE_CMD_DEMOMODE, (uint8_t[]){0x01}, 1);
         }
         else
@@ -267,10 +313,10 @@ static void face_process_verify_demo(face_context_t *ctx)
         }
         break;
     case 5:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             ctx->step = 6;
-            ctx->status.demomode = 1;     // 演示模式
+            ctx->status.demomode = 1; // 演示模式
             face_send_command(ctx, FACE_CMD_VERIFY, (uint8_t[]){0x00, 0x05}, 2);
         }
         else
@@ -280,46 +326,60 @@ static void face_process_verify_demo(face_context_t *ctx)
         }
         break;
     case 6:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_FAILED4_UNKNOWNUSER)
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
             {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
+                if (ctx->ack_packet.result == MR_FAILED4_UNKNOWNUSER)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
+                    }
+                }
+                else if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    ctx->params.verify.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1], ctx->ack_packet.buffer[0]);
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_SUCCESS_VERIFY, (void *)&ctx->params.verify.page_id, sizeof(ctx->params.verify.page_id));
+                    }
+                }
+                else if (MR_FAILED4_TIMEOUT == ctx->ack_packet.result)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
+                    }
+                }
+                else
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
+                    }
                 }
             }
-            else if (ctx->ack_packet.result == MR_SUCCESS){
-                ctx->params.verify.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_SUCCESS_VERIFY, (void *)&ctx->params.verify.page_id, sizeof(ctx->params.verify.page_id));
-                }
-            }
-            else if (MR_FAILED4_TIMEOUT == ctx->ack_packet.result){
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
-                }
-            }
-            else{
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_UNKNOWNUSER, NULL, 0);
-                }
-            }
-
-
-        }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+            else if (MID_NOTE == ctx->ack_packet.msgid)
             {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                }
             }
         }
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
         break;
     default:
         break;
@@ -335,12 +395,14 @@ static void face_process_register(face_context_t *ctx)
         {
             if (ctx->status.timeout)
             {
-                if (ctx->status.encryption == 0){
+                if (ctx->status.encryption == 0)
+                {
                     face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
-                    ctx->status.encryption = 1;     //密钥种子发送及当加密成功
+                    ctx->status.encryption = 1; // 密钥种子发送及当加密成功
                     ctx->step = 1;
                 }
-                else{
+                else
+                {
                     face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
                     ctx->step = 1;
                 }
@@ -348,7 +410,7 @@ static void face_process_register(face_context_t *ctx)
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             face_send_command(ctx, FACE_CMD_FACERESET, NULL, 0);
             ctx->step = 2;
@@ -360,14 +422,14 @@ static void face_process_register(face_context_t *ctx)
         }
         break;
     case 2:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             ctx->step = 3;
-            memset(face_send_buf,0,sizeof(face_send_buf));
+            memset(face_send_buf, 0, sizeof(face_send_buf));
 
-            face_send_buf[33] = FACE_DIRECTION_FRONT; // 方向
-            face_send_buf[34] = ctx->func_attr.register_type; // 注册类型
-            face_send_buf[35] = ctx->func_attr.repeat; // 能否重复录入
+            face_send_buf[33] = FACE_DIRECTION_FRONT;             // 方向
+            face_send_buf[34] = ctx->func_attr.register_type;     // 注册类型
+            face_send_buf[35] = ctx->func_attr.repeat;            // 能否重复录入
             face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
 
             face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
@@ -379,164 +441,224 @@ static void face_process_register(face_context_t *ctx)
         }
         break;
     case 3:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                if(ctx->func_attr.register_type == 1){
-                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                    ctx->step = 0;
-                    ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
-                    if (NULL != ctx->callback) {
-                        ctx->callback(FACE_RESULT_SUCCESS_REGISTER, (void *)&ctx->params.reg.page_id, sizeof(ctx->params.reg.page_id));
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    if (ctx->func_attr.register_type == 1)
+                    {
+                        ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                        ctx->step = 0;
+                        ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1], ctx->ack_packet.buffer[0]);
+                        if (NULL != ctx->callback)
+                        {
+                            ctx->callback(FACE_RESULT_SUCCESS_REGISTER, (void *)&ctx->params.reg.page_id, sizeof(ctx->params.reg.page_id));
+                        }
+                    }
+                    else
+                    {
+                        ctx->step = 4;
+                        memset(face_send_buf, 0, sizeof(face_send_buf));
+
+                        face_send_buf[33] = FACE_DIRECTION_UP;                // 方向
+                        face_send_buf[34] = ctx->func_attr.register_type;     // 注册类型
+                        face_send_buf[35] = ctx->func_attr.repeat;            // 能否重复录入
+                        face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
+
+                        face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
+                        if (NULL != ctx->callback)
+                        {
+                            ctx->callback(FACE_RESULT_SUCCESS_REGISTER_UP, NULL, 0);
+                        }
                     }
                 }
-                else{
-                    ctx->step = 4;
-                    memset(face_send_buf,0,sizeof(face_send_buf));
+                else if (ctx->ack_packet.result == MR_FAILED4_MAXUSER)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_FULL, NULL, 0);
+                    }
+                }
+                else if (ctx->ack_packet.result == MR_FAILED4_FACEENROLLED)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_REPEAT, NULL, 0);
+                    }
+                }
+                else
+                {
+                    OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
+                }
+            }
+            else if (MID_NOTE == ctx->ack_packet.msgid)
+            {
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                }
+            }
+        }
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
+        break;
+    case 4:
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    ctx->step = 5;
+                    memset(face_send_buf, 0, sizeof(face_send_buf));
 
-                    face_send_buf[33] = FACE_DIRECTION_UP; // 方向
-                    face_send_buf[34] = ctx->func_attr.register_type; // 注册类型
-                    face_send_buf[35] = ctx->func_attr.repeat; // 能否重复录入
+                    face_send_buf[33] = FACE_DIRECTION_DOWN;              // 方向
+                    face_send_buf[34] = ctx->func_attr.register_type;     // 注册类型
+                    face_send_buf[35] = ctx->func_attr.repeat;            // 能否重复录入
                     face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
 
                     face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
-                    if (NULL != ctx->callback) {
-                        ctx->callback(FACE_RESULT_SUCCESS_REGISTER_UP, NULL, 0);
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_SUCCESS_REGISTER_DOWN, NULL, 0);
                     }
                 }
-            }
-            else if (ctx->ack_packet.result == MR_FAILED4_MAXUSER)
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_FULL, NULL, 0);
+                else
+                {
+                    OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
                 }
             }
-            else if (ctx->ack_packet.result == MR_FAILED4_FACEENROLLED)
+            else if (MID_NOTE == ctx->ack_packet.msgid)
             {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_REPEAT, NULL, 0);
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
                 }
             }
-            else
-            {
-                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
-            }
         }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-            }
-        }
-        break;
-    case 4:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                ctx->step = 5;
-                memset(face_send_buf,0,sizeof(face_send_buf));
-
-                face_send_buf[33] = FACE_DIRECTION_DOWN; // 方向
-                face_send_buf[34] = ctx->func_attr.register_type; // 注册类型
-                face_send_buf[35] = ctx->func_attr.repeat; // 能否重复录入
-                face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
-
-                face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_SUCCESS_REGISTER_DOWN, NULL, 0);
-                }
-            }
-            else
-            {
-                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
-            }
-        }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-            }
-        }
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
         break;
     case 5:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                ctx->step = 6;
-                memset(face_send_buf,0,sizeof(face_send_buf));
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    ctx->step = 6;
+                    memset(face_send_buf, 0, sizeof(face_send_buf));
 
-                face_send_buf[33] = FACE_DIRECTION_LEFT; // 方向
-                face_send_buf[34] = ctx->func_attr.register_type; // 注册类型
-                face_send_buf[35] = ctx->func_attr.repeat; // 能否重复录入
-                face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
+                    face_send_buf[33] = FACE_DIRECTION_LEFT;              // 方向
+                    face_send_buf[34] = ctx->func_attr.register_type;     // 注册类型
+                    face_send_buf[35] = ctx->func_attr.repeat;            // 能否重复录入
+                    face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
 
-                face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_SUCCESS_REGISTER_LEFT, NULL, 0);
+                    face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_SUCCESS_REGISTER_LEFT, NULL, 0);
+                    }
+                }
+                else
+                {
+                    OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
                 }
             }
-            else
+            else if (MID_NOTE == ctx->ack_packet.msgid)
             {
-                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                }
             }
         }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-            }
-        }
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
         break;
     case 6:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                ctx->step = 7;
-                memset(face_send_buf,0,sizeof(face_send_buf));
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    ctx->step = 7;
+                    memset(face_send_buf, 0, sizeof(face_send_buf));
 
-                face_send_buf[33] = FACE_DIRECTION_RIGHT; // 方向
-                face_send_buf[34] = ctx->func_attr.register_type; // 注册类型
-                face_send_buf[35] = ctx->func_attr.repeat; // 能否重复录入
-                face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
+                    face_send_buf[33] = FACE_DIRECTION_RIGHT;             // 方向
+                    face_send_buf[34] = ctx->func_attr.register_type;     // 注册类型
+                    face_send_buf[35] = ctx->func_attr.repeat;            // 能否重复录入
+                    face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
 
-                face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_SUCCESS_REGISTER_RIGHT, NULL, 0);
+                    face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_SUCCESS_REGISTER_RIGHT, NULL, 0);
+                    }
+                }
+                else
+                {
+                    OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
                 }
             }
-            else
+            else if (MID_NOTE == ctx->ack_packet.msgid)
             {
-                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                }
             }
+            break;
         }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-            }
-        }
-        break;
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
     case 7:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_SUCCESS_REGISTER, (void *)&ctx->params.reg.page_id, sizeof(ctx->params.reg.page_id));
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1], ctx->ack_packet.buffer[0]);
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_SUCCESS_REGISTER, (void *)&ctx->params.reg.page_id, sizeof(ctx->params.reg.page_id));
+                    }
+                }
+                else
+                {
+                    OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
                 }
             }
-            else
+            else if (MID_NOTE == ctx->ack_packet.msgid)
             {
-                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                }
             }
         }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-            }
-        }
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
         break;
     default:
         break;
@@ -550,22 +672,21 @@ static void face_process_register_palm(face_context_t *ctx)
     case 0:
         if (ctx->status.timeout)
         {
-            if (ctx->status.timeout)
+            if (ctx->status.encryption == 0)
             {
-                if (ctx->status.encryption == 0){
-                    face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
-                    ctx->status.encryption = 1;     //密钥种子发送及当加密成功
-                    ctx->step = 1;
-                }
-                else{
-                    face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
-                    ctx->step = 1;
-                }
+                face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
+                ctx->status.encryption = 1; // 密钥种子发送及当加密成功
+                ctx->step = 1;
+            }
+            else
+            {
+                face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
+                ctx->step = 1;
             }
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             face_send_command(ctx, FACE_CMD_FACERESET, NULL, 0);
             ctx->step = 2;
@@ -577,14 +698,14 @@ static void face_process_register_palm(face_context_t *ctx)
         }
         break;
     case 2:
-        if (ctx->ack_packet.result == MR_SUCCESS)
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
             ctx->step = 3;
-            memset(face_send_buf,0,sizeof(face_send_buf));
+            memset(face_send_buf, 0, sizeof(face_send_buf));
 
-            face_send_buf[33] = FACE_DIRECTION_FRONT; // 方向
-            face_send_buf[34] = ctx->func_attr.register_type; // 注册类型
-            face_send_buf[35] = ctx->func_attr.repeat; // 能否重复录入
+            face_send_buf[33] = FACE_DIRECTION_FRONT;             // 方向
+            face_send_buf[34] = ctx->func_attr.register_type;     // 注册类型
+            face_send_buf[35] = ctx->func_attr.repeat;            // 能否重复录入
             face_send_buf[36] = ctx->func_attr.register_time_out; // 录入超时时间
 
             face_send_command(ctx, FACE_CMD_ENROLL_ITG, face_send_buf, sizeof(face_send_buf));
@@ -596,50 +717,64 @@ static void face_process_register_palm(face_context_t *ctx)
         }
         break;
     case 3:
-        if (MID_REPLY == ctx->ack_packet.msgid){
-            if (ctx->ack_packet.result == MR_SUCCESS){
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1],ctx->ack_packet.buffer[0]);
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_SUCCESS_REGISTER, (void *)&ctx->params.reg.page_id, sizeof(ctx->params.reg.page_id));
+        if (!ctx->status.timeout)
+        {
+            if (MID_REPLY == ctx->ack_packet.msgid)
+            {
+                if (ctx->ack_packet.result == MR_SUCCESS)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    ctx->params.reg.page_id = UINT8_SWAP_UINT16(ctx->ack_packet.buffer[1], ctx->ack_packet.buffer[0]);
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_SUCCESS_REGISTER, (void *)&ctx->params.reg.page_id, sizeof(ctx->params.reg.page_id));
+                    }
+                }
+                else if (ctx->ack_packet.result == MR_FAILED4_MAXUSER)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_FULL, NULL, 0);
+                    }
+                }
+                else if (ctx->ack_packet.result == MR_FAILED4_FACEENROLLED)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_REPEAT, NULL, 0);
+                    }
+                }
+                else if (ctx->ack_packet.result == MR_FAILED4_TIMEOUT)
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+                    ctx->step = 0;
+                    if (NULL != ctx->callback)
+                    {
+                        ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
+                    }
+                }
+                else
+                {
+                    OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
                 }
             }
-            else if (ctx->ack_packet.result == MR_FAILED4_MAXUSER)
+            else if (MID_NOTE == ctx->ack_packet.msgid)
             {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_FULL, NULL, 0);
+                if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
+                {
+                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
                 }
-            }
-            else if (ctx->ack_packet.result == MR_FAILED4_FACEENROLLED)
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_REPEAT, NULL, 0);
-                }
-            }
-            else if (ctx->ack_packet.result == MR_FAILED4_TIMEOUT)
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                ctx->step = 0;
-                if (NULL != ctx->callback) {
-                    ctx->callback(FACE_RESULT_FAIL_TIMEOUT, NULL, 0);
-                }
-            }
-            else
-            {
-                OB_LOGE(TAG, "fail ctx->ack_packet.result[%02X]", ctx->ack_packet.result);
             }
         }
-        else if (MID_NOTE == ctx->ack_packet.msgid){
-            if ((ctx->ack_packet.result == MR_SUCCESS) && (ctx->ack_packet.nid == NID_FACE_STATE))
-            {
-                ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-            }
-        }
+        // else{
+        //     ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
+        //     ctx->step = 0;
+        // }
         break;
     default:
         break;
@@ -651,22 +786,24 @@ static void face_process_delete(face_context_t *ctx)
     switch (ctx->step)
     {
     case 0:
-        if (ctx->status.timeout){
-            if (ctx->status.timeout){
-                if (ctx->status.encryption == 0){
-                    face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
-                    ctx->status.encryption = 1;     //密钥种子发送及当加密成功
-                    ctx->step = 1;
-                }
-                else{
-                    face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
-                    ctx->step = 1;
-                }
+        if (ctx->status.timeout)
+        {
+            if (ctx->status.encryption == 0)
+            {
+                face_send_command(ctx, FACE_CMD_ENCRYPTION, (uint8_t[]){0xFA, 0x14, 0x35, 0x72, 0x02}, 5);
+                ctx->status.encryption = 1; // 密钥种子发送及当加密成功
+                ctx->step = 1;
+            }
+            else
+            {
+                face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
+                ctx->step = 1;
             }
         }
         break;
     case 1:
-        if (ctx->ack_packet.result == MR_SUCCESS){
+        if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
+        {
             // 发送删除指令
             if (ctx->params.del.page_id == 0xFFFF)
                 face_send_command(ctx, FACE_CMD_DELALL, NULL, 0);
@@ -674,7 +811,8 @@ static void face_process_delete(face_context_t *ctx)
                 face_send_command(ctx, FACE_CMD_DELUSER, (const uint8_t *)&ctx->params.del, sizeof(face_delete_params_t));
             ctx->step = 2;
         }
-        else{
+        else
+        {
             ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
             ctx->step = 0;
         }
@@ -682,7 +820,7 @@ static void face_process_delete(face_context_t *ctx)
     case 2:
         if (NULL != ctx->callback)
         {
-            if (MR_SUCCESS == ctx->ack_packet.result)
+            if ((MR_SUCCESS == ctx->ack_packet.result) && (!ctx->status.timeout))
             {
                 if (ctx->params.del.page_id == 0xFFFF)
                     ctx->callback(FACE_RESULT_SUCCESS_DELETE_ALL, (&ctx->params.del), sizeof(face_delete_params_t));
@@ -782,7 +920,8 @@ void face_send_command(face_context_t *ctx, uint8_t cmd, const uint8_t *params, 
 
     OB_LOGW(TAG, "TX[%u]: ", (ptr - tx_buffer));
     OB_LOGW_DUMP(tx_buffer, (ptr - tx_buffer));
-    if (ctx->status.encryption == 1){
+    if (ctx->status.encryption == 1)
+    {
         uint8_t face_out_buff[FACE_TX_BUFFER_SIZE];
         uint8_t send_out_len = 0;
 
@@ -829,31 +968,35 @@ static uint8_t face_parse_response(face_context_t *ctx, uint8_t *buffer, uint8_t
     uint8_t out[FACE_RX_BUFFER_SIZE];
 
     memset(out, 0, FACE_RX_BUFFER_SIZE);
-    if (ctx->status.encryption == 1){
+    if (ctx->status.encryption == 1)
+    {
         face_smpl_encryption((uint8_t *)&buffer[4], buffer[3], out);
         OB_LOGE(TAG, "RX:");
         OB_LOGE_DUMP(buffer, 4);
         OB_LOGE_DUMP(out, buffer[3]);
     }
-    else{
-        memcpy(out,&buffer[2],lenth);
+    else
+    {
+        memcpy(out, &buffer[2], lenth);
         OB_LOGE(TAG, "RX:  encryption 0");
-        OB_LOGE_DUMP(out, lenth + 2);
+        OB_LOGE_DUMP(out, lenth - 2);
     }
 
     ctx->ack_packet.msgid = out[0];
 
-    if(MID_REPLY == ctx->ack_packet.msgid){
+    if (MID_REPLY == ctx->ack_packet.msgid)
+    {
         ctx->ack_packet.mid = out[3];
         ctx->ack_packet.result = out[4];
 
         uint8_t pkg_len = out[2];
 
-        if (pkg_len > 2){
+        if (pkg_len > 2)
+        {
             uint8_t param_len = pkg_len - 2;
             if (param_len > FACE_RX_BUFFER_SIZE)
             {
-                OB_LOGE(TAG, "RX: len fail!! param_len [%d]",param_len);
+                OB_LOGE(TAG, "RX: len fail!! param_len [%d]", param_len);
                 param_len = FACE_RX_BUFFER_SIZE;
             }
 
@@ -862,12 +1005,13 @@ static uint8_t face_parse_response(face_context_t *ctx, uint8_t *buffer, uint8_t
             OB_LOGD(TAG, "param[%u]: ", ctx->ack_packet.lenth);
             OB_LOGD_DUMP(ctx->ack_packet.buffer, ctx->ack_packet.lenth);
         }
-        OB_LOGD(TAG, "MID_REPLY mid[%02X], result[%02X]", ctx->ack_packet.mid, ctx->ack_packet.result);
+        OB_LOGD(TAG, "MID_REPLY mid[%02X], result[%02X] ctx->mode[%d]", ctx->ack_packet.mid, ctx->ack_packet.result, ctx->mode);
     }
-    else if(MID_NOTE == ctx->ack_packet.msgid){
+    else if (MID_NOTE == ctx->ack_packet.msgid)
+    {
         ctx->ack_packet.nid = out[3];
         ctx->ack_packet.result = MR_SUCCESS;
-        OB_LOGD(TAG, "MID_NOTE nid[%02X]", ctx->ack_packet.nid);
+        OB_LOGD(TAG, "MID_NOTE nid[%02X]  ctx->mode[%d]", ctx->ack_packet.nid, ctx->mode);
     }
     else
     {
@@ -1030,19 +1174,19 @@ uint8_t face_is_ready(face_context_t *ctx, uint8_t mode)
         }
         // 验证模式 → 非阻塞延时2s上电
         if (mode == FACE_MODE_VERIFY 
-            || mode == FACE_MODE_INIT
+            || mode == FACE_MODE_INIT 
             || mode == FACE_MODE_VERIFY_DEMO 
-            || mode == FACE_MODE_REGISTER
-            || mode == FACE_MODE_REGISTER_PALM
-            || mode == FACE_MODE_VERIFY_DELETE)
+            || mode == FACE_MODE_REGISTER 
+            || mode == FACE_MODE_REGISTER_PALM 
+            || mode == FACE_MODE_VERIFY_DELETE
+            || mode == FACE_MODE_IDLE)
         {
-            OB_LOGD(TAG, "verify mode, delay power on 1s");
+            OB_LOGD(TAG, "mode %d, delay power on 1s", mode);
             ctx->delay_power_en = 1;
             ctx->delay_tick = system_inc_time_cnt(1000);
         }
         else if (mode == FACE_MODE_SLEEP)
         {
-
         }
         else
         {

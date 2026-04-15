@@ -595,6 +595,8 @@ static void fingerprint_process_control_led(fp_context_t *ctx) {
             ctx->tick = system_inc_time_cnt(0);
             ctx->led.processing = 0;
             ctx->step = FP_STEP_0;
+            OB_LOGE(TAG,"[%s] line %d",__func__,__LINE__);
+            fingerprint_event_callback(ctx, FP_EVENT_POWER_ON, NULL, 0);
             break;
         default:
             break;
@@ -734,7 +736,6 @@ static void fp_process_step(fp_context_t *ctx) {
 	
     if (ctx->led.processing) {
         ctx->config->ops.uart_init(1);
-        fingerprint_event_callback(ctx, FP_EVENT_POWER_ON, NULL, 0);
         fingerprint_process_control_led(ctx);
         ctx->status.processing = 0;
         ctx->status.timeout = 0;
@@ -914,6 +915,11 @@ uint8_t fingerprint_control_led(fp_context_t *ctx, uint8_t color) {
     if (ctx->led.processing) {
         return false;
     }
+
+    if (ctx->led.color == color) {
+        return false;
+    }
+
 
     OB_LOGD(TAG, "led color[%u]", color);
     fingerprint_reset_context(ctx);
