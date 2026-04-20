@@ -878,7 +878,10 @@ uint8_t fp_is_ready(fp_context_t *ctx, uint8_t mode) {
         ctx->config->ops.uart_init(1);
         fingerprint_event_callback(ctx, FP_EVENT_POWER_ON, NULL, 0);
     }
-
+    else if (FP_MODE_RESET_ALL == mode) {
+        // 确保复位的时候串口是在指纹上
+        ctx->config->ops.uart_init(1);
+    }
     fingerprint_reset_context(ctx);
     ctx->status.waiting = 0;
     if (!ctx->status.power) {
