@@ -352,7 +352,10 @@ static void fingerprint_process_register(fp_context_t *ctx) {
                 }
                 ctx->status.wait_lift = 1;
                 ctx->step = FP_STEP_2;
-                fingerprint_send_command(ctx, FP_CMD_GEN_CHAR, (&ctx->params.reg.count), 1);
+
+                uint8_t param = ctx->params.reg.count + 1;
+
+                fingerprint_send_command(ctx, FP_CMD_GEN_CHAR, (&param), 1);
             } 
             else {
                 ctx->status.wait_lift = 0;
@@ -375,7 +378,9 @@ static void fingerprint_process_register(fp_context_t *ctx) {
                 ctx->params.reg.count++;
                 fingerprint_event_callback(ctx, FP_EVENT_PROCESSING, (&ctx->params.reg.count), 1);
 
-                if (ctx->params.reg.count >= ctx->func_attr.register_count) {
+                uint8_t param = ctx->params.reg.count + 1;
+
+                if (param >= ctx->func_attr.register_count) {
                     fingerprint_send_command(ctx, FP_CMD_REG_MODEL, NULL, 0);
                     ctx->step = FP_STEP_4;
                     break;
