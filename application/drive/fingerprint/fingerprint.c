@@ -216,7 +216,7 @@ static void fingerprint_process_verify(fp_context_t *ctx) {
                 ctx->step = FP_STEP_3;
 
                  // 发送搜索指令
-                fingerprint_send_command(ctx, FP_CMD_SEARCH, (uint8_t[]){0x01, 0x00, 0x00, 0x00, 0x00}, 5);
+                fingerprint_send_command(ctx, FP_CMD_SEARCH, (uint8_t[]){0x01, 0x00, 0x00, 0x00, 0x82}, 5);
             }
             break;
         case FP_STEP_3:
@@ -295,7 +295,7 @@ static void fingerprint_process_verify_delete(fp_context_t *ctx)
                 ctx->step = FP_STEP_3;
 
                  // 发送搜索指令
-                fingerprint_send_command(ctx, FP_CMD_SEARCH, (uint8_t[]){0x01, 0x00, 0x00, 0x00, 0x00}, 5);
+                fingerprint_send_command(ctx, FP_CMD_SEARCH, (uint8_t[]){0x01, 0x00, 0x00, 0x00, 0x82}, 5);
             }
             break;
         case FP_STEP_3:
@@ -383,7 +383,7 @@ static void fingerprint_process_register(fp_context_t *ctx) {
                 else if (ctx->func_attr.repeat) {
                     if (1 == ctx->params.reg.count) {
                         // 发送搜索指令
-                        fingerprint_send_command(ctx, FP_CMD_SEARCH, (uint8_t[]){0x01, 0x00, 0x00, 0x00, 0x00}, 5);
+                        fingerprint_send_command(ctx, FP_CMD_SEARCH, (uint8_t[]){0x01, 0x00, 0x00, 0x00, 0x82}, 5);
                         ctx->step = FP_STEP_3;
                         break;
                     }
