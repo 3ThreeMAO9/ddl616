@@ -130,7 +130,6 @@ void nfc_task_loop(void) {
     nfc_task_driver.io->loop();
 }
 
-#if 0
 uint16_t nfc_task_is_wake(void) {
     if (NULL == nfc_task_driver.io->is_wake){
         return WAKE_SOURCE_NULL;
@@ -142,7 +141,6 @@ uint16_t nfc_task_is_wake(void) {
 
     return WAKE_SOURCE_NULL;
 }
-#endif
 
 void nfc_task_set_state(uint8_t state) {
     uint8_t mode;
