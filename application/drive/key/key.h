@@ -89,6 +89,8 @@ uint8_t module_keyInit(uint8_t type);
 void module_keySwitch(uint8_t type, uint8_t flag);
 void module_key_pause(uint32_t value);
 void module_keyTestMode(uint8_t mode);
+void module_keyParameter(void* packet);
+
 /**********************************************************/
 
 #endif /* MODULE_KEY_HH */

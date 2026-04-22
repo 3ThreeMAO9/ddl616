@@ -1017,6 +1017,11 @@
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_encrypt.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_protocol_touch_sensitivity.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_touch_sensitivity.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2116,6 +2121,11 @@
               <FileName>uart_protocol_encrypt.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_encrypt.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_touch_sensitivity.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_touch_sensitivity.c</FilePath>
             </File>
           </Files>
         </Group>

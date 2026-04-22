@@ -72,6 +72,9 @@ uint8_t set_user_parameter(uint8_t index, const uint32_t value);
 uint8_t write_finger_module_chip_sn(const uint8_t* chip_sn, uint8_t lenth);
 uint8_t read_finger_module_chip_sn(uint8_t* chip_sn);
 
+uint8_t write_touch_chip_sensitivity(const uint8_t* sensitivity);
+uint8_t read_touch_chip_sensitivity(uint8_t* sensitivity);
+
 /**************************************/
 
 #endif 

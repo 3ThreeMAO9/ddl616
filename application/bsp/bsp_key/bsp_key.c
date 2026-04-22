@@ -20,6 +20,7 @@ const bsp_key_drive_io_t bsp_key = {
     .handle = module_keySwitch,
     .pause = module_key_pause,
     .test = module_keyTestMode,
+    .parameter = module_keyParameter,
 };
 
 //--------------------------------------------------

@@ -30,6 +30,7 @@ typedef struct {
     void (*handle)(uint8_t, uint8_t);
     void (*pause)(uint32_t);
     void (*test)(uint8_t);
+    void (*parameter)(void*);
 } bsp_key_drive_io_t;
 
 /*************************Variable*************************/

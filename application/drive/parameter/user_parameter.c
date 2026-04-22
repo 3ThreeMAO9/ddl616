@@ -99,3 +99,32 @@ uint8_t read_finger_module_chip_sn(uint8_t* chip_sn) {
 
     return parameter_tab.finger_chip.lenth;
 }
+
+uint8_t write_touch_chip_sensitivity(const uint8_t* sensitivity)
+{
+    uint8_t len = sizeof(parameter_tab.touch_chip.sensitivity);
+
+    memset(parameter_tab.touch_chip.sensitivity, 0, len);
+    memcpy(parameter_tab.touch_chip.sensitivity, sensitivity, len);
+    parameter_tab.touch_chip.flag = 1;
+    parameter_tab.sum = (uint16_t)check_sum((uint8_t*)(&parameter_tab.value[0]), (sizeof(user_patameter_tab_t) - sizeof(U_PARA)));
+
+    OB_LOGD(TAG,"[%s] parameter_tab.touch_chip.sensitivity", __func__);
+    OB_LOGD_DUMP(parameter_tab.touch_chip.sensitivity, len);
+
+    return write_parameter_info((uint8_t*)(&parameter_tab), sizeof(user_patameter_tab_t));
+}
+
+uint8_t read_touch_chip_sensitivity(uint8_t* sensitivity)
+{
+    if (1 != parameter_tab.touch_chip.flag) {
+        return 0;
+    }
+
+    uint8_t len = sizeof(parameter_tab.touch_chip.sensitivity);
+
+    memcpy(sensitivity, parameter_tab.touch_chip.sensitivity, len);
+
+    return len;
+}
+

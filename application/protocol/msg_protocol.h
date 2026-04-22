@@ -308,6 +308,12 @@ typedef struct
 
 typedef struct
 {
+    uint8_t event;
+    uint8_t data[16];
+} frame_touch_sensitivity_t;
+
+typedef struct
+{
     uint8_t status;
     uint8_t reserved1;
     uint8_t fw_funcode;
@@ -408,6 +414,7 @@ void uart_msg_ack_ota_request(uint8_t status);
 void uart_msg_ack_param_report(uint8_t status);
 void uart_msg_version(uint8_t status, uint8_t *data, uint8_t size);
 void uart_msg_ack_encrypt_req(uint8_t status, uint8_t *data, uint8_t size);
+void uart_msg_ack_touch_sensitivity(uint8_t status);
 /*****************************/
 
 #endif // MSG_PROTOCOL_HH

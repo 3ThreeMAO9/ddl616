@@ -139,6 +139,11 @@ void keyTaksInit(uint8_t type)
     g_key_task_driver.io->init(type);
 }
 
+void keyTaksParameter(const uint8_t* sensitivity)
+{
+    g_key_task_driver.io->parameter((void*)sensitivity);
+}
+
 void keyTaskPowerOnInit(void)
 {
     OB_LOGD(TAG, "[%s]", __func__);

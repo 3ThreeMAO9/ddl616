@@ -3,6 +3,7 @@
 #include "tamper_key.h"
 #include "hal_timer.h"
 #include "system_timer.h"
+#include "user_parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -28,6 +29,8 @@ uint8_t touch_sensity[TOUCH_CH_CNT] ={
     TOUCH_IC_CH12,
     TOUCH_IC_CH13,
 };
+
+uint8_t touch_chip_sensitivity[16] = {0};
 
 // ---------------------------------------------------------
 // @brief key事件回调
@@ -208,7 +211,10 @@ uint8_t module_keyInit(uint8_t type)
             break;
 
         case KEY_TYPE_KEY_BOARD:
-            keyboard_init(((void*)touch_sensity));
+            if (read_touch_chip_sensitivity(touch_chip_sensitivity) != 0)
+                keyboard_init(((void*)touch_chip_sensitivity));
+            else
+                keyboard_init(((void*)touch_sensity));
             keyHandle.keyBoard.busy = false;
             keyHandle.keyBoard.pressCnt = 0;
             keyHandle.keyBoard.value = KEY_NULL;
@@ -310,3 +316,9 @@ void module_keyTestMode(uint8_t mode)
 {
 //    keyBoard_testmode(mode);
 }
+
+void module_keyParameter(void* packet)
+{
+    keyboard_set_parameter(packet);
+}
+
