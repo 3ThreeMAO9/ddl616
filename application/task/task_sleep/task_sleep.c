@@ -16,6 +16,7 @@
 #include "task_uart.h"
 #include "task_fingerprint.h"
 #include "task_radar.h"
+#include "task_nfc.h"
 
 #include "event.h"
 
