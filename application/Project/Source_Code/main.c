@@ -44,9 +44,9 @@ void MainLoop(void)
         fp_task_loop();         // finger task loop
         face_task_loop();       // face task loop
         radar_task_loop();      // radar task loop
-        qp_fsm_task_loop();     // fsm task loop
         system_time_task_loop();// system time task loop
         sleep_task_loop();      // sleep task loop
+        qp_fsm_task_loop();     // fsm task loop
         protocol_task_loop();   // protocol task loop
     }
 }
