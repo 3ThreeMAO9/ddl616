@@ -37,7 +37,7 @@ void main (void) {
 }
 */
 /*****************Macro****************/
-#define FP_TASK_MODE_DEFAULT                FP_MODE_SLEEP
+#define FP_TASK_MODE_DEFAULT                FP_MODE_VERIFY
 #define FP_TASK_LED_COLOR_DEFAULT           FP_LED_BLUE
 
 /*****************Enum*****************/

@@ -26,6 +26,7 @@ typedef struct {
     uint8_t (*read_mode)(void);
     uint8_t (*set_mode)(uint8_t, bsp_face_callback_t, void*, uint8_t);
     uint8_t (*set_attr)(void*, uint8_t);
+    uint8_t (*is_busy)(void);
 } bsp_face_drive_io_t;
 
 /***************Variable***************/

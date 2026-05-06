@@ -178,7 +178,7 @@ void module_radar_loop(void)
     {
         if (true == module_radar_is_wake_API())
         {
-            module_radar_wake();
+            // module_radar_wake();
         }
     }
 

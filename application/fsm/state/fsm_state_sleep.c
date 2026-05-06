@@ -34,7 +34,7 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
     switch (e->sig){
         case Q_ENTRY_SIG:
             fp_task_set_mode(FP_MODE_SLEEP);
-            face_task_set_mode(FACE_MODE_SLEEP);
+            face_task_set_mode(FACE_MODE_IDLE);
             system_time_task_set_work_time(250);
             break;
         case Q_EXIT_SIG:
@@ -58,6 +58,10 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
                 {
                 }
                 state = Q_TRAN(lock_fsm_idle);
+            }
+            else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP_BUSY){
+                system_time_task_set_work_time(250);
+                OB_LOGI(TAG, "Fsm_state[%s], HANDLE_EVENT_SLEEP_BUSY!!!!", "sleep");
             }
             break;
         case Q_USER_KEY_SIG:

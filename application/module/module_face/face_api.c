@@ -238,3 +238,8 @@ uint8_t face_set_attr_API(void *attr, uint8_t lenth)
 
     return true;
 }
+
+uint8_t face_is_busy(void)
+{
+    return face_handle.ctx.status.power;
+}

@@ -63,6 +63,7 @@ typedef enum{
     HANDLE_EVENT_TAMPER_WARN,
     HANDLE_EVENT_UART_RX,
     HANDLE_EVENT_SLEEP,
+    HANDLE_EVENT_SLEEP_BUSY,
     HANDLE_EVENT_CNT,
 }handle_event_e;
 

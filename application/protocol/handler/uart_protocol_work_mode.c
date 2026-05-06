@@ -178,7 +178,7 @@ static void face_mode_handler(frame_work_mode_t* param)
         break;
     case FACE_WORK_MODE_SLEEP:
         OB_LOGD(TAG, "face sleep mode");
-        face_task_set_mode(FACE_MODE_SLEEP);
+        face_task_set_mode(FACE_MODE_IDLE);
         break;
     case FACE_WORK_MODE_NULL:
         OB_LOGD(TAG, "face idle/null mode, ignore");

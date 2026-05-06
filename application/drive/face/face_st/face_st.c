@@ -77,6 +77,7 @@ static void face_process_idle(face_context_t *ctx)
             }
             else
             {
+                ctx->config->ops.power(1);
                 face_send_command(ctx, FACE_CMD_RESET, NULL, 0);
                 ctx->step = 1;
             }
@@ -85,6 +86,10 @@ static void face_process_idle(face_context_t *ctx)
     case 1:
         if ((ctx->ack_packet.result == MR_SUCCESS) && (!ctx->status.timeout))
         {
+            face_is_ready(ctx, FACE_MODE_SLEEP);
+            ctx->callback = NULL;
+        }
+        else if (ctx->status.timeout){
             face_is_ready(ctx, FACE_MODE_SLEEP);
             ctx->callback = NULL;
         }

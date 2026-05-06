@@ -50,10 +50,20 @@ static uint8_t enter_sleep_event_deal(void){
     // }
 
     if (fp_task_is_busy()) {
+        OB_LOGD(TAG, "fp_task_is_busy");
+        baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP_BUSY);
+        return false;
+    }
+
+    if (face_task_is_busy()) {
+        OB_LOGD(TAG, "face_task_is_busy");
+        baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP_BUSY);
         return false;
     }
 
     if (!key_task_sleep(KEY_TYPE_KEY_BOARD)) {
+        OB_LOGD(TAG, "key_task_is_busy");
+        baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP_BUSY);
         return false;
     }
     ledTaskSleep();

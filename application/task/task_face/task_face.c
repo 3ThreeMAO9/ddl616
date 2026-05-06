@@ -57,7 +57,7 @@ static void face_verify_event_callback(uint8_t result, void* para, uint8_t lenth
         break;
     }
 
-    face_task_set_mode(FACE_MODE_SLEEP);
+    face_task_set_mode(FACE_MODE_IDLE);
 }
 
 static void face_register_event_callback(uint8_t result, void* para, uint8_t lenth) {
@@ -68,7 +68,7 @@ static void face_register_event_callback(uint8_t result, void* para, uint8_t len
     case FACE_RESULT_SUCCESS_REGISTER:
         OB_LOGD(TAG, "FACE_RESULT_SUCCESS_REGISTER");
         uart_msg_face(EVENT_CODE_FACE_REGISTER_SUCCESS, (uint8_t *)(para), lenth);
-        face_task_set_mode(FACE_MODE_SLEEP);
+        face_task_set_mode(FACE_MODE_IDLE);
         break;
     case FACE_RESULT_SUCCESS_REGISTER_UP:
         OB_LOGD(TAG, "FACE_RESULT_SUCCESS_REGISTER_UP");
@@ -109,7 +109,7 @@ static void face_register_palm_event_callback(uint8_t result, void* para, uint8_
     case FACE_RESULT_SUCCESS_REGISTER:
         OB_LOGD(TAG, "FACE_RESULT_SUCCESS_REGISTER");
         uart_msg_face(EVENT_CODE_FACE_REGISTER_SUCCESS, (uint8_t *)(para), lenth);
-        face_task_set_mode(FACE_MODE_SLEEP);
+        face_task_set_mode(FACE_MODE_IDLE);
         break;
     case FACE_RESULT_FAIL_REPEAT:
         OB_LOGD(TAG, "FACE_RESULT_FAIL_REPEAT");
@@ -295,4 +295,13 @@ void face_task_set_attr(void* attr, uint8_t lenth) {
     */
 
     face_task_driver.io->set_attr((void*)(&face_attr), lenth);
+}
+
+uint8_t face_task_is_busy(void)
+{
+    if (NULL == face_task_driver.io->is_busy) {
+        return false;
+    }
+
+    return face_task_driver.io->is_busy();
 }

@@ -64,7 +64,8 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
         break;
     }
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-    face_task_set_mode(FACE_MODE_SLEEP);
+    if (event != FP_EVENT_POWER_ON)
+        face_task_set_mode(FACE_MODE_IDLE);
     // fp_task_set_mode(FP_MODE_IDLE);
     return true;
 }
@@ -112,7 +113,7 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
         break;
     }
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-    face_task_set_mode(FACE_MODE_SLEEP);
+    face_task_set_mode(FACE_MODE_IDLE);
     return true;
 }
 
@@ -142,7 +143,7 @@ static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t len
     }
 
     fp_task_set_mode(FP_MODE_IDLE);
-    face_task_set_mode(FACE_MODE_SLEEP);
+    face_task_set_mode(FACE_MODE_IDLE);
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
 
     return true;
@@ -180,7 +181,7 @@ static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t 
 
     fp_task_set_mode(FP_MODE_IDLE);
     if (event != FP_EVENT_DELETE_ALL)
-    face_task_set_mode(FACE_MODE_SLEEP);
+    face_task_set_mode(FACE_MODE_IDLE);
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
 
     return true;
@@ -215,7 +216,7 @@ static uint8_t fp_verify_delete_event_callback(uint8_t event, void* params, uint
 
     // fp_task_set_mode(FP_MODE_IDLE);
     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-    face_task_set_mode(FACE_MODE_SLEEP);
+    face_task_set_mode(FACE_MODE_IDLE);
     return true;
 }
 #endif

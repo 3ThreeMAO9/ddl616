@@ -51,7 +51,7 @@ void face_init_API(face_api_callback_t callback);
 uint8_t face_read_mode_API(void);
 uint8_t face_set_mode_API(uint8_t mode, face_api_callback_t callback, void* params, uint8_t lenth);
 uint8_t face_set_attr_API(void* attr, uint8_t lenth);
-
+uint8_t face_is_busy(void);
 /**************************************/
 
 #endif /* __FACE_API_H */

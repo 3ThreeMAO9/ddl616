@@ -15,6 +15,7 @@ static const bsp_face_drive_io_t bsp_face = {
     .set_mode = face_set_mode_API,
     .read_mode = face_read_mode_API,
     .set_attr = face_set_attr_API,
+    .is_busy = face_is_busy,
 };
 
 // ------------------------------------------
