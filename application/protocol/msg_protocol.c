@@ -361,6 +361,12 @@ void uart_msg_ack_touch_sensitivity(uint8_t status)
                          sizeof(frame_ack_def_t), fill_ack_def_data, status);
 }
 
+void uart_msg_ack_pa_ctl(uint8_t status)
+{
+    uart_msg_common_send(UP_CMD_ACK_PA_CTL,
+                         sizeof(frame_ack_def_t), fill_ack_def_data, status);
+}
+
 void uart_msg_ack_ota_request(uint8_t status)
 {
     uart_msg_common_send(UP_CMD_ACK_OTA_REQUEST,

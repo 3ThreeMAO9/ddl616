@@ -82,6 +82,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_VERSION)          // (0x0A)   // 版本号命令
         HANDLER_IMPORT(UP_CMD_ENCRYPT)          // (0x0B)   // 加密指令
         HANDLER_IMPORT(UP_CMD_TOUCH_SENSITIVITY)// (0x0C)   // 触摸灵敏度指令
+        HANDLER_IMPORT(UP_CMD_PA_CTL)           // (0x0D)   // PA控制指令
 
         HANDLER_IMPORT(UP_CMD_ACK_REPORT_ORDER) // (0x83)   // 锁操作上报应答
         HANDLER_IMPORT(UP_CMD_ACK_PARAM_REQ)    // (0x87)   // 参数请求应答指令

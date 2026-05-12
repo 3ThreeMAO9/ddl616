@@ -37,6 +37,8 @@
 #define UP_CMD_VERSION                      (0x0A)   // 版本号命令
 #define UP_CMD_ENCRYPT                      (0x0B)   // 加密指令
 #define UP_CMD_TOUCH_SENSITIVITY            (0x0C)   // 触摸灵敏度指令
+#define UP_CMD_PA_CTL                       (0x0D)   // PA控制指令
+
 
 #define UP_CMD_HEART                        (0x2A)   // 心跳命令
 
@@ -56,6 +58,7 @@
 #define UP_CMD_ACK_VERSION                  (0x8A)   // 版本号应答命令
 #define UP_CMD_ACK_ENCRYPT                  (0x8B)   // 加密应答命令
 #define UP_CMD_ACK_TOUCH_SENSITIVITY        (0x8C)   // 触摸灵敏度应答指令
+#define UP_CMD_ACK_PA_CTL                   (0x8D)   // PA控制应答指令
 
 #define UP_CMD_ACK_HEART                    (0xAA)   // 心跳应答
 
