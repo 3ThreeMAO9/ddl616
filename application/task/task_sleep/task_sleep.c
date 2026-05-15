@@ -69,7 +69,6 @@ static uint8_t enter_sleep_event_deal(void){
     ledTaskSleep();
     uartTaskSleep();
     radar_task_sleep();
-    HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 0); // 前板喇叭功放
 
     OB_LOGD(TAG, "Enter Sleep");
     system_time_task_sleep(ENTER_SLEEP);
@@ -134,7 +133,6 @@ static uint8_t exit_sleep_event_scan(void){
     system_time_task_sleep(EXIT_SLEEP);
     uartTaskWake();
     ledTaskWake();
-    HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 1); // 前板喇叭功放
 
     uint8_t wake_type = WAKE_UP_TYPE_NULL;
     if (sleep_task_driver.attribute.wake_source & WAKE_SOURCE_RADAR)

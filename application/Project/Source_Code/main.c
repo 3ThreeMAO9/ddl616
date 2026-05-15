@@ -78,8 +78,6 @@ static void task_init(void)
     nfc_task_init();
     face_task_init();
 
-    HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 1); // 前板喇叭功放
-    HAL_GPIO_Init(VOICE_EN_GPIO, VOICE_EN_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
 
     radar_task_init();
     fp_task_init();

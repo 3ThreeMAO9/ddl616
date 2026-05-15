@@ -30,6 +30,7 @@ HANDLER_DEFINE(UP_CMD_PA_CTL)
         HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 1);
     else if (param->data == 0x00)
         HAL_GPIO_Write(VOICE_EN_GPIO, VOICE_EN_PIN, 0);
+    HAL_GPIO_Init(VOICE_EN_GPIO, VOICE_EN_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);// 前板喇叭功放
 
     status = STATUS_SUCCESS;
     uart_msg_ack_pa_ctl(status);
