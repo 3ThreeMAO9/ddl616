@@ -23,8 +23,8 @@ static QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            system_time_task_set_function_time(800);
-            system_time_task_set_work_time(500);
+            system_time_task_set_function_time(1200);
+            system_time_task_set_work_time(1000);
             break;
         case Q_EXIT_SIG:
             break;

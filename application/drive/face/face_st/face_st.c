@@ -1113,7 +1113,7 @@ void face_process(face_context_t *ctx)
     {
         if (system_out_time_cnt(ctx->delay_tick))
         {
-            OB_LOGD(TAG, "delay 1s arrive, power on");
+            OB_LOGD(TAG, "delay arrive, power on");
             ctx->config->ops.power(1);
             ctx->status.handshake = 0;
             ctx->delay_power_en = 0;
@@ -1179,7 +1179,6 @@ uint8_t face_is_ready(face_context_t *ctx, uint8_t mode)
         }
         // 验证模式 → 非阻塞延时2s上电
         if (mode == FACE_MODE_VERIFY 
-            || mode == FACE_MODE_INIT 
             || mode == FACE_MODE_VERIFY_DEMO 
             || mode == FACE_MODE_REGISTER 
             || mode == FACE_MODE_REGISTER_PALM 
@@ -1189,6 +1188,12 @@ uint8_t face_is_ready(face_context_t *ctx, uint8_t mode)
             OB_LOGD(TAG, "mode %d, delay power on 1s", mode);
             ctx->delay_power_en = 1;
             ctx->delay_tick = system_inc_time_cnt(1000);
+        }
+        else if (mode == FACE_MODE_INIT)
+        {
+            OB_LOGD(TAG, "mode %d, delay power on 300ms", mode);
+            ctx->delay_power_en = 1;
+            ctx->delay_tick = system_inc_time_cnt(300);
         }
         else if (mode == FACE_MODE_SLEEP)
         {
