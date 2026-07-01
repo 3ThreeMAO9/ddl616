@@ -43,7 +43,7 @@ void keyboard_task_pause(uint32_t value);
 void keyboard_test_mode(uint8_t mode);
 void keyTaksInit(uint8_t type);
 void keyTaksParameter(const uint8_t* sensitivity);
-
+void key_task_wake(void);
 /*****************************/
 
 #endif // TASK_KEY_H
