@@ -15,7 +15,7 @@
 /***********Macro***********/
 //firmware version
 #define MINOR_VERSION    PROJECT_NUMBER
-#define PATCH_VERSION    6
+#define PATCH_VERSION    7
 
 
 /***********Enum***********/
