@@ -612,6 +612,11 @@
               <FileType>1</FileType>
               <FilePath>..\hal\hal_wdt.c</FilePath>
             </File>
+            <File>
+              <FileName>hal_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hal\hal_rtc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -836,11 +841,6 @@
               <FileName>FM17622.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\drive\nfc\FM17622\FM17622.c</FilePath>
-            </File>
-            <File>
-              <FileName>LPCD_API.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\nfc\FM17622\LPCD_API.c</FilePath>
             </File>
             <File>
               <FileName>MIFARE.c</FileName>

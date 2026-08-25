@@ -29,6 +29,7 @@ typedef enum{
 typedef enum{
     DOWN_COUNT_SOURCE_TIMER = 0,
     DOWN_COUNT_SOURCE_WDT,
+    DOWN_COUNT_SOURCE_RTC,
     DOWN_COUNT_SOURCE_CNT,
 }down_count_source_e;
 

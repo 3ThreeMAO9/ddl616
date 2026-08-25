@@ -10,8 +10,9 @@
  */
 #include "system_timer.h"
 #include "hal_wdt.h"
+#include "hal_rtc.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "sys_timer"
 
@@ -47,6 +48,12 @@ static void wdt_irq_callback(void)
 {
     system_timer_event_callback(DOWN_COUNT_SOURCE_WDT, 0);
 }
+
+static void rtc_irq_callback(void)
+{
+    system_timer_event_callback(DOWN_COUNT_SOURCE_RTC, 0);
+}
+
 void system_timer_init(uint8_t count_type)
 {
     if(system_time_handle.init & (0x01 << count_type)){
@@ -67,6 +74,9 @@ void system_timer_init(uint8_t count_type)
         break;
     case DOWN_COUNT_SOURCE_WDT:
         hal_wdt_init(wdt_irq_callback);
+        break;
+    case DOWN_COUNT_SOURCE_RTC:
+        hal_rtc_init(rtc_irq_callback);
         break;
     default:
         break;

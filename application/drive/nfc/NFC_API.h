@@ -2,7 +2,7 @@
 #define _NFC_API_H
 
 #include "config.h"
-#include "LPCD_API.h"
+
 
 /*****************Macro****************/
 #define NFC_SCAN_TIME_OUT           250
@@ -42,6 +42,16 @@ typedef enum {
 
 /****************Struct****************/
 typedef struct {
+    uint8_t state: 3;               // NFC工作模式
+    uint8_t encrypt : 1;            // 1， 加密； 0， 解密
+    uint8_t encrypt_type : 2;       // 加密类型，nfc_encrypt_mode_e
+
+    uint8_t block_sel : 4;          // bit = 1， 读取对应块； bit = 0， 不读取对应块
+    uint8_t sector_id : 6;          // 扇区ID （0~63）
+
+}nfc_attribute_t;
+
+typedef struct {
     uint8_t init : 1;
     uint8_t release : 1;
     uint8_t mode : 4;
@@ -69,6 +79,7 @@ typedef struct {
 }nfc_event_t;
 
 /**************************************/
+typedef unsigned char (*card_handle_callback_t)(const nfc_attribute_t*);
 typedef void (*nfc_event_callback_t)(nfc_event_t*);
 
 /***************Variable***************/
@@ -80,7 +91,6 @@ uint8_t nfc_set_attr(const nfc_attribute_t* nfc_attr);
 uint8_t nfc_set_mode(uint8_t mode);
 void nfc_loop(void);
 void nfc_event_register_callback(nfc_event_callback_t callback);
-uint8_t is_nfc_wake(void);
 
 /**************************************/
 

@@ -3,7 +3,7 @@
 #include "event.h"
 
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "task_system_time"
 
@@ -28,7 +28,10 @@ static uint16_t system_time_task_callback(uint8_t source, uint8_t timeOutId)
         }
     }
     else if (DOWN_COUNT_SOURCE_WDT == source) {
-        // radar_task_stay_scan(0);
+
+    }
+    else if (DOWN_COUNT_SOURCE_RTC == source) {
+        hal_get_rtc_time();
     }
     return true;
 }
@@ -56,6 +59,7 @@ void system_time_task_init(void)
     if (NULL != system_time_task_driver.io){
         system_time_task_driver.io->init(DOWN_COUNT_SOURCE_TIMER);
         system_time_task_driver.io->init(DOWN_COUNT_SOURCE_WDT);
+        system_time_task_driver.io->init(DOWN_COUNT_SOURCE_RTC);
     }
     else{
         OB_LOGE(TAG, "Error[%s]", "system_time_task_driver.io is NULL");

@@ -1,13 +1,12 @@
 #include "OB90A64M1.h"
 #include "rtc.h"
 
-
-volatile uint32_t g_RTCInterrupt;
+extern void rtc_IRQ_callback(void);
 
 void RTC_IRQHandler(void)
 {
-    g_RTCInterrupt++;
     OB_RTC->IESTC = OB_RTC->IEST;
+    rtc_IRQ_callback();
 }
 
 void RTC_SetTime(uint32_t nTimeType, uint32_t nTimeValue)
@@ -150,7 +149,12 @@ void RTC_SetInterrupt (uint32_t nINTType)
 
 void RTC_Open(void)
 {
-    OB_SYSCON->CPUCHIPCTR0 |= 0x04;
-    OB_RTC->CON  =0x00;
+    // OB_SYSCON->CPUCHIPCTR0 |= 0x04;
+    // OB_RTC->CON  =0x00;
+    uint32_t *pCPUCHIPCTR0;
+
+    pCPUCHIPCTR0 = (uint32_t *)0x500100B0;
+    *pCPUCHIPCTR0 = *pCPUCHIPCTR0 | 0x04;
+    OB_RTC->CON = 0x00;
 }
 

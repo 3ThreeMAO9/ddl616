@@ -16,7 +16,6 @@
 #define TAG "led"
 
 static led_event_callback_t led_callback;
-static led_hanlde_t led_handle;
 
 static void ledEvent_callback(uint8_t ledType, uint8_t ledEvent, uint8_t ledState, uint8_t ledValue)
 {

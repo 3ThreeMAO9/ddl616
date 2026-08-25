@@ -3,6 +3,7 @@
 #include "hal_gpio.h"
 #include "hal_uart.h"
 #include "hal_wdt.h"
+#include "hal_rtc.h"
 
 #include "task_key.h"
 #include "task_led.h"
@@ -77,9 +78,6 @@ static void task_init(void)
     // uartTaskInit();
     nfc_task_init();
     // face_task_init();
-
-
-    // radar_task_init();
     fp_task_init();
     sleep_task_init();
 }

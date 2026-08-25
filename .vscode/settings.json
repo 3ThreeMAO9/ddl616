@@ -5,7 +5,17 @@
         "config_smarklockzql1.h": "c",
         "ob90a64m1.h": "c",
         "wdt.h": "c",
-        "event.h": "c"
+        "event.h": "c",
+        "bsp_nfc.h": "c",
+        "config.h": "c",
+        "nfc_api.h": "c",
+        "task_system_time.h": "c",
+        "bsp_system_time.h": "c",
+        "system_timer.h": "c",
+        "hal_timer.h": "c",
+        "hal_gpio.h": "c",
+        "gpio.h": "c",
+        "uart.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

@@ -27,19 +27,19 @@ uint8_t nfc_set_mode(uint8_t mode) {
 
         switch (mode) {
             case NFC_MODE_DEEP_SLEEP:
-                // FM17622_DeepSleep();
                 FM17622_HardReset();
-                Lpcd_Init_Register(LPCD_SLEEPTIME, LPCD_THRESHOLD);
+                nfc_handle.time_out = system_inc_time_cnt(0);
                 break;
             case NFC_MODE_SLEEP:
                 FM17622_HardReset();
-                Lpcd_Init_Register(LPCD_SLEEPTIME, LPCD_THRESHOLD);
+                nfc_handle.time_out = system_inc_time_cnt(0);
                 break;
             case NFC_MODE_IDLE:
                 FM17622_HardReset();
+                nfc_handle.time_out = system_inc_time_cnt(0);
             case NFC_MODE_FUNC:
                 FM17622_HardReset();
-                Lpcd_Init_Register(LPCD_SLEEPTIME, LPCD_THRESHOLD);
+                nfc_handle.time_out = system_inc_time_cnt(0);
                 break;
             case NFC_MODE_SCAN:
                 FM17622_HardReset();
@@ -191,35 +191,10 @@ static unsigned char Card_Handle_Event(const nfc_attribute_t* nfc_attr) {
 	return result;
 }
 
-uint8_t is_nfc_wake(void) {
-
-    if (is_Lpcd_wake()) {
-        if (NFC_MODE_DEEP_SLEEP == nfc_handle.mode) {
-            FM17622_HardReset();
-            Lpcd_Init_Register(LPCD_SLEEPTIME, LPCD_THRESHOLD);         //重新回到LPCD模式
-            return false;
-        }
-        nfc_handle.wake = true;
-		return true;
-    }
-
-	return false;
-}
-
 void nfc_loop(void) {
     switch (nfc_handle.mode) {
         case NFC_MODE_SLEEP:
         case NFC_MODE_FUNC:
-	        if (is_nfc_wake() || (nfc_handle.wake)) {
-                nfc_handle.wake = false;
-                if (Lpcd_IRQ_Event(&nfc_handle.attr, Card_Handle_Event)) {
-                    // 当前实际为NFC_MODE_IDLE模式下（工作模式下关闭天线）
-
-                    nfc_handle.release = true;
-                    Lpcd_Init_Register(LPCD_SLEEPTIME, LPCD_THRESHOLD);         //重新回到LPCD模式
-                }
-            }
-            break;
         case NFC_MODE_SCAN:
             if (system_out_time_cnt(nfc_handle.time_out)) {
                 nfc_handle.time_out = system_inc_time_cnt(NFC_SCAN_TIME_OUT);

@@ -13,7 +13,7 @@ const bsp_nfc_drive_io_t bsp_nfc = {
     .init = nfc_init,
     .loop = nfc_loop,
     .set_mode = nfc_set_mode,
-    .is_wake = is_nfc_wake,
+    .is_wake = NULL,
     .set_attr = nfc_set_attr,
 
 };
