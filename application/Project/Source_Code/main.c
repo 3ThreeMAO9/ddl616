@@ -36,14 +36,15 @@ void MainLoop(void)
         if (system_out_time_cnt(time_out))
         {
             time_out = system_inc_time_cnt(1000);
+            OB_LOGD(TAG, "[%s]",__func__);
         }
-        keyTaskLoop();          // Key task loop
+        // keyTaskLoop();          // Key task loop
         ledTaskLoop();          // LED task loop
-        uartTaskLoop();         // uart task loop
+        // uartTaskLoop();         // uart task loop
         nfc_task_loop();        // nfc task loop
-        fp_task_loop();         // finger task loop
-        face_task_loop();       // face task loop
-        radar_task_loop();      // radar task loop
+        // fp_task_loop();         // finger task loop
+        // face_task_loop();       // face task loop
+        // radar_task_loop();      // radar task loop
         system_time_task_loop();// system time task loop
         sleep_task_loop();      // sleep task loop
         qp_fsm_task_loop();     // fsm task loop
@@ -67,20 +68,20 @@ static void task_init(void)
 {
     OB_LOGD(TAG, "[%s]",__func__);
     ota_helper_init();
-    if (ota_helper_get_state() == OTA_STATE_IDLE)
-    {
-        reset7258_handle();
-    }
-    flash_task_init();
-    keyTaskPowerOnInit();
+    // if (ota_helper_get_state() == OTA_STATE_IDLE)
+    // {
+    //     reset7258_handle();
+    // }
+    // flash_task_init();
+    // keyTaskPowerOnInit();
     ledTaskInit();
-    uartTaskInit();
+    // uartTaskInit();
     nfc_task_init();
-    face_task_init();
+    // face_task_init();
 
 
-    radar_task_init();
-    fp_task_init();
+    // radar_task_init();
+    // fp_task_init();
     sleep_task_init();
 }
 
@@ -98,8 +99,5 @@ int main(void)
     device_init();
     task_init();
     app_init();
-
-    OB_LOGD(TAG, "OB_FMC->BSCSR_b.BS[%02X]", OB_FMC->BSCSR_b.BS);
-    
     MainLoop();
 }

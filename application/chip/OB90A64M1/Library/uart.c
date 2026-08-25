@@ -2,7 +2,6 @@
 #include "OB90A64M1.h"
 #include "uart.h"
 #include "hal_uart.h"
-#include "soft_uart.h"
 
 volatile uint8_t  g_UartRxData[UART_RX_SIZE];
 volatile uint32_t g_UartRxCounter = 0x00;
@@ -131,10 +130,10 @@ int fputc(int ch, FILE *f)
 #if (OB_LOG_UART_SIMU == OB_LOG_UART_SEL)
     simu_putchar((uint8_t)ch);
     return 1;
-#else
+#elif (OB_LOG_UART_SEL == OB_LOG_UART_1)
     uint8_t Buff;
     Buff = (uint8_t)ch;
-    return SoftUART_LogWrite(g_uart_par, &Buff, 1);
+    return UART_Write(OB_UART0, &Buff, 1);
 #endif
 }
 /*******************************************************************************

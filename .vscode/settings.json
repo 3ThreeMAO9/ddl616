@@ -4,7 +4,8 @@
         "led.h": "c",
         "config_smarklockzql1.h": "c",
         "ob90a64m1.h": "c",
-        "wdt.h": "c"
+        "wdt.h": "c",
+        "event.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

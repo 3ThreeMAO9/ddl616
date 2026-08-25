@@ -30,9 +30,9 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            fp_task_set_mode(FP_TASK_MODE_DEFAULT);
-            face_task_set_mode(FACE_TASK_MODE_DEFAULT);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            // fp_task_set_mode(FP_TASK_MODE_DEFAULT);
+            // face_task_set_mode(FACE_TASK_MODE_DEFAULT);
+            // system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             break;
         case Q_EXIT_SIG:
             break;
@@ -41,12 +41,12 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_KEY_PRESS_SIG:
             break;
         case Q_HANDLE_SIG:
-            if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-            }
-            else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP){
-                state = Q_TRAN(lock_fsm_sleep);
-            }
+            // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
+            //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            // }
+            // else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP){
+            //     state = Q_TRAN(lock_fsm_sleep);
+            // }
             break;
         case Q_USER_KEY_SIG:
             break;

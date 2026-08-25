@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2025 GZ-OB, All rights reserved.
- * File name: item_12345.h
+ * File name: item_39140.h
  * Desc:
  * Version: 1.0.0
  * Revision: James_Zhang
  * Date: 2025-12-01
  */
 
-#ifndef _ITEM_12345_H_
-#define _ITEM_12345_H_
-#if (CLIENT_ITEM_SN_12345 == CLIENT_ITEM_SN)
-#include "board_RLFA16X_V1.h"
+#ifndef _ITEM_39140_H_
+#define _ITEM_39140_H_
+
+#include "board_RLSA120M_V1.h"
 
 /***********Macro***********/
 //firmware version
@@ -19,22 +19,24 @@
 
 
 /***********Enum***********/
-#define TOUCH_IC_CH0    0x0F
-#define TOUCH_IC_CH1    0x0F
-#define TOUCH_IC_CH2    0x0F
-#define TOUCH_IC_CH3    0x0F
-#define TOUCH_IC_CH4    0x0F
-#define TOUCH_IC_CH5    0x0F
-#define TOUCH_IC_CH6    0x0F
-#define TOUCH_IC_CH7    0x0F
-#define TOUCH_IC_CH8    0x0F
-#define TOUCH_IC_CH9    0x0F
-#define TOUCH_IC_CH10   0x0F
-#define TOUCH_IC_CH11   0x0F
-#define TOUCH_IC_CH12   0x0F
-#define TOUCH_IC_CH13   0x0F
-#define TOUCH_IC_CH14   0x0F
-#define TOUCH_IC_CH15   0x0F
+
+#define TOUCH_IC_CH0    0x3F    //KEY_NULL
+#define TOUCH_IC_CH1    0x35    //KEY_CAN
+#define TOUCH_IC_CH2    0x35    //KEY_NUM_7
+#define TOUCH_IC_CH3    0x2F    //KEY_NUM_4
+#define TOUCH_IC_CH4    0x2F    //KEY_NUM_1
+#define TOUCH_IC_CH5    0x2F    //KEY_NUM_2
+#define TOUCH_IC_CH6    0x2F    //KEY_NUM_3
+#define TOUCH_IC_CH7    0x35    //KEY_NUM_6
+#define TOUCH_IC_CH8    0x35    //KEY_NUM_5
+#define TOUCH_IC_CH9    0x35    //KEY_NUM_8
+#define TOUCH_IC_CH10   0x35    //KEY_NUM_9
+#define TOUCH_IC_CH11   0x35    //KEY_OK
+#define TOUCH_IC_CH12   0x35    //KEY_NUM_0
+#define TOUCH_IC_CH13   0x35    //KEY_NUM_13
+#define TOUCH_IC_CH14   0x3F    //无对应按键
+#define TOUCH_IC_CH15   0x3F    //无对应按键
+
 
 #define NFC_CHECK_ADC                   0x01
 #define NFC_CHECK_LPCD                  0x02
@@ -45,6 +47,12 @@
 #ifndef NFC_SACN_INTERVAL
 #define NFC_SACN_INTERVAL               (1900)        // ms
 #endif
+
+#define OB_LOG_UART_SIMU                0   // 模拟UART（非软串口LOG_TX）
+#define OB_LOG_UART_1                   1   // 硬件串口LOG_TX1
+
+#define OB_LOG_UART_SEL                 OB_LOG_UART_1
+
 
 #if(NFC_CHECK_SEL == NFC_CHECK_ADC)
 #define NFC_READ_CARD_POWER             (0x20)        //This is nfc read the card power
@@ -72,13 +80,18 @@
 #define RADAR_MIDDLE_VALUE              (30)
 #define RADAR_LOW_VALUE                 (40)
 
+#define RADAR_CHECK_IO                  (0x01)
+#define RADAR_CHECK_IIC                 (0x02)
+#define RADAR_CHECK_SEL                 RADAR_CHECK_IO
+
 /*******************  wake source  *******************/
-#define WAKE_SOURCE_NULL                            0x0000
-#define WAKE_SOURCE_KEY_BOARD                       0x0001
-#define WAKE_SOURCE_FINGER                          0x0002
-#define WAKE_SOURCE_NFC                             0x0004
-#define WAKE_SOURCE_TAMPER_KEY                      0x0008
-#define WAKE_SOURCE_RADAR                           0x0040
+#define WAKE_SOURCE_NULL                            (0x0000)
+#define WAKE_SOURCE_KEY_BOARD                       (0x0001)
+#define WAKE_SOURCE_FINGER                          (0x0002)
+#define WAKE_SOURCE_NFC                             (0x0004)
+#define WAKE_SOURCE_TAMPER_KEY                      (0x0008)
+#define WAKE_SOURCE_RADAR                           (0x0040)
+#define WAKE_SOURCE_LOCK_UART                       (0x0080)
 
 /********************  time out  *********************/
 #define WORK_TIME_OUT_VAULE                         (10 * 1000)       // ms
@@ -90,6 +103,4 @@
 
 /*****************************/
 
-
-#endif /* CLIENT_ITEM_SN_12345 == CLIENT_ITEM_SN */
-#endif /* _ITEM_12345_H_ */
+#endif /* _ITEM_39140_H_ */

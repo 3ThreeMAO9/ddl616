@@ -5,8 +5,6 @@
 #include "string.h"
 #include "uart.h"
 #include "simu_uart.h"
-#include "soft_uart.h"
-#include "soft_uart_log.h"
 
 /*************************Macro*************************/
 // uart baudrate

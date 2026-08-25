@@ -112,10 +112,10 @@ void hal_uartSendBuff(Uart_Group_t uart_group, uint8_t *data, uint16_t len)
     {
         UART_Write(OB_UART1, data, len);
     }
-    else if (UART_SOFT_0 == uart_group)
-    {
-        SoftUART_Write(NULL,data, len);
-    }
+    // else if (UART_SOFT_0 == uart_group)
+    // {
+    //     SoftUART_Write(NULL,data, len);
+    // }
     else
     {
         ;
@@ -156,10 +156,10 @@ void hal_uart_Init(hal_uart_config_t *uart_cfg)
     {
         hw_uart_io_init(uart_cfg); // 硬件UART走通用逻辑
     }
-    else if (uart_group == UART_SOFT_0)
-    {
-        soft_uart2_init(uart_cfg->baudrate, uart_cfg->callback); 
-    }
+    // else if (uart_group == UART_SOFT_0)
+    // {
+    //     soft_uart2_init(uart_cfg->baudrate, uart_cfg->callback); 
+    // }
     else
     {
         return;
@@ -212,11 +212,11 @@ void hal_uart_sleep(hal_uart_sleep_config_t *uart_cfg)
     {
         hw_uart_sleep(uart_cfg); // 硬件UART走通用逻辑
     }
-    else if (uart_group == UART_SOFT_0)
-    {
-        // 软件串口休眠：提取结构体中的mode/level参数
-        soft_uart2_sleep(uart_cfg->mode, uart_cfg->level);
-    }
+    // else if (uart_group == UART_SOFT_0)
+    // {
+    //     // 软件串口休眠：提取结构体中的mode/level参数
+    //     soft_uart2_sleep(uart_cfg->mode, uart_cfg->level);
+    // }
     else
         return;
 }
@@ -231,10 +231,10 @@ void hal_uart_isr(Uart_Group_t uart_group)
     {
         ;
     }
-    else if (UART_SOFT_0 == uart_group)
-    {
-        ;
-    }
+    // else if (UART_SOFT_0 == uart_group)
+    // {
+    //     ;
+    // }
     else
     {
         ;

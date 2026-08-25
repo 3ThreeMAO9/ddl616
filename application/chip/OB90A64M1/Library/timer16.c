@@ -6,7 +6,6 @@ volatile uint32_t g_T16B0Interrupt;
 volatile uint32_t g_T16B1Interrupt;
 
 extern void hal_callback(unsigned char ucChannel);
-extern void SoftUART_IRQHandler(void);
 
 void CT16B0_IRQHandler()
 {
@@ -21,7 +20,6 @@ void CT16B1_IRQHandler()
     // OB_GPIO0->DATA |= GPIO_PIN8;
     // OB_GPIO0->DATA &= (~GPIO_PIN8);
     // OB_GPIO2->DATA |= GPIO_PIN2;   //test irq time
-    SoftUART_IRQHandler();
     // OB_GPIO2->DATA &= (~GPIO_PIN2);   //test irq time
 }
 

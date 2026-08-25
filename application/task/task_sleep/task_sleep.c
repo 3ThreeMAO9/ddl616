@@ -220,7 +220,7 @@ void sleep_task_loop(void){
         return;
     }
 
-    reset7258_loop();
+    // reset7258_loop();
 
     if (sleep_task_driver.attribute.flag){
         sleep_task_driver.attribute.flag = false;

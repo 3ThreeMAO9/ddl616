@@ -30,7 +30,7 @@ HANDLER_DEFINE(UP_CMD_VERSION)
     FMC_Read(0xF000, (uint8_t *)&boot_verstion, sizeof(boot_verstion));
     if (param->status == 0xff)
     {
-        version_param.fw_funcode = CLIENT_ITEM_SN;
+        version_param.fw_funcode = MINOR_VERSION;
         version_param.boot_ver = boot_verstion;
         version_param.flash_ver = 0;
         version_param.fw_ver = PATCH_VERSION;
