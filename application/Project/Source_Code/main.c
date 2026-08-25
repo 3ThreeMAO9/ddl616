@@ -10,7 +10,7 @@
 #include "task_nfc.h"
 #include "task_fingerprint.h"
 #include "task_face.h"
-#include "task_radar.h"
+
 #include "task_system_time.h"
 #include "task_sleep.h"
 #include "task_qp_fsm.h"
@@ -36,13 +36,12 @@ void MainLoop(void)
         if (system_out_time_cnt(time_out))
         {
             time_out = system_inc_time_cnt(1000);
-            OB_LOGD(TAG, "[%s]",__func__);
         }
-        // keyTaskLoop();          // Key task loop
+        keyTaskLoop();          // Key task loop
         ledTaskLoop();          // LED task loop
         // uartTaskLoop();         // uart task loop
         nfc_task_loop();        // nfc task loop
-        // fp_task_loop();         // finger task loop
+        fp_task_loop();         // finger task loop
         // face_task_loop();       // face task loop
         // radar_task_loop();      // radar task loop
         system_time_task_loop();// system time task loop
@@ -68,12 +67,12 @@ static void task_init(void)
 {
     OB_LOGD(TAG, "[%s]",__func__);
     ota_helper_init();
-    // if (ota_helper_get_state() == OTA_STATE_IDLE)
-    // {
-    //     reset7258_handle();
-    // }
+    if (ota_helper_get_state() == OTA_STATE_IDLE)
+    {
+        
+    }
     // flash_task_init();
-    // keyTaskPowerOnInit();
+    keyTaskPowerOnInit();
     ledTaskInit();
     // uartTaskInit();
     nfc_task_init();
@@ -81,7 +80,7 @@ static void task_init(void)
 
 
     // radar_task_init();
-    // fp_task_init();
+    fp_task_init();
     sleep_task_init();
 }
 

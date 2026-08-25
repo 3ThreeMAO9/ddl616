@@ -1,5 +1,5 @@
 #include "task_system_time.h"
-#include "task_radar.h"
+
 #include "event.h"
 
 
@@ -28,7 +28,7 @@ static uint16_t system_time_task_callback(uint8_t source, uint8_t timeOutId)
         }
     }
     else if (DOWN_COUNT_SOURCE_WDT == source) {
-        radar_task_stay_scan(0);
+        // radar_task_stay_scan(0);
     }
     return true;
 }

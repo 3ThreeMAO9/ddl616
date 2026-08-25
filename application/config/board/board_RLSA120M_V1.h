@@ -61,32 +61,32 @@ typedef enum
     #define VOICE_EN_GPIO                   (HAL_GPIO_PORT1)
     #define VOICE_EN_PIN                    (HAL_GPIO_PIN4)
 
-    //NFC
-    #define NFC_NRST_GPIO                   (HAL_GPIO_PORT0)
-    #define NFC_NRST_PIN                    (HAL_GPIO_PIN10)
-    #define NFC_IRQ_GPIO                    (HAL_GPIO_PORT1)
-    #define NFC_IRQ_PIN                     (HAL_GPIO_PIN3)
-    #define NFC_NSS_GPIO                    (HAL_GPIO_PORT3)
-    #define NFC_NSS_PIN                     (HAL_GPIO_PIN4)
-    #define NFC_CLK_GPIO                    (HAL_GPIO_PORT3)
-    #define NFC_CLK_PIN                     (HAL_GPIO_PIN5)
-    #define NFC_MOSI_GPIO                   (HAL_GPIO_PORT3)
-    #define NFC_MOSI_PIN                    (HAL_GPIO_PIN6)
-    #define NFC_MISO_GPIO                   (HAL_GPIO_PORT3)
-    #define NFC_MISO_PIN                    (HAL_GPIO_PIN7)
+//NFC
+#define NFC_NRST_GPIO                   (HAL_GPIO_PORT0)
+#define NFC_NRST_PIN                    (HAL_GPIO_PIN10)
+#define NFC_IRQ_GPIO                    (HAL_GPIO_PORT1)
+#define NFC_IRQ_PIN                     (HAL_GPIO_PIN3)
+#define NFC_NSS_GPIO                    (HAL_GPIO_PORT3)
+#define NFC_NSS_PIN                     (HAL_GPIO_PIN4)
+#define NFC_CLK_GPIO                    (HAL_GPIO_PORT3)
+#define NFC_CLK_PIN                     (HAL_GPIO_PIN5)
+#define NFC_MOSI_GPIO                   (HAL_GPIO_PORT3)
+#define NFC_MOSI_PIN                    (HAL_GPIO_PIN6)
+#define NFC_MISO_GPIO                   (HAL_GPIO_PORT3)
+#define NFC_MISO_PIN                    (HAL_GPIO_PIN7)
 
-    #define NFC_SPI                         (HAL_SPI0)
-    #define NFC_SPI_TYPE                    (HAL_SPI_TYPE_HW)
-    // #define NFC_SPI_TYPE                  (HAL_SPI_TYPE_SW)
+#define NFC_SPI                         (HAL_SPI0)
+#define NFC_SPI_TYPE                    (HAL_SPI_TYPE_HW)
 
-    // #define NFC_IRQ_ADC_CHANNEL           (ADC_CHANNEL_4)
-    // #define NFC_IRQ_ADC_MODE              (1)
+// #define NFC_IRQ_ADC_CHANNEL           (ADC_CHANNEL_4)
+// #define NFC_IRQ_ADC_MODE              (1)
 
-    ///<endNFC
+///<endNFC
 
-    //led
-    #define LED_POWER_GPIO                  (HAL_GPIO_PORT0)
-    #define LED_POWER_PIN                   (HAL_GPIO_PIN13)
+//led
+#define LED_POWER_GPIO                  (HAL_GPIO_PORT0)
+#define LED_POWER_PIN                   (HAL_GPIO_PIN13)
+
     #define LED_OE_GPIO                     (HAL_GPIO_PORT0)
     #define LED_OE_PIN                      (HAL_GPIO_PIN11)
     #define LED_LE_GPIO                     (HAL_GPIO_PORT1)
@@ -114,8 +114,8 @@ typedef enum
     #define LED_14                          (LED_NULL)
     #define LED_15                          (LED_NULL)
 
-    //back uart
-    #define BACK_UART_SEL                   (UART_0)
+//back uart
+#define BACK_UART_SEL                   (UART_0)
 
 
     //uart
@@ -145,16 +145,16 @@ typedef enum
 #define LOG_UART_RX_PIN                     (HAL_GPIO_PIN0)
 #define LOG_UART_SEL                        (UART_0)
 
-    // fingerprint  
-    #define FP_TX_GPIO                      (HAL_GPIO_PORT0)
-    #define FP_TX_PIN                       (HAL_GPIO_PIN3)
-    #define FP_RX_GPIO                      (HAL_GPIO_PORT2)
-    #define FP_RX_PIN                       (HAL_GPIO_PIN11)
-    #define FP_POWER_GPIO                   (HAL_GPIO_PORT0)
-    #define FP_POWER_PIN                    (HAL_GPIO_PIN6)
-    #define FP_WAKE_GPIO                    (HAL_GPIO_PORT0)
-    #define FP_WAKE_PIN                     (HAL_GPIO_PIN7)
-    #define FINGER_UART_SEL                 (UART_1) // UART_1  //UART_SOFT_0
+// fingerprint  
+#define FP_TX_GPIO                      (HAL_GPIO_PORT2)
+#define FP_TX_PIN                       (HAL_GPIO_PIN1)
+#define FP_RX_GPIO                      (HAL_GPIO_PORT2)
+#define FP_RX_PIN                       (HAL_GPIO_PIN0)
+#define FP_POWER_GPIO                   (HAL_GPIO_PORT0)
+#define FP_POWER_PIN                    (HAL_GPIO_PIN6)
+#define FP_WAKE_GPIO                    (HAL_GPIO_PORT0)
+#define FP_WAKE_PIN                     (HAL_GPIO_PIN7)
+#define FINGER_UART_SEL                 (UART_1)
 
     // face
     #define FACE_TX_GPIO                    (HAL_GPIO_PORT0)
@@ -165,30 +165,21 @@ typedef enum
     #define FACE_POWER_PIN                  (HAL_GPIO_PIN12)
     #define FACE_UART_SEL                   (UART_1)            
 
-    // io radar
-    #define RADAR_PB3_SDA_GPIO              (HAL_GPIO_PORT0)
-    #define RADAR_PB3_SDA_PIN               (HAL_GPIO_PIN12)
-    #define RADAR_PB2_SCL_GPIO              (HAL_GPIO_PORT0)
-    #define RADAR_PB2_SCL_PIN               (HAL_GPIO_PIN4)
-    #define RADAR_INT_GPIO                  (HAL_GPIO_PORT0)
-    #define RADAR_INT_PIN                   (HAL_GPIO_PIN5)
-
-
-    //touch key
-    #define TOUCH_CH_CNT                    (14)
-    #define TOUCH_WAKE_GPIO                 (HAL_GPIO_PORT2)
-    #define TOUCH_WAKE_PIN                  (HAL_GPIO_PIN7)
-    #define TOUCH_RESET_GPIO                (HAL_GPIO_PORT1)
-    #define TOUCH_RESET_PIN                 (HAL_GPIO_PIN2)
-    #define TOUCH_I2C_SCL_GPIO              (HAL_GPIO_PORT1)
-    #define TOUCH_I2C_SCL_PIN               (HAL_GPIO_PIN6)
-    #define TOUCH_I2C_SDA_GPIO              (HAL_GPIO_PORT1)
-    #define TOUCH_I2C_SDA_PIN               (HAL_GPIO_PIN5)
+//touch key
+#define TOUCH_CH_CNT                    (14)
+#define TOUCH_WAKE_GPIO                 (HAL_GPIO_PORT2)
+#define TOUCH_WAKE_PIN                  (HAL_GPIO_PIN7)
+#define TOUCH_RESET_GPIO                (HAL_GPIO_PORT1)
+#define TOUCH_RESET_PIN                 (HAL_GPIO_PIN2)
+#define TOUCH_I2C_SCL_GPIO              (HAL_GPIO_PORT1)
+#define TOUCH_I2C_SCL_PIN               (HAL_GPIO_PIN6)
+#define TOUCH_I2C_SDA_GPIO              (HAL_GPIO_PORT1)
+#define TOUCH_I2C_SDA_PIN               (HAL_GPIO_PIN5)
 
 #define KEYBOAD_MAX 14
 
-#define KEY_VALUE_TAB {KEY_NULL, KEY_CAN, KEY_NUM_7, KEY_NUM_4, KEY_NUM_1, KEY_NUM_2, KEY_NUM_3, \
-                       KEY_NUM_6, KEY_NUM_5, KEY_NUM_8, KEY_NUM_9, KEY_OK, KEY_NUM_0, KEY_NUM_13}
+#define KEY_VALUE_TAB {KEY_NUM_13, KEY_NUM_3, KEY_NUM_2, KEY_NUM_5, KEY_NUM_6, KEY_NUM_9, KEY_NUM_8, \
+                       KEY_OK, KEY_NUM_0, KEY_CAN, KEY_NUM_7, KEY_NUM_4, KEY_NUM_1, KEY_NULL}
 
 /****************************/
 

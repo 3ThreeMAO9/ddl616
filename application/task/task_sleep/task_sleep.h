@@ -69,7 +69,6 @@ typedef struct{
 void sleep_task_init(void);
 void sleep_task_loop(void);
 void sleep_task_set_flag(void);
-void reset7258_handle(void);
 
 /**************************************/
 

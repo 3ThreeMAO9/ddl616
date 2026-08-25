@@ -15,7 +15,7 @@
 #include "task_face.h"
 #include "task_uart.h"
 #include "task_fingerprint.h"
-#include "task_radar.h"
+
 #include "task_nfc.h"
 
 #include "event.h"
@@ -68,7 +68,6 @@ static uint8_t enter_sleep_event_deal(void){
     }
     ledTaskSleep();
     uartTaskSleep();
-    radar_task_sleep();
 
     OB_LOGD(TAG, "Enter Sleep");
     system_time_task_sleep(ENTER_SLEEP);
@@ -82,7 +81,6 @@ static uint8_t exit_sleep_event_scan(void){
     sleep_task_driver.attribute.wake_source |= fp_task_is_wake();       //  指纹
     sleep_task_driver.attribute.wake_source |= nfc_task_is_wake();      //  NFC
     sleep_task_driver.attribute.wake_source |= system_timer_loop();     //  WDT定时
-    sleep_task_driver.attribute.wake_source |= radar_task_is_wake();    //  雷达
     sleep_task_driver.attribute.wake_source |= uart_task_is_wake();     //  串口
 
 #if (Enabled == WAKE_STAT_ENABLE)
@@ -178,49 +176,10 @@ void sleep_task_init(void){
     }
 }
 
-static uint32_t reset7258_time_out = 0;
-static uint8_t reset7258_step = 0;
-void reset7258_handle(void)
-{
-    reset7258_step = 1;
-    reset7258_time_out =  system_inc_time_cnt(10);
-    HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 0); // WEN
-    HAL_GPIO_Init(HAL_GPIO_PORT2, HAL_GPIO_PIN9, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
-
-}
-
-static void reset7258_loop(void)
-{
-    if(!reset7258_step || !system_out_time_cnt(reset7258_time_out))
-        return;
-
-    switch (reset7258_step)
-    {
-        case 1:
-            reset7258_time_out =  system_inc_time_cnt(50);
-            HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 1); // WEN
-            reset7258_step = 2;
-            break;
-
-        case 2:
-            HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 0); // WEN
-            reset7258_step = 0;
-            break;
-        
-        default:
-            HAL_GPIO_Write(HAL_GPIO_PORT2, HAL_GPIO_PIN9, 0); // WEN
-            reset7258_step = 0;
-            break;
-    }
-} 
-
-
 void sleep_task_loop(void){
     if (NULL == sleep_task_driver.io){
         return;
     }
-
-    // reset7258_loop();
 
     if (sleep_task_driver.attribute.flag){
         sleep_task_driver.attribute.flag = false;

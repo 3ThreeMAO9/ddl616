@@ -23,9 +23,6 @@ typedef led_event_callback_t bsp_led_callback_t;
 typedef struct {
     void (*init)(void);
     void (*sleep)(void);
-    void (*set_value)(uint16_t value);
-    uint16_t (*get_value)(void);
-    bool (*check_led)(uint8_t led_value, uint16_t *value);
     void (*handle)(uint8_t event,uint16_t value);
     void (*loop)(void);
 } bsp_led_drive_io_t;

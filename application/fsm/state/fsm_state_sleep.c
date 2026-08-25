@@ -6,7 +6,7 @@
 #include "task_system_time.h"
 #include "task_face.h"
 #include "task_fingerprint.h"
-#include "task_radar.h"
+
 #include "task_key.h"
 
 #include "event.h"
@@ -33,7 +33,7 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            // fp_task_set_mode(FP_MODE_SLEEP);
+            fp_task_set_mode(FP_MODE_SLEEP);
             // face_task_set_mode(FACE_MODE_IDLE);
             system_time_task_set_work_time(250);
             break;

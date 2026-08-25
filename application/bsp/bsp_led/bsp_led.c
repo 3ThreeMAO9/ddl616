@@ -13,9 +13,6 @@
 const bsp_led_drive_io_t bsp_led = {
     .init = led_init,
     .sleep = led_sleep,
-    .set_value = led_set_value,
-    .get_value = led_get_value,
-    .check_led = led_bit_set_in_led,
     .handle = led_hanlde,
     .loop = led_loop,
 };

@@ -6,7 +6,7 @@
 #include "event.h"
 #include "task_led.h"
 #include "task_face.h"
-#include "task_radar.h"
+
 #include "task_fingerprint.h"
 
 
@@ -30,9 +30,9 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            // fp_task_set_mode(FP_TASK_MODE_DEFAULT);
+            fp_task_set_mode(FP_TASK_MODE_DEFAULT);
             // face_task_set_mode(FACE_TASK_MODE_DEFAULT);
-            // system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             break;
         case Q_EXIT_SIG:
             break;

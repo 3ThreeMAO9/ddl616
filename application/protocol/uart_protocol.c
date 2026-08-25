@@ -218,7 +218,9 @@ void uart_protocol_poll(void)
         {
             uart_protocol_heart_send_cnt++;
             if (uart_protocol_heart_send_cnt > 3)
-                reset7258_handle();
+            {
+                
+            }
         }
     }
 }

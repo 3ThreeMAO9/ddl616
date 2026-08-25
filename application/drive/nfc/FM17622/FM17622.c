@@ -133,7 +133,7 @@ uint8_t FM17622_Version(void) {
 
     if (NfcGetReg(JREG_VERSION, &reg_data)) {
         OB_LOGD(TAG, "NFC IC Version: %02X", reg_data);
-        if (0xA2 == reg_data) {
+        if ((0x00 != reg_data) && (0xFF != reg_data)) {
             return true;
         }
     }

@@ -18,10 +18,10 @@ typedef void (*led_event_callback_t)(uint8_t, uint8_t, uint8_t, uint8_t);
 #define LED_KEY_BOARD_TIME      (200)   //unit: ms
 
 #define SET_LED_POWER(_level) (HAL_GPIO_Write(LED_POWER_GPIO, LED_POWER_PIN, _level))
-#define SET_LED_OE(_level) (HAL_GPIO_Write(LED_OE_GPIO, LED_OE_PIN, _level))
-#define SET_LED_LE(_level) (HAL_GPIO_Write(LED_LE_GPIO, LED_LE_PIN, _level))
-#define SET_LED_SDI(_level) (HAL_GPIO_Write(LED_SDI_GPIO, LED_SDI_PIN, _level))
-#define SET_LED_SCK(_level) (HAL_GPIO_Write(LED_SCK_GPIO, LED_SCK_PIN, _level))
+// #define SET_LED_OE(_level) (HAL_GPIO_Write(LED_OE_GPIO, LED_OE_PIN, _level))
+// #define SET_LED_LE(_level) (HAL_GPIO_Write(LED_LE_GPIO, LED_LE_PIN, _level))
+// #define SET_LED_SDI(_level) (HAL_GPIO_Write(LED_SDI_GPIO, LED_SDI_PIN, _level))
+// #define SET_LED_SCK(_level) (HAL_GPIO_Write(LED_SCK_GPIO, LED_SCK_PIN, _level))
 
 #define LED_POWER_INIT(_level)                                                                     \
     do                                                                                             \
@@ -30,33 +30,33 @@ typedef void (*led_event_callback_t)(uint8_t, uint8_t, uint8_t, uint8_t);
         HAL_GPIO_Init(LED_POWER_GPIO, LED_POWER_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
     } while (0)
 
-#define LED_OE_INIT(_level)                                                                  \
-    do                                                                                       \
-    {                                                                                        \
-        HAL_GPIO_Write(LED_OE_GPIO, LED_OE_PIN, _level);                                     \
-        HAL_GPIO_Init(LED_OE_GPIO, LED_OE_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-    } while (0)
+// #define LED_OE_INIT(_level)                                                                  \
+//     do                                                                                       \
+//     {                                                                                        \
+//         HAL_GPIO_Write(LED_OE_GPIO, LED_OE_PIN, _level);                                     \
+//         HAL_GPIO_Init(LED_OE_GPIO, LED_OE_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
+//     } while (0)
 
-#define LED_LE_INIT(_level)                                                                  \
-    do                                                                                       \
-    {                                                                                        \
-        HAL_GPIO_Write(LED_LE_GPIO, LED_LE_PIN, _level);                                     \
-        HAL_GPIO_Init(LED_LE_GPIO, LED_LE_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-    } while (0)
+// #define LED_LE_INIT(_level)                                                                  \
+//     do                                                                                       \
+//     {                                                                                        \
+//         HAL_GPIO_Write(LED_LE_GPIO, LED_LE_PIN, _level);                                     \
+//         HAL_GPIO_Init(LED_LE_GPIO, LED_LE_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
+//     } while (0)
 
-#define LED_SDI_INIT(_level)                                                                   \
-    do                                                                                         \
-    {                                                                                          \
-        HAL_GPIO_Write(LED_SDI_GPIO, LED_SDI_PIN, _level);                                     \
-        HAL_GPIO_Init(LED_SDI_GPIO, LED_SDI_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-    } while (0)
+// #define LED_SDI_INIT(_level)                                                                   \
+//     do                                                                                         \
+//     {                                                                                          \
+//         HAL_GPIO_Write(LED_SDI_GPIO, LED_SDI_PIN, _level);                                     \
+//         HAL_GPIO_Init(LED_SDI_GPIO, LED_SDI_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
+//     } while (0)
 
-#define LED_SCK_INIT(_level)                                                                   \
-    do                                                                                         \
-    {                                                                                          \
-        HAL_GPIO_Write(LED_SCK_GPIO, LED_SCK_PIN, _level);                                     \
-        HAL_GPIO_Init(LED_SCK_GPIO, LED_SCK_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-    } while (0)
+// #define LED_SCK_INIT(_level)                                                                   \
+//     do                                                                                         \
+//     {                                                                                          \
+//         HAL_GPIO_Write(LED_SCK_GPIO, LED_SCK_PIN, _level);                                     \
+//         HAL_GPIO_Init(LED_SCK_GPIO, LED_SCK_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
+//     } while (0)
 
 #define LED_VALUE_0                    (1 << 0)
 #define LED_VALUE_1                    (1 << 1)
@@ -82,35 +82,10 @@ typedef void (*led_event_callback_t)(uint8_t, uint8_t, uint8_t, uint8_t);
 #define LED_VALUE_ALL_STANDARD         (0xFFF)      //按bit置位 bit0：LED0  bit1：LED1
 #define LED_VALUE_ALL (LED_0 | LED_1 | LED_2 | LED_3 | LED_4 | LED_5 | LED_6 | LED_7 | LED_8 | LED_9 | LED_10 | LED_11)
 
-#define LED_GROUP_CNT                  (6)  // 总组数
-#define LED_GROUP_INTERVAL             (30) // ms
-#define LED_GROUP_TAB                                                                              \
-    {                                                                                              \
-        (LED_10),                                                                                  \
-        (LED_10 | LED_7 | LED_0),                                                                  \
-        (LED_10 | LED_7 | LED_0 | LED_4 | LED_8 | LED_11),                                         \
-        (LED_10 | LED_7 | LED_0 | LED_4 | LED_8 | LED_11 | LED_1 | LED_5 | LED_9),                 \
-        (LED_10 | LED_7 | LED_0 | LED_4 | LED_8 | LED_11 | LED_1 | LED_5 | LED_9 | LED_2 | LED_6), \
-        (LED_10 | LED_7 | LED_0 | LED_4 | LED_8 | LED_11 | LED_1 | LED_5 | LED_9 | LED_2 | LED_6 | LED_3)}
 
 #define LED_EFFECT_GROUP_CNT            (10)  // 灯效组合总数
 #define UNLOCK_LED_INTERVAL             (100) // 开锁间隔
 #define LOCK_LED_INTERVAL               (100) // 关锁间隔
-
-#define LED_EFFECT_TAB                               \
-    {                                                \
-        (LED_VALUE_10 | LED_VALUE_7 | LED_VALUE_4),  \
-        (LED_VALUE_7 | LED_VALUE_4 | LED_VALUE_1),   \
-        (LED_VALUE_4 | LED_VALUE_1 | LED_VALUE_2),   \
-        (LED_VALUE_1 | LED_VALUE_2 | LED_VALUE_3),   \
-        (LED_VALUE_2 | LED_VALUE_3 | LED_VALUE_6),   \
-        (LED_VALUE_3 | LED_VALUE_6 | LED_VALUE_9),   \
-        (LED_VALUE_6 | LED_VALUE_9 | LED_VALUE_11),  \
-        (LED_VALUE_9 | LED_VALUE_11 | LED_VALUE_0),  \
-        (LED_VALUE_11 | LED_VALUE_0 | LED_VALUE_10), \
-        (LED_VALUE_0 | LED_VALUE_10 | LED_VALUE_7),  \
-    }
-
 
 // ========== 失败灯效配置（宏定义） ==========
 #define FAILED_LED_INTERVAL             (300)    // 失败灯效单帧间隔（ms）

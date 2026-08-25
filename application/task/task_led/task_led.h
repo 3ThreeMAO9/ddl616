@@ -33,14 +33,9 @@ typedef struct{
 /***********Function***********/
 void ledTaskInit(void);
 void ledTaskHandle(uint8_t event_type, uint16_t event_code);
-uint8_t ledTaskIsEnable(void);
-void ledTaskSetEnable(uint8_t enable);
 void ledTaskSleep(void);
 void ledTaskWake(void);
 void ledTaskLoop(void);
-uint8_t ledTaskGetValue(void);
-void ledtaskSetValue(uint16_t value);
-bool ledTaskCheckLed(uint8_t led_value);
 
 /*****************************/
 

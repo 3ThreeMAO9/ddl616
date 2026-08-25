@@ -10,7 +10,7 @@
       <TargetName>39140</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5050041::5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
+      <pCCUsed>5060960::V5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -653,11 +653,6 @@
               <FilePath>..\bsp\bsp_qp_fsm\bsp_qp_fsm.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_radar.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\bsp_radar\bsp_radar.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_sleep.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\bsp\bsp_sleep\bsp_sleep.c</FilePath>
@@ -865,41 +860,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>driver/radar</GroupName>
-          <Files>
-            <File>
-              <FileName>radar_stay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\radar\radar_stay.c</FilePath>
-            </File>
-            <File>
-              <FileName>iic_radar_api.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\radar\iic_radar\iic_radar_api.c</FilePath>
-            </File>
-            <File>
-              <FileName>iic_radar_driver.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\radar\iic_radar\iic_radar_driver.c</FilePath>
-            </File>
-            <File>
-              <FileName>radar.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\radar\radar.c</FilePath>
-            </File>
-            <File>
-              <FileName>io_radar_api.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\radar\io_radar\io_radar_api.c</FilePath>
-            </File>
-            <File>
-              <FileName>io_radar_driver.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\radar\io_radar\io_radar_driver.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>module</GroupName>
           <Files>
             <File>
@@ -916,11 +876,6 @@
               <FileName>face_api.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\module\module_face\face_api.c</FilePath>
-            </File>
-            <File>
-              <FileName>module_radar.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\module_radar\module_radar.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1056,11 +1011,6 @@
               <FileName>task_qp_fsm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\task\task_qp_fsm\task_qp_fsm.c</FilePath>
-            </File>
-            <File>
-              <FileName>task_radar.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\task\task_radar\task_radar.c</FilePath>
             </File>
             <File>
               <FileName>task_sleep.c</FileName>
