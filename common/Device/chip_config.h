@@ -64,8 +64,8 @@
 #define FLASH_USER_DEFINE_END_PAGE                  (0xEFFF)
 
 /*****************  data block size  *****************/
-#define PARAMETER_BLOCK_SIZE                        (sizeof(uint32_t))
-#define DATA_BLOCK_SIZE                             (MAX(0, PARAMETER_BLOCK_SIZE))
+// #define PARAMETER_BLOCK_SIZE                        (sizeof(uint32_t))
+// #define DATA_BLOCK_SIZE                             (MAX(0, PARAMETER_BLOCK_SIZE))
 #define FLASH_SECTOR_SIZE                           (FMC_PAGE_SIZE)
 
 /***************  user parameter addr  ***************/
