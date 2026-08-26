@@ -14,8 +14,8 @@
         HAL_GPIO_Init(SIMU_UART_GPIO, SIMU_UART_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
     } while (0)
 
-#define OUT_LOW_BIT 	        SET_SIMU_UART(0)
-#define OUT_HIGH_BIT 	        SET_SIMU_UART(1)
+#define OUT_LOW_BIT 	        SIMU_UART_TX_PIN_CLR
+#define OUT_HIGH_BIT 	        SIMU_UART_TX_PIN_SET
 
 #define OUT_STOP_BIT 	        OUT_HIGH_BIT
 #define OUT_START_BIT 	        OUT_LOW_BIT

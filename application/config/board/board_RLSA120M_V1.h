@@ -133,11 +133,11 @@ typedef enum
     #define UART1_RX_GPIO                   (HAL_GPIO_PORT2)
     #define UART1_RX_PIN                    (HAL_GPIO_PIN11)
 
-    // soft uart    
-#define SOFT_UART_LOG_TX_GPIO               (HAL_GPIO_PORT0)
-#define SOFT_UART_LOG_TX_PIN                (HAL_GPIO_PIN9)
-#define SIMU_UART_GPIO                      (SOFT_UART_LOG_TX_GPIO)
-#define SIMU_UART_PIN                       (SOFT_UART_LOG_TX_PIN)
+// soft uart    
+#define SIMU_UART_GPIO                      (HAL_GPIO_PORT0)
+#define SIMU_UART_PIN                       (HAL_GPIO_PIN9)
+#define SIMU_UART_TX_PIN_SET                (OB_GPIO0->DATA |= GPIO_PIN9)     //中断执行，需要直接寄存器操作
+#define SIMU_UART_TX_PIN_CLR                (OB_GPIO0->DATA &= ~GPIO_PIN9)    //中断执行，需要直接寄存器操作
 
 #define LOG_UART_TX_GPIO                    (HAL_GPIO_PORT3)
 #define LOG_UART_TX_PIN                     (HAL_GPIO_PIN1)

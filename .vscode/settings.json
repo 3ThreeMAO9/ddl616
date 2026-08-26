@@ -15,7 +15,9 @@
         "hal_timer.h": "c",
         "hal_gpio.h": "c",
         "gpio.h": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "system_ob90a64m1.h": "c",
+        "stdint.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

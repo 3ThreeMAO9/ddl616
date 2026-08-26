@@ -8,13 +8,9 @@
 // ------------------------------------------
 
 // baudrate:115200
-void delay_simu_uart(void) {
-    uint16_t i,j;
-
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 3; j++);
-    }
+void delay_simu_uart(void)
+{
+    for (uint8_t i = 0; i < 32; i++);
 }
 
 void simu_uart_init(void) {
