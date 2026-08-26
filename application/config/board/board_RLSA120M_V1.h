@@ -86,27 +86,26 @@ typedef enum
 ///< SPI FLASH
 #define FLASH_CS_PORT                    (HAL_GPIO_PORT0)
 #define FLASH_CS_PIN                     (HAL_GPIO_PIN8)
-#define FLASH_CS_PIN_SET                 (OB_GPIO0->DATA |= GPIO_PIN8)     //中断执行，需要直接寄存器操作
-#define FLASH_CS_PIN_CLR                 (OB_GPIO0->DATA &= ~GPIO_PIN8)    //中断执行，需要直接寄存器操作
 
 #define FLASH_CLK_PORT                   (HAL_GPIO_PORT2)
 #define FLASH_CLK_PIN                    (HAL_GPIO_PIN10)
-#define FLASH_CLK_PIN_SET                (OB_GPIO2->DATA |= GPIO_PIN10)     //中断执行，需要直接寄存器操作
-#define FLASH_CLK_PIN_CLR                (OB_GPIO2->DATA &= ~GPIO_PIN10)    //中断执行，需要直接寄存器操作
-
 
 #define FLASH_MOSI_PORT                  (HAL_GPIO_PORT0)
 #define FLASH_MOSI_PIN                   (HAL_GPIO_PIN4)
-#define FLASH_MOSI_PIN_SET               (OB_GPIO0->DATA |= GPIO_PIN4)     //中断执行，需要直接寄存器操作
-#define FLASH_MOSI_PIN_CLR               (OB_GPIO0->DATA &= ~GPIO_PIN4)    //中断执行，需要直接寄存器操作
 
 #define FLASH_MISO_PORT                  (HAL_GPIO_PORT0)
 #define FLASH_MISO_PIN                   (HAL_GPIO_PIN5)
-#define FLASH_MISO_READ_PIN              (OB_GPIO0->PIN & HAL_GPIO_PIN5)
-
 
 #define FLASH_SPI_ID                     (HAL_SPI1)
 #define FLASH_SPI_TYPE                   (HAL_SPI_TYPE_SW)
+
+#define FLASH_CS_PIN_SET                 (OB_GPIO0->DATA |= GPIO_PIN8)
+#define FLASH_CS_PIN_CLR                 (OB_GPIO0->DATA &= ~GPIO_PIN8)
+#define FLASH_CLK_PIN_SET                (OB_GPIO2->DATA |= GPIO_PIN10)
+#define FLASH_CLK_PIN_CLR                (OB_GPIO2->DATA &= ~GPIO_PIN10)
+#define FLASH_MOSI_PIN_SET               (OB_GPIO0->DATA |= GPIO_PIN4)
+#define FLASH_MOSI_PIN_CLR               (OB_GPIO0->DATA &= ~GPIO_PIN4)
+#define FLASH_MISO_READ_PIN              (OB_GPIO0->PIN & GPIO_PIN5)
 
 ///< SPI  CS IO软件控制
 #define SPI_INIT_DEF                                                                                 \

@@ -38,24 +38,49 @@
 
 void sfud_log_debug(const char *file, const long line, const char *format, ...);
 
+static inline uint8_t spi_byte(uint8_t data)
+{
+    uint8_t byte_rx = 0;
+    FLASH_CLK_PIN_CLR;
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        if (data & (0x80 >> i))
+            FLASH_MOSI_PIN_SET;
+        else
+            FLASH_MOSI_PIN_CLR;
+        FLASH_CLK_PIN_SET;
+        if (FLASH_MISO_READ_PIN)
+        {
+            byte_rx |= (0x80 >> i);
+        }
+        FLASH_CLK_PIN_CLR;
+    }
+    return byte_rx;
+}
+
 /**
  * SPI write data then read data
  */
-static sfud_err spi_write_read(const sfud_spi *spi, const uint8_t *write_buf, size_t write_size, uint8_t *read_buf,
-        size_t read_size) {
+static sfud_err spi_write_read(const sfud_spi *spi, const uint8_t *write_buf, size_t write_size, uint8_t *read_buf, size_t read_size)
+{
     sfud_err result = SFUD_SUCCESS;
-//    uint8_t send_data, read_data;
-    hal_spi_enable(FLASH_SPI_ID);
-    if(write_size>0)
+    FLASH_CS_PIN_CLR;
+    if (write_size > 0)
     {
-        hal_spi_write(FLASH_SPI_ID,write_buf,write_size);
+        for (uint32_t i = 0; i < write_size; i++)
+        {
+            spi_byte(write_buf[i]);
+        }
     }
 
-    if(read_size>0)
+    if (read_size > 0)
     {
-        hal_spi_read(FLASH_SPI_ID,read_buf,read_size);
+        for (uint32_t i = 0; i < read_size; i++)
+        {
+            read_buf[i] = spi_byte(0x00);
+        }
     }
-    hal_spi_disable(FLASH_SPI_ID);
+    FLASH_CS_PIN_SET;
     return result;
 }
 

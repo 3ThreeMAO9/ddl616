@@ -10,30 +10,6 @@
 #include "item_config.h"
 
 /*********************Macro*********************/
-#define PRINTF_FUN Disabled // Enabled // Disabled
-
-#if (Enabled == PRINTF_FUN)
-#define LOG(fmt, args...)    \
-    do                       \
-    {                        \
-        printf(fmt, ##args); \
-    } while (0)
-
-#define LOG_ERR(fmt, args...)  \
-    do                         \
-    {                          \
-        printf(fmt, ##args);   \
-        printf("%s", "\r\n "); \
-        while (1)              \
-            ;                  \
-    } while (0)
-
-#define LOG_TEST_POINT(X, Y) LOG("\r\n =====TP[%u]: value[%lu]====", X, Y)
-
-#else
-// #define LOG(fmt, args...)
-// #define LOG_ERR(fmt, args...)
-#endif
 
 /*********************Enum**********************/
 

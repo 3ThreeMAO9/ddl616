@@ -124,16 +124,10 @@ int32_t get_offset_addr(uint16_t type)
 	default:
 		break;
 	}
-#if (Enabled == PRINTF_FLASH)
     OB_LOGD(TAG,"type:  %02X",type);
     OB_LOGD(TAG,"ret:   %08X",ret);
-#endif
     return ret;
 }
-
-
-
-
 
 /// @brief 
 /// @param flash 
@@ -175,7 +169,6 @@ void flash_addr_update_handler(const sfud_flash *flash,const spi_flash_frame_t  
 	}
 
     if(offset >= 0) {
-#if (Enabled == PRINTF_FLASH)
         OB_LOGD(TAG,"/***************************************************/");
         OB_LOGD(TAG,"flash_info_frame.head          %04X", flash_info_frame.head);
         OB_LOGD(TAG,"flash_info_frame.sum           %04X", flash_info_frame.sum);
@@ -186,7 +179,6 @@ void flash_addr_update_handler(const sfud_flash *flash,const spi_flash_frame_t  
         OB_LOGD(TAG,"flash_info_frame.data_length   %04X", flash_info_frame.data_length);
         OB_LOGD(TAG,"flash_info_frame.start_addr    %08X", flash_info_frame.start_addr);
         OB_LOGD(TAG,"/***************************************************/");
-#endif
         hal_flash_write(base_addr+offset, &flash_info_frame, sizeof(flash_info_frame));
         spi_flash_to_mcu_flash(flash,addr+sizeof(spi_flash_frame_t),base_addr+offset, opt_length);
     }
@@ -203,8 +195,8 @@ uint32_t flash_info_seach(void)
     OB_LOGD(TAG, "flash_info_seach");
     flash_erase_flag = true;
 
-    for (uint32_t addr = 0; addr < flash->chip.capacity;)
-    // for (uint32_t addr = 0; addr < 0x2F0000;)    //遍历全部FLASH时间需要3s，太长了，缩短有效区域
+    // for (uint32_t addr = 0; addr < flash->chip.capacity;)
+    for (uint32_t addr = 0; addr < 0xB0000;)    //遍历全部FLASH时间需要3s，太长了，缩短有效区域
     {
         int result = sfud_read(flash, addr, sizeof(spi_flash_frame_t), (uint8_t *)&spi_flash_frame);
         if (result == SFUD_SUCCESS)
@@ -224,7 +216,7 @@ uint32_t flash_info_seach(void)
             else
             {
                 addr += FLASH_HEADER_OFFSET_SIZE;
-                //  OB_LOGD(TAG, "addr:%X", addr);
+                 OB_LOGD(TAG, "addr:%X", addr);
             }
             memset(&spi_flash_frame, 0, sizeof(spi_flash_frame_t));
         }

@@ -2,6 +2,10 @@
 #include "hal_gpio.h"
 #include "hal_spi_software.h"
 
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#include "ob_log.h"
+#define TAG "hal_sw_spi"
+
 static uint8_t spi_index = 0;
 static hal_spi_config_t hal_spi_config[SOFTWARE_SPI_NUM];
 
