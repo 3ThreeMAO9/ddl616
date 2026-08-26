@@ -17,7 +17,11 @@
         "gpio.h": "c",
         "uart.h": "c",
         "system_ob90a64m1.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "ob_error_codes.h": "c",
+        "hal_spi.h": "c",
+        "hal_rtc.h": "c",
+        "bsp_rom_config.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

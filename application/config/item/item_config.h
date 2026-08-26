@@ -15,6 +15,27 @@
 /***********Macro***********/
 #define NFC_ENABLE                              Enabled
 
+//user cnt
+#define MASTER_USER_CODE_CNT                        (1)
+#define COMMON_USER_CODE_CNT      		            (100)
+#define PERMANENT_USER_CODE_CNT                     (MASTER_USER_CODE_CNT + COMMON_USER_CODE_CNT)
+
+#define USER_FINGERPRINTS_CNT                       (50)
+
+#define USER_CARD_CNT                               (0)
+
+
+#define PERMANENT_USER_CNT                          (PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT)
+
+#define ONE_TIME_CODE_CNT                           (1)
+#define USER_CNT                                    (PERMANENT_USER_CNT + ONE_TIME_CODE_CNT)
+
+//block' size
+#define USER_BLOCK_SIZE                             (32)
+#define PARAMETER_BLOCK_SIZE                        (4)
+#define DATA_BLOCK_SIZE                             (MAX(USER_BLOCK_SIZE, PARAMETER_BLOCK_SIZE))
+
+
 /***********Enum***********/
 typedef enum{
     ENTER_SLEEP = 0,

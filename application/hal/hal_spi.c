@@ -5,6 +5,10 @@
 #include "spi.h"
 #include "gpio.h"
 
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#include "ob_log.h"
+#define TAG "hal_spi"
+
 #define HAL_SPI_MAX 2
 
 static hal_spi_config_t spi_config[HAL_SPI_MAX] = {0};

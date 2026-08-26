@@ -18,6 +18,7 @@
 #include "task_flash.h"
 #include "task_protocol.h"
 
+#include "module_spi_flash.h"
 #include "user_parameter.h"
 #include "ota_helper.h"
 
@@ -72,6 +73,11 @@ static void task_init(void)
     {
         
     }
+
+    module_spi_flash_init();
+    module_spi_flash_self_test();
+    // module_flash_test();
+
     // flash_task_init();
     keyTaskPowerOnInit();
     ledTaskInit();
