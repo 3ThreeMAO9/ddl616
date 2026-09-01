@@ -51,6 +51,8 @@ typedef enum{
     USER_EVENT_FAIL_EMPTY,
     USER_EVENT_FAIL_SIMPTY,
     USER_EVENT_FAIL_REPEAT,
+    
+    EVENT_RESULT_VOICE_TIME_OUT,        //语音播报完毕
 
     USER_EVENT_CNT,
 

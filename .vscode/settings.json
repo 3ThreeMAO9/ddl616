@@ -26,7 +26,10 @@
         "flash_data.h": "c",
         "base_attribute.h": "c",
         "flash_drive.h": "c",
-        "hal_flash.h": "c"
+        "hal_flash.h": "c",
+        "hal_pwm.h": "c",
+        "task_sleep.h": "c",
+        "task_player.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

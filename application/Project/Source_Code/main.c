@@ -11,7 +11,7 @@
 #include "task_nfc.h"
 #include "task_fingerprint.h"
 #include "task_face.h"
-
+#include "task_player.h"
 #include "task_system_time.h"
 #include "task_sleep.h"
 #include "task_qp_fsm.h"
@@ -47,6 +47,7 @@ void MainLoop(void)
         fp_task_loop();         // finger task loop
         // face_task_loop();       // face task loop
         // radar_task_loop();      // radar task loop
+        player_task_loop();
         system_time_task_loop();// system time task loop
         sleep_task_loop();      // sleep task loop
         qp_fsm_task_loop();     // fsm task loop
@@ -84,6 +85,7 @@ static void task_init(void)
     ledTaskInit();
     // uartTaskInit();
     nfc_task_init();
+    player_task_init();
     // face_task_init();
     fp_task_init();
     sleep_task_init();

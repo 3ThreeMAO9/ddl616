@@ -40,6 +40,9 @@ uint32_t hal_timer_start(hal_timer_config_t const *p_config);
 uint32_t hal_timer_stop(HalTimerSel timer_id);
 void hal_timer_register_callback(hal_timer_callback_t cb);
 
+uint32_t hal_timer1_start(hal_timer_config_t const *p_config);
+void hal_timer1_register_callback(hal_timer_callback_t cb);
+
 void time0_irq_handler(void);
 #endif // _HAL_TIMER_H
 

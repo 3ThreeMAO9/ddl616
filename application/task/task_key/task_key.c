@@ -13,10 +13,10 @@
 #include "task_fingerprint.h"
 #include "task_system_time.h"
 #include "task_sleep.h"
+#include "task_player.h"
 #include "event.h"
 #include "msg_protocol.h"
 #include "user.h"
-
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"

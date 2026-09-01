@@ -6,6 +6,7 @@ volatile uint32_t g_T16B0Interrupt;
 volatile uint32_t g_T16B1Interrupt;
 
 extern void hal_callback(unsigned char ucChannel);
+extern void hal_callback1(unsigned char ucChannel);
 
 void CT16B0_IRQHandler()
 {
@@ -16,11 +17,8 @@ void CT16B0_IRQHandler()
 
 void CT16B1_IRQHandler()
 {
-    // OB_GPIO0->DATA_b.GPIOXDATA8 = ~OB_GPIO0->DATA_b.GPIOXDATA8;
-    // OB_GPIO0->DATA |= GPIO_PIN8;
-    // OB_GPIO0->DATA &= (~GPIO_PIN8);
-    // OB_GPIO2->DATA |= GPIO_PIN2;   //test irq time
-    // OB_GPIO2->DATA &= (~GPIO_PIN2);   //test irq time
+    OB_CT16B1->TMR16IR = 0xFF; //clear interrupt
+    hal_callback1(0);
 }
 
 // void TIMER16_Enable(OB_CT16B_Type *pTimer16)
