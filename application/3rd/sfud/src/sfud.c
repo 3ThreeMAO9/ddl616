@@ -830,21 +830,18 @@ static sfud_err reset(const sfud_flash *flash) {
     uint8_t cmd_data[2];
 
     SFUD_ASSERT(flash);
-    SFUD_INFO("reset1");
     if (result == SFUD_SUCCESS) {
         result = wait_busy(flash);
     } else {
         SFUD_INFO("Error: Flash device reset failed.");
         return result;
     }
-    SFUD_INFO("reset2");
     cmd_data[0] = SFUD_CMD_ENABLE_RESET;
     result = spi->wr(spi, cmd_data, 1, NULL, 0);
 
     flash->retry.delay();
     cmd_data[1] = SFUD_CMD_RESET;
     result = spi->wr(spi, &cmd_data[1], 1, NULL, 0);
-    SFUD_INFO("reset3");
     if (result == SFUD_SUCCESS) {
         result = wait_busy(flash);
     }

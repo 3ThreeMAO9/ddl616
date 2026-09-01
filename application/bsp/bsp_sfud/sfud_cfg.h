@@ -45,9 +45,9 @@ enum {
 //     .chip = { "P25Q128", 0x85, 0x20, 0x18, 16L*1024L*1024L, SFUD_WM_PAGE_256B, 4096, 0x20}},           \
 // }
 
-#define SFUD_FLASH_DEVICE_TABLE                                                                                                                                                   \
-    {                                                                                                                                                                             \
-        [SFUD_XXXX_DEVICE_INDEX] = {.name = "P25Q32", .spi.name = "SPI1", .chip = {"P25Q32", SFUD_MF_ID_WINBOND, 0x85, 0x60, 4L * 1024L * 1024L, SFUD_WM_PAGE_256B, 4096, 0x20}}, \
+#define SFUD_FLASH_DEVICE_TABLE                                                                                                                                           \
+    {                                                                                                                                                                     \
+        [SFUD_XXXX_DEVICE_INDEX] = {.name = "PY25Q32HB", .spi.name = "SPI0", .chip = {"PY25Q32HB", 0x85, 0x60, 0x16, 4L * 1024L * 1024L, SFUD_WM_PAGE_256B, 4096, 0x20}}, \
     }
 // #define SFUD_USING_QSPI
 
