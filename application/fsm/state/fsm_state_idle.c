@@ -4,7 +4,7 @@
 #include "task_sleep.h"
 #include "task_system_time.h"
 #include "event.h"
-#include "task_led.h"
+#include "task_hmi.h"
 #include "task_face.h"
 
 #include "task_fingerprint.h"
@@ -37,7 +37,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            
+            hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
             break;
         case Q_KEY_PRESS_SIG:
             break;

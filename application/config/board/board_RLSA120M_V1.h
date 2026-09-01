@@ -134,36 +134,15 @@ typedef enum
 ///< End SPI FLASH
 
 
-//led
-#define LED_POWER_GPIO                  (HAL_GPIO_PORT0)
-#define LED_POWER_PIN                   (HAL_GPIO_PIN13)
-
-    #define LED_OE_GPIO                     (HAL_GPIO_PORT0)
-    #define LED_OE_PIN                      (HAL_GPIO_PIN11)
-    #define LED_LE_GPIO                     (HAL_GPIO_PORT1)
-    #define LED_LE_PIN                      (HAL_GPIO_PIN7)
-    #define LED_SDI_GPIO                    (HAL_GPIO_PORT0)
-    #define LED_SDI_PIN                     (HAL_GPIO_PIN14)
-    #define LED_SCK_GPIO                    (HAL_GPIO_PORT0)
-    #define LED_SCK_PIN                     (HAL_GPIO_PIN1)
-
-    #define LED_NULL                        (0)
-    #define LED_0                           (1 << 6)
-    #define LED_1                           (1 << 3)
-    #define LED_2                           (1 << 13)
-    #define LED_3                           (1 << 14)
-    #define LED_4                           (1 << 2)
-    #define LED_5                           (1 << 10)
-    #define LED_6                           (1 << 11)
-    #define LED_7                           (1 << 1)
-    #define LED_8                           (1 << 8)
-    #define LED_9                           (1 << 9)
-    #define LED_10                          (1 << 0)
-    #define LED_11                          (1 << 4)
-    #define LED_12                          (LED_NULL)
-    #define LED_13                          (LED_NULL)
-    #define LED_14                          (LED_NULL)
-    #define LED_15                          (LED_NULL)
+// led
+#define RED_LED_GPIO                        (HAL_GPIO_PORT0)
+#define RED_LED_PIN                         (HAL_GPIO_PIN14)
+#define GREEN_LED_GPIO                      (HAL_GPIO_PORT0)
+#define GREEN_LED_PIN                       (HAL_GPIO_PIN1)
+#define WHITE_LED_GPIO                      (HAL_GPIO_PORT0)
+#define WHITE_LED_PIN                       (HAL_GPIO_PIN13)
+#define BLUE_LED_GPIO                       (HAL_GPIO_PORT1)
+#define BLUE_LED_PIN                        (HAL_GPIO_PIN7)
 
 //back uart
 #define BACK_UART_SEL                   (UART_0)

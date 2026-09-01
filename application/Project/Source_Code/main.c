@@ -6,7 +6,6 @@
 #include "hal_rtc.h"
 
 #include "task_key.h"
-#include "task_led.h"
 #include "task_uart.h"
 #include "task_nfc.h"
 #include "task_fingerprint.h"
@@ -15,6 +14,7 @@
 #include "task_system_time.h"
 #include "task_sleep.h"
 #include "task_qp_fsm.h"
+#include "task_hmi.h"
 
 #include "task_protocol.h"
 
@@ -41,8 +41,8 @@ void MainLoop(void)
             time_out = system_inc_time_cnt(1000);
         }
         keyTaskLoop();          // Key task loop
-        ledTaskLoop();          // LED task loop
         // uartTaskLoop();         // uart task loop
+        hmiTaskLoop();
         nfc_task_loop();        // nfc task loop
         fp_task_loop();         // finger task loop
         // face_task_loop();       // face task loop
@@ -82,7 +82,7 @@ static void task_init(void)
 
     flash_data_init();
     keyTaskPowerOnInit();
-    ledTaskInit();
+    hmiTaskInit();
     // uartTaskInit();
     nfc_task_init();
     player_task_init();

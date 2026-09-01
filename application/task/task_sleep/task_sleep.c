@@ -11,7 +11,7 @@
 
 #include "task_key.h"
 #include "task_system_time.h"
-#include "task_led.h"
+
 #include "task_face.h"
 #include "task_uart.h"
 #include "task_fingerprint.h"
@@ -66,7 +66,7 @@ static uint8_t enter_sleep_event_deal(void){
         baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP_BUSY);
         return false;
     }
-    ledTaskSleep();
+
     // uartTaskSleep();
 
     OB_LOGD(TAG, "Enter Sleep");
@@ -130,7 +130,6 @@ static uint8_t exit_sleep_event_scan(void){
     ob_log_init();
     system_time_task_sleep(EXIT_SLEEP);
     // uartTaskWake();
-    ledTaskWake();
 
     uint8_t wake_type = WAKE_UP_TYPE_NULL;
     if (sleep_task_driver.attribute.wake_source & WAKE_SOURCE_KEY_BOARD)

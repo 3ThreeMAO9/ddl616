@@ -59,11 +59,13 @@ typedef enum{
     
 }motor_direction_t;
 
-typedef enum
-{
-    TRUN_OFF = 0,
-    TRUN_ON,
-} turn_state_t;
+typedef enum{
+    TRUN_OFF = 0,       //键盘灯全灭
+    TRUN_ON,            //键盘灯全亮
+    KEY_OFF,            //按键熄灭对应键盘灯
+    KEY_ON,             //按键亮起对应键盘灯
+    OPTIONAL_ON,        //可选键盘灯
+}swtich_t;
 
 /***********Struct***********/
 
