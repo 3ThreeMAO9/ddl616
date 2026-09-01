@@ -1,0 +1,130 @@
+#include "flash_drive.h"
+#include "bsp_rom_config.h"
+
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#include "ob_log.h"
+#define TAG "flash_drive"
+
+/***************Variable***************/
+
+
+// ------------------------------------------
+uint32_t user_flash_erase(uint32_t sector_addr, uint32_t size)
+{
+    sector_addr = sector_addr / FLASH_ERASE_SIZE * FLASH_ERASE_SIZE;      //对地址取整
+
+    if ((sector_addr >= FLASH_USER_DEFINE_START_ADDR) && (sector_addr < FLASH_USER_DEFINE_END_ADDR))
+    {
+        return hal_flash_erase(sector_addr, size);
+    }
+
+#if (Enabled == PRINTF_ERR)
+    OB_LOGE(TAG, "Err: fmc addr[%08X] is out", sector_addr);
+#endif
+    return SFUD_ERR_ADDR_OUT_OF_BOUND;
+}
+
+uint32_t user_flash_write(uint32_t addr, const void *buf, uint32_t size)
+{
+    if ((addr >= FLASH_USER_DEFINE_START_ADDR) && (addr < FLASH_USER_DEFINE_END_ADDR))
+    {
+        return hal_flash_write(addr, buf, size);
+    }
+
+#if (Enabled == PRINTF_ERR)
+    OB_LOGE(TAG, "Err: fmc addr[%08X] is out", addr);
+#endif
+
+    return SFUD_ERR_ADDR_OUT_OF_BOUND;
+}
+
+uint32_t user_flash_read(uint32_t addr, void *buf, uint32_t size)
+{
+    return hal_flash_read(addr, buf, size);
+}
+
+static void flash_write_data_block(uint32_t pageAddr, uint16_t index, uint8_t* pData, uint16_t blockSize)
+{
+    user_flash_write((pageAddr + (blockSize * index)), pData, blockSize);
+}
+
+void flash_read_data_block(uint32_t pageAddr, uint16_t index, uint8_t* pData, uint16_t blockSize)
+{
+    user_flash_read((pageAddr + (blockSize * index)), pData, blockSize);
+}
+
+static void flash_write_page_flag(uint32_t pageAddr, uint16_t blockSize)
+{
+    uint8_t dataBlock[DATA_BLOCK_SIZE];
+
+    //write page flag
+    memset(dataBlock, 0xFF, blockSize);
+    dataBlock[0] = true;
+    flash_write_data_block(pageAddr, 0, dataBlock, blockSize);
+}
+
+static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8_t pageCnt,
+                                 uint16_t index, uint8_t* pData, uint16_t blockSize)
+{
+	uint16_t i;
+    uint16_t blockCnt;
+    uint8_t dataBlock[DATA_BLOCK_SIZE];
+
+    //write data block
+    user_flash_erase(pageAddr, (pageCnt * FLASH_ERASE_SIZE));
+
+    blockCnt = (FLASH_ERASE_SIZE / blockSize) * pageCnt;
+    
+    for (i = 1; i < blockCnt ; i++)
+    {
+        memset(dataBlock, 0xFF, DATA_BLOCK_SIZE);
+        if(index == i)
+        {
+            memcpy(dataBlock, pData, blockSize);
+        }
+        else
+        {
+            flash_read_data_block(backupAddr, i, dataBlock, blockSize);
+        }
+        flash_write_data_block(pageAddr, i, dataBlock, blockSize);
+    }
+
+    //write page flag
+    flash_write_page_flag(pageAddr, blockSize);
+}
+
+void falsh_data_block_modify( uint32_t pageAddr, 
+                            uint32_t backupAddr, 
+                            uint8_t pageCnt, 
+                            uint16_t index, 
+                            uint8_t* pData, 
+                            uint16_t blockSize)
+{
+    //first write backup page
+    flash_data_block_renew(backupAddr, pageAddr, pageCnt, index, pData, blockSize);
+
+    //first write data page
+    flash_data_block_renew(pageAddr, backupAddr, pageCnt, index, pData, blockSize);
+}
+
+void flash_write_data_pages(uint32_t pageAddr, uint32_t backupAddr, uint8_t* pData, uint16_t size)
+{
+    const uint32_t flag = true;
+
+    //first write backup page
+    user_flash_erase(backupAddr, size);
+
+    user_flash_write(backupAddr + sizeof(uint32_t), pData, size);
+    user_flash_write(backupAddr, (uint8_t*)(&flag), sizeof(uint32_t));
+
+    //first write backup page
+    user_flash_erase(pageAddr, size);
+
+    user_flash_write(pageAddr + sizeof(uint32_t), pData, size);
+    user_flash_write(pageAddr, (uint8_t*)(&flag), sizeof(uint32_t));
+}
+
+void flash_read_data_pages(uint32_t pageAddr, uint8_t* pData, uint16_t size)
+{
+    user_flash_read(pageAddr + sizeof(uint32_t), pData, size);
+}

@@ -15,12 +15,13 @@
 #include "task_system_time.h"
 #include "task_sleep.h"
 #include "task_qp_fsm.h"
-#include "task_flash.h"
+
 #include "task_protocol.h"
 
 #include "module_spi_flash.h"
-#include "user_parameter.h"
+
 #include "ota_helper.h"
+#include "flash_data.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -78,7 +79,7 @@ static void task_init(void)
     module_spi_flash_self_test();
     // module_flash_test();
 
-    // flash_task_init();
+    flash_data_init();
     keyTaskPowerOnInit();
     ledTaskInit();
     // uartTaskInit();

@@ -11,7 +11,7 @@
 #include "task_face.h"
 #include "task_system_time.h"
 
-#include "user_parameter.h"
+
 #include "msg_protocol.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
@@ -83,9 +83,11 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
         break;
     case FP_EVENT_CHIP_SN:
         // save chip sn
-        if (write_finger_module_chip_sn(ptr, lenth)) {
-            OB_LOGI(TAG, "save finger module chip sn");
-        }
+
+        // 后续实现
+        // if (write_finger_module_chip_sn(ptr, lenth)) {
+        //     OB_LOGI(TAG, "save finger module chip sn");
+        // }
         break;
     case FP_EVENT_PROCESSING:
         uart_msg_finger(EVENT_CODE_FINGER_REGISTER_STEP, *ptr);
@@ -310,11 +312,12 @@ void fp_task_set_attr(void* attr, uint8_t lenth) {
 
     memcpy(&fp_attr, attr, lenth);
     
-    if (read_finger_module_chip_sn(fp_attr.chip_sn)){
-        fp_attr.chip_sn_flag = 1;
-        OB_LOGD(TAG, "read fp chip sn->");
-        OB_LOGD_DUMP(fp_attr.chip_sn, 14);
-    }
+    // 后续实现
+    // if (read_finger_module_chip_sn(fp_attr.chip_sn)){
+    //     fp_attr.chip_sn_flag = 1;
+    //     OB_LOGD(TAG, "read fp chip sn->");
+    //     OB_LOGD_DUMP(fp_attr.chip_sn, 14);
+    // }
 
     fp_task_driver.io->set_attr((void*)(&fp_attr), lenth);
 }

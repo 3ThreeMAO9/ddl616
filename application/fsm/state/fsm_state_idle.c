@@ -37,6 +37,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            
             break;
         case Q_KEY_PRESS_SIG:
             break;

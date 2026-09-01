@@ -21,7 +21,12 @@
         "ob_error_codes.h": "c",
         "hal_spi.h": "c",
         "hal_rtc.h": "c",
-        "bsp_rom_config.h": "c"
+        "bsp_rom_config.h": "c",
+        "user_parameter.h": "c",
+        "flash_data.h": "c",
+        "base_attribute.h": "c",
+        "flash_drive.h": "c",
+        "hal_flash.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

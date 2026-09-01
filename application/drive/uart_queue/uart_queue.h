@@ -13,9 +13,9 @@
 #include <stdint.h>
 #include <string.h>
 /***********Macro***********/
-// 统一缓冲区大小（高/普通优先级队列均为256字节）
+// 统一缓冲区大小（高/普通优先级队列均为128字节）
 #ifndef UART_QUEUE_SIZE
-#define UART_QUEUE_SIZE (256)
+#define UART_QUEUE_SIZE (128)
 #endif
 
 

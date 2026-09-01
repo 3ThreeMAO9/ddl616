@@ -45,6 +45,9 @@
 
 #define IS_NUMBER_IN_RANGE(X, min, max)             ((X >= min) && (X <= max))
 
+#define ABS_DIFF(X, Y)                              ((X >= Y) ? (X - Y) : (Y - X))
+
+#define NOT(X)                                      ((X) ? false : true)
 
 /***********Enum***********/
 
