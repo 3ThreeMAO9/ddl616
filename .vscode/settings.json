@@ -29,7 +29,8 @@
         "hal_flash.h": "c",
         "hal_pwm.h": "c",
         "task_sleep.h": "c",
-        "task_player.h": "c"
+        "task_player.h": "c",
+        "task_hmi.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

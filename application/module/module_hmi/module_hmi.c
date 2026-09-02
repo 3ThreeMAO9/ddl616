@@ -67,7 +67,7 @@ static void hmi_key_board_led_config(uint8_t nowState, uint8_t nextState, uint32
 
 uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 {
-    struct tm *time_info;
+//    struct tm *time_info;
     uint32_t keepTime = HANDLE_RESULT_TIME_OUT;
 
     switch (state)
@@ -86,14 +86,19 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = HMI_STATE_KEEP_TIME_100ms;
             break;
         case HMI_STATE_POWER_ON:
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
         case HMI_STATE_KEY_BOARD_LED_ON:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             break;
         case HMI_STATE_KEY_BOARD_LED_OFF:
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            break;
+        case HMI_STATE_KEY_BOARD_LED_BLUE_OB:
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             break;
         default:
             return keepTime;

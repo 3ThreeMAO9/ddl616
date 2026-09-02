@@ -1,0 +1,867 @@
+#include "key_event.h"
+#include "event.h"
+#include "user.h"
+#include "parameter.h"
+#include "utils.h"
+// #include "lock_log.h"
+#include "task_sleep.h"
+#include "task_key.h"
+#include "led.h"
+// #include "offlinekey_port.h"
+// #include "offlinekey.h"
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#include "ob_log.h"
+#define TAG "key_event"
+
+/***************Variable***************/
+static key_board_event_t keyBoardEvent;
+
+/*****************Macro****************/
+#define CLEAR_KEY_EVENT() memset((uint8_t *)(&keyBoardEvent), 0, sizeof(key_board_event_t));
+#define CLEAR_KEY_EVENT_INPUT(X) memset((uint8_t *)(&keyBoardEvent.input[X]), 0, sizeof(key_board_input_t));
+#define COPY_KEY_EVENT_INPUT()                                                                                         \
+    {                                                                                                                  \
+        memcpy((uint8_t *)(&keyBoardEvent.input[1]), (uint8_t *)(&keyBoardEvent.input[0]), sizeof(key_board_input_t)); \
+        CLEAR_KEY_EVENT_INPUT(0);                                                                                      \
+    }
+
+// ------------------------------------------
+void keyEventInit(void)
+{
+    CLEAR_KEY_EVENT();
+}
+
+static uint8_t keyEventCombineFunctionHandle(void)
+{
+    uint32_t value;
+
+    value = arraysConvertNumber(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
+    if (isEmptyUser(false))
+    {
+        if (COMBINE_KEY_BOARD_AGING_TEST == value && !is_block_hotkey())
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_AGING_TEST);
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_DEVICE_TEST == value && !is_block_hotkey())
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DEVICE_TEST_STEP1);
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_VERSION == value)
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERSION);
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_TIME == value)
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_TIME);
+            return true;
+        }
+#if (Enabled == WAKE_STAT_ENABLE)
+        else if (COMBINE_KEY_BOARD_FINGER_WAKE == value)
+        {
+            play_finger_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_PASSWORD_WAKE == value)
+        {
+            play_password_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_NFC_WAKE == value)
+        {
+            play_card_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_STATE_WAKE == value)
+        {
+            play_doorstate_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_BT_WAKE == value)
+        {
+            play_ble_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_AUTOLOCK_WAKE == value)
+        {
+            play_autolock_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_RESET_WAKE == value)
+        {
+            play_resetkey_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_ALL_WAKE == value)
+        {
+            play_all_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_WAKE_CLR == value)
+        {
+            clear_all_Wake_num();
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_WAKE_UP_CNT == value)
+        {
+            play_WakeUpCnt_num();
+            return true;
+        }
+#endif
+    }
+    else
+    {
+        if (COMBINE_KEY_BOARD_VERSION == value)
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERSION);
+            return true;
+        }
+        else if (COMBINE_KEY_BOARD_TIME == value)
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_TIME);
+            return true;
+        }
+    }
+    return false;
+}
+
+void keyEventVerifyUser(uint8_t key_value)
+{
+    uint16_t user_sn;
+
+    if (KEY_CAN == key_value)
+    {
+        if (0 == keyBoardEvent.input[0].len)
+        {
+            if (keyBoardEvent.key_can_cnt < 2)
+            {
+                keyBoardEvent.key_can_cnt++;
+            }
+#if (Enabled == PRINTF_USER)
+            if (keyBoardEvent.key_can_cnt == 1)
+                OB_LOGD(TAG, "InputCode: input[%u]->*", keyBoardEvent.input[0].len);
+            else if (keyBoardEvent.key_can_cnt == 2)
+                OB_LOGD(TAG, "InputCode: input[%u]->**", keyBoardEvent.input[0].len);
+#endif
+        }
+        else
+        {
+            CLEAR_KEY_EVENT();
+            if (keyBoardEvent.key_can_cnt < 2)
+            {
+                keyBoardEvent.key_can_cnt++;
+            }
+#if (Enabled == PRINTF_USER)
+            if (keyBoardEvent.key_can_cnt == 1)
+                OB_LOGD(TAG, "InputCode: input[%u]->*", keyBoardEvent.input[0].len);
+            else if (keyBoardEvent.key_can_cnt == 2)
+                OB_LOGD(TAG, "InputCode: input[%u]->**", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+#endif
+        }
+    }
+    else if (KEY_OK == key_value)
+    {
+#if (Enabled == PRINTF_USER)
+        if (keyBoardEvent.input[0].len)
+        {
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+        }
+#endif
+        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MIN)     // 密码输入过短
+        {
+            if (false == keyEventCombineFunctionHandle())
+            {
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
+#endif
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
+            }
+            CLEAR_KEY_EVENT();
+        }
+        else
+        {
+            if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, true))
+            {
+                if ((keyBoardEvent.key_can_cnt >= 2) && (user_sn <= MASTER_USER_CODE_CNT))
+                {
+                    if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, true))
+                    {
+                        if (user_sn <= MASTER_USER_CODE_CNT)
+                        {
+#if (Enabled == PRINTF_PASSWORD)
+                            OB_LOGD(TAG, "Verify success: password admin user[%u]", user_sn);
+#endif
+                            userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_ADMIN, user_sn);
+                            CLEAR_KEY_EVENT();
+                            return;
+                        }
+                    }
+                }
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGI(TAG, "verify success: password user[%u]", user_sn);
+#endif
+                // uint16_t ble_lock_id = 0;
+                // if (true == getUserFlag(&ble_lock_id, USER_TYPE_PERMANENT_CODE, user_sn - 1))
+                //     OB_LOGI(TAG, "-> ble_lock_id = %ld", ble_lock_id);
+                // if (user_sn <= MASTER_USER_CODE_CNT)
+                // {
+                //     ble_lock_id = 0xFE;
+                // }
+                // if (Enabled == readUserParameter(USER_PARA_VACATION_MODE_ID))
+                // {
+                //     if (user_sn <= MASTER_USER_CODE_CNT)
+                //     { 
+                //         setUserParameter(USER_PARA_VACATION_MODE_ID, Disabled);
+
+                //         userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
+                //         // lock_log_user_operation_add(EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id); //密码开锁
+                //         // set_lockOpera_confirm(EVENT_TYPE_OPERATION, EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id,get_last_log_timestamp());
+                //     }
+                //     else
+                //     {
+                //         userHandleEventPush(EVENT_RESULT_VACATION_MODE_FAIL, 0);
+                //     }
+                // }
+                // else
+                // {
+                //     if (user_sn >= PERMANENT_USER_CNT)
+                //     {
+                //         delUserOneTimeCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn);
+                //     }
+
+                //     userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
+                //     // lock_log_user_operation_add(EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id); //密码开锁
+                //     // set_lockOpera_confirm(EVENT_TYPE_OPERATION, EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id,get_last_log_timestamp());
+                // }
+            }
+            else
+            {
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGE(TAG, "verify fail: password user is invalid");
+#endif
+                userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
+            }
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (key_value < KEY_CNT)
+    {
+        if (keyBoardEvent.input[0].len < DUMMY_USER_CODE_LEN_MAX)
+        {
+            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
+            keyBoardEvent.input[0].len++;
+#if (Enabled == PRINTF_USER)
+            if (keyBoardEvent.input[0].len)
+            {
+                OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+                OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+            }
+#endif
+        }
+        else
+        {
+            // handle fail
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input is too long");
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_LONG);
+            CLEAR_KEY_EVENT();
+        }
+    }
+}
+
+static uint8_t isSameInputCode(void)
+{
+    if (keyBoardEvent.input[0].len == keyBoardEvent.input[1].len)
+    {
+        if (compare_arrays(keyBoardEvent.input[0].buffer, keyBoardEvent.input[1].buffer, keyBoardEvent.input[0].len))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
+{
+    uint8_t result = EVENT_RESULT_FAIL;
+    uint16_t user_sn;
+    uint16_t user_ble_sn;
+    user_time_t parameter;
+    parameter.attribute = USER_TYPE_PERMANENT_CODE;
+    parameter.week = 0xFF;
+    parameter.start_time = 0xFFFFFFFF;
+    parameter.end_time = 0xFFFFFFFF;
+
+#if (Enabled == PRINTF_PASSWORD)
+    OB_LOGD(TAG, "%s  input_cnt: %d", __FUNCTION__, input_cnt);
+#endif
+    if (input_cnt)
+    {
+        if (isSameInputCode())
+        {
+            // keypadLed_control(KEY_OK,TRUN_ON);
+            if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)) && (0 != user_sn))
+            {
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGD(TAG, "user sn[%u]: len[%u]", user_sn, keyBoardEvent.input[0].len);
+#endif
+                if ((CODE_HANDLE_ADD == handle_code) || (CODE_HANDLE_CHANGE_MASTER == handle_code))
+                {
+                    result = EVENT_RESULT_FAIL_REPEAT;
+                }
+                CLEAR_KEY_EVENT();
+            }
+            else
+            {
+                switch (handle_code)
+                {
+                case CODE_HANDLE_ADD:
+                    if (true == addUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, USER_TYPE_PERMANENT_CODE, &user_sn, &parameter))
+                    {
+                        if (true == getUserFlag(&user_ble_sn, USER_TYPE_PERMANENT_CODE, user_sn - 1))
+                        {
+                            OB_LOGW(TAG, "user_sn  %0ld user_ble_sn %0ld", user_sn, user_ble_sn);
+                        }
+                        // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn);    //添加普通密码
+                        // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn,get_last_log_timestamp());
+                        result = EVENT_RESULT_SUCCESS;
+                    }
+                    break;
+                case CODE_HANDLE_CHANGE_MASTER:
+                    modifyUserMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
+                    // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE);      //修改管理员密码
+                    // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE,get_last_log_timestamp());
+                    result = EVENT_RESULT_SUCCESS;
+                    break;
+                // case CODE_HANDLE_ADD_ONE_TIME:
+                //     if (true == addUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, USER_TYPE_ONE_TIME_CODE, &user_sn, &parameter))
+                //     {
+                //         if (true == getUserFlag(&user_ble_sn, USER_TYPE_PERMANENT_CODE, user_sn - 1))
+                //         {
+                //             OB_LOGW(TAG, "user_sn  %0ld user_ble_sn %0ld", user_sn, user_ble_sn);
+                //         }
+                //         // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn);    //添加一次性密码
+                //         // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn,get_last_log_timestamp());
+                //         result = EVENT_RESULT_SUCCESS;
+                //     }
+                //     break;
+                default:
+                    break;
+                }
+            }
+        }
+        else
+        {
+            result = EVENT_RESULT_FAIL_DIFFERENT;
+            OB_LOGE(TAG, "Fail: input is't same");
+        }
+        CLEAR_KEY_EVENT();
+    }
+    else
+    {
+        if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)) && (0 != user_sn))
+        {
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGD(TAG, "user sn[%u]: len[%u]", user_sn, keyBoardEvent.input[0].len);
+#endif
+            if ((CODE_HANDLE_ADD == handle_code) || (CODE_HANDLE_CHANGE_MASTER == handle_code))
+            {
+                result = EVENT_RESULT_FAIL_REPEAT;
+            }
+            else if (CODE_HANDLE_DEL == handle_code)
+            {
+                // keypadLed_control(KEY_OK,TRUN_ON);
+                if (delUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn))
+                {
+                    result = EVENT_RESULT_SUCCESS;
+                }
+                else
+                {
+                    result = EVENT_RESULT_DELETION_FAIL;
+                }
+            }
+
+            CLEAR_KEY_EVENT();
+        }
+        else if ((CODE_HANDLE_ADD == handle_code) || (CODE_HANDLE_CHANGE_MASTER == handle_code) || (CODE_HANDLE_ADD_ONE_TIME == handle_code))
+        {
+            result = EVENT_RESULT_SUCCESS;
+            COPY_KEY_EVENT_INPUT();
+        }
+        else if (CODE_HANDLE_DEL == handle_code)
+        {
+            result = EVENT_RESULT_DELETION_FAIL;
+            CLEAR_KEY_EVENT();
+        }
+        else
+        {
+            CLEAR_KEY_EVENT();
+        }
+    }
+
+    baseEventPush(Q_HANDLE_SIG, result);
+}
+
+void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cnt)
+{
+    if (KEY_CAN == key_value)
+    {
+        if (keyBoardEvent.input[0].len)
+        {
+            // baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_REPEAT_MENU);
+            CLEAR_KEY_EVENT();
+#if (Enabled == PRINTF_USER)
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+#endif
+        }
+        else
+        {
+            // //修改管理密码 无管理员的情况下，按返回键退出管理模式
+            // if((CODE_HANDLE_CHANGE_MASTER == handle_code) && (isEmptyUser(false)))
+            //     baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_EXIT_MENU);
+            // else
+            //     baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_BACK_MENU);
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (KEY_OK == key_value)
+    {
+#if (Enabled == PRINTF_USER)
+        if (keyBoardEvent.input[0].len)
+        {
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+        }
+#endif
+        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MIN)
+        {
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INPUT);
+            CLEAR_KEY_EVENT();
+        }
+        else
+        {
+//             if (isTooSimpleCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len))
+//             {
+//                 CLEAR_KEY_EVENT();
+
+// #if (Enabled == PRINTF_PASSWORD)
+//                 OB_LOGE(TAG, "add fail: code is too simple");
+// #endif
+//                 baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+//             }
+//             else
+//             {
+//                 codeHandle(handle_code, input_cnt);
+//             }
+            if ((CODE_HANDLE_CHANGE_MASTER == handle_code) && (isCheckDefaultMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len)))
+            {
+                CLEAR_KEY_EVENT();
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGE(TAG, "add fail: code is 12345678");
+#endif
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            }
+            else
+                codeHandle(handle_code, input_cnt);
+        }
+    }
+    else if (key_value < KEY_CNT)
+    {
+        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MAX)
+        {
+            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
+            keyBoardEvent.input[0].len++;
+#if (Enabled == PRINTF_USER)
+            if (keyBoardEvent.input[0].len)
+            {
+                OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+                OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+            }
+#endif
+        }
+        else
+        {
+            // handle fail
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input fail");
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INPUT);
+            CLEAR_KEY_EVENT();
+        }
+    }
+}
+
+void keyEventHandleMasterCode(uint8_t key_value, uint8_t input_cnt)
+{
+    uint16_t user_sn;
+
+    if (KEY_CAN == key_value)
+    {
+        if (keyBoardEvent.input[0].len)
+        {
+            CLEAR_KEY_EVENT();
+#if (Enabled == PRINTF_USER)
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+#endif
+        }
+        else
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (KEY_OK == key_value)
+    {
+#if (Enabled == PRINTF_USER)
+        if (keyBoardEvent.input[0].len)
+        {
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+        }
+#endif
+
+        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MIN)
+        {
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
+            CLEAR_KEY_EVENT();
+        }
+        else
+        {
+            // if((0 == input_cnt) 
+            //     && (!isTooSimpleCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len))
+            //     && (!isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)))
+            if ((0 == input_cnt) && (!isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)))
+            {
+                COPY_KEY_EVENT_INPUT();
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGD(TAG, "add success: password user[%u]", user_sn);
+#endif
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS);
+            }
+            else if ((1 == input_cnt) && (isSameInputCode()))
+            {
+                modifyUserMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
+                // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE);      //修改管理员密码
+                // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE,get_last_log_timestamp());
+                CLEAR_KEY_EVENT();
+
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGD(TAG, "add success: password user[%u]", user_sn);
+#endif
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS);
+            }
+            else
+            {
+                CLEAR_KEY_EVENT();
+
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGE(TAG, "add fail: password user[%u]", user_sn);
+#endif
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            }
+        }
+    }
+    else if (key_value < KEY_CNT)
+    {
+        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MAX)
+        {
+            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
+            keyBoardEvent.input[0].len++;
+        }
+        else
+        {
+            // handle fail
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input is too long");
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_LONG);
+            CLEAR_KEY_EVENT();
+        }
+    }
+}
+
+void keyEventDeleteUserCode(uint8_t key_value)
+{
+    uint16_t user_sn;
+    if (KEY_CAN == key_value)
+    {
+        if (keyBoardEvent.input[0].len)
+        {
+            CLEAR_KEY_EVENT();
+#if (Enabled == PRINTF_USER)
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+#endif
+        }
+        else
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (KEY_OK == key_value)
+    {
+#if (Enabled == PRINTF_USER)
+        if (keyBoardEvent.input[0].len)
+        {
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+        }
+#endif
+        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MIN)
+        {
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
+            CLEAR_KEY_EVENT();
+        }
+        else
+        {
+            if (delUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn))
+            {
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGD(TAG, "del success: password user[%u]", user_sn);
+#endif
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS);
+            }
+            else
+            {
+#if (Enabled == PRINTF_PASSWORD)
+                OB_LOGE(TAG, "add fail: password user[%u]", user_sn);
+#endif
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            }
+
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (key_value < KEY_CNT)
+    {
+        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MAX)
+        {
+            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
+            keyBoardEvent.input[0].len++;
+        }
+        else
+        {
+            // handle fail
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input is too long");
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_LONG);
+            CLEAR_KEY_EVENT();
+        }
+    }
+}
+
+void keyEventSetParameter(uint8_t key_value, uint8_t parameter_index, uint8_t width)
+{
+    uint32_t value;
+    if (KEY_CAN == key_value)
+    {
+        if (keyBoardEvent.input[0].len)
+        {
+            CLEAR_KEY_EVENT();
+#if (Enabled == PRINTF_USER)
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+#endif
+        }
+        else
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (KEY_OK == key_value)
+    {
+#if (Enabled == PRINTF_USER)
+        if (keyBoardEvent.input[0].len)
+        {
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+        }
+#endif
+        if (keyBoardEvent.input[0].len < width)
+        {
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input is fail");
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INPUT);
+        }
+        else
+        {
+            value = arraysConvertNumber(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
+
+            switch (parameter_index)
+            {
+            case USER_PARA_AUTO_LOCK_TIME_ID:
+                setUserParameter(USER_PARA_AUTO_LOCK_MODE_ID, Enabled);
+                break;
+            case USER_PARA_AUTO_LOCK_MODE_ID:
+                if (1 == value)
+                {
+                    value = Enabled;
+                    setUserParameter(USER_PARA_AUTO_LOCK_TIME_ID, 30);
+                }
+                else if (2 == value)
+                {
+                    value = Disabled;
+                }
+                break;
+            case USER_PARA_SILENT_MODE_ID:
+                if (1 == value)
+                {
+                    value = Enabled;
+                }
+                else if (2 == value)
+                {
+                    value = Disabled;
+                }
+                break;
+            case USER_PARA_LANGUAGE_MODE_ID:
+                if (1 == value)
+                {
+                    setUserParameter(USER_PARA_SILENT_MODE_ID, Enabled);
+                    value = LANGUAGE_EN;
+                }
+                else if (2 == value)
+                {
+                    setUserParameter(USER_PARA_SILENT_MODE_ID, Enabled);
+                    value = LANGUAGE_FR;
+                }
+                else if (3 == value)
+                {
+                    setUserParameter(USER_PARA_SILENT_MODE_ID, Enabled);
+                    value = LANGUAGE_SP;
+                }
+                else if (4 == value)
+                {
+                    parameter_index = USER_PARA_SILENT_MODE_ID;
+                    value = Disabled;
+                }
+                break;
+            default:
+                break;
+            }
+
+            if (setUserParameter(parameter_index, value))
+            {
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS_SETUP);
+            }
+            else
+            {
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INVALID);
+            }
+        }
+
+        CLEAR_KEY_EVENT();
+    }
+    else if (key_value < KEY_CNT)
+    {
+        if (keyBoardEvent.input[0].len < width)
+        {
+            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
+            keyBoardEvent.input[0].len++;
+        }
+        else
+        {
+            // handle fail
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "handle fail: input fail");
+#endif
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INPUT);
+            CLEAR_KEY_EVENT();
+        }
+    }
+}
+
+
+void keyEventAgingTest(uint8_t key_value, uint8_t input_cnt)
+{
+    if (KEY_CAN == key_value)
+    {
+        if (keyBoardEvent.input[0].len)
+        {
+            CLEAR_KEY_EVENT();
+        }
+        else
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (KEY_OK == key_value)
+    {
+        if (keyBoardEvent.input[0].len < input_cnt)
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
+            CLEAR_KEY_EVENT();
+        }
+        else
+        {
+            uint32_t value = 0;
+            value = arraysConvertNumber(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
+
+            if (1 == value)
+            {
+#if (Enabled == PRINTF_FSM)
+                OB_LOGE(TAG, "----------------set aging time 2h----------------");
+#endif
+                handleEventPush(EVENT_RESULT_AGING_TEST_TIME,value);
+            }
+            else if (2 == value)
+            {
+#if (Enabled == PRINTF_FSM)
+                OB_LOGE(TAG, "----------------set aging time 4h----------------");
+#endif
+                handleEventPush(EVENT_RESULT_AGING_TEST_TIME,value);
+            }
+            else if (3 == value)
+            {
+#if (Enabled == PRINTF_FSM)
+                OB_LOGE(TAG, "----------------set aging time 8h----------------");
+#endif
+                handleEventPush(EVENT_RESULT_AGING_TEST_TIME,value);
+            }
+            else if (4 == value)
+            { 
+#if (Enabled == PRINTF_FSM)
+                OB_LOGE(TAG, "----------------set aging time infinite----------------");
+#endif
+                handleEventPush(EVENT_RESULT_AGING_TEST_TIME,value);
+            }
+            CLEAR_KEY_EVENT();
+        }
+    }
+    else if (key_value < KEY_CNT)
+    {
+        if (keyBoardEvent.input[0].len < input_cnt)
+        {
+            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
+            keyBoardEvent.input[0].len++;
+        }
+        else
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_LONG);
+            CLEAR_KEY_EVENT();
+        }
+    }
+}
+

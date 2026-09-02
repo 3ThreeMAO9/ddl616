@@ -21,6 +21,8 @@
 #define PRINTF_USER                 Enabled
 #define PRINTF_FLASH                Enabled
 #define PRINTF_ERR                  Enabled
+#define PRINTF_PASSWORD             Enabled
+
 
 /***********Enum***********/
 

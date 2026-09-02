@@ -30,14 +30,14 @@ void handleEventPush(uint8_t handle, uint8_t value)
     eventQueuePush(&event);
 }
 
-void userKeyEventPush(uint8_t result, uint8_t type, uint16_t user_sn) {
+void userHandleEventPush(uint8_t result, uint16_t user_sn)
+{
     QEvent event;
 
-    event.sig = Q_USER_KEY_SIG;
+    event.sig = Q_USER_HANDLE_SIG;
     event.dynamic_[0] = result;
-    event.dynamic_[1] = type;
-    event.dynamic_[2] = (uint8_t)(user_sn>>8);
-    event.dynamic_[3] = (uint8_t)(user_sn&0xFF);
+    event.dynamic_[1] = (uint8_t)(user_sn>>8);
+    event.dynamic_[2] = (uint8_t)(user_sn&0xFF);
 
     eventQueuePush(&event);
 }

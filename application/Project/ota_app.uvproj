@@ -727,6 +727,11 @@
               <FileType>1</FileType>
               <FilePath>..\fsm\event\event_queue.c</FilePath>
             </File>
+            <File>
+              <FileName>key_event.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\event\key_event.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

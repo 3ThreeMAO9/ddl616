@@ -67,3 +67,25 @@ uint16_t crc16_ccitt(const uint8_t *data, uint16_t len)
     }
     return crc; // 最终CRC值（可根据主控需求选择是否反转字节序）
 }
+
+uint32_t arraysConvertNumber(uint8_t* data, uint8_t len)
+{
+	uint8_t i;
+	uint16_t number;
+
+#if (Enabled==PRINTF_FUN)
+	if (len > 9)
+	{
+		OB_LOGE(TAG,"Fail: arrays len[%u] is out", len);
+	}
+#endif
+
+	number = 0;
+	for (i = 0; i < len; i++)
+	{
+		number *= 10;
+		number += data[i];
+	}
+
+	return number;
+}

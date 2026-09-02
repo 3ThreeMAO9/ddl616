@@ -1,12 +1,13 @@
 #include "fsm_state.h"
 #include "state_inside.h"
 
+#include "event.h"
+#include "key_event.h"
+
 #include "task_sleep.h"
 #include "task_system_time.h"
-#include "event.h"
 #include "task_hmi.h"
 #include "task_face.h"
-
 #include "task_fingerprint.h"
 
 
@@ -33,11 +34,20 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             fp_task_set_mode(FP_TASK_MODE_DEFAULT);
             // face_task_set_mode(FACE_TASK_MODE_DEFAULT);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_BLUE_OB);
             break;
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+            if (KEY_NUM_13 == e->dynamic_[0])   // 门铃
+            {
+
+            }
+            else
+            {
+                keyEventVerifyUser(e->dynamic_[0]);
+                hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+            }
             break;
         case Q_KEY_PRESS_SIG:
             break;

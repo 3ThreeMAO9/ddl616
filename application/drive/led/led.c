@@ -30,7 +30,7 @@ void ledInit(void)
     WHITE_LED_INIT();
     
     logoLedDrive(LOGO_LED_COLOR_IDLE);
-    keyBoardLedDrive(TRUN_ON);
+    // keyBoardLedDrive(TRUN_ON);
 }
 
 void logoLedDrive(uint8_t color)

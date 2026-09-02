@@ -60,6 +60,7 @@ uint16_t check_sum(uint8_t *buf, uint16_t len);
 uint8_t compareArraysWithValue(const uint8_t *data, uint16_t size, const uint8_t value);
 uint8_t compare_arrays(const uint8_t *arr1, const uint8_t *arr2, uint16_t len);
 uint16_t crc16_ccitt(const uint8_t *data, uint16_t len);
+uint32_t arraysConvertNumber(uint8_t* data, uint8_t len);
 /*****************************/
 
 #endif /* UTILS_H */

@@ -33,7 +33,7 @@ User Options (Setting by User)
 // 2 = Push Pull
 // 3 = Input Mode
 #define UOP_MODE_P0_0       0U
-#define UOP_MODE_P0_1       0U
+#define UOP_MODE_P0_1       3U
 #define UOP_MODE_P0_2       0U
 #define UOP_MODE_P0_3       0U
 #define UOP_MODE_P0_4       2U // spi mosi
@@ -45,8 +45,8 @@ User Options (Setting by User)
 #define UOP_MODE_P0_10      0U
 #define UOP_MODE_P0_11      0U
 #define UOP_MODE_P0_12      2U
-#define UOP_MODE_P0_13      0U
-#define UOP_MODE_P0_14      0U
+#define UOP_MODE_P0_13      3U
+#define UOP_MODE_P0_14      3U
 #define UOP_MODE_P0_15      0U
 
 #define UOP_MODE_P1_0       3U

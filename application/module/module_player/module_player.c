@@ -11,7 +11,7 @@
 #include "system_timer.h"
 #include "bsp_voice_list.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "m_player"
 

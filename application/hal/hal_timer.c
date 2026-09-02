@@ -2,7 +2,7 @@
 #include "timer16.h"
 #include <math.h>
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "hal_timer"
 
@@ -57,7 +57,6 @@ void hal_timer1_register_callback(hal_timer_callback_t cb)
 uint32_t hal_timer1_start(hal_timer_config_t const *p_config)
 {
     uint32_t interval = 0;
-    OB_LOGD(TAG,"%s",__FUNCTION__);
     interval = p_config->period;
 
     hal_timer1_register_callback(p_config->event_handler);
