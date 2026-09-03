@@ -51,6 +51,9 @@ void player_task_init(void)
     data = readUserParameter(USER_PARA_LANGUAGE_MODE_ID);
     switch (data)
     {
+    case LANGUAGE_CN:
+        player_task_language_set(OB_LOCK_LANGUAGE_CN); //设置语言
+        break;
     case LANGUAGE_EN:
         player_task_language_set(OB_LOCK_LANGUAGE_EN); //设置语言
         break;
@@ -202,6 +205,13 @@ void player_task_callback(const player_event_t *event)
 
 void test_voice(uint16_t value,uint16_t cnt)
 {
+    for (uint16_t i = 0; i < cnt; i++)
+        PLAYER_LIST_ADD(value + i);
+}
+
+void test_china(uint16_t value,uint16_t cnt)
+{
+    player_task_language_set(OB_LOCK_LANGUAGE_CN);
     for (uint16_t i = 0; i < cnt; i++)
         PLAYER_LIST_ADD(value + i);
 }

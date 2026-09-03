@@ -54,15 +54,22 @@ typedef enum
 
 /***********Macro***********/
 //player
-#define PLAYER_EN_PORT                              HAL_GPIO_PORT2
-#define PLAYER_EN_PIN                               HAL_GPIO_PIN9
+#define PLAYER_EN_PORT                  (HAL_GPIO_PORT2)
+#define PLAYER_EN_PIN                   (HAL_GPIO_PIN9)
 
-#define PLAYER_DATA_PORT                            HAL_GPIO_PORT0
-#define PLAYER_DATA_PIN                             HAL_GPIO_PIN12
-#define PLAYER_PWM_CHANNEL                          PWM_CH0B
-#define PLAYER_PWM_PERIOD                           (uint32_t)(64 * 1000)           //unit: Hz
-#define PLAYER_PWM_DUTY                             (uint8_t)(0x80)                 //unit: %
+#define PLAYER_DATA_PORT                (HAL_GPIO_PORT0)
+#define PLAYER_DATA_PIN                 (HAL_GPIO_PIN12)
+#define PLAYER_PWM_CHANNEL              (PWM_CH0B)
+#define PLAYER_PWM_PERIOD               ((uint32_t)(64 * 1000))           //unit: Hz
+#define PLAYER_PWM_DUTY                 ((uint8_t)(0x80))                 //unit: %
 //end player
+
+// motor
+#define MOTOR_LA_GPIO                   (HAL_GPIO_PORT2)
+#define MOTOR_LA_PIN                    (HAL_GPIO_PIN13)
+
+#define MOTOR_LB_GPIO                   (HAL_GPIO_PORT2)
+#define MOTOR_LB_PIN                    (HAL_GPIO_PIN4)
 
 
     // tamper key

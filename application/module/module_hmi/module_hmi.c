@@ -86,7 +86,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = HMI_STATE_KEEP_TIME_100ms;
             break;
         case HMI_STATE_POWER_ON:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
@@ -97,8 +97,17 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
             break;
         case HMI_STATE_KEY_BOARD_LED_BLUE_OB:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            break;
+        case HMI_STATE_VERIFY_SUCCESS:
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_3s, 1);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            if (!silentFlag)
+            {
+                PLAYER_LIST_CLEAR_ADD(VOICE_Door_opened);
+            }
+            keepTime = 6000;
             break;
         default:
             return keepTime;
@@ -134,7 +143,6 @@ static void hmi_logo_led_loop(void)
         {
             switch (hmihandle.state)
             {
-                case HMI_STATE_VERIFY_SUCCESS:
                 case HMI_STATE_VERIFY_ADMIN_SUCCESS:
                 case HMI_STATE_HANDLE_SUCCESS_KEEP_GREEN:
                 case HMI_STATE_ENROLL_PRESS_TWICE:

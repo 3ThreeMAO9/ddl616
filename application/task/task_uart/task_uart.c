@@ -10,7 +10,7 @@
 #include "task_uart.h"
 #include "event.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "task_uart"
 

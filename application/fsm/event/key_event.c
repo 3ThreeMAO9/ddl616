@@ -204,39 +204,22 @@ void keyEventVerifyUser(uint8_t key_value)
 #if (Enabled == PRINTF_PASSWORD)
                 OB_LOGI(TAG, "verify success: password user[%u]", user_sn);
 #endif
-                // uint16_t ble_lock_id = 0;
-                // if (true == getUserFlag(&ble_lock_id, USER_TYPE_PERMANENT_CODE, user_sn - 1))
-                //     OB_LOGI(TAG, "-> ble_lock_id = %ld", ble_lock_id);
-                // if (user_sn <= MASTER_USER_CODE_CNT)
-                // {
-                //     ble_lock_id = 0xFE;
-                // }
-                // if (Enabled == readUserParameter(USER_PARA_VACATION_MODE_ID))
-                // {
-                //     if (user_sn <= MASTER_USER_CODE_CNT)
-                //     { 
-                //         setUserParameter(USER_PARA_VACATION_MODE_ID, Disabled);
-
-                //         userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
-                //         // lock_log_user_operation_add(EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id); //密码开锁
-                //         // set_lockOpera_confirm(EVENT_TYPE_OPERATION, EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id,get_last_log_timestamp());
-                //     }
-                //     else
-                //     {
-                //         userHandleEventPush(EVENT_RESULT_VACATION_MODE_FAIL, 0);
-                //     }
-                // }
-                // else
-                // {
-                //     if (user_sn >= PERMANENT_USER_CNT)
-                //     {
-                //         delUserOneTimeCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn);
-                //     }
-
-                //     userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
-                //     // lock_log_user_operation_add(EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id); //密码开锁
-                //     // set_lockOpera_confirm(EVENT_TYPE_OPERATION, EVENT_SOURCE_KEYPAD, OPERATION_EVENT_UNLOCK, ble_lock_id,get_last_log_timestamp());
-                // }
+                if (Enabled == readUserParameter(USER_PARA_VACATION_MODE_ID))
+                {
+                    if (user_sn <= MASTER_USER_CODE_CNT)
+                    {
+                        setUserParameter(USER_PARA_VACATION_MODE_ID, Disabled);
+                        userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
+                    }
+                    else
+                    {
+                        userHandleEventPush(EVENT_RESULT_VACATION_MODE_FAIL, 0);
+                    }
+                }
+                else
+                {
+                    userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
+                }
             }
             else
             {

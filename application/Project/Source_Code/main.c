@@ -15,7 +15,7 @@
 #include "task_sleep.h"
 #include "task_qp_fsm.h"
 #include "task_hmi.h"
-
+#include "task_motor.h"
 #include "task_protocol.h"
 
 #include "module_spi_flash.h"
@@ -42,6 +42,7 @@ void MainLoop(void)
         }
         keyTaskLoop();          // Key task loop
         // uartTaskLoop();         // uart task loop
+        motorTaskLoop();
         hmiTaskLoop();
         nfc_task_loop();        // nfc task loop
         fp_task_loop();         // finger task loop
@@ -51,7 +52,7 @@ void MainLoop(void)
         system_time_task_loop();// system time task loop
         sleep_task_loop();      // sleep task loop
         qp_fsm_task_loop();     // fsm task loop
-        protocol_task_loop();   // protocol task loop
+        // protocol_task_loop();   // protocol task loop
     }
 }
 
@@ -83,6 +84,7 @@ static void task_init(void)
     flash_data_init();
     keyTaskPowerOnInit();
     hmiTaskInit();
+    motorTaskInit();
     // uartTaskInit();
     nfc_task_init();
     player_task_init();

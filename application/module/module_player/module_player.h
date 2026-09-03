@@ -4,12 +4,10 @@
 #include "stdint.h"
 
 ///VOICE
-#define PLAYER_BUFFER_MAX   1024
-#define PLAYLIST_BUFFER_MAX 256
+#define PLAYER_BUFFER_MAX   (1024)		// 语音缓冲区
 
-#ifndef PLAYER_RATE
-#define PLAYER_RATE         12.0 
-#endif
+#define PLAYLIST_BUFFER_MAX (64)		// 语音播放列表	
+
 
 typedef struct 
 {

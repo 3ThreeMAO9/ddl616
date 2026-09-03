@@ -90,14 +90,15 @@
 
 //language mode
 typedef enum{
-    LANGUAGE_EN = 0,
-    LANGUAGE_SP = 1,
-    LANGUAGE_FR = 2,
+    LANGUAGE_CN = 0,
+    LANGUAGE_EN,
+    LANGUAGE_SP,
+    LANGUAGE_FR,
 }language_set_t;
 
-#define LANGUAGE_MODE_MIN                           LANGUAGE_EN
+#define LANGUAGE_MODE_MIN                           LANGUAGE_CN
 #define LANGUAGE_MODE_MAX                           LANGUAGE_FR
-#define LANGUAGE_MODE_DEFAULT                       LANGUAGE_EN
+#define LANGUAGE_MODE_DEFAULT                       LANGUAGE_CN
 
 //system lock flag
 #define SYSTEM_LOCK_FLAG_MIN                        Disabled

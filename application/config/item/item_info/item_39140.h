@@ -22,6 +22,10 @@
 #define PRINTF_FLASH                Enabled
 #define PRINTF_ERR                  Enabled
 #define PRINTF_PASSWORD             Enabled
+#define PRINTF_MOTOR                Disabled
+#define PRINTF_FSM                  Enabled
+#define PRINTF_HMI                  Enabled
+
 
 
 /***********Enum***********/

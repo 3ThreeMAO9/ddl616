@@ -30,7 +30,11 @@
         "hal_pwm.h": "c",
         "task_sleep.h": "c",
         "task_player.h": "c",
-        "task_hmi.h": "c"
+        "task_hmi.h": "c",
+        "task_motor.h": "c",
+        "bsp_motor.h": "c",
+        "parameter.h": "c",
+        "bsp_hmi.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

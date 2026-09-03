@@ -9,11 +9,12 @@
 #include "task_hmi.h"
 #include "task_face.h"
 #include "task_fingerprint.h"
+#include "task_motor.h"
 
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "lock_fsm"
+#define TAG "fsm_idle"
 
 /***************Variable***************/
 
@@ -60,6 +61,16 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             // }
             break;
         case Q_USER_KEY_SIG:
+            break;
+        case Q_USER_HANDLE_SIG:
+            me->branch = (QStateHandler)(lock_fsm_idle);
+
+            if (EVENT_RESULT_SUCCESS_VERIFY_USER == (e->dynamic_[0]))
+            {
+                motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);
+                me->branch = (QStateHandler)(lock_fsm_sleep);
+                state = Q_TRAN(lockFsmVerifyUserSuccess);
+            }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;

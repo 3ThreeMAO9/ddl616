@@ -2,7 +2,7 @@
 #include "msg_protocol.h"
 #include "protocol_func_card.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "task_nfc"
 

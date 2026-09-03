@@ -28,6 +28,7 @@
 #define HMI_STATE_KEEP_TIME_500ms               (500)           //unit: ms
 #define HMI_STATE_KEEP_TIME_1s                  (1000)          //unit: ms
 #define HMI_STATE_KEEP_TIME_2s                  (2000)          //unit: ms
+#define HMI_STATE_KEEP_TIME_3s                  (3000)          //unit: ms
 
 #define HMI_STATE_KEY_BOARD_LED_TIME     		(100)           //unit: ms
 #define HMI_STATE_KEY_BOARD_BEEP_TIME     		(150)           //unit: ms
@@ -118,6 +119,7 @@ typedef enum{
     HMI_STATE_VACATION_MENU,        //假期模式菜单
     // HMI_STATE_SETUP_SUCCESSFUL,     //设置成功
     HMI_STATE_HANDLE_FAIL_KEEP_RED,
+    HMI_STATE_HANDLE_SUCCESS,
     HMI_STATE_HANDLE_SUCCESS_KEEP_GREEN,
     HMI_STATE_DEV_PARA,
     HMI_STATE_DEV_PARA_MUTE,

@@ -13,7 +13,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "lock_fsm"
+#define TAG "fsm_sleep"
 
 /***************Variable***************/
 
