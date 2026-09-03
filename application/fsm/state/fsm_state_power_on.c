@@ -1,6 +1,6 @@
 #include "fsm_state.h"
 #include "state_inside.h"
-
+#include "task_hmi.h"
 #include "task_system_time.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
