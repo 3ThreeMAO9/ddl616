@@ -10,7 +10,7 @@
 #include "task_face.h"
 #include "task_fingerprint.h"
 #include "task_motor.h"
-
+#include "task_key.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -32,10 +32,12 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            keyTaskInit(KEY_TYPE_KEY_BOARD);
+            keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_TASK_MODE_DEFAULT);
             // face_task_set_mode(FACE_TASK_MODE_DEFAULT);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-            hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_BLUE_OB);
+            hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
             break;
         case Q_EXIT_SIG:
             break;
@@ -53,6 +55,11 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_KEY_PRESS_SIG:
             break;
         case Q_HANDLE_SIG:
+            if (e->dynamic_[0] == EVENT_RESULT_FAIL_TOO_SHORT)
+            {
+                // me->branch = (QStateHandler)(lock_fsm_idle);
+                state = Q_TRAN(lockFsmInputError);
+            }
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
             //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             // }
@@ -70,6 +77,11 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);
                 me->branch = (QStateHandler)(lock_fsm_sleep);
                 state = Q_TRAN(lockFsmVerifyUserSuccess);
+            }
+            else if (EVENT_RESULT_FAIL_INVALID == (e->dynamic_[0]))
+            {
+                // me->branch = (QStateHandler)(lock_fsm_idle);
+                state = Q_TRAN(lockFsmVerifyFail);
             }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:

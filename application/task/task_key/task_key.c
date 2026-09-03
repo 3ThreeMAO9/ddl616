@@ -18,7 +18,7 @@
 #include "msg_protocol.h"
 #include "user.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "task_key"
 
@@ -112,7 +112,7 @@ void keyTaskHandle(uint8_t keyType,uint8_t enable)
     g_key_task_driver.io->handle(keyType, enable);
 }
 
-void keyTaksInit(uint8_t type)
+void keyTaskInit(uint8_t type)
 {
     g_key_task_driver.io->init(type);
 }
@@ -128,9 +128,9 @@ void keyTaskPowerOnInit(void)
     g_key_task_driver.io = bsp_key_get_driver(key_task_callback);
     if (NULL != g_key_task_driver.io)
     {
-        keyTaksInit(KEY_TYPE_KEY_BOARD);
+        keyTaskInit(KEY_TYPE_KEY_BOARD);
         keyTaskHandle(KEY_TYPE_KEY_BOARD, true);
-        keyTaksInit(KEY_TYPE_TAMPER_KEY);
+        keyTaskInit(KEY_TYPE_TAMPER_KEY);
         keyTaskHandle(KEY_TYPE_TAMPER_KEY, true);
     }
     else

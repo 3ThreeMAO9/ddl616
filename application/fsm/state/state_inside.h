@@ -50,6 +50,7 @@ QState lockFsmAddOneTimeCode(LockFsm *me, QEvent const *e);
 QState lockFsmProduceTest(LockFsm *me, QEvent const *e);
 QState lockFsmAgingTest(LockFsm *me, QEvent const *e);
 QState lockFsmDeviceTest(LockFsm *me, QEvent const *e);
+QState lockFsmInputError(LockFsm *me, QEvent const *e);
 /**************************************/
 
 

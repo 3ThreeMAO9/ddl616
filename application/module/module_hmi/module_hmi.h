@@ -47,12 +47,13 @@ typedef enum{
 
     HMI_STATE_NULL_IDLE,                //无效果
     HMI_STATE_UNLOCK_SUCCESS,           //开锁成功
-    HMI_STATE_VERIFY_SUCCESS,           //验证成功              verification_succeeded
+    HMI_STATE_VERIFY_SUCCESS,           //验证成功
+    HMI_STATE_VERIFY_FAIL,              //验证失败
+    HMI_STATE_INPUT_ERROR,              //输入错误
     HMI_STATE_VERIFY_ADMIN_SUCCESS,     //验证成功+绿灯长亮
     HMI_STATE_LOCK_SUCCESS,             //关锁成功
     HMI_STATE_HANDLE_FAIL,              //红灯闪烁，打断当前语音
     HMI_STATE_UNLOCK_FAIL,              //验证失败
-    // HMI_STATE_INPUT_ERROR,              //输入错误             Input error 
     // HMI_STATE_INPUT_ERROR_AGAIN,        //输入错误,请再次输入   Input error Please_enter_again
     // HMI_STATE_PIN_REPEAT,               //设置失败，密码已存在  Setup failed PIN code already exists 
     // HMI_STATE_ENTER_AGAIN,              //请在输入一次          please enter again
@@ -99,7 +100,7 @@ typedef enum{
     HMI_STATE_KEY_BOARD_LED_ON,         //键盘灯全亮
     HMI_STATE_KEY_BOARD_LED_OFF,        //键盘灯全灭
     HMI_STATE_OTA_MODE,                 //ota模式
-    // HMI_STATE_KEY_BOARD_WAKE_UP,        //键盘唤醒灯效
+    HMI_STATE_KEY_BOARD_WAKE_UP,        //键盘唤醒灯效
 
     // HMI_STATE_ENROLL_SUCCESS,           //添加成功
     HMI_STATE_ENROLL_FINGER_PRESS,

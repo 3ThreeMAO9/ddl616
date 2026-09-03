@@ -75,6 +75,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_NULL_IDLE:
             keepTime = 0;
             break;
+
         case HMI_STATE_KEY_BOARD_PRESS:
             if (!silentFlag)
             {
@@ -82,33 +83,51 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             }
             keepTime = HMI_STATE_KEEP_TIME_90ms;
             break;
+
         case HMI_STATE_TIME_OUT:
             keepTime = HMI_STATE_KEEP_TIME_100ms;
             break;
+
         case HMI_STATE_POWER_ON:
+        case HMI_STATE_KEY_BOARD_WAKE_UP:
             hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
+
         case HMI_STATE_KEY_BOARD_LED_ON:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             break;
+
         case HMI_STATE_KEY_BOARD_LED_OFF:
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
             break;
+
         case HMI_STATE_KEY_BOARD_LED_BLUE_OB:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, 0, 0);
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             break;
+
         case HMI_STATE_VERIFY_SUCCESS:
             hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_3s, 1);
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
             if (!silentFlag)
-            {
                 PLAYER_LIST_CLEAR_ADD(VOICE_Door_opened);
-            }
             keepTime = 6000;
             break;
+
+        case HMI_STATE_VERIFY_FAIL:
+            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
+            if (!silentFlag)
+                PLAYER_LIST_CLEAR_ADD(VOICE_Verification_failed);
+            break;
+
+        case HMI_STATE_INPUT_ERROR:
+            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
+            if (!silentFlag)
+                PLAYER_LIST_CLEAR_ADD(VOICE_Input_error);
+            break;
+
         default:
             return keepTime;
     }

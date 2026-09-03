@@ -10,8 +10,9 @@
 #include "task_key.h"
 
 #include "event.h"
+#include "key_event.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "fsm_sleep"
 
@@ -35,15 +36,14 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
         case Q_ENTRY_SIG:
             fp_task_set_mode(FP_MODE_SLEEP);
             // face_task_set_mode(FACE_MODE_IDLE);
+            keyEventInit();
+            keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             system_time_task_set_work_time(250);
             hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_OFF);
             break;
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            if (KEY_CNT >= e->dynamic_[0]){
-                state = Q_TRAN(lock_fsm_idle);
-            }
             break;
         case Q_KEY_PRESS_SIG:
             break;
@@ -51,14 +51,8 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
             if (HANDLE_EVENT_WAKE == e->dynamic_[0]){
                 OB_LOGW(TAG,"wake [%08X]",e->dynamic_[1]);
                 // lock_wake();
-                // if (e->dynamic_[1] == WAKE_UP_TYPE_RADAR)
-                // {
-                //     radar_task_wake();
-                // }
-                // else if (e->dynamic_[1] == WAKE_UP_TYPE_KEY_BOARD)
-                // {
-                //     key_task_wake();
-                // }
+                if (e->dynamic_[1] == WAKE_UP_TYPE_KEY_BOARD)
+                    hmiTaskSetState(HMI_STATE_KEY_BOARD_WAKE_UP);
                 state = Q_TRAN(lock_fsm_idle);
             }
             else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP_BUSY){

@@ -41,7 +41,7 @@ void keyTaskHandle(uint8_t keyType, uint8_t enable);
 uint8_t keyTaskIsBusy(uint8_t type);
 void keyboard_task_pause(uint32_t value);
 void keyboard_test_mode(uint8_t mode);
-void keyTaksInit(uint8_t type);
+void keyTaskInit(uint8_t type);
 void keyTaksParameter(const uint8_t* sensitivity);
 void key_task_wake(void);
 /*****************************/

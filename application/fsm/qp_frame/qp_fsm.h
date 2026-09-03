@@ -23,9 +23,8 @@ typedef struct{
     QFsm super;                         /* derive from QFsm */
     
     QStateHandler branch;               /* branch of state */
+    uint8_t verify_fail_cnt;
 
-    // uint8_t pin_verify_count;           // 验证错误计数
-    // uint8_t card_verify_count;          // 验证错误计数
 }LockFsm;
 
 /***************Function***************/

@@ -30,7 +30,7 @@ static QState lockFsmSuccessDeal(LockFsm *me, QEvent const *e, uint8_t hmiState)
     switch (e->sig)
     {
         case Q_ENTRY_SIG:
-            //keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
+            keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             
             if (HMI_STATE_IDLE != hmiState)
@@ -42,11 +42,11 @@ static QState lockFsmSuccessDeal(LockFsm *me, QEvent const *e, uint8_t hmiState)
                 keepTimeOut = 100;
             }
 
-            // if (HMI_STATE_LOCK_SUCCESS != hmiState)
-            // {
-            //     me->verify_fail_cnt = 0;
-            //     setUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID, me->verify_fail_cnt);
-            // }
+            if (HMI_STATE_LOCK_SUCCESS != hmiState)
+            {
+                me->verify_fail_cnt = 0;
+                setUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID, me->verify_fail_cnt);
+            }
             system_time_task_set_work_time(keepTimeOut);
             break;
 
@@ -100,27 +100,28 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
             keyEventInit();
             fp_task_set_mode(FP_MODE_IDLE);
 
-            // if ((errCntFlag) && ((me->verify_fail_cnt) < VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK))
-            // {
-            //     (me->verify_fail_cnt)++;
-            //     setUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID, me->verify_fail_cnt);
-            // }
+            if ((errCntFlag) && ((me->verify_fail_cnt) < VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK))
+            {
+                (me->verify_fail_cnt)++;
+                setUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID, me->verify_fail_cnt);
+            }
             break;
         case Q_EXIT_SIG:
             break;
         case Q_WORK_TIME_OUT_SIG:
-            // if(NULL != (me->branch))
-            // {
-            //     if ((me->verify_fail_cnt) >= VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK)
-            //     {
-            //         state = Q_TRAN(lockFsmSystemLock);
-            //     }
-            //     else
-            //     {
-            //         state = Q_TRAN(me->branch);
-            //     }
-            // }
-            // else
+            if(NULL != (me->branch))
+            {
+                if ((me->verify_fail_cnt) >= VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK)
+                {
+                    state = Q_TRAN(me->branch);
+                    // state = Q_TRAN(lockFsmSystemLock);
+                }
+                else
+                {
+                    state = Q_TRAN(me->branch);
+                }
+            }
+            else
             {
                 state = Q_TRAN(lock_fsm_idle);
 #if (Enabled==PRINTF_ERR)
@@ -204,5 +205,15 @@ QState lockFsmVerifyFail(LockFsm *me, QEvent const *e)
 #if (Enabled==PRINTF_FSM)
     OB_LOGD(TAG, "Now State[Verify fail], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
-    return lockFsmFailDeal(me, e, HMI_STATE_HANDLE_FAIL, true);
+    return lockFsmFailDeal(me, e, HMI_STATE_VERIFY_FAIL, true);
 }
+
+QState lockFsmInputError(LockFsm *me, QEvent const *e)
+{
+#if (Enabled==PRINTF_FSM)
+    OB_LOGD(TAG, "Now State[input error], Event[%d, %d]--", e->sig, e->dynamic_[0]);
+#endif
+    return lockFsmFailDeal(me, e, HMI_STATE_INPUT_ERROR, true);
+}
+
+

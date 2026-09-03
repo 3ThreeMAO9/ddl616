@@ -14,8 +14,7 @@ static void lockFsm_ctor(LockFsm* lock_fsm)
 {
     QFsm_ctor(&(lock_fsm->super), (QStateHandler)(lock_fsm_init));
     lock_fsm->branch = NULL;
-    // lock_fsm->pin_verify_count = 0;
-    // lock_fsm->card_verify_count = 0;
+    lock_fsm->verify_fail_cnt = 0;
 }
 
 void qpFsmInit(void)
