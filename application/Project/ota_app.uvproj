@@ -378,7 +378,7 @@
               <MiscControls>--locale=english</MiscControls>
               <Define>CLIENT_ITEM_SN=39140,PROJECT_NUMBER=140,CONFIG_SEL=39</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\common\Device;..\chip\OB90A64M1\Library;..\config;..\hal;.\Source_Code\device;..\drive\i2c_software;..\drive\utils;..\drive\key;..\3rd\multi_button;..\3rd\multi_button\examples;..\drive\system_timer;..\drive\ob_log;..\config\board;..\config\item;..\config\item\item_info;..\task\task_key;..\bsp\bsp_key;..\protocol\handler;..\protocol;..\drive\led;..\bsp\bsp_led;..\task\task_led;..\3rd\ringbuffer;..\3rd\rt-thread;..\task\task_uart;..\drive\uart_queue;..\bsp\bsp_uart;..\module\module_uart;..\bsp\bsp_nfc;..\drive\nfc;..\drive\nfc\FM17622;..\task\task_nfc;..\bsp\bsp_fingerprint;..\drive\fingerprint;..\module\module_fp;..\task\task_fingerprint;..\bsp\bsp_face;..\drive\face;..\drive\face\face_st;..\module\module_face;..\task\task_face;..\drive\soft_uart;..\drive\soft_uart\simu_uart;..\drive\soft_uart\soft_uart_finger;..\drive\soft_uart\soft_uart_log;..\drive\radar;..\drive\radar\iic_radar;..\task\task_radar;..\bsp\bsp_radar;..\module\module_radar;..\task\task_system_time;..\bsp\bsp_system_time;..\bsp\bsp_sleep;..\drive\sleep;..\task\task_sleep;..\task\task_qp_fsm;..\bsp\bsp_qp_fsm;..\fsm\event;..\fsm\qp_frame;..\fsm\state;..\drive\key\key_board;..\drive\key\key_board\GTX314L;..\drive\key\tamper_key;..\bsp\bsp_flash;..\drive\flash;..\task\task_flash;..\drive\dual_sector;..\drive\parameter;..\task\task_protocol;..\drive\spi_software;..\app\protocol_func_card;..\..\common\CMSIS\5.4.0;..\..\common\Library;..\..\common\ota_helper;..\..\common\Device;..\drive\radar\iic_radar\include;..\drive\radar\io_radar\include;..\drive\lock_uart;..\..\common\encrypt;..\3rd\sfud\src;..\3rd\sfud\inc;..\bsp\bsp_sfud;..\module\module_spi_flash;..\module\module_flash_data;..\app\parameter;..\app\user;..\bsp\bsp_player;..\module\module_player;..\task\task_player;..\bsp\bsp_hmi;..\module\module_hmi;..\task\task_hmi;..\bsp\bsp_motor;..\drive\motor;..\task\task_motor;..\module\module_motor</IncludePath>
+              <IncludePath>..\..\common\Device;..\chip\OB90A64M1\Library;..\config;..\hal;.\Source_Code\device;..\drive\i2c_software;..\drive\utils;..\drive\key;..\3rd\multi_button;..\3rd\multi_button\examples;..\drive\system_timer;..\drive\ob_log;..\config\board;..\config\item;..\config\item\item_info;..\task\task_key;..\bsp\bsp_key;..\protocol\handler;..\protocol;..\drive\led;..\bsp\bsp_led;..\task\task_led;..\3rd\ringbuffer;..\3rd\rt-thread;..\task\task_uart;..\drive\uart_queue;..\bsp\bsp_uart;..\module\module_uart;..\bsp\bsp_nfc;..\drive\nfc;..\drive\nfc\FM17622;..\task\task_nfc;..\bsp\bsp_fingerprint;..\drive\fingerprint;..\module\module_fp;..\task\task_fingerprint;..\bsp\bsp_face;..\drive\face;..\drive\face\face_st;..\module\module_face;..\task\task_face;..\drive\soft_uart;..\drive\soft_uart\simu_uart;..\drive\soft_uart\soft_uart_finger;..\drive\soft_uart\soft_uart_log;..\drive\radar;..\drive\radar\iic_radar;..\task\task_radar;..\bsp\bsp_radar;..\module\module_radar;..\task\task_system_time;..\bsp\bsp_system_time;..\bsp\bsp_sleep;..\drive\sleep;..\task\task_sleep;..\task\task_qp_fsm;..\bsp\bsp_qp_fsm;..\fsm\event;..\fsm\qp_frame;..\fsm\state;..\drive\key\key_board;..\drive\key\key_board\GTX314L;..\drive\key\tamper_key;..\bsp\bsp_flash;..\drive\flash;..\task\task_flash;..\drive\dual_sector;..\drive\parameter;..\task\task_protocol;..\drive\spi_software;..\app\protocol_func_card;..\..\common\CMSIS\5.4.0;..\..\common\Library;..\..\common\ota_helper;..\..\common\Device;..\drive\radar\iic_radar\include;..\drive\radar\io_radar\include;..\drive\lock_uart;..\..\common\encrypt;..\3rd\sfud\src;..\3rd\sfud\inc;..\bsp\bsp_sfud;..\module\module_spi_flash;..\module\module_flash_data;..\app\parameter;..\app\user;..\bsp\bsp_player;..\module\module_player;..\task\task_player;..\bsp\bsp_hmi;..\module\module_hmi;..\task\task_hmi;..\bsp\bsp_motor;..\drive\motor;..\task\task_motor;..\module\module_motor;..\fsm\menu</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -761,6 +761,51 @@
               <FileName>fsm_state_result.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\state\fsm_state_result.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_state_verify_admin.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\state\fsm_state_verify_admin.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>fsm/menu</GroupName>
+          <Files>
+            <File>
+              <FileName>fsm_menu_admin.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_admin.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_modfiy_admin_pin.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_modfiy_admin_pin.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_add_normal_user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_add_normal_user.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_language_settings.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_language_settings.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_linked_unlock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_linked_unlock.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_user_settings.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_user_settings.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_system_settings.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_system_settings.c</FilePath>
             </File>
           </Files>
         </Group>

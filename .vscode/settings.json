@@ -34,7 +34,8 @@
         "task_motor.h": "c",
         "bsp_motor.h": "c",
         "parameter.h": "c",
-        "bsp_hmi.h": "c"
+        "bsp_hmi.h": "c",
+        "state_inside.h": "c"
     },
     "C_Cpp.dimInactiveRegions": false
 }

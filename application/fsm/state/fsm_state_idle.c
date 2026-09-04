@@ -44,7 +44,8 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_KEY_BOARD_PRESS_SIG:
             if (KEY_NUM_13 == e->dynamic_[0])   // 门铃
             {
-
+                hmiTaskSetState(HMI_STATE_ENTER_ADMIN_MODE);
+                state = Q_TRAN(lock_fsm_verify_admin);
             }
             else
             {
@@ -55,9 +56,9 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_KEY_PRESS_SIG:
             break;
         case Q_HANDLE_SIG:
-            if (e->dynamic_[0] == EVENT_RESULT_FAIL_TOO_SHORT)
+            if ((EVENT_RESULT_FAIL_TOO_SHORT == e->dynamic_[0]) || (EVENT_RESULT_FAIL_TOO_LONG == e->dynamic_[0]))
             {
-                // me->branch = (QStateHandler)(lock_fsm_idle);
+                me->branch = (QStateHandler)(lock_fsm_idle);
                 state = Q_TRAN(lockFsmInputError);
             }
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
@@ -80,7 +81,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL_INVALID == (e->dynamic_[0]))
             {
-                // me->branch = (QStateHandler)(lock_fsm_idle);
+                me->branch = (QStateHandler)(lock_fsm_idle);
                 state = Q_TRAN(lockFsmVerifyFail);
             }
             break;

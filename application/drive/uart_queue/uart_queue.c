@@ -10,7 +10,7 @@
 #include "uart_queue.h"
 #include "ringbuffer.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_WARN
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "uart_queue"
 

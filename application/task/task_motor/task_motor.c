@@ -10,7 +10,7 @@
 
 // #include "shell.h"
 #include "task_player.h"
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "task_motor"
 /***************Variable***************/

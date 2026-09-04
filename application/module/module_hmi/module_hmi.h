@@ -54,6 +54,8 @@ typedef enum{
     HMI_STATE_LOCK_SUCCESS,             //关锁成功
     HMI_STATE_HANDLE_FAIL,              //红灯闪烁，打断当前语音
     HMI_STATE_UNLOCK_FAIL,              //验证失败
+    HMI_STATE_ENTER_ADMIN_MODE,         //进入管理模式
+    HMI_STATE_VERIFY_ADMIN_CODE,        //请验证管理密钥，取消请按星号键
     // HMI_STATE_INPUT_ERROR_AGAIN,        //输入错误,请再次输入   Input error Please_enter_again
     // HMI_STATE_PIN_REPEAT,               //设置失败，密码已存在  Setup failed PIN code already exists 
     // HMI_STATE_ENTER_AGAIN,              //请在输入一次          please enter again
@@ -66,12 +68,17 @@ typedef enum{
     // HMI_STATE_FINGER_EMPTY,             //指纹库为空            Fingerprint database is empty 
     // HMI_STATE_FINGER_FULL,              //指纹库已满            Fingerprint database is full
     HMI_STATE_VACATION_MODE_FAIL,       //离家模式              away mode
-    // HMI_STATE_CHANGE_MASTER_CODE,       //请及时修改管理密码     Please_modify_master_PIN_code_as_soon_as_possible
+    HMI_STATE_CHANGE_MASTER_CODE,       //请及时修改管理密码     Please_modify_master_PIN_code_as_soon_as_possible
+    HMI_STATE_PIN_CODE_TOO_SIMPLE,      //密码过于简单
     // HMI_STATE_ENTER_USER_PIN_CODE,      //请输入用户密码         Enter user PIN code
     // HMI_STATE_PLACE_FINGER_ON_READER,   //请按指纹              Place_your_finger_on_the_reader
     // HMI_STATE_ENROLLMENT_FAIL,          //添加失败              
-    // HMI_STATE_ADMIN,                    //管理员菜单
+    HMI_STATE_ADMIN,                    //管理员菜单
+    HMI_STATE_USER_SETTINGS,            //用户设置
+    HMI_STATE_SYSTEM_SETTINGS,          //系统设置
+    HMI_STATE_ADD_NORMAL_USER,          //添加普通用户--用户编号XXX
     HMI_STATE_LANGAGESETTING,           //语言设置菜单
+    HMI_STATE_LINKED_UNLOCK,            //联动解锁
     HMI_STATE_AUTO_LOCK,                //自动上锁菜单
     HMI_STATE_VERSION,                  //版本号
     HMI_STATE_TIME,                     //当前时间

@@ -13,7 +13,7 @@
 #include "timestamp.h"
 #include "system_timer.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "m_hmi"
 /***************Variable***************/
@@ -111,23 +111,69 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_VERIFY_SUCCESS:
             hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_3s, 1);
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
-            if (!silentFlag)
-                PLAYER_LIST_CLEAR_ADD(VOICE_Door_opened);
+            // if (!silentFlag)
+            //     PLAYER_LIST_CLEAR_ADD(VOICE_Door_opened);
             keepTime = 6000;
+            break;
+        case HMI_STATE_VERIFY_ADMIN_SUCCESS:
             break;
 
         case HMI_STATE_VERIFY_FAIL:
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
             if (!silentFlag)
                 PLAYER_LIST_CLEAR_ADD(VOICE_Verification_failed);
+            keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
 
         case HMI_STATE_INPUT_ERROR:
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
             if (!silentFlag)
                 PLAYER_LIST_CLEAR_ADD(VOICE_Input_error);
+            keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
 
+        case HMI_STATE_ENTER_ADMIN_MODE:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            if (!silentFlag)
+                PLAYER_LIST_CLEAR_ADD(VOICE_Entered_management_mode);
+            break;
+
+        case HMI_STATE_VERIFY_ADMIN_CODE:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            if (!silentFlag)
+                PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_master_PIN_code);
+            break;
+
+        case HMI_STATE_ADMIN:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_One);
+            PLAYER_LIST_ADD(VOICE_Two);
+            break;
+        
+        case HMI_STATE_CHANGE_MASTER_CODE:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_master_PIN_code,VOICE_End_with_pound_key);
+            break;
+
+        case HMI_STATE_PIN_CODE_TOO_SIMPLE:
+            PLAYER_LIST_CLEAR_ADD(VOICE_PIN_code_is_too_simple);
+            break;
+
+        case HMI_STATE_USER_SETTINGS:
+            PLAYER_LIST_CLEAR_ADD(VOICE_To_change_the_master_PIN_code_please_press,VOICE_One,VOICE_To_add_a_user_please_press,VOICE_Two);
+            break;
+
+        case HMI_STATE_ADD_NORMAL_USER:
+            PLAYER_LIST_CLEAR_ADD(VOICE_User_number);
+            break;
+
+        case HMI_STATE_SYSTEM_SETTINGS:
+            PLAYER_LIST_CLEAR_ADD(VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
+            break;
+
+        case HMI_STATE_LANGAGESETTING:
+            PLAYER_LIST_CLEAR_ADD(VOICE_One,VOICE_Two);
+            break;
         default:
             return keepTime;
     }
@@ -162,7 +208,6 @@ static void hmi_logo_led_loop(void)
         {
             switch (hmihandle.state)
             {
-                case HMI_STATE_VERIFY_ADMIN_SUCCESS:
                 case HMI_STATE_HANDLE_SUCCESS_KEEP_GREEN:
                 case HMI_STATE_ENROLL_PRESS_TWICE:
                     hmihandle.logoLed.color = LOGO_LED_COLOR_GREEN;

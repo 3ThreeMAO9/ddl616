@@ -3,7 +3,7 @@
 #include "FM17622.h"
 #include "DEVICE_CFG.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "reader_api"
 

@@ -14,7 +14,7 @@
 // #include "task_battery.h"
 // #include "lock_log.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "m_motor"
 

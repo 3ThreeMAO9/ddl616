@@ -24,12 +24,12 @@ static QState lockFsmSuccessDeal(LockFsm *me, QEvent const *e, uint8_t hmiState)
     uint32_t keepTimeOut;
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "lockFsmSuccessDeal", e->sig, e->dynamic_[0]);
-#endif
     switch (e->sig)
     {
         case Q_ENTRY_SIG:
+#if (Enabled == PRINTF_FSM)
+            OB_LOGD(TAG, "branch[%08X]--", me->branch);
+#endif
             keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             
@@ -89,17 +89,19 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
     uint32_t keepTimeOut;
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "lockFsmFailDeal", e->sig, e->dynamic_[0]);
-#endif
     switch (e->sig)
     {
         case Q_ENTRY_SIG:
-            keepTimeOut = hmiTaskSetState(hmiState);
-            system_time_task_set_work_time(keepTimeOut);
+#if (Enabled == PRINTF_FSM)
+            OB_LOGD(TAG, "branch[%08X]--", me->branch);
+#endif
             keyEventInit();
+            keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
 
+            keepTimeOut = hmiTaskSetState(hmiState);
+            system_time_task_set_work_time(keepTimeOut);
+            OB_LOGW(TAG, "keepTimeOut[%ld]", keepTimeOut);
             if ((errCntFlag) && ((me->verify_fail_cnt) < VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK))
             {
                 (me->verify_fail_cnt)++;
@@ -107,8 +109,10 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
             }
             break;
         case Q_EXIT_SIG:
+            OB_LOGW(TAG, "Q_EXIT_SIG");
             break;
         case Q_WORK_TIME_OUT_SIG:
+            OB_LOGW(TAG, "Q_WORK_TIME_OUT_SIG");
             if(NULL != (me->branch))
             {
                 if ((me->verify_fail_cnt) >= VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK)
@@ -157,7 +161,7 @@ QState lockFsmVerifyAdminSuccess(LockFsm *me, QEvent const *e)
 #if (Enabled==PRINTF_FSM)
     OB_LOGD(TAG, "Now State[verify admin success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
-    return lockFsmSuccessDeal(me, e, HMI_STATE_VERIFY_SUCCESS);
+    return lockFsmSuccessDeal(me, e, HMI_STATE_VERIFY_ADMIN_SUCCESS);
 }
 
 QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e)

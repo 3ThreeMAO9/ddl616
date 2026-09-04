@@ -12,7 +12,6 @@ typedef enum{
     CODE_HANDLE_ADD = 0,
     CODE_HANDLE_CHANGE_MASTER,
     CODE_HANDLE_DEL,
-    CODE_HANDLE_ADD_ONE_TIME,
 
 }code_handle_t;
 
@@ -28,13 +27,13 @@ typedef struct
 }key_board_input_t;
 
 typedef struct{
-    uint8_t key_can_cnt;
     key_board_input_t input[2];
 
 }key_board_event_t;
 
 /***************Function***************/
 void keyEventInit(void);
+void keyEventVerifyAdmin(uint8_t key_value);
 void keyEventVerifyUser(uint8_t key_value);
 void keyEventSetParameter(uint8_t key_value, uint8_t parameter_index, uint8_t width);
 void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cnt);

@@ -22,6 +22,15 @@
 /***************Function***************/
 QState lock_fsm_sleep(LockFsm *me, QEvent const *e);
 QState lock_fsm_idle(LockFsm *me, QEvent const *e);
+QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e);
+
+QState lock_fsm_menu_admin(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_user_settings(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_system_settings(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_linked_unlock(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_language_settings(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e);
 
 QState lockFsmWake(LockFsm *me, QEvent const *e);
 QState lockFsmSystemLock(LockFsm *me, QEvent const *e);

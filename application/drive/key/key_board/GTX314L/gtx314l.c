@@ -11,7 +11,7 @@
 #include "gtx314l_config.h"
 #include "i2c_software.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "GTX314L"
 
