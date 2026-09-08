@@ -151,7 +151,7 @@ static void user_flash_renew(void)
     const uint16_t index = 0;
 	uint8_t pData[DATA_BLOCK_SIZE]; 
 
-    if(isLoseDataPage(USER_PAGE_START_ADDR))    //读取flash是否有效
+    if(isLoseDataPage(USER_PAGE_START_ADDR))
     {
         //renew data page
         flash_data_block_renew(USER_PAGE_START_ADDR, USER_PAGE_BACKUP_ADDR, USER_PAGE_CNT
@@ -184,46 +184,19 @@ static void flash_data_block_modify( uint32_t pageAddr,
 
 static void flash_user_data_init(void)
 {
-   uint8_t i;
-   uint8_t data[50];
-   uint8_t size;
+   uint16_t i;
+   uint8_t dataBlock[DATA_BLOCK_SIZE];
 
 #if (Enabled == PRINTF_FLASH)
-   OB_LOGD(TAG, "flash_user_data_init  user info init");
-   OB_LOGD(TAG, "USER_PW_BASE       Adrr %08X", USER_PAGE_START_ADDR + USER_PW_BASE);
-   OB_LOGD(TAG, "USER_FINGER_BASE   Adrr %08X", USER_PAGE_START_ADDR + USER_FINGER_BASE);
-   OB_LOGD(TAG, "USER_CARD_BASE     Adrr %08X", USER_PAGE_START_ADDR + USER_CARD_BASE);
-   OB_LOGD(TAG, "USER_FACE_BASE     Adrr %08X", USER_PAGE_START_ADDR + USER_FACE_BASE);
+    OB_LOGD(TAG,"flash_user_data_init  user info init");
 #endif
-
-    size = sizeof(user_code_flash_t);
-    for (i = 0; i < PERMANENT_USER_CODE_CNT; i++)
+    for (i = 0; i < (USER_CNT); i++)
     {
-        // 读取FLASH内容，计算SUM，然后把data数据放进ram中
-        uint32_t item_addr = USER_PAGE_START_ADDR + USER_PW_BASE + (i * size);
-        user_flash_read(item_addr, data, size);
-#if (Enabled == PRINTF_FLASH)
-        OB_LOGW(TAG,"Adrr %08X  pw",item_addr);
-        OB_LOGI_DUMP(data, size);
-#endif
-        updateUserTable(i, USER_TYPE_PERMANENT_CODE, data);     //然后把data数据放进ram中
+        user_flash_read(USER_PAGE_START_ADDR + ((i + 1) * USER_BLOCK_SIZE), dataBlock, USER_BLOCK_SIZE);
+        // OB_LOGW(TAG,"Adrr %08X",USER_PAGE_START_ADDR + ((i + 1) * USER_BLOCK_SIZE));
+        // OB_LOGI_DUMP(dataBlock, USER_BLOCK_SIZE);
+        updateUserTable(i, (user_info_t *)(dataBlock));
     }
-
-    for (i = 0; i < USER_FINGERPRINTS_CNT; i++)
-    {
-        
-    }
-
-    for (i = 0; i < USER_CARD_CNT; i++)
-    {
-        
-    }
-
-    for (i = 0; i < USER_FACE_CNT; i++)
-    {
-        
-    }
-
     updateUserCnt();
 }
 
@@ -266,21 +239,21 @@ void flash_data_init(void)
 
 void save_user_data(uint16_t user_sn, uint8_t* pData)
 {
-//     uint8_t temp[USER_BLOCK_SIZE];
+    uint8_t temp[USER_BLOCK_SIZE];
 
-//     memset(temp, 0xFF, USER_BLOCK_SIZE);
-//     memcpy(temp, pData, sizeof(user_info_t));
+    memset(temp, 0xFF, USER_BLOCK_SIZE);
+    memcpy(temp, pData, sizeof(user_info_t));
 
 #if (Enabled == PRINTF_FLASH)
     OB_LOGD(TAG,"save user sn[%u]", user_sn);
 #endif
 
-//     flash_data_block_modify( USER_PAGE_START_ADDR, 
-//                             USER_PAGE_BACKUP_ADDR, 
-//                             USER_PAGE_CNT, 
-//                             user_sn, 
-//                             (uint8_t*)(temp), 
-//                             USER_BLOCK_SIZE);
+    flash_data_block_modify( USER_PAGE_START_ADDR, 
+                            USER_PAGE_BACKUP_ADDR, 
+                            USER_PAGE_CNT, 
+                            user_sn, 
+                            (uint8_t*)(temp), 
+                            USER_BLOCK_SIZE);
 }
 
 void save_parameter_data(uint8_t* pData, uint16_t size)
