@@ -343,10 +343,10 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
                 case CODE_HANDLE_ADD:
                     if (true == addUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, USER_TYPE_PERMANENT_CODE, &user_sn, &parameter))
                     {
-                        if (true == getUserFlag(&user_ble_sn, USER_TYPE_PERMANENT_CODE, user_sn - 1))
-                        {
-                            OB_LOGW(TAG, "user_sn  %0ld user_ble_sn %0ld", user_sn, user_ble_sn);
-                        }
+                        // if (true == getUserFlag(&user_ble_sn, USER_TYPE_PERMANENT_CODE, user_sn - 1))
+                        // {
+                        //     OB_LOGW(TAG, "user_sn  %0ld user_ble_sn %0ld", user_sn, user_ble_sn);
+                        // }
                         // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn);    //添加普通密码
                         // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn,get_last_log_timestamp());
                         result = EVENT_RESULT_SUCCESS;

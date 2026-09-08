@@ -22,8 +22,8 @@
 
 #define USER_CODE_LEN_MIN                           (6)
 #define USER_CODE_LEN_MAX                           (12)
-#define USER_CODE_LEN_SIZE                          (12)
-// #define USER_CODE_LEN_SIZE                          (USER_CODE_LEN_MAX / 2)
+// #define USER_CODE_LEN_SIZE                          (12)
+#define USER_CODE_LEN_SIZE                          (USER_CODE_LEN_MAX / 2)
 #define DUMMY_USER_CODE_LEN_MAX                     (20)
 
 #define ADMIN_PASSWORD_DEFAULT                      {1,2,3,4,5,6,7,8}
@@ -50,16 +50,18 @@
 #define COMMON_USER_CODE_CNT      		            (19)
 #define PERMANENT_USER_CODE_CNT                     (MASTER_USER_CODE_CNT + COMMON_USER_CODE_CNT)
 
-#define USER_FINGERPRINTS_CNT                       (10)
+#define USER_FINGERPRINTS_CNT                       (50)
 
-#define USER_CARD_CNT                               (10)
+#define USER_CARD_CNT                               (100)
 
-#define PERMANENT_USER_CNT                          (PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT)
+#define USER_FACE_CNT                               (0)
+
+#define PERMANENT_USER_CNT                          (PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT + USER_FACE_CNT)
 
 #define USER_CNT                                    (PERMANENT_USER_CNT)
 
 //block' size
-#define USER_BLOCK_SIZE                             (32)
+#define USER_BLOCK_SIZE                             (18)
 #define PARAMETER_BLOCK_SIZE                        (4)
 #define DATA_BLOCK_SIZE                             (MAX(USER_BLOCK_SIZE, PARAMETER_BLOCK_SIZE))
 
@@ -120,11 +122,6 @@ typedef enum{
 #define WORK_TIME_OUT_VAULE_LOWBATTERY              (4000)         // unit: ms
 #define HANDLE_RESULT_TIME_OUT                      (1500+100)      // unit: ms
 #define WAKE_PAUSE_KEY_TIME                         (50)            //unit： ms
-
-//block' size
-#define USER_BLOCK_SIZE                             (32)
-#define PARAMETER_BLOCK_SIZE                        (4)
-#define DATA_BLOCK_SIZE                             (MAX(USER_BLOCK_SIZE, PARAMETER_BLOCK_SIZE))
 
 //wake type
 /*****************************************************/
