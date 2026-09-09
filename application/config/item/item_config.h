@@ -50,11 +50,13 @@
 #define COMMON_USER_CODE_CNT      		            (19)
 #define PERMANENT_USER_CODE_CNT                     (MASTER_USER_CODE_CNT + COMMON_USER_CODE_CNT)
 
-#define USER_FINGERPRINTS_CNT                       (10)
+#define USER_FINGERPRINTS_CNT                       (50)
 
-#define USER_CARD_CNT                               (10)
+#define USER_CARD_CNT                               (100)
 
-#define PERMANENT_USER_CNT                          (PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT)
+#define USER_FACE_CNT                               (50)
+
+#define PERMANENT_USER_CNT                          (PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT + USER_FACE_CNT)
 
 #define USER_CNT                                    (PERMANENT_USER_CNT)
 

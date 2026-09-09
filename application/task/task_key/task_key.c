@@ -44,31 +44,6 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
         if(true == g_key_task_driver.attribute.enable[KEY_TYPE_KEY_BOARD])
         {
             OB_LOGD(TAG, "key_value = %d", key_value);
-            if(key_value == 1)
-            {
-                // uint8_t buff[11];
-                // uint8_t len = 6;
-                // uint16_t user_sn;
-                // user_time_t parameter;
-                // parameter.attribute = USER_TYPE_PERMANENT_CODE;
-                // parameter.week = 0xFF;
-                // parameter.start_time = 0xFFFFFFFF;
-                // parameter.end_time = 0xFFFFFFFF;
-                // memset(buff, 2, len);
-                // if ((isValidUserCode(buff, len, &user_sn, false, false)) && (0 != user_sn))
-                // {
-                //     OB_LOGD(TAG, "user sn[%u]: len[%u]", user_sn, len);
-                // }
-
-                // if (true == addUserCode(buff, len, USER_TYPE_PERMANENT_CODE, &user_sn, &parameter))
-                // {
-                //     OB_LOGW(TAG, "user_sn  %0ld",user_sn);
-                // }
-            }
-            else if(key_value == 2)
-            {
-                // flash_page_system_init();
-            }
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             baseEventPush(Q_KEY_BOARD_PRESS_SIG, key_value);
         }

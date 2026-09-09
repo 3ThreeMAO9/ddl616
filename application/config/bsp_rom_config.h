@@ -1,12 +1,6 @@
 /**
  * @file bsp_rom_config.h
- * @author Dandjinh Deng (Dandjinh_Deng@on-bright.com)
- * @brief 
- * @version 0.1
- * @date 2023-02-21
- * 
- * @copyright Copyright (c) 2023 广州昂宝电子有限公司
- * 
+ * @brief Flash地址配置 - 固定地址存储方案
  */
 
 #ifndef _BSP_ROM_CONFIG_H
@@ -15,13 +9,12 @@
 #include "item_config.h"
 
 //flash addr
-#define FLASH_ERASE_SIZE                (0x1000)         //falsh erase size
+#define FLASH_ERASE_SIZE                (0x1000)         //flash erase size (4KB)
 #define FLASH_USER_DEFINE_START_ADDR    (0x1000)
 #define FLASH_USER_DEFINE_END_ADDR      (0x17FFF)
 
 //page cnt
 #define SPI_FLASH_SECTOR_NUM            (1)
-#define USER_PAGE_CNT                   (((USER_BLOCK_SIZE * USER_CNT) + FLASH_ERASE_SIZE) / FLASH_ERASE_SIZE) //(32*222+4096)/4096   2.73
 #define PARAMETER_PAGE_CNT              (1)
 #define PRODUCE_DATA_PAGE_CNT           (1)
 #define LOCK_LOG_SECTOR_NUM             (2)
@@ -30,37 +23,69 @@
 #define ONE_LINE_KEY_CNT                (1)
 
 //audio index addr
-#define SPI_FLASH_INFO_BEGIN_ADDR       (FLASH_USER_DEFINE_START_ADDR)  //spi flash地址信息
+#define SPI_FLASH_INFO_BEGIN_ADDR       (FLASH_USER_DEFINE_START_ADDR)
 
 //user addr
-#define USER_PAGE_START_ADDR            (SPI_FLASH_INFO_BEGIN_ADDR + FLASH_ERASE_SIZE * SPI_FLASH_SECTOR_NUM)  //0x1000+0x1000=0x2000
-#define USER_PAGE_BACKUP_ADDR           (USER_PAGE_START_ADDR + FLASH_ERASE_SIZE * USER_PAGE_CNT)   //0x4000
+#define USER_PAGE_START_ADDR            (SPI_FLASH_INFO_BEGIN_ADDR + FLASH_ERASE_SIZE * SPI_FLASH_SECTOR_NUM)
+#define USER_PAGE_BACKUP_ADDR           (USER_PAGE_START_ADDR + FLASH_ERASE_SIZE * USER_PAGE_CNT)
 
 //parameter addr
-#define PARAMETER_PAGE_START_ADDR       (USER_PAGE_BACKUP_ADDR + FLASH_ERASE_SIZE * USER_PAGE_CNT)  //0x6000
-#define PARAMETER_PAGE_BACKUP_ADDR      (PARAMETER_PAGE_START_ADDR + FLASH_ERASE_SIZE * PARAMETER_PAGE_CNT) //0x7000
+#define PARAMETER_PAGE_START_ADDR       (USER_PAGE_BACKUP_ADDR + FLASH_ERASE_SIZE * USER_PAGE_CNT)
+#define PARAMETER_PAGE_BACKUP_ADDR      (PARAMETER_PAGE_START_ADDR + FLASH_ERASE_SIZE * PARAMETER_PAGE_CNT)
 
 //produce data addr
-#define PRODUCE_DATA_PAGE_START_ADDR    (PARAMETER_PAGE_BACKUP_ADDR + FLASH_ERASE_SIZE * PARAMETER_PAGE_CNT)    //0x8000
+#define PRODUCE_DATA_PAGE_START_ADDR    (PARAMETER_PAGE_BACKUP_ADDR + FLASH_ERASE_SIZE * PARAMETER_PAGE_CNT)
 
 //log data addr
-#define LOCK_LOG_FLASH_ADDR             (PRODUCE_DATA_PAGE_START_ADDR + FLASH_ERASE_SIZE * PRODUCE_DATA_PAGE_CNT)   //0x9000
+#define LOCK_LOG_FLASH_ADDR             (PRODUCE_DATA_PAGE_START_ADDR + FLASH_ERASE_SIZE * PRODUCE_DATA_PAGE_CNT)
 
 //test data addr
-#define GC_SECTOR_ADDR                  (LOCK_LOG_FLASH_ADDR + FLASH_ERASE_SIZE * LOCK_LOG_SECTOR_NUM)      //0xB000
+#define GC_SECTOR_ADDR                  (LOCK_LOG_FLASH_ADDR + FLASH_ERASE_SIZE * LOCK_LOG_SECTOR_NUM)
 
 //sleep wake state data addr
-#define WAKEUP_STATE_ADDR               (GC_SECTOR_ADDR + FLASH_ERASE_SIZE * GC_SECTOR_CNT)                 //0xC000
+#define WAKEUP_STATE_ADDR               (GC_SECTOR_ADDR + FLASH_ERASE_SIZE * GC_SECTOR_CNT)
 
 //blue one line key data addr
-#define ONE_LINE_KEY_ADDR               (WAKEUP_STATE_ADDR + FLASH_ERASE_SIZE * WAKEUP_STATE_CNT)           //0xD000
+#define ONE_LINE_KEY_ADDR               (WAKEUP_STATE_ADDR + FLASH_ERASE_SIZE * WAKEUP_STATE_CNT)
+
+
+
+// ========== 用户数据固定地址布局 ==========
+// 每个用户块 32 字节，块0为页标记
+// 布局：页标记(1块) + 密码(20块) + 指纹(50块) + 卡片(100块) + 人脸(50块) = 221块
+
+#define USER_BLOCK_SIZE                 (32)
+
+// 各类型用户起始块索引（从块1开始，块0为页标记）
+#define BLOCK_INDEX_CODE_START          (1)                                          // 1
+#define BLOCK_INDEX_FINGER_START        (BLOCK_INDEX_CODE_START + PERMANENT_USER_CODE_CNT)   // 1+20=21
+#define BLOCK_INDEX_CARD_START          (BLOCK_INDEX_FINGER_START + USER_FINGERPRINTS_CNT)   // 21+50=71
+#define BLOCK_INDEX_FACE_START          (BLOCK_INDEX_CARD_START + USER_CARD_CNT)             // 71+100=171
+
+// 各类型用户Flash地址宏
+#define USER_ADDR_CODE(index)           (USER_PAGE_START_ADDR + (BLOCK_INDEX_CODE_START + (index)) * USER_BLOCK_SIZE)
+#define USER_ADDR_FINGER(index)         (USER_PAGE_START_ADDR + (BLOCK_INDEX_FINGER_START + (index)) * USER_BLOCK_SIZE)
+#define USER_ADDR_CARD(index)           (USER_PAGE_START_ADDR + (BLOCK_INDEX_CARD_START + (index)) * USER_BLOCK_SIZE)
+#define USER_ADDR_FACE(index)           (USER_PAGE_START_ADDR + (BLOCK_INDEX_FACE_START + (index)) * USER_BLOCK_SIZE)
+
+// 各类型用户备份地址宏
+#define USER_ADDR_CODE_BACKUP(index)    (USER_PAGE_BACKUP_ADDR + (BLOCK_INDEX_CODE_START + (index)) * USER_BLOCK_SIZE)
+#define USER_ADDR_FINGER_BACKUP(index)  (USER_PAGE_BACKUP_ADDR + (BLOCK_INDEX_FINGER_START + (index)) * USER_BLOCK_SIZE)
+#define USER_ADDR_CARD_BACKUP(index)    (USER_PAGE_BACKUP_ADDR + (BLOCK_INDEX_CARD_START + (index)) * USER_BLOCK_SIZE)
+#define USER_ADDR_FACE_BACKUP(index)    (USER_PAGE_BACKUP_ADDR + (BLOCK_INDEX_FACE_START + (index)) * USER_BLOCK_SIZE)
+
+// 用户数据总块数（包含页标记）
+#define USER_TOTAL_BLOCKS               (1 + PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT + USER_FACE_CNT)
+#define USER_TOTAL_SIZE                 (USER_TOTAL_BLOCKS * USER_BLOCK_SIZE)
+#define USER_PAGE_CNT                   ((USER_TOTAL_SIZE + FLASH_ERASE_SIZE - 1) / FLASH_ERASE_SIZE)
+
+// 各类型在Flash中的偏移
+#define USER_OFFSET_CODE_START          (BLOCK_INDEX_CODE_START * USER_BLOCK_SIZE)
+#define USER_OFFSET_FINGER_START        (BLOCK_INDEX_FINGER_START * USER_BLOCK_SIZE)
+#define USER_OFFSET_CARD_START          (BLOCK_INDEX_CARD_START * USER_BLOCK_SIZE)
+#define USER_OFFSET_FACE_START          (BLOCK_INDEX_FACE_START * USER_BLOCK_SIZE)
 
 
 ///END SPI FLASH
 
-
-// chip flash  (0x7C000~0x7E000)
-#define LOCK_LOG_CHIP_FLASH_ADDR        0x7C000 //(0x7C000~0x7E000)
-
-#define BLE_PARAMETER_CHIP_FLASH_ADDR   0x7E000
 #endif // _BSP_ROM_CONFIG_H

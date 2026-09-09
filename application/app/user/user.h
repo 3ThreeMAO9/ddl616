@@ -2,6 +2,7 @@
 #define USER__HH
 
 #include "config.h"
+#include "bsp_rom_config.h"
 
 /*****************Macro****************/
 
@@ -11,7 +12,7 @@ typedef enum{
     USER_TYPE_PERMANENT_CODE = 0,
     USER_TYPE_PERMANENT_FINGERPRINTS,
     USER_TYPE_PERMANENT_CARD,
-
+    USER_TYPE_PERMANENT_FACE,
 }user_type_t;
 
 typedef enum
@@ -52,6 +53,11 @@ typedef struct{
 
 }user_card_t;
 
+typedef struct{
+    uint16_t id;
+
+}user_face_t;
+
 /*************************************/
  //周期性 BIT 7  6  5  4  3  2  1 0  
  //星期      保留 六 五 四 三 二 一 日
@@ -82,6 +88,7 @@ typedef struct{
         user_code_t password;
         user_fingers_t finger;
         user_card_t card;
+        user_face_t face;
 
     }info;
 
@@ -94,16 +101,11 @@ typedef struct{
     uint8_t  permanentCode;     // 密码数量
     uint8_t  permanentFingers;  // 指纹数量
     uint8_t  permanentCard;     // 卡片数量
+    uint8_t  permanentFace;     // 人脸数量
     uint16_t permanentKey;      // 总钥匙数量
 
 }user_key_cnt_t;
 
-typedef struct{
-    user_key_cnt_t cnt;
-    
-    user_info_t user[USER_CNT];
-
-}user_list_t;
 #pragma pack()
 
 /***************Variable***************/
@@ -123,6 +125,7 @@ uint8_t isCheckDefaultMasterCode(uint8_t *input, uint8_t input_len);
 uint8_t isValidUserFingerprint(uint16_t* user_sn);
 uint8_t isValidUserCard(uint16_t* user_sn, uint8_t* card_id);
 uint8_t isValiydUserKeyId(uint16_t *user_sn, uint8_t code_id, uint8_t key_type);
+uint8_t isValidUserFace(uint16_t* user_sn);
 
 void modifyUserMasterCode(uint8_t* input, uint8_t len);
 void modifyUserCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* para);
@@ -141,4 +144,4 @@ uint8_t getUserFlag(uint16_t *user_sn,uint8_t key_type,uint16_t id);
 uint8_t getUserFingerID(uint16_t *user_sn,uint16_t id);
 /**************************************/
 
-#endif 
+#endif
