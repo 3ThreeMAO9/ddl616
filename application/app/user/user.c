@@ -351,15 +351,21 @@ uint8_t compareUserParameter(uint16_t index)
  * @param input 传入密码数组（原始字节）
  * @param input_len 密码数组长度
  * @param user_sn 返回用户ID
+ * @param mode 验证管理员还是验证开门
  * @param dummy_flag 是否匹配虚位
  * @param time_flag 是否匹配时效性
  * @return uint8_t 匹配成功返回true
  */
-uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_sn, uint8_t dummy_flag, uint8_t time_flag)
+uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_sn, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag)
 {
     uint16_t i;
 
-    if (isDefaultMasterCode(input, input_len, dummy_flag))
+    if ((mode == false) && isDefaultMasterCode(input, input_len, dummy_flag))
+    {
+        *user_sn = 0;
+        return true;
+    }
+    else if ((mode == true) && isEmptyUser(false))
     {
         *user_sn = 0;
         return true;

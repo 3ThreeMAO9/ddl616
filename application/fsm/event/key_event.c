@@ -164,7 +164,7 @@ void keyEventVerifyAdmin(uint8_t key_value)
         }
         else
         {
-            if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, false) && (user_sn <= MASTER_USER_CODE_CNT))
+            if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, true, false) && (user_sn <= MASTER_USER_CODE_CNT))
             {
 #if (Enabled == PRINTF_PASSWORD)
                 OB_LOGD(TAG, "Verify success: password admin user[%u]", user_sn);
@@ -242,7 +242,7 @@ void keyEventVerifyUser(uint8_t key_value)
         }
         else
         {
-            if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, true))
+            if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, true, true))
             {
 #if (Enabled == PRINTF_PASSWORD)
                 OB_LOGI(TAG, "verify success: password user[%u]", user_sn);
@@ -331,7 +331,7 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
     {
         if (isSameInputCode())
         {
-            if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)) && (0 != user_sn))
+            if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, false, false)) && (0 != user_sn))
             {
 #if (Enabled == PRINTF_PASSWORD)
                 OB_LOGD(TAG, "user sn[%u]: len[%u]", user_sn, keyBoardEvent.input[0].len);
@@ -378,7 +378,7 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
     }
     else
     {
-        if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)) && (0 != user_sn))
+        if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, false, false)) && (0 != user_sn))
         {
 #if (Enabled == PRINTF_PASSWORD)
             OB_LOGD(TAG, "user sn[%u]: len[%u]", user_sn, keyBoardEvent.input[0].len);
@@ -492,174 +492,6 @@ void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cn
             OB_LOGE(TAG, "handle fail: input fail");
 #endif
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INPUT);
-            CLEAR_KEY_EVENT();
-        }
-    }
-}
-
-void keyEventHandleMasterCode(uint8_t key_value, uint8_t input_cnt)
-{
-    uint16_t user_sn;
-
-    if (KEY_CAN == key_value)
-    {
-        if (keyBoardEvent.input[0].len)
-        {
-            CLEAR_KEY_EVENT();
-#if (Enabled == PRINTF_USER)
-            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
-            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
-#endif
-        }
-        else
-        {
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
-            CLEAR_KEY_EVENT();
-        }
-    }
-    else if (KEY_OK == key_value)
-    {
-#if (Enabled == PRINTF_USER)
-        if (keyBoardEvent.input[0].len)
-        {
-            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
-            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
-        }
-#endif
-
-        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MIN)
-        {
-#if (Enabled == PRINTF_PASSWORD)
-            OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
-#endif
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
-            CLEAR_KEY_EVENT();
-        }
-        else
-        {
-            // if((0 == input_cnt) 
-            //     && (!isTooSimpleCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len))
-            //     && (!isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)))
-            if ((0 == input_cnt) && (!isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)))
-            {
-                COPY_KEY_EVENT_INPUT();
-#if (Enabled == PRINTF_PASSWORD)
-                OB_LOGD(TAG, "add success: password user[%u]", user_sn);
-#endif
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS);
-            }
-            else if ((1 == input_cnt) && (isSameInputCode()))
-            {
-                modifyUserMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
-                // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE);      //修改管理员密码
-                // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE,get_last_log_timestamp());
-                CLEAR_KEY_EVENT();
-
-#if (Enabled == PRINTF_PASSWORD)
-                OB_LOGD(TAG, "add success: password user[%u]", user_sn);
-#endif
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS);
-            }
-            else
-            {
-                CLEAR_KEY_EVENT();
-
-#if (Enabled == PRINTF_PASSWORD)
-                OB_LOGE(TAG, "add fail: password user[%u]", user_sn);
-#endif
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
-            }
-        }
-    }
-    else if (key_value < KEY_CNT)
-    {
-        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MAX)
-        {
-            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
-            keyBoardEvent.input[0].len++;
-        }
-        else
-        {
-            // handle fail
-#if (Enabled == PRINTF_PASSWORD)
-            OB_LOGE(TAG, "handle fail: input is too long");
-#endif
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_LONG);
-            CLEAR_KEY_EVENT();
-        }
-    }
-}
-
-void keyEventDeleteUserCode(uint8_t key_value)
-{
-    uint16_t user_sn;
-    if (KEY_CAN == key_value)
-    {
-        if (keyBoardEvent.input[0].len)
-        {
-            CLEAR_KEY_EVENT();
-#if (Enabled == PRINTF_USER)
-            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
-            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
-#endif
-        }
-        else
-        {
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
-            CLEAR_KEY_EVENT();
-        }
-    }
-    else if (KEY_OK == key_value)
-    {
-#if (Enabled == PRINTF_USER)
-        if (keyBoardEvent.input[0].len)
-        {
-            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
-            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
-        }
-#endif
-        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MIN)
-        {
-#if (Enabled == PRINTF_PASSWORD)
-            OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
-#endif
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
-            CLEAR_KEY_EVENT();
-        }
-        else
-        {
-            if (delUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn))
-            {
-#if (Enabled == PRINTF_PASSWORD)
-                OB_LOGD(TAG, "del success: password user[%u]", user_sn);
-#endif
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS);
-            }
-            else
-            {
-#if (Enabled == PRINTF_PASSWORD)
-                OB_LOGE(TAG, "add fail: password user[%u]", user_sn);
-#endif
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
-            }
-
-            CLEAR_KEY_EVENT();
-        }
-    }
-    else if (key_value < KEY_CNT)
-    {
-        if (keyBoardEvent.input[0].len < USER_CODE_LEN_MAX)
-        {
-            keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
-            keyBoardEvent.input[0].len++;
-        }
-        else
-        {
-            // handle fail
-#if (Enabled == PRINTF_PASSWORD)
-            OB_LOGE(TAG, "handle fail: input is too long");
-#endif
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_LONG);
             CLEAR_KEY_EVENT();
         }
     }

@@ -120,7 +120,7 @@ uint16_t readUserKeyCnt(uint8_t type);
 uint8_t isTooSimpleCode(uint8_t* input, uint8_t len);
 uint8_t isEmptyUser(uint8_t commonUserFlag);
 uint8_t isFullUser(uint8_t type);
-uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_sn, uint8_t dummy_flag, uint8_t time_flag);
+uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_sn, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag);
 uint8_t isCheckDefaultMasterCode(uint8_t *input, uint8_t input_len);
 uint8_t isValidUserFingerprint(uint16_t* user_sn);
 uint8_t isValidUserCard(uint16_t* user_sn, uint8_t* card_id);

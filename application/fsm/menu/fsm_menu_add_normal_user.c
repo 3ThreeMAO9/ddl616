@@ -32,7 +32,7 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e)
         case Q_ENTRY_SIG:
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
-            fp_task_set_mode(FP_MODE_IDLE);
+            fp_task_set_mode(FP_MODE_REGISTER);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_ADD_NORMAL_USER);
             break;

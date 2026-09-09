@@ -21,7 +21,7 @@ typedef uint8_t (*fingerprint_callback_t)(uint8_t result, void* para, uint8_t le
 /*****************Macro****************/
 // 根据实际需求启用/禁用功能以节省内存
 #define FP_ENABLE_DELETE            1  // 启用删除功能
-#define FP_ENABLE_VERIFY_DELETE     1  // 启用验证删除功能
+#define FP_ENABLE_VERIFY_DELETE     0  // 启用验证删除功能
 #define FP_ENABLE_LED_CONTROL       0  // 禁用LED控制（如不需要）
 
 // 缓冲区大小配置（根据实际需求调整）
