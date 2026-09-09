@@ -36,6 +36,13 @@ static uint8_t keyEventCombineFunctionHandle(void)
     uint32_t value;
 
     value = arraysConvertNumber(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
+
+    if (208 == value)
+    {
+        flash_page_system_init();
+        return true;
+    }
+
     if (isEmptyUser(false))
     {
         if (COMBINE_KEY_BOARD_AGING_TEST == value && !is_block_hotkey())
