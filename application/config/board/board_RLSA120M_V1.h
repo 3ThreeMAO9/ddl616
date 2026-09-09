@@ -152,37 +152,44 @@ typedef enum
 #define BLUE_LED_PIN                        (HAL_GPIO_PIN7)
 
 //back uart
-#define BACK_UART_SEL                   (UART_0)
+#define BACK_UART_SEL                       (UART_0)
 
 
-    //uart
-    #define UART0_TX_GPIO                   (HAL_GPIO_PORT3)
-    #define UART0_TX_PIN                    (HAL_GPIO_PIN1)
-    #define UART0_RX_GPIO                   (HAL_GPIO_PORT3)
-    #define UART0_RX_PIN                    (HAL_GPIO_PIN0)
+//uart
+#define BACK_UART0_TX_GPIO                  (HAL_GPIO_PORT3)
+#define BACK_UART0_TX_PIN                   (HAL_GPIO_PIN1)
+#define BACK_UART0_RX_GPIO                  (HAL_GPIO_PORT3)
+#define BACK_UART0_RX_PIN                   (HAL_GPIO_PIN0)
 
-    #define UART_INT_GPIO                   (UART0_RX_GPIO)
-    #define UART_INT_PIN                    (UART0_RX_PIN)
+#define UART_INT_GPIO                       (BACK_UART0_RX_GPIO)
+#define UART_INT_PIN                        (BACK_UART0_RX_PIN)
 
 
-    #define UART1_TX_GPIO                   (HAL_GPIO_PORT0)
-    #define UART1_TX_PIN                    (HAL_GPIO_PIN3)
-    #define UART1_RX_GPIO                   (HAL_GPIO_PORT2)
-    #define UART1_RX_PIN                    (HAL_GPIO_PIN11)
+
 
 // soft uart    
-#define SIMU_UART_GPIO                      (HAL_GPIO_PORT0)
-#define SIMU_UART_PIN                       (HAL_GPIO_PIN9)
-#define SIMU_UART_TX_PIN_SET                (OB_GPIO0->DATA |= GPIO_PIN9)     //中断执行，需要直接寄存器操作
-#define SIMU_UART_TX_PIN_CLR                (OB_GPIO0->DATA &= ~GPIO_PIN9)    //中断执行，需要直接寄存器操作
+#define SIMU_UART_GPIO                  (HAL_GPIO_PORT0)
+#define SIMU_UART_PIN                   (HAL_GPIO_PIN9)
+#define SIMU_UART_TX_PIN_SET            (OB_GPIO0->DATA |= GPIO_PIN9)     //中断执行，需要直接寄存器操作
+#define SIMU_UART_TX_PIN_CLR            (OB_GPIO0->DATA &= ~GPIO_PIN9)    //中断执行，需要直接寄存器操作
 
-#define LOG_UART_TX_GPIO                    (HAL_GPIO_PORT3)
-#define LOG_UART_TX_PIN                     (HAL_GPIO_PIN1)
-#define LOG_UART_RX_GPIO                    (HAL_GPIO_PORT3)
-#define LOG_UART_RX_PIN                     (HAL_GPIO_PIN0)
-#define LOG_UART_SEL                        (UART_0)
+#define LOG_UART_TX_GPIO                (HAL_GPIO_PORT3)
+#define LOG_UART_TX_PIN                 (HAL_GPIO_PIN1)
+#define LOG_UART_RX_GPIO                (HAL_GPIO_PORT3)
+#define LOG_UART_RX_PIN                 (HAL_GPIO_PIN0)
+#define LOG_UART_SEL                    (UART_0)
+
+#define UART0_TX_GPIO                   (OB_GPIO3)
+#define UART0_TX_PIN                    (GPIO_PIN1)
+#define UART0_RX_GPIO                   (OB_GPIO3)
+#define UART0_RX_PIN                    (GPIO_PIN0)
+                      
 
 // fingerprint  
+#define UART1_TX_GPIO                   (OB_GPIO2)
+#define UART1_TX_PIN                    (GPIO_PIN1)
+#define UART1_RX_GPIO                   (OB_GPIO2)
+#define UART1_RX_PIN                    (GPIO_PIN0)
 #define FP_TX_GPIO                      (HAL_GPIO_PORT2)
 #define FP_TX_PIN                       (HAL_GPIO_PIN1)
 #define FP_RX_GPIO                      (HAL_GPIO_PORT2)
@@ -193,14 +200,14 @@ typedef enum
 #define FP_WAKE_PIN                     (HAL_GPIO_PIN7)
 #define FINGER_UART_SEL                 (UART_1)
 
-    // face
-    #define FACE_TX_GPIO                    (HAL_GPIO_PORT0)
-    #define FACE_TX_PIN                     (HAL_GPIO_PIN3)
-    #define FACE_RX_GPIO                    (HAL_GPIO_PORT2)
-    #define FACE_RX_PIN                     (HAL_GPIO_PIN11)
-    #define FACE_POWER_GPIO                 (HAL_GPIO_PORT2)
-    #define FACE_POWER_PIN                  (HAL_GPIO_PIN12)
-    #define FACE_UART_SEL                   (UART_1)            
+// face
+#define FACE_TX_GPIO                    (HAL_GPIO_PORT0)
+#define FACE_TX_PIN                     (HAL_GPIO_PIN3)
+#define FACE_RX_GPIO                    (HAL_GPIO_PORT2)
+#define FACE_RX_PIN                     (HAL_GPIO_PIN11)
+#define FACE_POWER_GPIO                 (HAL_GPIO_PORT2)
+#define FACE_POWER_PIN                  (HAL_GPIO_PIN12)
+#define FACE_UART_SEL                   (UART_1)            
 
 //touch key
 #define TOUCH_CH_CNT                    (14)

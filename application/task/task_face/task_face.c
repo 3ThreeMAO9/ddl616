@@ -16,6 +16,8 @@
 #include "ob_log.h"
 #define TAG "task_face"
 
+#if 0
+
 /***************Variable***************/
 static face_task_driver_t face_task_driver;
 
@@ -305,3 +307,9 @@ uint8_t face_task_is_busy(void)
 
     return face_task_driver.io->is_busy();
 }
+
+#else
+void face_task_set_mode(uint8_t mode) {};
+void face_task_reset_all_face(face_delete_params_t params) {};
+
+#endif

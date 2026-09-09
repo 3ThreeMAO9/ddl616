@@ -22,16 +22,7 @@ void ob_log_init(void)
 #if (OB_LOG_UART_SEL == OB_LOG_UART_SIMU)
     simu_uart_init();
 #elif (OB_LOG_UART_SEL == OB_LOG_UART_1)
-    hal_uart_config_t uart_cfg = {
-        .tx_port = LOG_UART_TX_GPIO,
-        .tx_pin = LOG_UART_TX_PIN,
-        .rx_port = LOG_UART_RX_GPIO,
-        .rx_pin = LOG_UART_RX_PIN,
-        .baudrate = UART_BAUDRATE_1000000,
-        .uart_group = LOG_UART_SEL,
-        .callback = NULL
-    };
-    hal_uart_Init(&uart_cfg);
+    hal_uart_init(LOG_UART_SEL, UART_BAUDRATE_1000000, NULL);
 #endif
 
 #endif

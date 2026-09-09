@@ -198,16 +198,7 @@ static void uart_poll_tx(void)
 
 void module_uart_sleep(void)
 {
-    hal_uart_sleep_config_t uart_sleep_cfg = {
-        .tx_port = UART0_TX_GPIO,
-        .tx_pin = UART0_TX_PIN,
-        .rx_port = UART0_RX_GPIO,
-        .rx_pin = UART0_RX_PIN,
-        .uart_group = BACK_UART_SEL,
-        .mode = HAL_GPIO_MODE_INPUT_PULLUP,
-        .level = 1
-    };
-    hal_uart_sleep(&uart_sleep_cfg);
+    hal_uart_sleep(BACK_UART_SEL,HAL_GPIO_MODE_INPUT_PULLUP,1);
 
     LOCK_UART_INT_PIN_ENABLE();
 }
@@ -227,16 +218,7 @@ uint8_t module_uart_is_wake(void)
 
 void module_uart_init(void)
 {
-    hal_uart_config_t uart_cfg = {
-        .tx_port = UART0_TX_GPIO,
-        .tx_pin = UART0_TX_PIN,
-        .rx_port = UART0_RX_GPIO,
-        .rx_pin = UART0_RX_PIN,
-        .baudrate = UART_BAUDRATE_115200,
-        .uart_group = BACK_UART_SEL,
-        .callback = NULL
-    };
-    hal_uart_Init(&uart_cfg);
+    hal_uart_init(BACK_UART_SEL, UART_BAUDRATE_115200, NULL);
     uart_queue_init();
 }
 

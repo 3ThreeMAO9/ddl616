@@ -43,32 +43,13 @@ static inline void fingerprint_uart_init(uint8_t turn_on)
 {
     if (turn_on) {
         if (hal_uart_get_owner() != UART_OWNER_DEV1){
-            hal_uart_config_t uart_cfg = {
-                .tx_port    = FP_TX_GPIO,
-                .tx_pin     = FP_TX_PIN,
-                .rx_port    = FP_RX_GPIO,
-                .rx_pin     = FP_RX_PIN,
-                .baudrate   = FINGER_UART_BAUDRATE,
-                .uart_group = FINGER_UART_SEL,
-                .callback   = fingerprint_uart_IRQ
-            };
-            hal_uart_switch(UART_OWNER_DEV1, &uart_cfg);
-            delay_ms(10);
+
+            hal_uart_init(FINGER_UART_SEL, FINGER_UART_BAUDRATE, fingerprint_uart_IRQ);
             OB_LOGI(TAG,"finger uart on");
         }
     }
     else{
-        hal_uart_sleep_config_t uart_sleep_cfg = {
-            .tx_port    = FP_TX_GPIO,
-            .tx_pin     = FP_TX_PIN,
-            .rx_port    = FP_RX_GPIO,
-            .rx_pin     = FP_RX_PIN,
-            .mode       = HAL_GPIO_MODE_OUTPUT_PP,
-            .uart_group = FINGER_UART_SEL,
-            .level      = 0
-        };
-        hal_uart_sleep(&uart_sleep_cfg);
-        hal_uart_switch(UART_OWNER_NONE, NULL);
+        hal_uart_sleep(FINGER_UART_SEL,HAL_GPIO_MODE_OUTPUT_PP,0);
         OB_LOGE(TAG,"finger uart off");
     }
 }

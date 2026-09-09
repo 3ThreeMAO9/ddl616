@@ -31,7 +31,6 @@
 typedef enum {
     UART_0 = 0,
     UART_1,
-    UART_SOFT_0,
     UART_GROUP_CNT,
 }Uart_Group_t;
 
@@ -71,9 +70,9 @@ typedef struct
 /*************************Variable*************************/
 
 /*************************Function*************************/
-void hal_uart_Init(hal_uart_config_t *uart_cfg);
+void hal_uart_init(Uart_Group_t uart_group, uint32_t baudrate, uart_callback_t callback);
 void hal_uart_sotp(Uart_Group_t uart_group);
-void hal_uart_sleep(hal_uart_sleep_config_t *uart_cfg);
+void hal_uart_sleep(Uart_Group_t uart_group, uint8_t mode, uint8_t level);
 void hal_uart_gpio_sleep(hal_uart_sleep_config_t *uart_cfg);
 void hal_uartSendBuff(Uart_Group_t uart_group, uint8_t *data, uint16_t len);
 uint8_t hal_uart_receive_deal(Uart_Group_t uart_group, uint8_t *buf);
