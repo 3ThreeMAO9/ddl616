@@ -26,6 +26,7 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e);
 
 QState lock_fsm_menu_admin(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t code_handle);
 QState lock_fsm_menu_user_settings(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_system_settings(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_linked_unlock(LockFsm *me, QEvent const *e);
@@ -35,7 +36,7 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e);
 QState lockFsmWake(LockFsm *me, QEvent const *e);
 QState lockFsmSystemLock(LockFsm *me, QEvent const *e);
 QState lockFsmLowEnergySystemLock(LockFsm *me, QEvent const *e);
-QState lockFsmHandleSuccessKeepGreen(LockFsm *me, QEvent const *e);
+QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmVerifyAdminSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e);

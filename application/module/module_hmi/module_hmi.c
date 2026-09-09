@@ -156,7 +156,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_PIN_CODE_TOO_SIMPLE:
-            PLAYER_LIST_CLEAR_ADD(VOICE_PIN_code_is_too_simple);
+            PLAYER_LIST_CLEAR_ADD(VOICE_PIN_code_is_too_simple,VOICE_Please_re_enter);
             break;
 
         case HMI_STATE_USER_SETTINGS:
@@ -173,6 +173,26 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_LANGAGESETTING:
             PLAYER_LIST_CLEAR_ADD(VOICE_One,VOICE_Two);
+            break;
+
+        case HMI_STATE_REPEAT_INPUT_CODE:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Please_enter_again,VOICE_End_with_pound_key);
+            break;
+
+        case HMI_STATE_INPUT_ERROR_AGAIN:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Input_error,VOICE_Please_re_enter);
+            break;
+
+        case HMI_STATE_PIN_REPEAT:
+            PLAYER_LIST_CLEAR_ADD(VOICE_PIN_code_already_exists,VOICE_Please_re_enter);
+            break;
+
+        case HMI_STATE_PIN_DIFFERENT:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed,VOICE_PIN_codes_entered_do_not_match);
+            break;
+
+        case HMI_STATE_HANDLE_ADD_SUCCESS:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_successful);
             break;
         default:
             return keepTime;
@@ -208,7 +228,6 @@ static void hmi_logo_led_loop(void)
         {
             switch (hmihandle.state)
             {
-                case HMI_STATE_HANDLE_SUCCESS_KEEP_GREEN:
                 case HMI_STATE_ENROLL_PRESS_TWICE:
                     hmihandle.logoLed.color = LOGO_LED_COLOR_GREEN;
                     break;

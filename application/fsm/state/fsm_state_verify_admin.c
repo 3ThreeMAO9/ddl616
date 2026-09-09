@@ -65,8 +65,7 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
 
             if (EVENT_RESULT_SUCCESS_VERIFY_ADMIN == (e->dynamic_[0]))
             {
-                // if (isEmptyUser(false))   // 初始化状态
-                if (0)
+                if (isEmptyUser(false))   // 初始化状态
                 {
                     hmiTaskSetState(HMI_STATE_PIN_CODE_TOO_SIMPLE);
                     state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);

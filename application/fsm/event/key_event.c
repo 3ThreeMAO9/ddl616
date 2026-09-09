@@ -324,7 +324,6 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
     {
         if (isSameInputCode())
         {
-            // keypadLed_control(KEY_OK,TRUN_ON);
             if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, false)) && (0 != user_sn))
             {
 #if (Enabled == PRINTF_PASSWORD)
@@ -383,7 +382,6 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
             }
             else if (CODE_HANDLE_DEL == handle_code)
             {
-                // keypadLed_control(KEY_OK,TRUN_ON);
                 if (delUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn))
                 {
                     result = EVENT_RESULT_SUCCESS;
@@ -420,7 +418,6 @@ void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cn
     {
         if (keyBoardEvent.input[0].len)
         {
-            // baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_REPEAT_MENU);
             CLEAR_KEY_EVENT();
 #if (Enabled == PRINTF_USER)
             OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
@@ -429,11 +426,6 @@ void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cn
         }
         else
         {
-            // //修改管理密码 无管理员的情况下，按返回键退出管理模式
-            // if((CODE_HANDLE_CHANGE_MASTER == handle_code) && (isEmptyUser(false)))
-            //     baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_EXIT_MENU);
-            // else
-            //     baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_BACK_MENU);
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
             CLEAR_KEY_EVENT();
         }
@@ -457,32 +449,22 @@ void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cn
         }
         else
         {
-//             if (isTooSimpleCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len))
-//             {
-//                 CLEAR_KEY_EVENT();
-
-// #if (Enabled == PRINTF_PASSWORD)
-//                 OB_LOGE(TAG, "add fail: code is too simple");
-// #endif
-//                 baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
-//             }
-//             else
-//             {
-//                 codeHandle(handle_code, input_cnt);
-//             }
-            if ((CODE_HANDLE_CHANGE_MASTER == handle_code) && (isCheckDefaultMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len)))
+            if (isTooSimpleCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len))
             {
                 CLEAR_KEY_EVENT();
+
 #if (Enabled == PRINTF_PASSWORD)
-                OB_LOGE(TAG, "add fail: code is 12345678");
+                OB_LOGE(TAG, "add fail: code is too simple");
 #endif
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SIMPLE);
             }
             else
+            {
                 codeHandle(handle_code, input_cnt);
+            }
         }
     }
-    else if (key_value < KEY_CNT)
+    else if ((key_value < KEY_CNT) && (key_value != KEY_NUM_13))
     {
         if (keyBoardEvent.input[0].len < USER_CODE_LEN_MAX)
         {

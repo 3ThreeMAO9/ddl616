@@ -56,10 +56,10 @@ typedef enum{
     HMI_STATE_UNLOCK_FAIL,              //验证失败
     HMI_STATE_ENTER_ADMIN_MODE,         //进入管理模式
     HMI_STATE_VERIFY_ADMIN_CODE,        //请验证管理密钥，取消请按星号键
-    // HMI_STATE_INPUT_ERROR_AGAIN,        //输入错误,请再次输入   Input error Please_enter_again
-    // HMI_STATE_PIN_REPEAT,               //设置失败，密码已存在  Setup failed PIN code already exists 
+    HMI_STATE_INPUT_ERROR_AGAIN,        //输入错误,请再次输入   Input error Please_enter_again
+    HMI_STATE_PIN_REPEAT,               //设置失败，密码已存在  Setup failed PIN code already exists 
     // HMI_STATE_ENTER_AGAIN,              //请在输入一次          please enter again
-    // HMI_STATE_PIN_DIFFERENT,            //两次输入的密码不一致  The PIN code is inconsistent
+    HMI_STATE_PIN_DIFFERENT,            //两次输入的密码不一致  The PIN code is inconsistent
     // HMI_STATE_FINGER_DELETION_SUCCESS,  //删除成功(键盘灯熄灭)  Deletion successful
     // HMI_STATE_DELETION_SUCCESS,         //删除成功              Deletion successful
     // HMI_STATE_DELETION_FAIL,            //删除失败              Deletion failed
@@ -77,6 +77,7 @@ typedef enum{
     HMI_STATE_USER_SETTINGS,            //用户设置
     HMI_STATE_SYSTEM_SETTINGS,          //系统设置
     HMI_STATE_ADD_NORMAL_USER,          //添加普通用户--用户编号XXX
+    HMI_STATE_REPEAT_INPUT_CODE,        //请再输入一次，以#号键结束
     HMI_STATE_LANGAGESETTING,           //语言设置菜单
     HMI_STATE_LINKED_UNLOCK,            //联动解锁
     HMI_STATE_AUTO_LOCK,                //自动上锁菜单
@@ -128,7 +129,7 @@ typedef enum{
     // HMI_STATE_SETUP_SUCCESSFUL,     //设置成功
     HMI_STATE_HANDLE_FAIL_KEEP_RED,
     HMI_STATE_HANDLE_SUCCESS,
-    HMI_STATE_HANDLE_SUCCESS_KEEP_GREEN,
+    HMI_STATE_HANDLE_ADD_SUCCESS,
     HMI_STATE_DEV_PARA,
     HMI_STATE_DEV_PARA_MUTE,
     HMI_STATE_DEVICE_TEST_TIME_OUT,     

@@ -807,6 +807,11 @@
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_system_settings.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm_menu_repeat_input_code.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_repeat_input_code.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

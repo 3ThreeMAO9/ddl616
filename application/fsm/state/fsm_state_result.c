@@ -140,12 +140,12 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
     return state;
 }
 
-QState lockFsmHandleSuccessKeepGreen(LockFsm *me, QEvent const *e)
+QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e)
 {
 #if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[handle success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
+    OB_LOGD(TAG, "Now State[handle add success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
-    return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_SUCCESS_KEEP_GREEN);
+    return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_ADD_SUCCESS);
 }
 
 QState lockFsmHandleSuccess(LockFsm *me, QEvent const *e)
