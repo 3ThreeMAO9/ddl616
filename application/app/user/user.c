@@ -443,7 +443,8 @@ uint8_t isValidUserCard(uint16_t* user_sn, uint8_t* card_id)
 
     if(isEmptyUser(false))
     {
-        return false;
+        *user_sn = 0;
+        return true;
     }
     else
     {

@@ -98,7 +98,6 @@ extern unsigned char ReaderA_Wakeup(void);
 extern unsigned char ReaderA_AntiColl(void);
 extern unsigned char ReaderA_Select(void);
 extern unsigned char ReaderA_CardActivate(void);
-extern unsigned char ReaderA_OpenBackDoor(void);
 #endif
 
 #if (Enabled == CARD_TYPE_B_ENABLE)

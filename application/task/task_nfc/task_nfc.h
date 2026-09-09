@@ -28,7 +28,7 @@ typedef enum {
 }nfc_task_state_e;
 
 /*****************Macro****************/
-#define NFC_ENCRYPT_DEFAULT             NFC_ENCRYPT_OB_DEFAULT
+#define NFC_ENCRYPT_DEFAULT             NFC_ENCRYPT_NONE
 
 #define NFC_FUNC_CARD_SECTOR_ID         (2)
 #define NFC_USER_CARD_SECTOR_ID         (15)

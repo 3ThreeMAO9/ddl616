@@ -165,13 +165,6 @@ static unsigned char Card_Handle_Event(const nfc_attribute_t* nfc_attr) {
                             nfc_event.valid = true;
                         }
                         break;
-                    case NFC_ENCRYPT_SOLITY:
-                        if (FM17622_SUCCESS != ReaderA_OpenBackDoor()) {
-                            // 实测有效卡需要2.5ms左右(超时)，GEN卡需要<1.4ms        
-                            // 魔术卡GEN1和GEN2可以通过特殊指令开启后门，此类卡不允许使用
-                            nfc_event.valid = true;
-                        }
-                        break;
                     default:
                         break;
                 }

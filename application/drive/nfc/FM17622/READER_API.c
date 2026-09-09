@@ -234,61 +234,6 @@ uint8_t ReaderA_CardInfo(picc_a_t* info) {
 	memcpy((uint8_t*)(info), (uint8_t*)(&PICC_A), sizeof(picc_a_t));
 	return true;
 }
-
-//*************************************
-//函数  ReaderA_OpenBackDoor
-//入口参数：
-//出口参数：FM17622_SUCCESS, FM17622_COMM_ERR
-//注：后门开启序列： 7bit发送的命令是否为0x41与卡有关，此处为缩短读卡速度，仅确保支持客户提供的复制卡测试
-//*************************************
-unsigned char ReaderA_OpenBackDoor(void) {
-#if 0	// 该序列库获取自网上，因提供的两个卡片样品分别支持0x40, 0x41，其他指令未充分验证有效性
-	// 2代魔术卡后门序列库
-	static const back_door_sequence_t back_door_sequence = {
-		{{0x40, 0x43, 0x00, 0x00}, "Standard Gen2 Backdoor"},
-		{{0x41, 0x44, 0x00, 0x00}, "Variant A"},
-		{{0x42, 0x45, 0x00, 0x00}, "Variant B"},
-		{{0x48, 0x4D, 0x00, 0x00}, "Config Mode Sequence"},
-		{{0x4A, 0x4F, 0x00, 0x00}, "Advanced Mode"},
-		{{0x50, 0x53, 0x00, 0x00}, "Extended Sequence A"},
-		{{0x51, 0x54, 0x00, 0x00}, "Extended Sequence B"},
-		{{0x52, 0x55, 0x00, 0x00}, "Extended Sequence C"},
-		{{0x53, 0x56, 0x00, 0x00}, "Extended Sequence D"},
-		{{0x54, 0x57, 0x00, 0x00}, "Extended Sequence E"},
-	} 
-#else
-	const unsigned char backdoor_cmd[] = {0x40, 0x41, 0x42};
-#endif
-
-    unsigned char response[2];
-    unsigned char responseBits;
-	
-	// 进入休眠模式
-    if (FM17622_SUCCESS != ReaderA_Halt()) {		// 实测<3ms
-        return FM17622_COMM_ERR;
-    }
-		
-    delay_us(250);
-
-	NfcSetReg(JREG_TXMODE,0x00);//Enable TxCRC
-	NfcSetReg(JREG_RXMODE,0x00);//Disable RxCRC
-	// 后门激活, 实测最大需9ms左右
-	for (uint8_t i = 0; i < sizeof(backdoor_cmd); i++) {
-		if (FM17622_Transceive7Bits(backdoor_cmd[i], response, &responseBits)) {
-			if ((4 != responseBits) || (0x0A != response[0])) {
-				continue;
-			}
-
-			OB_LOGD(TAG, "Succ: Open back door step 1");
-			// 此处为了加快读卡速度，后续后门确认指令步骤跳过（如需修改魔术卡的块0，则需完整步骤后修改）
-			
-			return FM17622_SUCCESS;
-		}
-	}
-	
-	return FM17622_COMM_ERR;
-}
-
 #endif
 
 #if (Enabled == CARD_TYPE_B_ENABLE)

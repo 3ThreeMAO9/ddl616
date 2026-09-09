@@ -254,6 +254,7 @@ static void fingerprint_process_verify(fp_context_t *ctx) {
     }
 }
 
+#if (FP_ENABLE_VERIFY_DELETE)
 static void fingerprint_process_verify_delete(fp_context_t *ctx)
 {
     switch (ctx->step) {
@@ -332,7 +333,7 @@ static void fingerprint_process_verify_delete(fp_context_t *ctx)
             break;
     }
 }
-
+#endif
 static void fingerprint_process_register(fp_context_t *ctx) {
     switch (ctx->step) {
         case FP_STEP_0:

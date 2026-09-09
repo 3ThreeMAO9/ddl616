@@ -11,6 +11,7 @@
 #include "task_fingerprint.h"
 #include "task_motor.h"
 #include "task_key.h"
+#include "task_nfc.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -34,7 +35,8 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_ENTRY_SIG:
             keyTaskInit(KEY_TYPE_KEY_BOARD);
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
-            fp_task_set_mode(FP_TASK_MODE_DEFAULT);
+            fp_task_set_mode(FP_MODE_VERIFY);
+            nfc_task_set_state(NFC_STATE_VERIFY);
             // face_task_set_mode(FACE_TASK_MODE_DEFAULT);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);

@@ -35,8 +35,6 @@ typedef enum {
 typedef enum {
     NFC_ENCRYPT_NONE = 0,
     NFC_ENCRYPT_OB_DEFAULT,     // OB默认加密方式
-    NFC_ENCRYPT_SOLITY,         // 韩国项目专用
-    //...
 
 }nfc_encrypt_mode_e;
 
@@ -74,6 +72,7 @@ typedef struct {
 
     uint8_t sector_valid : 1;   // 扇区数据有效标识（用于传递扇区数据）
     uint8_t sector_id : 7;      // 扇区ID（0~127）
+    uint16_t para;
     uint8_t *sector_pt;         // 指向扇区数据地址
 
 }nfc_event_t;

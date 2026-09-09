@@ -1,8 +1,10 @@
 #include "task_nfc.h"
 #include "msg_protocol.h"
 #include "protocol_func_card.h"
+#include "user.h"
+#include "event.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "task_nfc"
 
@@ -20,7 +22,14 @@ static void nfc_task_callback(nfc_event_t *event)
         {
         case NFC_STATE_VERIFY:
             OB_LOGI(TAG, "verify success");
-            // uart_msg_nfc_verify(EVENT_CODE_CARD_VERIFY_SUCCESS, event->card_id);
+            if (isValidUserCard(&(event->para) ,event->card_id))
+            {
+                userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, event->para);
+            }
+            else
+            {
+                userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
+            }
             break;
         case NFC_STATE_REGISTER:
             OB_LOGI(TAG, "register success");
@@ -40,11 +49,11 @@ static void nfc_task_callback(nfc_event_t *event)
         {
         case NFC_STATE_VERIFY:
             OB_LOGI(TAG, "verify fail");
-            // uart_msg_nfc_verify(EVENT_CODE_CARD_VERIFY_FAIL, event->card_id);
+            userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
             break;
         case NFC_STATE_REGISTER:
             OB_LOGI(TAG, "register fail");
-            // uart_msg_nfc_verify(EVENT_CODE_CARD_REGISTER_FAIL, event->card_id);
+            userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
             break;
         case NFC_STATE_FUNCTION:
             OB_LOGI(TAG, "state function");
