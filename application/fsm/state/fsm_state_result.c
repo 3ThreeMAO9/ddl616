@@ -8,6 +8,7 @@
 #include "task_hmi.h"
 #include "task_nfc.h"
 #include "parameter.h"
+#include "user.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
@@ -178,7 +179,12 @@ QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e)
 #if (Enabled==PRINTF_FSM)
     OB_LOGD(TAG, "Now State[verify user success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
-    return lockFsmSuccessDeal(me, e, HMI_STATE_VERIFY_SUCCESS);
+    uint8_t state = HMI_STATE_VERIFY_SUCCESS;
+
+    if (isEmptyUser(false))
+        state = HMI_STATE_DEMO_VERIFY_SUCCESS;
+
+    return lockFsmSuccessDeal(me, e, state);
 }
 
 QState lockFsmUnlockSuccess(LockFsm *me, QEvent const *e)
