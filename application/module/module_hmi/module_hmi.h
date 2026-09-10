@@ -58,6 +58,7 @@ typedef enum{
     HMI_STATE_VERIFY_ADMIN_CODE,        //请验证管理密钥，取消请按星号键
     HMI_STATE_INPUT_ERROR_AGAIN,        //输入错误,请再次输入   Input error Please_enter_again
     HMI_STATE_PIN_REPEAT,               //设置失败，密码已存在  Setup failed PIN code already exists 
+    HMI_STATE_CARD_REPEAT,              //添加失败，卡片已存在
     // HMI_STATE_ENTER_AGAIN,              //请在输入一次          please enter again
     HMI_STATE_PIN_DIFFERENT,            //两次输入的密码不一致  The PIN code is inconsistent
     // HMI_STATE_FINGER_DELETION_SUCCESS,  //删除成功(键盘灯熄灭)  Deletion successful

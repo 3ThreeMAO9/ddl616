@@ -4,6 +4,7 @@
 #include "task_system_time.h"
 #include "task_fingerprint.h"
 #include "task_key.h"
+#include "task_nfc.h"
 
 #include "event.h"
 #include "key_event.h"
@@ -28,6 +29,7 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
     switch (e->sig){
         case Q_ENTRY_SIG:
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
+            nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_REPEAT_INPUT_CODE);
             break;

@@ -6,6 +6,7 @@
 #include "task_key.h"
 #include "task_motor.h"
 #include "task_hmi.h"
+#include "task_nfc.h"
 #include "parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
@@ -32,7 +33,7 @@ static QState lockFsmSuccessDeal(LockFsm *me, QEvent const *e, uint8_t hmiState)
 #endif
             keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
-            
+            nfc_task_set_state(NFC_STATE_SLEEP);
             if (HMI_STATE_IDLE != hmiState)
             {
                 keepTimeOut = hmiTaskSetState(hmiState);
@@ -98,7 +99,7 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
-
+            nfc_task_set_state(NFC_STATE_SLEEP);
             keepTimeOut = hmiTaskSetState(hmiState);
             system_time_task_set_work_time(keepTimeOut);
             OB_LOGW(TAG, "keepTimeOut[%ld]", keepTimeOut);
@@ -186,6 +187,14 @@ QState lockFsmHandleFail(LockFsm *me, QEvent const *e)
     OB_LOGD(TAG, "Now State[handle fail], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
     return lockFsmFailDeal(me, e, HMI_STATE_HANDLE_FAIL, false);
+}
+
+QState lockFsmHandleCardRepeat(LockFsm *me, QEvent const *e)
+{
+#if (Enabled==PRINTF_FSM)
+    OB_LOGD(TAG, "Now State[card repeat], Event[%d, %d]--", e->sig, e->dynamic_[0]);
+#endif
+    return lockFsmFailDeal(me, e, HMI_STATE_CARD_REPEAT, false);
 }
 
 QState lockFsmHandleFailKeepRed(LockFsm *me, QEvent const *e)

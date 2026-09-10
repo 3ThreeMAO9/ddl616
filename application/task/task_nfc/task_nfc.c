@@ -22,18 +22,32 @@ static void nfc_task_callback(nfc_event_t *event)
         {
         case NFC_STATE_VERIFY:
             OB_LOGI(TAG, "verify success");
-            if (isValidUserCard(&(event->para) ,event->card_id))
-            {
+            if (isValidUserCard(&(event->para) ,event->card_id)){
                 userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, event->para);
             }
-            else
-            {
+            else{
                 userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
             }
             break;
         case NFC_STATE_REGISTER:
             OB_LOGI(TAG, "register success");
-            // uart_msg_nfc_verify(EVENT_CODE_CARD_REGISTER_SUCCESS, event->card_id);
+            if (!isValidUserCard(&(event->para), event->card_id))
+            {
+                uint16_t uu_id = 0;
+                if (addUserCard(event->card_id, (&(uu_id))))
+                {
+                    OB_LOGI(TAG, "->uu_id [%ld]", uu_id);
+                    userHandleEventPush(EVENT_RESULT_SUCCESS_ADD, event->para);
+                }
+                else
+                {
+                    userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
+                }
+            }
+            else
+            {
+                userHandleEventPush(EVENT_RESULT_FAIL_CARD_REPEAT, 0);
+            }
             break;
         case NFC_STATE_FUNCTION:
             OB_LOGI(TAG, "state function");

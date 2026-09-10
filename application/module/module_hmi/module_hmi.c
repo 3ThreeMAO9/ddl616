@@ -129,7 +129,6 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
             if (!silentFlag)
                 PLAYER_LIST_CLEAR_ADD(VOICE_Input_error);
-            keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
 
         case HMI_STATE_ENTER_ADMIN_MODE:
@@ -185,6 +184,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_PIN_REPEAT:
             PLAYER_LIST_CLEAR_ADD(VOICE_PIN_code_already_exists,VOICE_Please_re_enter);
+            break;
+
+        case HMI_STATE_CARD_REPEAT:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed, VOICE_Key_tag_already_exists);
+            keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
         case HMI_STATE_PIN_DIFFERENT:

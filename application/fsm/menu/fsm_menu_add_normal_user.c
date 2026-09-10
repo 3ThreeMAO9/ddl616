@@ -4,6 +4,7 @@
 #include "task_system_time.h"
 #include "task_fingerprint.h"
 #include "task_key.h"
+#include "task_nfc.h"
 
 #include "event.h"
 #include "key_event.h"
@@ -33,6 +34,7 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e)
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_REGISTER);
+            nfc_task_set_state(NFC_STATE_REGISTER);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_ADD_NORMAL_USER);
             break;
@@ -78,6 +80,16 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e)
             }
             break;
         case Q_USER_HANDLE_SIG:
+            if (EVENT_RESULT_SUCCESS_ADD == e->dynamic_[0])
+            {
+                me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user);
+                state = Q_TRAN(lockFsmHandleAddSuccess);
+            }
+            else if (EVENT_RESULT_FAIL_CARD_REPEAT == e->dynamic_[0])
+            {
+                me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user);
+                state = Q_TRAN(lockFsmHandleCardRepeat);
+            }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;

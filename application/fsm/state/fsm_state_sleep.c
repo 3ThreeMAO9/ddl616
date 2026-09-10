@@ -8,6 +8,7 @@
 #include "task_fingerprint.h"
 #include "task_hmi.h"
 #include "task_key.h"
+#include "task_nfc.h"
 
 #include "event.h"
 #include "key_event.h"
@@ -35,6 +36,7 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
     switch (e->sig){
         case Q_ENTRY_SIG:
             fp_task_set_mode(FP_MODE_SLEEP);
+            nfc_task_set_state(NFC_STATE_SLEEP);
             // face_task_set_mode(FACE_MODE_IDLE);
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board

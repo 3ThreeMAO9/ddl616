@@ -44,6 +44,7 @@ QState lockFsmUnlockSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmLockSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleFailKeepRed(LockFsm *me, QEvent const *e);
 QState lockFsmHandleFail(LockFsm *me, QEvent const *e);
+QState lockFsmHandleCardRepeat(LockFsm *me, QEvent const *e);
 QState lockFsmVerifyFail(LockFsm *me, QEvent const *e);
 QState lockFsmTimeOut(LockFsm *me, QEvent const *e);
 QState lockFsmAdminMenu(LockFsm *me, QEvent const *e);
