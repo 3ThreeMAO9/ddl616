@@ -35,11 +35,11 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            fp_task_set_mode(FP_MODE_SLEEP);
-            nfc_task_set_state(NFC_STATE_SLEEP);
-            // face_task_set_mode(FACE_MODE_IDLE);
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
+            fp_task_set_mode(FP_MODE_SLEEP);
+            nfc_task_set_state(NFC_STATE_SLEEP);
+            hmiTaskSetAllowSelintFlag(true);
             system_time_task_set_work_time(250);
             hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_OFF);
             break;

@@ -34,6 +34,7 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_VERIFY);
             nfc_task_set_state(NFC_STATE_VERIFY);
+            hmiTaskSetAllowSelintFlag(false);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_VERIFY_ADMIN_CODE);
             break;

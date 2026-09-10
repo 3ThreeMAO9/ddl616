@@ -89,6 +89,7 @@ typedef enum{
     EVENT_RESULT_TOUCH_WAKE,            //触摸唤醒
     EVENT_RESULT_LOCK,
     EVENT_RESULT_KEY_LOCK,              //按键关锁事件
+    EVENT_RESULT_VOICE_MODE,            //长按语音模式切换
     EVENT_RESULT_RESET_LONG_PRESS,      //复位按键长按
     EVENT_RESULT_RESET_RELEASE,         //复位按键松手
     EVENT_RESULT_RESET_TEST,

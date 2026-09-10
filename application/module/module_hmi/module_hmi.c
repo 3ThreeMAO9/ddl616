@@ -206,6 +206,13 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_ENROLLMENT_FAIL:
             PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed);
             break;
+
+        case HMI_STATE_HANDLE_VOICE_SUCCESS:
+            if (readUserParameter(USER_PARA_SILENT_MODE_ID))
+                PLAYER_LIST_CLEAR_ADD(VOICE_Voice_mode);
+            else
+                PLAYER_LIST_CLEAR_ADD(VOICE_Mute_mode);
+            break;
         default:
             return keepTime;
     }

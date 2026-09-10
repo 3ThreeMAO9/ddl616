@@ -25,6 +25,7 @@ static QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
         case Q_ENTRY_SIG:
             system_time_task_set_function_time(1200);
             system_time_task_set_work_time(1000);
+            hmiTaskSetAllowSelintFlag(true);
             hmiTaskSetState(HMI_STATE_POWER_ON);
             break;
         case Q_EXIT_SIG:

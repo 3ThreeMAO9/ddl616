@@ -36,6 +36,7 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e);
 QState lockFsmWake(LockFsm *me, QEvent const *e);
 QState lockFsmSystemLock(LockFsm *me, QEvent const *e);
 QState lockFsmLowEnergySystemLock(LockFsm *me, QEvent const *e);
+QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmVerifyAdminSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleSuccess(LockFsm *me, QEvent const *e);

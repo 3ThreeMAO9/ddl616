@@ -149,6 +149,14 @@ QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e)
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_ADD_SUCCESS);
 }
 
+QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e)
+{
+#if (Enabled==PRINTF_FSM)
+    OB_LOGD(TAG, "Now State[voice], Event[%d, %d]--", e->sig, e->dynamic_[0]);
+#endif
+    return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_VOICE_SUCCESS);
+}
+
 QState lockFsmHandleSuccess(LockFsm *me, QEvent const *e)
 {
 #if (Enabled==PRINTF_FSM)

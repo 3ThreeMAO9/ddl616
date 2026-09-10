@@ -51,6 +51,14 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
     case KEY_TYPE_LONG_RELEASE:
         OB_LOGD(TAG, "KEY_TYPE_LONG_RELEASE event=%d", key_value);
         break;
+    case KEY_TYPE_VOICE_MODE:
+        if (key_value == KEY_NUM_0)
+        {
+            OB_LOGD(TAG, "KEY_TYPE_VOICE_MODE");
+            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VOICE_MODE);
+        }
+        break;
     default:
         break;
     }

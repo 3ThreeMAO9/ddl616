@@ -118,7 +118,7 @@ static void keyBoardHandler_callback(void* btn)
                     OB_LOGD(TAG,"LONG PRESS");
                     keyHandle.keyBoard.busy = false;
                     long_press_hold_flag = true;
-                    keyEvent_callback(KEY_TYPE_KEY_BOARD, KEY_LOCK);
+                    keyEvent_callback(KEY_TYPE_VOICE_MODE, button->button_id);
                 }
             }
             break;

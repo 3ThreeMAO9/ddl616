@@ -3,6 +3,7 @@
 
 #include "event.h"
 #include "key_event.h"
+#include "parameter.h"
 
 #include "task_sleep.h"
 #include "task_system_time.h"
@@ -37,6 +38,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_VERIFY);
             nfc_task_set_state(NFC_STATE_VERIFY);
+            hmiTaskSetAllowSelintFlag(true);
             // face_task_set_mode(FACE_TASK_MODE_DEFAULT);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
@@ -62,6 +64,18 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 me->branch = (QStateHandler)(lock_fsm_idle);
                 state = Q_TRAN(lockFsmInputError);
+            }
+            else if (EVENT_RESULT_VOICE_MODE == e->dynamic_[0])
+            {
+                keyEventInit(); // 清空已输入的密码
+                if (readUserParameter(USER_PARA_SILENT_MODE_ID)){
+                    setUserParameter(USER_PARA_SILENT_MODE_ID, Disabled);
+                }
+                else{
+                    setUserParameter(USER_PARA_SILENT_MODE_ID, Enabled);
+                }
+                me->branch = (QStateHandler)(lock_fsm_idle);
+                state = Q_TRAN(lockFsmHandleVoiceModeSuccess);
             }
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
             //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);

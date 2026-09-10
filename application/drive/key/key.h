@@ -18,7 +18,7 @@ typedef void (*key_event_callback_t)(uint8_t, uint8_t);
 #define KEY_SCAN_TIME_OUT                (TICKS_INTERVAL)  //unit: ms
 #define KEY_CNT                          (13)
 
-#define KEY_BOARD_LONG_PRESS_TIME        (1000 / KEY_SCAN_TIME_OUT)
+#define KEY_BOARD_LONG_PRESS_TIME        (1500 / KEY_SCAN_TIME_OUT)     // 总时间3s 3000-1500=1500
 
 #define TAMPER_KEY_LONG_PRESS_TIME       (KEY_SCAN_TIME_OUT / KEY_SCAN_TIME_OUT)
 
@@ -52,6 +52,7 @@ typedef enum{
     KEY_TYPE_TAMPER_KEY,
     KEY_TYPE_LONG_RELEASE,
     KEY_TYPE_CLOSE_KEY,
+    KEY_TYPE_VOICE_MODE,
     KEY_TYPE_CNT,
 }key_type_t;
 
