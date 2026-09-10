@@ -197,6 +197,13 @@ QState lockFsmHandleCardRepeat(LockFsm *me, QEvent const *e)
     return lockFsmFailDeal(me, e, HMI_STATE_CARD_REPEAT, false);
 }
 
+QState lockFsmHandleAddFail(LockFsm *me, QEvent const *e)
+{
+#if (Enabled==PRINTF_FSM)
+    OB_LOGD(TAG, "Now State[add fail], Event[%d, %d]--", e->sig, e->dynamic_[0]);
+#endif
+    return lockFsmFailDeal(me, e, HMI_STATE_ENROLLMENT_FAIL, false);
+}
 QState lockFsmHandleFailKeepRed(LockFsm *me, QEvent const *e)
 {
 #if (Enabled==PRINTF_FSM)

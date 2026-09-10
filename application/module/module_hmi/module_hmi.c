@@ -198,6 +198,14 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_HANDLE_ADD_SUCCESS:
             PLAYER_LIST_CLEAR_ADD(VOICE_Addition_successful);
             break;
+
+        case HMI_STATE_ENROLL_FINGER_PRESS:
+            PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DI, VOICE_Please_remove_your_finger_and_press_again);
+            break;
+        
+        case HMI_STATE_ENROLLMENT_FAIL:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed);
+            break;
         default:
             return keepTime;
     }

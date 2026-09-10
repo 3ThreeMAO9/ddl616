@@ -83,8 +83,6 @@ void nfc_task_set_state(uint8_t state);
  */
 void nfc_task_set_encrypt(uint8_t flag);
 
-uint8_t nfc_task_test_mode(uint8_t handle_id);
-
 /**************************************/
 
 #endif 

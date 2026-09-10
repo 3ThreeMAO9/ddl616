@@ -21,9 +21,9 @@ static fp_handle_t fp_handle;
 /*************** 指纹硬件配置 ***************/
 static void fingerprint_uart_IRQ(const uint8_t value) {
     // 仅当指纹占用 UART 时才处理，防止串扰
-    if (hal_uart_get_owner() != UART_OWNER_DEV1) {
-        return;
-    }
+    // if (hal_uart_get_owner() != UART_OWNER_DEV1) {
+    //     return;
+    // }
 
     register fingerprint_uart_t *p_uart = &fp_handle.uart;
     if (p_uart->lenth < FP_RX_BUFFER_SIZE) {
@@ -42,11 +42,13 @@ static inline void fingerprint_hw_init(void) {
 static inline void fingerprint_uart_init(uint8_t turn_on)
 {
     if (turn_on) {
-        if (hal_uart_get_owner() != UART_OWNER_DEV1){
+        // if (hal_uart_get_owner() != UART_OWNER_DEV1){
 
-            hal_uart_init(FINGER_UART_SEL, FINGER_UART_BAUDRATE, fingerprint_uart_IRQ);
-            OB_LOGI(TAG,"finger uart on");
-        }
+        //     hal_uart_init(FINGER_UART_SEL, FINGER_UART_BAUDRATE, fingerprint_uart_IRQ);
+        //     OB_LOGI(TAG,"finger uart on");
+        // }
+        hal_uart_init(FINGER_UART_SEL, FINGER_UART_BAUDRATE, fingerprint_uart_IRQ);
+        OB_LOGI(TAG,"finger uart on");
     }
     else{
         hal_uart_sleep(FINGER_UART_SEL,HAL_GPIO_MODE_OUTPUT_PP,0);
@@ -178,9 +180,6 @@ uint8_t fp_set_mode_API(uint8_t mode, fingerprint_api_callback_t callback, void*
 #if (FP_ENABLE_DELETE)
         case FP_MODE_DELETE:
         case FP_MODE_RESET_ALL:
-#endif
-#if (FP_ENABLE_VERIFY_DELETE)
-        case FP_MODE_VERIFY_DELETE:
 #endif
         case FP_MODE_SLEEP:
             fp_is_ready(&fp_handle.ctx, mode);

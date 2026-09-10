@@ -254,86 +254,6 @@ static void fingerprint_process_verify(fp_context_t *ctx) {
     }
 }
 
-#if (FP_ENABLE_VERIFY_DELETE)
-static void fingerprint_process_verify_delete(fp_context_t *ctx)
-{
-    switch (ctx->step) {
-        case FP_STEP_0:
-            if (ctx->status.timeout) {
-                // 发送获取图像指令
-                fingerprint_send_command(ctx, FP_CMD_GET_IMAGE, NULL, 0);
-                ctx->step = FP_STEP_1;
-            }
-            break;
-        case FP_STEP_1:
-            if (ctx->status.timeout || (ctx->ack_packet.code != FP_ACK_OK)) {
-                ctx->status.wait_lift = 0;
-                if (ctx->func_attr.auto_sleep) {
-                    fingerprint_send_command(ctx, FP_CMD_SLEEP, NULL, 0);
-                    ctx->step = FP_STEP_SLEEP;
-                }
-                else if (ctx->func_attr.idle_irq) {
-                    ctx->step = FP_STEP_IDLE;
-                }
-                else {
-                    ctx->tick = system_inc_time_cnt(ctx->timeout_ms);
-                    ctx->step = FP_STEP_0;
-                }
-            } 
-            else {
-                if (ctx->status.wait_lift) {
-                    break;      // 抬手检测
-                }
-                ctx->status.wait_lift = 1;
-                ctx->step = FP_STEP_2;
-                fingerprint_send_command(ctx, FP_CMD_GEN_CHAR, (uint8_t[]){0x01}, 1);
-            }
-            break;
-        case FP_STEP_2:
-            if (ctx->status.timeout || (ctx->ack_packet.code != FP_ACK_OK)) {
-                ctx->step = FP_STEP_0;
-            } else {
-                ctx->step = FP_STEP_3;
-
-                 // 发送搜索指令
-                fingerprint_send_command(ctx, FP_CMD_SEARCH, (uint8_t[]){0x01, 0x00, 0x00, 0x00, 0x82}, 5);
-            }
-            break;
-        case FP_STEP_3:
-            if (FP_ACK_OK == ctx->ack_packet.code && (!ctx->status.timeout)) {
-                ctx->params.del.page_id = (ctx->ack_packet.buffer[0] << 8) + (ctx->ack_packet.buffer[1]);
-                ctx->params.del.count = 1;
-                // 发送删除指令
-                uint8_t buffer[4];
-                buffer[0] = ctx->ack_packet.buffer[0];
-                buffer[1] = ctx->ack_packet.buffer[1];
-                buffer[2] = 0;
-                buffer[3] = 1;
-
-                fingerprint_send_command(ctx, FP_CMD_DELETE_CHAR, buffer, 4);
-                ctx->step = FP_STEP_4;
-                break;
-            }
-            else if (FP_ACK_NOT_FOUND == ctx->ack_packet.code) {
-                fingerprint_event_callback(ctx, FP_EVENT_INVALID_FP, NULL, 0);
-            }
-            ctx->step = FP_STEP_0;
-            break;
-        case FP_STEP_4:
-            if (FP_ACK_OK == ctx->ack_packet.code && (!ctx->status.timeout)) {
-                clear_fp_index(ctx, ctx->params.del.page_id, 1);
-                fingerprint_event_callback(ctx, FP_EVENT_SUCCESS_HANDLE, (&ctx->params.del), sizeof(fp_delete_params_t));
-            }
-            else {
-                fingerprint_event_callback(ctx, FP_EVENT_FAIL_DELETE, NULL, 0);
-            }
-            ctx->step = FP_STEP_0;
-            break;
-        default:
-            break;
-    }
-}
-#endif
 static void fingerprint_process_register(fp_context_t *ctx) {
     switch (ctx->step) {
         case FP_STEP_0:
@@ -711,11 +631,6 @@ static void fp_process_mode(fp_context_t *ctx) {
         case FP_MODE_DELETE:
         case FP_MODE_RESET_ALL:
             fingerprint_process_delete(ctx);
-            break;
-#endif
-#if (FP_ENABLE_VERIFY_DELETE)
-        case FP_MODE_VERIFY_DELETE:
-            fingerprint_process_verify_delete(ctx);
             break;
 #endif
         case FP_MODE_SLEEP:

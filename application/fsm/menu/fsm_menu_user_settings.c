@@ -52,6 +52,7 @@ QState lock_fsm_menu_user_settings(LockFsm *me, QEvent const *e)
         case Q_ENTRY_SIG:
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
+            fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
 
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);

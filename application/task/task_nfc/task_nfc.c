@@ -4,7 +4,7 @@
 #include "user.h"
 #include "event.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "task_nfc"
 
@@ -215,30 +215,4 @@ void nfc_task_set_state(uint8_t state)
     set_nfc_attr(&nfc_task_driver.attr);
 
     nfc_task_driver.io->set_mode(mode);
-}
-
-uint8_t nfc_task_test_mode(uint8_t handle_id)
-{
-
-    OB_LOGD(TAG, "nfc test mode[%u]", handle_id);
-
-    switch (handle_id)
-    {
-    case 0:
-        nfc_task_set_state(NFC_STATE_SLEEP);
-        break;
-    case 1:
-        nfc_task_set_state(NFC_STATE_VERIFY);
-        break;
-    case 2:
-        nfc_task_set_state(NFC_STATE_REGISTER);
-        break;
-    case 3:
-        nfc_task_set_state(NFC_STATE_FUNCTION);
-        break;
-    default:
-        return false;
-    }
-
-    return true;
 }

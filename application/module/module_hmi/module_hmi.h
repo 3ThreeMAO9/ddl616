@@ -73,7 +73,7 @@ typedef enum{
     HMI_STATE_PIN_CODE_TOO_SIMPLE,      //密码过于简单
     // HMI_STATE_ENTER_USER_PIN_CODE,      //请输入用户密码         Enter user PIN code
     // HMI_STATE_PLACE_FINGER_ON_READER,   //请按指纹              Place_your_finger_on_the_reader
-    // HMI_STATE_ENROLLMENT_FAIL,          //添加失败              
+    HMI_STATE_ENROLLMENT_FAIL,          //添加失败              
     HMI_STATE_ADMIN,                    //管理员菜单
     HMI_STATE_USER_SETTINGS,            //用户设置
     HMI_STATE_SYSTEM_SETTINGS,          //系统设置
@@ -112,7 +112,7 @@ typedef enum{
     HMI_STATE_KEY_BOARD_WAKE_UP,        //键盘唤醒灯效
 
     // HMI_STATE_ENROLL_SUCCESS,           //添加成功
-    HMI_STATE_ENROLL_FINGER_PRESS,
+    HMI_STATE_ENROLL_FINGER_PRESS,      //嘀，请拿开手指，再按一次
     HMI_STATE_ENROLL_FINGER_PRESS_END,  //最后一次按压，不亮灯
     HMI_STATE_BIND_SUCCESS,             //配对成功，蓝灯闪、响两下
     HMI_STATE_ENROLL_FINGER_SUCCESS,    //指纹录入成功

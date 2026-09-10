@@ -409,7 +409,8 @@ uint8_t isValidUserFingerprint(uint16_t* user_sn)
 #if (Enabled == PRINTF_USER)
         OB_LOGD(TAG,"EmptyUser");
 #endif
-        return false;
+        *user_sn = 0;
+        return true;
     }
     else
     {

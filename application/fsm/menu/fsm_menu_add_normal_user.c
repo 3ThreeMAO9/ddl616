@@ -90,6 +90,15 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e)
                 me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user);
                 state = Q_TRAN(lockFsmHandleCardRepeat);
             }
+            else if (EVENT_RESULT_FINGERPRINT_PRESS == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_ENROLL_FINGER_PRESS);
+            }
+            else if(EVENT_RESULT_FAIL_ADD == e->dynamic_[0])
+            {
+                me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user);
+                state = Q_TRAN(lockFsmHandleAddFail);
+            }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;

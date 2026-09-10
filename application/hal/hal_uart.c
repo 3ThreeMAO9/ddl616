@@ -121,9 +121,10 @@ void hal_uart_init(Uart_Group_t uart_group, uint32_t baudrate, uart_callback_t c
         UART0_RX_GPIO->DATA |= UART0_RX_PIN;
         GPIO_SetPinMFType(UART0_TX_GPIO, UART0_TX_PIN, GPIO_MF_UART0_TX, GPIO_PINMODE_PUSH_PULL);
         GPIO_SetPinMFType(UART0_RX_GPIO, UART0_RX_PIN, GPIO_MF_UART0_RX, GPIO_PINMODE_PULL_UP);
+
         UART_Open(OB_UART0, baudrate, callback);
         UART_EnableInt(OB_UART0, UART_INT_RBR);
-        NVIC_SetPriority(UART0_IRQn, 0);
+        NVIC_SetPriority(UART0_IRQn, 1);
         NVIC_EnableIRQ(UART0_IRQn);
     }
     else if (UART_1 == uart_group)
@@ -132,9 +133,10 @@ void hal_uart_init(Uart_Group_t uart_group, uint32_t baudrate, uart_callback_t c
         UART1_RX_GPIO->DATA |= UART1_RX_PIN;
         GPIO_SetPinMFType(UART1_TX_GPIO, UART1_TX_PIN, GPIO_MF_UART1_TX, GPIO_PINMODE_PUSH_PULL);
         GPIO_SetPinMFType(UART1_RX_GPIO, UART1_RX_PIN, GPIO_MF_UART1_RX, GPIO_PINMODE_PULL_UP);
+
         UART_Open(OB_UART1, baudrate, callback);
         UART_EnableInt(OB_UART1, UART_INT_RBR);
-        NVIC_SetPriority(UART1_IRQn, 0);
+        NVIC_SetPriority(UART1_IRQn, 1);
         NVIC_EnableIRQ(UART1_IRQn);
     }
     uart_len[uart_group] = 0;
