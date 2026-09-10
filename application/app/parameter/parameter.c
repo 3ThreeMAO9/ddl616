@@ -19,7 +19,7 @@ static const parameter_range_t parameter_range[USER_PARA_CNT] = {
     {MOTOR_DIRECTION_MIN, MOTOR_DIRECTION_MAX, MOTOR_DIRECTION_DEFAULT},
     {SYSTEM_LOCK_FLAG_MIN, SYSTEM_LOCK_FLAG_MAX, SYSTEM_LOCK_FLAG_DEFAULT},
     {VERIFY_FAIL_CNT_MIN, VERIFY_FAIL_CNT_MAX, VERIFY_FAIL_CNT_DEFAULT},
-    {INIT_MOTOR_RESET_MIN, INIT_MOTOR_RESET_MAX, INIT_MOTOR_RESET_DEFAULT},
+    {INIT_BREAK_MIN, INIT_BREAK_MAX, INIT_BREAK_DEFAULT},
     {LANGUAGE_MODE_MIN, LANGUAGE_MODE_MAX, LANGUAGE_MODE_DEFAULT},
     {BLE_ACTIVATION_FLAG_MIN, BLE_ACTIVATION_FLAG_MAX, BLE_ACTIVATION_FLAG_DEFAULT},
     {BLE_NET_STATUS_FLAG_MIN, BLE_NET_STATUS_FLAG_MAX, BLE_NET_STATUS_FLAG_DEFAULT},
@@ -71,8 +71,8 @@ void userParameterInit(void)
             OB_LOGD(TAG, "parameter[%u]: %u  系统锁定时间", i, userParameter.function[i]);
         else if (i == USER_PARA_VERIFY_FAIL_CNT_ID)
             OB_LOGD(TAG, "parameter[%u]: %u  验证错误次数", i, userParameter.function[i]);
-        else if (i == USER_PARA_INIT_MOTOR_RESET_ID)
-            OB_LOGD(TAG, "parameter[%u]: %u  电机校准", i, userParameter.function[i]);
+        else if (i == USER_PARA_BREAK_ID)
+            OB_LOGD(TAG, "parameter[%u]: %u  防撬", i, userParameter.function[i]);
         else if (i == USER_PARA_LANGUAGE_MODE_ID)
             OB_LOGD(TAG, "parameter[%u]: %u  语言", i, userParameter.function[i]);
         else if (i == BLE_ACTIVATION_FLAG_ID)

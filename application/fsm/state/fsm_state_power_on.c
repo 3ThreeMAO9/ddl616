@@ -2,6 +2,9 @@
 #include "state_inside.h"
 #include "task_hmi.h"
 #include "task_system_time.h"
+#include "task_key.h"
+
+#include "parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -37,6 +40,11 @@ static QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
         case Q_FUNCTION_TIME_OUT_SIG:
             break;
         case Q_WORK_TIME_OUT_SIG:
+            if (Enabled == readUserParameter(USER_PARA_BREAK_ID))
+            {
+                keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);
+                hmi_task_tamper_warn_time(TAMPER_WARN_KEEP_TIME);
+            }
             state = Q_TRAN(lock_fsm_idle);
             break;
         default:

@@ -36,7 +36,7 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
         {
             OB_LOGD(TAG, "KEY_TYPE_TAMPER_KEY event=%d", key_value);
             if(key_value == KEY_EVENT_TAMPER_PRESS){
- 
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_BREAK_LONG_PRESS);
             }
         }
         break;

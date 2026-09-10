@@ -18,6 +18,7 @@
 #define TAG "m_hmi"
 /***************Variable***************/
 static hmi_handle_t hmihandle;
+static hmi_callback_t hmi_callback;
 
 /*****************Macro****************/
 #define HMI_HANDLE_INIT()           memset((uint8_t*)(&hmihandle), 0, sizeof(hmi_handle_t))
@@ -33,6 +34,19 @@ void module_hmi_init(void)
     ledInit();
 }
 
+static void hmiHandleEvent_callback(uint8_t event, uint32_t value)
+{
+    if (NULL != hmi_callback)
+    {
+        hmi_callback(event, value);
+    }
+#if (Enabled == PRINTF_ERR)
+    else
+    {
+        OB_LOGE(TAG, "Err: hmi callback is null");
+    }
+#endif
+}
 static void hmi_logo_led_config(uint8_t nowColor, uint8_t nextColor, uint32_t halfPeriod, uint32_t halfPeriodCnt)
 {
     hmihandle.logoLed.color = BCD_CONVERT_HEX(nextColor, nowColor);
@@ -208,10 +222,18 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_HANDLE_VOICE_SUCCESS:
-            if (readUserParameter(USER_PARA_SILENT_MODE_ID))
+            if (readUserParameter(USER_PARA_SILENT_MODE_ID)){
+                hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
                 PLAYER_LIST_CLEAR_ADD(VOICE_Voice_mode);
-            else
+            }
+            else{
+                hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
                 PLAYER_LIST_CLEAR_ADD(VOICE_Mute_mode);
+            }
+            break;
+        
+        case HMI_STATE_TAMPER_WARN:
+            PLAYER_LIST_CLEAR_ADD(SOUND_WARN,SOUND_WARN,SOUND_WARN);
             break;
         default:
             return keepTime;
@@ -294,6 +316,47 @@ static void hmi_key_board_led_loop(void)
     keyBoardLedDrive(hmihandle.keyBoardLed.state);
 }
 
+//  @brief 注册回调函数
+//  @param callback
+void hmiEventRegister_callback(hmi_callback_t callback)
+{
+    hmi_callback = callback;
+}
+
+void module_hmi_tamper_warn_time(uint32_t warn_time)
+{
+    hmihandle.tamper.cnt = (warn_time / TAMPER_WARN_PERIOD_TIME);
+    if (warn_time)
+    {
+        hmihandle.tamper.timeOut = system_inc_time_cnt(1500);
+        hmihandle.tamper.busy = true;
+    }
+    else
+    {
+        hmihandle.tamper.busy = false;
+        hmihandle.tamper.cnt = 0;
+    }
+}
+
+static void hmi_break_warn_loop(void)
+{
+    if (hmihandle.tamper.cnt){
+        if (system_out_time_cnt(hmihandle.tamper.timeOut))
+        {
+            hmihandle.tamper.cnt--;
+            if (hmihandle.tamper.cnt == 0)
+                setUserParameter(USER_PARA_BREAK_ID, Disabled);
+            hmihandle.tamper.timeOut = system_inc_time_cnt(TAMPER_WARN_PERIOD_TIME);
+            if (!play_task_is_busy())
+            {
+                hmiHandleEvent_callback(HMI_STATE_TAMPER_WARN,0);
+
+            }
+        }
+        
+    }
+}
+
 void module_hmi_loop(void)
 {
     if (hmihandle.keyBoardLed.halfPeriod && system_out_time_cnt(hmihandle.keyBoardLed.timeOut))
@@ -309,4 +372,7 @@ void module_hmi_loop(void)
 
         hmi_logo_led_loop();
     }
+
+    // 防撬报警逻辑
+    hmi_break_warn_loop();
 }

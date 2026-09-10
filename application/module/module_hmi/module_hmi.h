@@ -69,6 +69,7 @@ typedef enum{
     // HMI_STATE_FINGER_EMPTY,             //指纹库为空            Fingerprint database is empty 
     // HMI_STATE_FINGER_FULL,              //指纹库已满            Fingerprint database is full
     HMI_STATE_VACATION_MODE_FAIL,       //离家模式              away mode
+    HMI_STATE_TAMPER_WARN,              //防撬报警
     HMI_STATE_CHANGE_MASTER_CODE,       //请及时修改管理密码     Please_modify_master_PIN_code_as_soon_as_possible
     HMI_STATE_PIN_CODE_TOO_SIMPLE,      //密码过于简单
     // HMI_STATE_ENTER_USER_PIN_CODE,      //请输入用户密码         Enter user PIN code
@@ -140,7 +141,7 @@ typedef enum{
 }hmi_state_t;
 
 /****************Struct****************/
-
+typedef void (*hmi_callback_t)(uint8_t, uint32_t);
 
 /***************Variable***************/
 typedef struct{
@@ -168,6 +169,13 @@ typedef struct{
 }beep_handle_t;
 
 typedef struct{
+    uint8_t busy;
+    uint8_t cnt;
+    uint32_t timeOut;
+
+}break_warn_handle_t;
+
+typedef struct{
     uint8_t busy;               // bit0--logo灯； bit1--key board led； bit2： beep
     uint8_t state;
 
@@ -175,6 +183,7 @@ typedef struct{
     key_led_handle_t keyBoardLed;
     beep_handle_t beep;
 
+    break_warn_handle_t tamper;
 }hmi_handle_t;
 
 /***************Function***************/
@@ -182,6 +191,8 @@ void module_hmi_init(void);
 void module_hmi_loop(void);
 uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag);
 void module_hmi_config(uint8_t sleepFlag);
+void module_hmi_tamper_warn_time(uint32_t warn_time);
+void hmiEventRegister_callback(hmi_callback_t callback);
 
 /**************************************/
 

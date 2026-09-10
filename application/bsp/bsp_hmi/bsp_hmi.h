@@ -13,6 +13,7 @@
 #include "config.h"
 #include "module_hmi.h"
 
+typedef hmi_callback_t bsp_hmi_callback_t;
 /*****************Macro****************/
 
 
@@ -25,6 +26,7 @@ typedef struct{
     void (*loop)(void);
     uint32_t (*setState)(uint8_t, uint8_t);
     void (*config)(uint8_t);
+    void (*tamperwarn)(uint32_t);
 
 }bsp_hmi_drive_io_t;
 
@@ -32,7 +34,7 @@ typedef struct{
 
 
 /***************Function***************/
-const bsp_hmi_drive_io_t* bsp_hmi_get_driver(void);
+const bsp_hmi_drive_io_t* bsp_hmi_get_driver(bsp_hmi_callback_t callback);
 
 /**************************************/
 

@@ -107,10 +107,10 @@ typedef enum{
 #define SYSTEM_LOCK_FLAG_MAX                        Enabled
 #define SYSTEM_LOCK_FLAG_DEFAULT                    Disabled
 
-//motor reset flag(init)
-#define INIT_MOTOR_RESET_MIN                        Disabled
-#define INIT_MOTOR_RESET_MAX                        Enabled
-#define INIT_MOTOR_RESET_DEFAULT                    Enabled
+//break flag(init)
+#define INIT_BREAK_MIN                              Disabled
+#define INIT_BREAK_MAX                              Enabled
+#define INIT_BREAK_DEFAULT                          Disabled
 
 //verify fail cnt
 #define VERIFY_FAIL_CNT_MIN                          0
@@ -168,6 +168,9 @@ typedef enum{
 #define COMBINE_KEY_BOARD_WAKE_UP_CNT               (110)
 
 //warn time
+#define TAMPER_WARN_KEEP_TIME                       (60 * 1000)      //unit: ms
+#define TAMPER_WARN_PERIOD_TIME                     (3 * 1000)      //unit: ms
+
 #define VACATION_WARN_KEEP_TIME                     (60 *1000)      //unit: ms
 #define VACATION_WARN_PERIOD_TIME                   (3 *1000)      //unit: ms
 #define VACATION_WARN_FLASH_PERIOD_TIME             (300)      //unit: ms

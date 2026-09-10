@@ -77,6 +77,16 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 me->branch = (QStateHandler)(lock_fsm_idle);
                 state = Q_TRAN(lockFsmHandleVoiceModeSuccess);
             }
+            else if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])
+            {
+                keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);
+                hmi_task_tamper_warn_time(TAMPER_WARN_KEEP_TIME);
+            }
+            else if (EVENT_RESULT_BREAK_WARN == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_TAMPER_WARN);
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            }
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
             //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             // }
@@ -91,6 +101,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
             if (EVENT_RESULT_SUCCESS_VERIFY_USER == (e->dynamic_[0]))
             {
+                hmi_task_tamper_warn_time(0);
                 motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);
                 me->branch = (QStateHandler)(lock_fsm_sleep);
                 state = Q_TRAN(lockFsmVerifyUserSuccess);
