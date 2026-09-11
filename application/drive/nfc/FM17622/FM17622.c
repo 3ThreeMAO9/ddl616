@@ -115,17 +115,17 @@ unsigned char FM17622_SoftReset(void) {
 }
 
 void FM17622_HardReset(void) {
-    CLR_NFC_NRST_LOW();
-    mDelay(1);
-    SET_NFC_NRST_HIGH();
-    mDelay(1);
+	HAL_GPIO_Write(NFC_NRST_GPIO,NFC_NRST_PIN,0);//NPD=0
+	mDelay(1);		
+	HAL_GPIO_Write(NFC_NRST_GPIO,NFC_NRST_PIN,1);//NPD=1	
+	mDelay(1);
 }
 
 void FM17622_DeepSleep(void) {
     // 硬件复位后，拉低reset脚
     FM17622_HardReset();
 
-    CLR_NFC_NRST_LOW();
+    HAL_GPIO_Write(NFC_NRST_GPIO,NFC_NRST_PIN,0);
 }
 
 uint8_t FM17622_Version(void) {

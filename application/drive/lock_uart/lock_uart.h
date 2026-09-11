@@ -15,23 +15,23 @@
 
 /***********Macro***********/
 // RX引脚电平读取
-#define READ_LOCK_UART_INT()                (UART_INT_GPIO->PIN & UART_INT_PIN)
+#define READ_LOCK_UART_INT() (HAL_GPIO_Read(UART_INT_GPIO, UART_INT_PIN))
 
 // RX引脚初始化（初始电平+引脚模式配置）
-#define LOCK_UART_PULLUP_INIT()                                                                  \
-    do                                                                                           \
-    {                                                                                            \
-        UART_INT_GPIO->DATA |= UART_INT_PIN;                                                     \
-        GPIO_SetPinMFType(UART_INT_GPIO, UART_INT_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PULL_UP); \
+#define LOCK_UART_PULLUP_INIT(_level)                                                               \
+    do                                                                                              \
+    {                                                                                               \
+        HAL_GPIO_Write(UART_INT_GPIO, UART_INT_PIN, _level);                                        \
+        HAL_GPIO_Init(UART_INT_GPIO, UART_INT_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_NONE); \
     } while (0)
 
 // RX引脚中断控制
-#define LOCK_UART_INT_PIN_ENABLE()          {GPIO_EnableINT(UART_INT_GPIO, UART_INT_PIN, GPIO_INTMODE_FALLING_EDGE);}
-#define LOCK_UART_INT_PIN_DISABLE()         {GPIO_EnableINT(UART_INT_GPIO, UART_INT_PIN, GPIO_INTMODE_DISABLE);}
+#define LOCK_UART_INT_PIN_ENABLE() (HAL_GPIO_EnableIRQ(UART_INT_GPIO, UART_INT_PIN, HAL_GPIO_IRQ_FALLING))
+#define LOCK_UART_INT_PIN_DISABLE() (HAL_GPIO_DisableIRQ(UART_INT_GPIO, UART_INT_PIN))
 
 // RX引脚中断状态管理
-#define LOCK_UART_INT_READ_INTSTATE()       (hal_read_gpio_int_flag(UART_INT_GPIO, UART_INT_PIN))
-#define LOCK_UART_INT_CLEAR_INTSTATE()      (hal_clear_gpio_int_flag(UART_INT_GPIO, UART_INT_PIN))
+#define LOCK_UART_INT_READ_INTSTATE() (HAL_GPIO_ReadIntState(UART_INT_GPIO, UART_INT_PIN))
+#define LOCK_UART_INT_CLEAR_INTSTATE() (HAL_GPIO_ClearIntState(UART_INT_GPIO, UART_INT_PIN))
 
 /***********Enum***********/
 

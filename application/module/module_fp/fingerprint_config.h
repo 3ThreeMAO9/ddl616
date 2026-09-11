@@ -19,30 +19,23 @@
 
 #define FINGERPRINT_UART_TIMEOUT            (10) // unit: ms
 
-#define SET_FINGERPRINT_POWER_HIGH()        (FP_POWER_GPIO->DATA |= FP_POWER_PIN)
-#define SET_FINGERPRINT_POWER_LOW()         (FP_POWER_GPIO->DATA &= ~FP_POWER_PIN)
-
-#define SET_FINGERPRINT_POWER_ON()          (SET_FINGERPRINT_POWER_LOW())
-#define SET_FINGERPRINT_POWER_OFF()         (SET_FINGERPRINT_POWER_HIGH())
-
-#define SET_FINGERPRINT_WAKE_HIGH()         (FP_WAKE_GPIO->DATA |= FP_WAKE_PIN)
-#define SET_FINGERPRINT_WAKE_LOW()          (FP_WAKE_GPIO->DATA &= ~FP_WAKE_PIN)
-
+#define SET_FINGERPRINT_POWER(_enable)      (HAL_GPIO_Write(FP_POWER_GPIO, FP_POWER_PIN, (_enable ? 0 : 1)))
+#define SET_FINGERPRINT_WAKE(_level)        (HAL_GPIO_Write(FP_WAKE_GPIO, FP_WAKE_PIN, _level))
 #define SET_FINGERPRINT_TX(_level)          (HAL_GPIO_Write(FP_TX_GPIO, FP_TX_PIN, _level))
 #define SET_FINGERPRINT_RX(_level)          (HAL_GPIO_Write(FP_RX_GPIO, FP_RX_PIN, _level))
 
-#define FINGERPRINT_POWER_INIT()                                                                   \
-    do                                                                                             \
-    {                                                                                              \
-        SET_FINGERPRINT_POWER_OFF();                                                               \
-        GPIO_SetPinMFType(FP_POWER_GPIO, FP_POWER_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+#define FINGERPRINT_POWER_INIT(_enable)                                                          \
+    do                                                                                           \
+    {                                                                                            \
+        HAL_GPIO_Write(FP_POWER_GPIO, FP_POWER_PIN, _enable);                                    \
+        HAL_GPIO_Init(FP_POWER_GPIO, FP_POWER_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
     } while (0)
 
-#define FINGERPRINT_WAKE_INIT()                                                              \
-    do                                                                                       \
-    {                                                                                        \
-        SET_FINGERPRINT_WAKE_HIGH();                                                         \
-        GPIO_SetPinMFType(FP_WAKE_GPIO, FP_WAKE_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_INPUT); \
+#define FINGERPRINT_WAKE_INIT(_level)                                                      \
+    do                                                                                     \
+    {                                                                                      \
+        HAL_GPIO_Write(FP_WAKE_GPIO, FP_WAKE_PIN, _level);                                 \
+        HAL_GPIO_Init(FP_WAKE_GPIO, FP_WAKE_PIN, HAL_GPIO_MODE_INPUT, HAL_GPIO_PULL_NONE); \
     } while (0)
 
 #define FINGERPRINT_TX_INIT(_level)                                                        \
@@ -59,22 +52,13 @@
         HAL_GPIO_Init(FP_RX_GPIO, FP_RX_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
     } while (0)
 
-#define READ_FINGERPRINT_WAKE()                 (FP_WAKE_GPIO->PIN & FP_WAKE_PIN)
 
-#define FINGERPRINT_WAKE_READ_INTSTATE()        (hal_read_gpio_int_flag(FP_WAKE_GPIO, FP_WAKE_PIN))
-#define FINGERPRINT_WAKE_CLEAR_INTSTATE()       (hal_clear_gpio_int_flag(FP_WAKE_GPIO, FP_WAKE_PIN))
+#define FINGERPRINT_WAKE_ENABLE()               (HAL_GPIO_EnableIRQ(FP_WAKE_GPIO, FP_WAKE_PIN, HAL_GPIO_IRQ_RISING))
+#define FINGERPRINT_WAKE_DISABLE()              (HAL_GPIO_DisableIRQ(FP_WAKE_GPIO, FP_WAKE_PIN))
+#define READ_FINGERPRINT_WAKE()                 (HAL_GPIO_Read(FP_WAKE_GPIO, FP_WAKE_PIN))
 
-#define FINGERPRINT_WAKE_ENABLE()                                            \
-    {                                                                        \
-        GPIO_EnableINT(FP_WAKE_GPIO, FP_WAKE_PIN, GPIO_INTMODE_RISING_EDGE); \
-        FINGERPRINT_WAKE_CLEAR_INTSTATE();                                   \
-    }
-
-#define FINGERPRINT_WAKE_DISABLE()                                       \
-    {                                                                    \
-        GPIO_EnableINT(FP_WAKE_GPIO, FP_WAKE_PIN, GPIO_INTMODE_DISABLE); \
-        FINGERPRINT_WAKE_CLEAR_INTSTATE();                               \
-    }
+#define FINGERPRINT_WAKE_READ_INTSTATE()        (HAL_GPIO_ReadIntState(FP_WAKE_GPIO, FP_WAKE_PIN))
+#define FINGERPRINT_WAKE_CLEAR_INTSTATE()       (HAL_GPIO_ClearIntState(FP_WAKE_GPIO, FP_WAKE_PIN))
 
 /*****************Enum*****************/
 

@@ -14,32 +14,31 @@
 #include "hal_gpio.h"
 
 /***********Macro***********/
-#define SET_TAMPER_KEY_OPEN()           (TAMPER_KEY_GPIO->DATA |= TAMPER_KEY_PIN)
-#define SET_TAMPER_KEY_CLOSE()          (TAMPER_KEY_GPIO->DATA &= ~TAMPER_KEY_PIN)
-#define READ_TAMPER_KEY_LEVEL()         (TAMPER_KEY_GPIO->PIN & TAMPER_KEY_PIN)
+#define SET_TAMPER_KEY_LEVEL(_level)    (HAL_GPIO_Write(TAMPER_KEY_GPIO, TAMPER_KEY_PIN, _level))
+#define READ_TAMPER_KEY_LEVEL()         (HAL_GPIO_Read(TAMPER_KEY_GPIO,TAMPER_KEY_PIN))
 
-#define READ_TAMPER_KEY_STATE()         (hal_read_gpio_int_flag(TAMPER_KEY_GPIO,TAMPER_KEY_PIN))   //读取GPIO中断信号
-#define CLEAR_TAMPER_KEY_STATE()        (hal_clear_gpio_int_flag(TAMPER_KEY_GPIO,TAMPER_KEY_PIN))  //清空GPIO中断信号
+#define READ_TAMPER_KEY_STATE()         (HAL_GPIO_ReadIntState(TAMPER_KEY_GPIO,TAMPER_KEY_PIN))   //读取GPIO中断信号
+#define CLEAR_TAMPER_KEY_STATE()        (HAL_GPIO_ClearIntState(TAMPER_KEY_GPIO,TAMPER_KEY_PIN))  //清空GPIO中断信号
 
-#define TAMPER_KEY_INIT()                                                                          \
-    do                                                                                             \
-    {                                                                                              \
-        SET_TAMPER_KEY_OPEN();                                                                     \
-        GPIO_SetPinMFType(TAMPER_KEY_GPIO, TAMPER_KEY_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_INPUT); \
+#define TAMPER_KEY_INIT(_level)                                                                  \
+    do                                                                                           \
+    {                                                                                            \
+        SET_TAMPER_KEY_LEVEL(_level);                                                            \
+        HAL_GPIO_Init(TAMPER_KEY_GPIO, TAMPER_KEY_PIN, HAL_GPIO_MODE_INPUT, HAL_GPIO_PULL_NONE); \
     } while (0)
 
-#define TAMPER_KEY_IRQ_FALLING()                                                    \
-    do                                                                              \
-    {                                                                               \
-        GPIO_EnableINT(TAMPER_KEY_GPIO, TAMPER_KEY_PIN, GPIO_INTMODE_FALLING_EDGE); \
-        CLEAR_TAMPER_KEY_STATE();                                                   \
-    } while (0)
-
-#define TAMPER_KEY_IRQ_RISING()                                                    \
+#define TAMPER_KEY_IRQ_FALLING()                                                   \
     do                                                                             \
     {                                                                              \
-        GPIO_EnableINT(TAMPER_KEY_GPIO, TAMPER_KEY_PIN, GPIO_INTMODE_RISING_EDGE); \
+        HAL_GPIO_EnableIRQ(TAMPER_KEY_GPIO, TAMPER_KEY_PIN, HAL_GPIO_IRQ_FALLING); \
         CLEAR_TAMPER_KEY_STATE();                                                  \
+    } while (0)
+
+#define TAMPER_KEY_IRQ_RISING()                                                   \
+    do                                                                            \
+    {                                                                             \
+        HAL_GPIO_EnableIRQ(TAMPER_KEY_GPIO, TAMPER_KEY_PIN, HAL_GPIO_IRQ_RISING); \
+        CLEAR_TAMPER_KEY_STATE();                                                 \
     } while (0)
 
 /***********Enum***********/

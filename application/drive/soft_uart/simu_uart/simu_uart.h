@@ -5,18 +5,20 @@
 #include "hal_gpio.h"
 
 /*****************Macro****************/
-#define OUT_LOW_BIT 	        (SIMU_UART_GPIO->DATA &= ~SIMU_UART_PIN)
-#define OUT_HIGH_BIT 	        (SIMU_UART_GPIO->DATA |= SIMU_UART_PIN)
+#define SET_SIMU_UART(_level) (HAL_GPIO_Write(SIMU_UART_GPIO, SIMU_UART_PIN, _level))
+
+#define SIMU_UART_INIT(_level)                                                                     \
+    do                                                                                             \
+    {                                                                                              \
+        HAL_GPIO_Write(SIMU_UART_GPIO, SIMU_UART_PIN, _level);                                     \
+        HAL_GPIO_Init(SIMU_UART_GPIO, SIMU_UART_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
+    } while (0)
+
+#define OUT_LOW_BIT 	        SIMU_UART_TX_PIN_CLR
+#define OUT_HIGH_BIT 	        SIMU_UART_TX_PIN_SET
 
 #define OUT_STOP_BIT 	        OUT_HIGH_BIT
 #define OUT_START_BIT 	        OUT_LOW_BIT
-
-#define SIMU_UART_INIT()                                                                             \
-    do                                                                                               \
-    {                                                                                                \
-        OUT_HIGH_BIT;                                                                                \
-        GPIO_SetPinMFType(SIMU_UART_GPIO, SIMU_UART_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
-    } while (0)
 
 /*****************Enum*****************/
 

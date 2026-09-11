@@ -135,15 +135,67 @@ void HAL_GPIO_Write(HalGpioPort port, HalGpioPin pin, bool state);
  */
 bool HAL_GPIO_Read(HalGpioPort port, HalGpioPin pin);
 
+/**
+ * @brief 翻转GPIO输出电平
+ * @param port 端口号
+ * @param pin  引脚号
+ * @note 该函数是原子操作，适用于需要快速切换的场景
+ */
+void HAL_GPIO_Toggle(HalGpioPort port, HalGpioPin pin);
+
+/**
+ * @brief 使能GPIO中断
+ * @param port 端口号
+ * @param pin  引脚号
+ * @param type 中断触发类型
+ * @note 使用前需先注册中断回调函数 @ref HAL_GPIO_SetIrqCallback
+ */
+void HAL_GPIO_EnableIRQ(HalGpioPort port, HalGpioPin pin, HalGpioIrqType type);
+
+/**
+ * @brief 禁用GPIO中断
+ * @param port 端口号
+ * @param pin  引脚号
+ */
+void HAL_GPIO_DisableIRQ(HalGpioPort port, HalGpioPin pin);
+
+/**
+ * @brief 设置中断回调函数
+ * @param port     端口号
+ * @param pin      引脚号
+ * @param callback 中断回调函数指针
+ * @note  回调函数在中断上下文中执行，应尽量简短
+ */
+void HAL_GPIO_SetIrqCallback(HalGpioPort port, HalGpioPin pin, void (*callback)(void));
+
+/**
+ * @brief 屏蔽指定GPIO引脚的写操作（设置WMARK寄存器）
+ * @param port: GPIO端口（HAL_GPIO_PORT0~3）
+ * @param pin:  GPIO引脚（HAL_GPIO_PIN0~15）
+ * @retval 无
+ */
+void HAL_GPIO_ShieldWrite(HalGpioPort port, HalGpioPin pin);
+
+/**
+ * @brief 恢复指定GPIO引脚的写操作（恢复WMARK寄存器）
+ * @param port: GPIO端口（HAL_GPIO_PORT0~3）
+ * @param pin:  GPIO引脚（HAL_GPIO_PIN0~15）
+ * @retval 无
+ */
+void HAL_GPIO_ResumeWrite(HalGpioPort port, HalGpioPin pin);
+
 // 辅助/内部接口
 HalGpioPort hal_convert_gpio_port(uint8_t port);
 HalGpioPin hal_convert_gpio_pin(uint8_t pin);
+void HAL_GPIO_IRQ_SetEN(void);
+void HAL_GPIO_IRQ_ClrEN(void);
+void HAL_GPIO_GetIntState(uint32_t port,uint32_t pin);
+uint8_t HAL_GPIO_ReadIntState(HalGpioPort port, HalGpioPin pin);
+void HAL_GPIO_ClearIntState(HalGpioPort port, HalGpioPin pin);
+void HAL_GPIO_callback(GPIOCallback cb);
+void HAL_GPIO_IRQHandler(void);
 uint32_t hal_convert_ob_gpio_pin(HalGpioPin pin);
 OB_GPIO_Type* hal_convert_ob_gpio_port(HalGpioPort port);
-
-
-uint8_t hal_read_gpio_int_flag(volatile OB_GPIO_Type *pGPIO, volatile uint32_t nPinSel);
-uint8_t hal_clear_gpio_int_flag(volatile OB_GPIO_Type *pGPIO, volatile uint32_t nPinSel);
 
 #ifdef __cplusplus
 }

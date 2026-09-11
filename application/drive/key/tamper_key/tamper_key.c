@@ -18,7 +18,7 @@ uint32_t tamper_key_init_value = 0; // 初始化的时候，防撬键的电平�
 
 void tamper_key_init(void)
 {
-    TAMPER_KEY_INIT();
+    TAMPER_KEY_INIT(1);
 
     tamper_key_init_value = READ_TAMPER_KEY_LEVEL();
     if(tamper_key_init_value)

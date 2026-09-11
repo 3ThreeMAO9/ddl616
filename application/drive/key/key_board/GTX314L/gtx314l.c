@@ -23,23 +23,17 @@ static touch_handle_t touch_handle = {0};
 
 static inline void TOUCH_I2C_SetSCL(bool level)
 {
-    if (level)
-        SET_TOUCH_SCL_PIN_OPEN();
-    else
-        SET_TOUCH_SCL_PIN_CLOSE();
+    HAL_GPIO_Write(TOUCH_I2C_SCL_GPIO, TOUCH_I2C_SCL_PIN, level);
 }
 
 static inline void TOUCH_I2C_SetSDA(bool level)
 {
-    if (level)
-        SET_TOUCH_SDA_PIN_OPEN();
-    else
-        SET_TOUCH_SDA_PIN_CLOSE();
+    HAL_GPIO_Write(TOUCH_I2C_SDA_GPIO, TOUCH_I2C_SDA_PIN, level);
 }
 
 static inline bool TOUCH_I2C_GetSDA()
 {
-    return READ_TOUCH_I2C_SDA();
+    return HAL_GPIO_Read(TOUCH_I2C_SDA_GPIO, TOUCH_I2C_SDA_PIN);
 }
 
 static const I2C_Config touch_i2c_config = {
@@ -140,9 +134,9 @@ static uint8_t touch_reset_deal(uint8_t hard_reset)
 
     if (hard_reset)
     {
-        SET_TOUCH_RESET_PIN_CLOSE();
+        SET_TOUCH_RESET(0);
         delay_ms(1);
-        SET_TOUCH_RESET_PIN_OPEN();
+        SET_TOUCH_RESET(1);
     }
     else
     {
@@ -205,10 +199,10 @@ uint8_t touch_init(uint8_t *sensity)
     // I2C init
     I2C_Init(&touch_i2c_config);
 
-    TOUCH_RESET_INIT();
-    TOUCH_WAKE_INIT();
-    TOUCH_I2C_SCL_INIT();
-    TOUCH_I2C_SDA_INIT();
+    TOUCH_RESET_INIT(0);
+    TOUCH_WAKE_INIT(1);
+    TOUCH_I2C_SCL_INIT(1);
+    TOUCH_I2C_SDA_INIT(1);
 
     return touch_reset_renew_state(true);
 }
@@ -221,7 +215,7 @@ uint8_t touch_sleep_config(void)
     };
 
     TOUCH_WAKE_PIN_ENABLE();
-    hal_clear_gpio_int_flag(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN);
+    HAL_GPIO_ClearIntState(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN);
 
     for (uint8_t i = 0; i < (sizeof(reg_tab) / sizeof(touch_register_t)); i++)
     {
