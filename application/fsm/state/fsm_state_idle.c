@@ -8,7 +8,7 @@
 #include "task_sleep.h"
 #include "task_system_time.h"
 #include "task_hmi.h"
-#include "task_face.h"
+
 #include "task_fingerprint.h"
 #include "task_motor.h"
 #include "task_key.h"

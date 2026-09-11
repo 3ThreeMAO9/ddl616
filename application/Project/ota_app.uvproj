@@ -458,19 +458,9 @@
               <FilePath>..\chip\OB90A64M1\Library\adc.c</FilePath>
             </File>
             <File>
-              <FileName>dma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\chip\OB90A64M1\Library\dma.c</FilePath>
-            </File>
-            <File>
               <FileName>gpio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\chip\OB90A64M1\Library\gpio.c</FilePath>
-            </File>
-            <File>
-              <FileName>i2c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\chip\OB90A64M1\Library\i2c.c</FilePath>
             </File>
             <File>
               <FileName>pwm.c</FileName>
@@ -642,11 +632,6 @@
         <Group>
           <GroupName>bsp</GroupName>
           <Files>
-            <File>
-              <FileName>bsp_face.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\bsp_face\bsp_face.c</FilePath>
-            </File>
             <File>
               <FileName>bsp_fingerprint.c</FileName>
               <FileType>1</FileType>
@@ -873,11 +858,6 @@
               <FilePath>..\drive\fingerprint\fingerprint.c</FilePath>
             </File>
             <File>
-              <FileName>face_st.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\face\face_st\face_st.c</FilePath>
-            </File>
-            <File>
               <FileName>system_timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\drive\system_timer\system_timer.c</FilePath>
@@ -993,11 +973,6 @@
               <FilePath>..\module\module_fp\fingerprint_api.c</FilePath>
             </File>
             <File>
-              <FileName>face_api.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\module\module_face\face_api.c</FilePath>
-            </File>
-            <File>
               <FileName>module_spi_flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\module\module_spi_flash\module_spi_flash.c</FilePath>
@@ -1047,11 +1022,6 @@
         <Group>
           <GroupName>task</GroupName>
           <Files>
-            <File>
-              <FileName>task_face.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\task\task_face\task_face.c</FilePath>
-            </File>
             <File>
               <FileName>task_fingerprint.c</FileName>
               <FileType>1</FileType>

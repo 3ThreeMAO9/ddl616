@@ -9,7 +9,7 @@
 #include "task_uart.h"
 #include "task_nfc.h"
 #include "task_fingerprint.h"
-#include "task_face.h"
+
 #include "task_player.h"
 #include "task_system_time.h"
 #include "task_sleep.h"

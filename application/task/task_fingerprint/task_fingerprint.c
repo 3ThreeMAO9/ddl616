@@ -8,7 +8,7 @@
  * Date: 2025-12-10
  */
 #include "task_fingerprint.h"
-#include "task_face.h"
+
 #include "task_system_time.h"
 
 #include "user.h"
