@@ -1,6 +1,7 @@
 #include "module_hmi.h"
 #include "hal_timer.h"
 #include "utils.h"
+#include "user.h"
 #include "led.h"
 #include "parameter.h"
 #include "bsp_voice_list.h"
@@ -181,8 +182,14 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_ADD_NORMAL_USER:
+        {
+            uint16_t user_id = read_user_id();
             PLAYER_LIST_CLEAR_ADD(VOICE_User_number);
+            PLAYER_LIST_ADD(VOICE_Zero + user_id / 100);
+            PLAYER_LIST_ADD(VOICE_Zero + (user_id / 10) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + user_id % 10);
             break;
+        }
 
         case HMI_STATE_SYSTEM_SETTINGS:
             PLAYER_LIST_CLEAR_ADD(VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);

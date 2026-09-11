@@ -46,14 +46,21 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
     switch (event)
     {
     case FP_EVENT_SUCCESS_HANDLE:
-        OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE  finger_id %d", *ptr);
-        if (isValidUserFingerprint(ptr)){
-            userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, 0);
+    {
+        uint16_t finger_id = *(uint16_t*)params;
+        uint16_t user_id = finger_id;   // 用于输入输出
+        
+        OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE finger_id %u", finger_id);
+        
+        if (isValidUserFingerprint(&user_id)) {
+            OB_LOGI(TAG, "matched user_id = %u", user_id);
+            userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_id);
         }
-        else{
+        else {
             userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
         }
         break;
+    }
     case FP_EVENT_INVALID_FP:
         OB_LOGI(TAG, "FP_EVENT_VERIFY_FAIL");
         if(isEmptyUser(false)){

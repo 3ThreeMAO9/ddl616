@@ -101,6 +101,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
             if (EVENT_RESULT_SUCCESS_VERIFY_USER == (e->dynamic_[0]))
             {
+                OB_LOGI(TAG, "user_id [%u]", ((uint16_t)e->dynamic_[1] << 8) | e->dynamic_[2]);
                 hmi_task_tamper_warn_time(0);
                 motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);
                 me->branch = (QStateHandler)(lock_fsm_sleep);

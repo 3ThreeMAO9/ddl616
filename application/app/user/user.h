@@ -83,7 +83,7 @@ typedef struct{
     uint8_t flag;
     uint8_t key_type;
     uint16_t user_sn;
-
+    uint16_t user_id;   // 用户ID，连续累计
     union{
         user_code_t password;
         user_fingers_t finger;
@@ -105,7 +105,32 @@ typedef struct{
     uint16_t permanentKey;      // 总钥匙数量
 
 }user_key_cnt_t;
-
+// Flash 地址布局：
+// ┌─────────────────────────────────────────────────────────────┐
+// │ 块0: 页标记                                                │
+// ├─────────────────────────────────────────────────────────────┤
+// │ 密码区 (slot 0~19)                                         │
+// │   块1:   密码 slot 0                                       │
+// │   块2:   密码 slot 1                                       │
+// │   ...                                                      │
+// │   块20:  密码 slot 19                                      │
+// ├─────────────────────────────────────────────────────────────┤
+// │ 指纹区 (slot 0~49)                                         │
+// │   块21:  指纹 slot 0                                       │
+// │   块22:  指纹 slot 1                                       │
+// │   ...                                                      │
+// │   块70:  指纹 slot 49                                      │
+// ├─────────────────────────────────────────────────────────────┤
+// │ 卡片区 (slot 0~99)                                         │
+// │   块71:  卡片 slot 0                                       │
+// │   ...                                                      │
+// │   块170: 卡片 slot 99                                      │
+// ├─────────────────────────────────────────────────────────────┤
+// │ 人脸区 (slot 0~49)                                         │
+// │   块171: 人脸 slot 0                                       │
+// │   ...                                                      │
+// │   块220: 人脸 slot 49                                      │
+// └─────────────────────────────────────────────────────────────┘
 #pragma pack()
 
 /***************Variable***************/
@@ -120,10 +145,10 @@ uint16_t readUserKeyCnt(uint8_t type);
 uint8_t isTooSimpleCode(uint8_t* input, uint8_t len);
 uint8_t isEmptyUser(uint8_t commonUserFlag);
 uint8_t isFullUser(uint8_t type);
-uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_sn, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag);
+uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag);
 uint8_t isCheckDefaultMasterCode(uint8_t *input, uint8_t input_len);
-uint8_t isValidUserFingerprint(uint16_t* user_sn);
-uint8_t isValidUserCard(uint16_t* user_sn, uint8_t* card_id);
+uint8_t isValidUserFingerprint(uint16_t* user_id);
+uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id);
 uint8_t isValiydUserKeyId(uint16_t *user_sn, uint8_t code_id, uint8_t key_type);
 uint8_t isValidUserFace(uint16_t* user_sn);
 
@@ -136,12 +161,16 @@ uint8_t addUserFinger(uint16_t id, uint16_t* userSn);
 uint8_t addUserCard(uint8_t* card_id, uint16_t* userSn);
 
 void delUserInfo(uint16_t user_sn);
-uint8_t delUserCode(uint8_t* input, uint8_t len, uint16_t* user_sn);
+uint8_t delUserCode(uint8_t* input, uint8_t len, uint16_t* user_id);
 uint8_t delUserOneTimeCode(uint8_t* input, uint8_t len, uint16_t* user_sn);
 
 uint8_t getUserPasswordCode(uint16_t user_sn, uint8_t* pData);
 uint8_t getUserFlag(uint16_t *user_sn,uint8_t key_type,uint16_t id);
 uint8_t getUserFingerID(uint16_t *user_sn,uint16_t id);
+
+uint16_t get_user_id(void);
+uint16_t read_user_id(void);
+void clean_user_id(void);
 /**************************************/
 
 #endif

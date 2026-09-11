@@ -6,6 +6,7 @@
 #include "task_key.h"
 #include "task_nfc.h"
 
+#include "user.h"
 #include "event.h"
 #include "key_event.h"
 
@@ -31,6 +32,7 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            get_user_id();
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_REGISTER);
