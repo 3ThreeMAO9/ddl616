@@ -51,3 +51,13 @@ void nfcKeyEventPush(uint8_t* id, uint8_t size) {
 
     eventQueuePush(&event);
 }
+
+void linkKeyEventPush(uint8_t* id, uint8_t size) {
+    QEvent event;
+
+    event.sig = Q_LINK_KEY_SIG;
+    event.dynamic_[0] = size;
+    memcpy(&event.dynamic_[1], id, size);
+
+    eventQueuePush(&event);
+}

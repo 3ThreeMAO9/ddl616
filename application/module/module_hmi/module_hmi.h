@@ -83,6 +83,8 @@ typedef enum{
     HMI_STATE_REPEAT_INPUT_CODE,        //请再输入一次，以#号键结束
     HMI_STATE_LANGAGESETTING,           //语言设置菜单
     HMI_STATE_LINKED_UNLOCK,            //联动解锁
+    HMI_STATE_CREATE_LINKED_UNLOCK,     //创建联动开锁
+    HMI_STATE_JOIN_LINKED_UNLOCK,       //加入联动开锁
     HMI_STATE_AUTO_LOCK,                //自动上锁菜单
     HMI_STATE_VERSION,                  //版本号
     HMI_STATE_TIME,                     //当前时间
@@ -129,9 +131,8 @@ typedef enum{
     HMI_STATE_EXIT_MASTER_MODE,     //退出管理模式
     HMI_STATE_ENTER_MENU,           //进入管理菜单，绿灯亮，语音播报验证成功
     HMI_STATE_VACATION_MENU,        //假期模式菜单
-    // HMI_STATE_SETUP_SUCCESSFUL,     //设置成功
     HMI_STATE_HANDLE_FAIL_KEEP_RED,
-    HMI_STATE_HANDLE_SUCCESS,
+    HMI_STATE_HANDLE_SUCCESS,       //设置成功
     HMI_STATE_HANDLE_ADD_SUCCESS,
     HMI_STATE_HANDLE_VOICE_SUCCESS,
     HMI_STATE_DEV_PARA,

@@ -5,9 +5,11 @@
 #include "task_fingerprint.h"
 #include "task_key.h"
 #include "task_nfc.h"
+#include "task_player.h"
 
 #include "event.h"
 #include "key_event.h"
+#include "parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -25,9 +27,15 @@ static QState menu_system_language_event_handle(LockFsm *me, QEvent const *e)
     {
     case KEY_NUM_1:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        setUserParameter(USER_PARA_LANGUAGE_MODE_ID, LANGUAGE_CN);
+        player_task_language_set(OB_LOCK_LANGUAGE_CN);
+        state = Q_TRAN(lock_fsm_menu_language_settings);
         break;
     case KEY_NUM_2:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        setUserParameter(USER_PARA_LANGUAGE_MODE_ID, LANGUAGE_EN);
+        player_task_language_set(OB_LOCK_LANGUAGE_EN);
+        state = Q_TRAN(lock_fsm_menu_language_settings);
         break;
     case KEY_CAN:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);

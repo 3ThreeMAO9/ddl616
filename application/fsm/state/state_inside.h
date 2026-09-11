@@ -32,6 +32,9 @@ QState lock_fsm_menu_system_settings(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_linked_unlock(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_language_settings(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_create_linked_unlock(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e);
+
 
 QState lockFsmWake(LockFsm *me, QEvent const *e);
 QState lockFsmSystemLock(LockFsm *me, QEvent const *e);

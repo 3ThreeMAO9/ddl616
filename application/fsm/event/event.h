@@ -20,6 +20,7 @@ typedef enum
     Q_USER_HANDLE_SIG,
     Q_USER_KEY_SIG,
     Q_NFC_KEY_SIG,
+    Q_LINK_KEY_SIG,
     
     Q_SIG_CNT,
 
@@ -144,6 +145,7 @@ void baseEventPush(uint8_t event_type, uint8_t value);
 void userHandleEventPush(uint8_t result, uint16_t user_sn);
 void handleEventPush(uint8_t handle, uint8_t value);
 void nfcKeyEventPush(uint8_t* id, uint8_t size);
+void linkKeyEventPush(uint8_t* id, uint8_t size);
 
 /**************************************/
 

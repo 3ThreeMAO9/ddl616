@@ -15,6 +15,12 @@ typedef enum{
 
 }code_handle_t;
 
+
+typedef enum{
+    LINKED_UNLOCK_CREATE = 0,
+    LINKED_UNLOCK_JOIN,
+
+}linked_unlock_handle_t;
 /****************Struct****************/
 
 
@@ -35,8 +41,8 @@ typedef struct{
 void keyEventInit(void);
 void keyEventVerifyAdmin(uint8_t key_value);
 void keyEventVerifyUser(uint8_t key_value);
-void keyEventSetParameter(uint8_t key_value, uint8_t parameter_index, uint8_t width);
 void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cnt);
+void keyEventLinkedUnlock(uint8_t key_value, uint8_t handle_code, uint8_t input_cnt);
 void keyEventAgingTest(uint8_t key_value, uint8_t input_cnt);
 /**************************************/
 

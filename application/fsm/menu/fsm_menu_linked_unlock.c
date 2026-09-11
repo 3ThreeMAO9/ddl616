@@ -22,12 +22,16 @@ static QState menu_linked_unloc_event_handle(LockFsm *me, QEvent const *e)
     {
     case KEY_NUM_1:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        state = Q_TRAN(lock_fsm_menu_create_linked_unlock);
         break;
     case KEY_NUM_2:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        state = Q_TRAN(lock_fsm_menu_join_linked_unlock);
         break;
     case KEY_NUM_3:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        me->branch = (QStateHandler)(lock_fsm_menu_linked_unlock);
+        state = Q_TRAN(lockFsmHandleSuccess);
         break;
     case KEY_CAN:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);

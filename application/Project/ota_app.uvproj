@@ -812,6 +812,16 @@
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_repeat_input_code.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm_menu_create_linked_unlock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_create_linked_unlock.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_join_linked_unlock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_join_linked_unlock.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -497,18 +497,16 @@ void keyEventHandleCode(uint8_t key_value, uint8_t handle_code, uint8_t input_cn
     }
 }
 
-void keyEventSetParameter(uint8_t key_value, uint8_t parameter_index, uint8_t width)
+void keyEventLinkedUnlock(uint8_t key_value, uint8_t handle_code, uint8_t input_cnt)
 {
-    uint32_t value;
     if (KEY_CAN == key_value)
     {
+#if (Enabled == PRINTF_USER)
+        OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+#endif
         if (keyBoardEvent.input[0].len)
         {
             CLEAR_KEY_EVENT();
-#if (Enabled == PRINTF_USER)
-            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
-            OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
-#endif
         }
         else
         {
@@ -525,87 +523,35 @@ void keyEventSetParameter(uint8_t key_value, uint8_t parameter_index, uint8_t wi
             OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
         }
 #endif
-        if (keyBoardEvent.input[0].len < width)
+        if (keyBoardEvent.input[0].len < LINKED_CODE_LEN_MAX)
         {
 #if (Enabled == PRINTF_PASSWORD)
-            OB_LOGE(TAG, "handle fail: input is fail");
+            OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
 #endif
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INPUT);
+            CLEAR_KEY_EVENT();
         }
         else
         {
-            value = arraysConvertNumber(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
-
-            switch (parameter_index)
-            {
-            case USER_PARA_AUTO_LOCK_TIME_ID:
-                setUserParameter(USER_PARA_AUTO_LOCK_MODE_ID, Enabled);
-                break;
-            case USER_PARA_AUTO_LOCK_MODE_ID:
-                if (1 == value)
-                {
-                    value = Enabled;
-                    setUserParameter(USER_PARA_AUTO_LOCK_TIME_ID, 30);
-                }
-                else if (2 == value)
-                {
-                    value = Disabled;
-                }
-                break;
-            case USER_PARA_SILENT_MODE_ID:
-                if (1 == value)
-                {
-                    value = Enabled;
-                }
-                else if (2 == value)
-                {
-                    value = Disabled;
-                }
-                break;
-            case USER_PARA_LANGUAGE_MODE_ID:
-                if (1 == value)
-                {
-                    setUserParameter(USER_PARA_SILENT_MODE_ID, Enabled);
-                    value = LANGUAGE_EN;
-                }
-                else if (2 == value)
-                {
-                    setUserParameter(USER_PARA_SILENT_MODE_ID, Enabled);
-                    value = LANGUAGE_FR;
-                }
-                else if (3 == value)
-                {
-                    setUserParameter(USER_PARA_SILENT_MODE_ID, Enabled);
-                    value = LANGUAGE_SP;
-                }
-                else if (4 == value)
-                {
-                    parameter_index = USER_PARA_SILENT_MODE_ID;
-                    value = Disabled;
-                }
-                break;
-            default:
-                break;
-            }
-
-            if (setUserParameter(parameter_index, value))
-            {
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS_SETUP);
-            }
-            else
-            {
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_INVALID);
-            }
+#if (Enabled == PRINTF_PASSWORD)
+            OB_LOGE(TAG, "link unlock ok");
+#endif
+            linkKeyEventPush(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
         }
-
-        CLEAR_KEY_EVENT();
     }
-    else if (key_value < KEY_CNT)
+    else if ((key_value < KEY_CNT) && (key_value != KEY_NUM_13))
     {
-        if (keyBoardEvent.input[0].len < width)
+        if (keyBoardEvent.input[0].len < LINKED_CODE_LEN_MAX)
         {
             keyBoardEvent.input[0].buffer[keyBoardEvent.input[0].len] = key_value;
             keyBoardEvent.input[0].len++;
+#if (Enabled == PRINTF_USER)
+            if (keyBoardEvent.input[0].len)
+            {
+                OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+                OB_LOGD_DUMP(&keyBoardEvent.input[0].buffer[0], keyBoardEvent.input[0].len);
+            }
+#endif
         }
         else
         {
@@ -618,7 +564,6 @@ void keyEventSetParameter(uint8_t key_value, uint8_t parameter_index, uint8_t wi
         }
     }
 }
-
 
 void keyEventAgingTest(uint8_t key_value, uint8_t input_cnt)
 {

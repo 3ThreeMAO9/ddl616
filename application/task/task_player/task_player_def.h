@@ -16,6 +16,7 @@
 #include "bsp_player.h"
 #include "module_spi_flash.h"
 #include "bsp_voice_list.h"
+#include "bsp_system_def.h"
 
 
 

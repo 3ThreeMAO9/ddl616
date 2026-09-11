@@ -26,6 +26,8 @@
 // #define USER_CODE_LEN_SIZE                          (USER_CODE_LEN_MAX / 2)
 #define DUMMY_USER_CODE_LEN_MAX                     (20)
 
+#define LINKED_CODE_LEN_MAX                         (4)
+
 #define ADMIN_PASSWORD_DEFAULT                      {1,2,3,4,5,6,7,8}
 
 //fingerprint parameter

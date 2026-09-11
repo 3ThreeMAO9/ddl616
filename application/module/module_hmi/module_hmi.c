@@ -239,6 +239,18 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_TAMPER_WARN:
             PLAYER_LIST_CLEAR_ADD(SOUND_WARN,SOUND_WARN,SOUND_WARN);
             break;
+
+        case HMI_STATE_HANDLE_SUCCESS:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Setup_successful);
+            break;
+
+        case HMI_STATE_CREATE_LINKED_UNLOCK:
+            PLAYER_LIST_ADD(VOICE_Please_enter_a_random_4_digit_pairing_code, VOICE_End_with_pound_key);
+            break;
+        
+        case HMI_STATE_JOIN_LINKED_UNLOCK:
+            PLAYER_LIST_ADD(VOICE_Please_enter_a_4_digit_pairing_code, VOICE_End_with_pound_key);
+            break;
         default:
             return keepTime;
     }
