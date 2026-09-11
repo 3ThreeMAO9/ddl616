@@ -254,7 +254,7 @@ void fp_task_set_mode(uint8_t mode) {
 
 void fp_task_init(void) {
     const fp_function_attr_t fp_attr = {
-        .register_count = 6,
+        .register_count = 5,
         .repeat = 0,
         .auto_sleep = 0,
         .idle_irq = 1,

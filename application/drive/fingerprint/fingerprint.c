@@ -301,7 +301,7 @@ static void fingerprint_process_register(fp_context_t *ctx) {
 
                 uint8_t param = ctx->params.reg.count + 1;
 
-                if (param >= ctx->func_attr.register_count) {
+                if (param > ctx->func_attr.register_count) {
                     fingerprint_send_command(ctx, FP_CMD_REG_MODEL, NULL, 0);
                     ctx->step = FP_STEP_4;
                     break;
