@@ -14,6 +14,7 @@
 #include "user.h"
 #include "event.h"
 #include "msg_protocol.h"
+#include "parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -41,7 +42,7 @@ static uint8_t fp_init_event_callback(uint8_t event, void* params, uint8_t lenth
 
 static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t lenth)
 {
-    uint16_t* ptr = (uint16_t*)(params);
+//    uint16_t* ptr = (uint16_t*)(params);
 
     switch (event)
     {
@@ -113,11 +114,7 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
     }
     case FP_EVENT_CHIP_SN:
         // save chip sn
-
-        // 后续实现
-        // if (write_finger_module_chip_sn(ptr, lenth)) {
-        //     OB_LOGI(TAG, "save finger module chip sn");
-        // }
+        writeFingerChipSn(ptr);
         break;
     case FP_EVENT_PROCESSING:
         OB_LOGI(TAG, "FP_EVENT_PROCESSING");
@@ -153,7 +150,7 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
 
 #if (FP_ENABLE_DELETE)
 static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t lenth) {
-    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
+//    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
 
     switch (event)
     {
@@ -182,7 +179,7 @@ static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t len
 }
 
 static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t lenth) {
-    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
+//    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
 
     switch (event)
     {
@@ -296,13 +293,12 @@ void fp_task_set_attr(void* attr, uint8_t lenth) {
 
     memcpy(&fp_attr, attr, lenth);
     
-    // 后续实现
-    // if (read_finger_module_chip_sn(fp_attr.chip_sn)){
-    //     fp_attr.chip_sn_flag = 1;
-    //     OB_LOGD(TAG, "read fp chip sn->");
-    //     OB_LOGD_DUMP(fp_attr.chip_sn, 14);
-    // }
-
+    if (readFingerChipSn(fp_attr.chip_sn)){
+        fp_attr.chip_sn_flag = 1;
+        OB_LOGD(TAG, "read fp chip sn->");
+        OB_LOGD_DUMP(fp_attr.chip_sn, 14);
+    }
+    
     fp_task_driver.io->set_attr((void*)(&fp_attr), lenth);
 }
 

@@ -46,7 +46,8 @@ typedef struct{
 
 typedef struct{
     uint32_t flag;
-    uint8_t sn[32];
+    uint8_t sn[14];
+    uint8_t reserved[18];
 
 }finger_chip_t;
 

@@ -7,6 +7,7 @@
 #include "task_sleep.h"
 #include "task_key.h"
 #include "led.h"
+#include "flash_data.h"
 // #include "offlinekey_port.h"
 // #include "offlinekey.h"
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG

@@ -99,7 +99,7 @@ uint32_t readUserParameter(uint8_t index)
 
 uint32_t readFingerChipSn(uint8_t *chipSn)
 {
-    memcpy(chipSn, userParameter.finger_chip.sn, 32);
+    memcpy(chipSn, userParameter.finger_chip.sn, sizeof(userParameter.finger_chip.sn));
     return userParameter.finger_chip.flag;
 }
 
@@ -107,7 +107,7 @@ void writeFingerChipSn(uint8_t *chipSn)
 {
     uint16_t sum;
 
-    memcpy((uint8_t *)(userParameter.finger_chip.sn), (uint8_t *)(chipSn), 32);
+    memcpy((uint8_t *)(userParameter.finger_chip.sn), (uint8_t *)(chipSn), sizeof(userParameter.finger_chip.sn));
     userParameter.finger_chip.flag = true;
 
     sum = check_sum((uint8_t *)(&userParameter.finger_chip), (sizeof(parameter_t) - sizeof(userParameter.sum)));

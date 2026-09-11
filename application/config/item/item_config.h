@@ -56,7 +56,7 @@
 
 #define USER_CARD_CNT                               (100)
 
-#define USER_FACE_CNT                               (0)
+#define USER_FACE_CNT                               (50)
 
 #define PERMANENT_USER_CNT                          (PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT + USER_FACE_CNT)
 
