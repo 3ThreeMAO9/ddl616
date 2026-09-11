@@ -10,7 +10,7 @@
 #include "i2c_software.h"
 #include "stddef.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "i2c_software"
 

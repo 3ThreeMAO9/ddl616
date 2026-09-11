@@ -10,7 +10,7 @@
 #include "flash_data.h"
 // #include "offlinekey_port.h"
 // #include "offlinekey.h"
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "key_event"
 
@@ -40,7 +40,7 @@ static uint8_t keyEventCombineFunctionHandle(void)
 
     if (208 == value)
     {
-        flash_page_system_init();
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_RESET);
         return true;
     }
 

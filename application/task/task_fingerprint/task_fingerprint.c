@@ -16,7 +16,7 @@
 #include "msg_protocol.h"
 #include "parameter.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "task_fp"
 
@@ -150,7 +150,7 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
 
 #if (FP_ENABLE_DELETE)
 static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t lenth) {
-//    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
+    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
 
     switch (event)
     {
@@ -179,7 +179,7 @@ static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t len
 }
 
 static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t lenth) {
-//    fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
+   fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
 
     switch (event)
     {
@@ -188,6 +188,7 @@ static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t 
         break;
     case FP_EVENT_DELETE_ALL:
         OB_LOGI(TAG, "FP_EVENT_DELETE_ALL");
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS_DELETE_ALL);
         break;
     case FP_EVENT_FAIL_DELETE:
         OB_LOGI(TAG, "FP_EVENT_FAIL_DELETE");

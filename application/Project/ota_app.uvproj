@@ -752,6 +752,11 @@
               <FileType>1</FileType>
               <FilePath>..\fsm\state\fsm_state_verify_admin.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm_state_reset.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\state\fsm_state_reset.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

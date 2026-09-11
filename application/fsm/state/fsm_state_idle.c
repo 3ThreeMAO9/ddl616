@@ -87,6 +87,10 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 hmiTaskSetState(HMI_STATE_TAMPER_WARN);
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             }
+            else if (EVENT_RESULT_RESET == e->dynamic_[0])
+            {
+                state = Q_TRAN(lock_fsm_reset);
+            }
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
             //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             // }

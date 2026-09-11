@@ -10,7 +10,7 @@
 #include "fingerprint.h"
 #include "utils.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "fp"
 

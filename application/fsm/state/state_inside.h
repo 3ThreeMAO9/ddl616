@@ -23,6 +23,8 @@
 QState lock_fsm_sleep(LockFsm *me, QEvent const *e);
 QState lock_fsm_idle(LockFsm *me, QEvent const *e);
 QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e);
+QState lock_fsm_reset(LockFsm *me, QEvent const *e);
+
 
 QState lock_fsm_menu_admin(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e);

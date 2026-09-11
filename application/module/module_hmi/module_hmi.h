@@ -101,7 +101,7 @@ typedef enum{
     // HMI_STATE_DEVICE_TEST_MOTOR_LOCKED,
     HMI_STATE_DEVICE_TEST_DONE,
 
-    HMI_STATE_RESET,                    //已恢复到出厂设置       Restored_to_factory_settings
+    HMI_STATE_RESET_SUCCESS,            //已恢复到出厂设置       Restored_to_factory_settings
 
     HMI_STATE_LOW_ENERGY,               //电量低灯效
     HMI_STATE_VACATION_MODE_WARN,       //离家模式报警

@@ -32,7 +32,7 @@
 #include "config.h"
 #include "module_spi_flash.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "sfud"
 

@@ -13,7 +13,7 @@
 #include "event.h"
 #include "key_event.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "fsm_sleep"
 

@@ -12,7 +12,7 @@
 #include "hal_wdt.h"
 #include "hal_rtc.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "sys_timer"
 
