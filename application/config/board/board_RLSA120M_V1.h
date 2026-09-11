@@ -54,37 +54,32 @@ typedef enum
 
 /***********Macro***********/
 //player
-#define PLAYER_EN_PORT                  (HAL_GPIO_PORT2)
-#define PLAYER_EN_PIN                   (HAL_GPIO_PIN9)
+#define PLAYER_EN_PORT                  (OB_GPIO2)
+#define PLAYER_EN_PIN                   (GPIO_PIN9)
 
-#define PLAYER_DATA_PORT                (HAL_GPIO_PORT0)
-#define PLAYER_DATA_PIN                 (HAL_GPIO_PIN12)
+#define PLAYER_DATA_PORT                (OB_GPIO0)
+#define PLAYER_DATA_PIN                 (GPIO_PIN12)
 #define PLAYER_PWM_CHANNEL              (PWM_CH0B)
 #define PLAYER_PWM_PERIOD               ((uint32_t)(64 * 1000))           //unit: Hz
 #define PLAYER_PWM_DUTY                 ((uint8_t)(0x80))                 //unit: %
 //end player
 
 // motor
-#define MOTOR_LA_GPIO                   (HAL_GPIO_PORT2)
-#define MOTOR_LA_PIN                    (HAL_GPIO_PIN13)
+#define MOTOR_LA_GPIO                   (OB_GPIO2)
+#define MOTOR_LA_PIN                    (GPIO_PIN13)
 
-#define MOTOR_LB_GPIO                   (HAL_GPIO_PORT2)
-#define MOTOR_LB_PIN                    (HAL_GPIO_PIN4)
+#define MOTOR_LB_GPIO                   (OB_GPIO2)
+#define MOTOR_LB_PIN                    (GPIO_PIN4)
 
-
-    // tamper key
-    #define TAMPER_KEY_GPIO                 (HAL_GPIO_PORT1)
-    #define TAMPER_KEY_PIN                  (HAL_GPIO_PIN1)
-
-    // voice en
-    #define VOICE_EN_GPIO                   (HAL_GPIO_PORT1)
-    #define VOICE_EN_PIN                    (HAL_GPIO_PIN4)
+// tamper key
+#define TAMPER_KEY_GPIO                 (OB_GPIO1)
+#define TAMPER_KEY_PIN                  (GPIO_PIN1)
 
 //NFC
-#define NFC_NRST_GPIO                   (HAL_GPIO_PORT0)
-#define NFC_NRST_PIN                    (HAL_GPIO_PIN10)
-#define NFC_IRQ_GPIO                    (HAL_GPIO_PORT1)
-#define NFC_IRQ_PIN                     (HAL_GPIO_PIN3)
+#define NFC_NRST_GPIO                   (OB_GPIO0)
+#define NFC_NRST_PIN                    (GPIO_PIN0)
+#define NFC_IRQ_GPIO                    (OB_GPIO1)
+#define NFC_IRQ_PIN                     (GPIO_PIN3)
 #define NFC_NSS_GPIO                    (HAL_GPIO_PORT3)
 #define NFC_NSS_PIN                     (HAL_GPIO_PIN4)
 #define NFC_CLK_GPIO                    (HAL_GPIO_PORT3)
@@ -103,80 +98,54 @@ typedef enum
 ///<endNFC
 
 ///< SPI FLASH
-#define FLASH_CS_PORT                    (HAL_GPIO_PORT0)
-#define FLASH_CS_PIN                     (HAL_GPIO_PIN8)
+#define FLASH_CS_PORT                   (HAL_GPIO_PORT0)
+#define FLASH_CS_PIN                    (HAL_GPIO_PIN8)
 
-#define FLASH_CLK_PORT                   (HAL_GPIO_PORT2)
-#define FLASH_CLK_PIN                    (HAL_GPIO_PIN10)
+#define FLASH_CLK_PORT                  (HAL_GPIO_PORT2)
+#define FLASH_CLK_PIN                   (HAL_GPIO_PIN10)
 
-#define FLASH_MOSI_PORT                  (HAL_GPIO_PORT0)
-#define FLASH_MOSI_PIN                   (HAL_GPIO_PIN4)
+#define FLASH_MOSI_PORT                 (HAL_GPIO_PORT0)
+#define FLASH_MOSI_PIN                  (HAL_GPIO_PIN4)
 
-#define FLASH_MISO_PORT                  (HAL_GPIO_PORT0)
-#define FLASH_MISO_PIN                   (HAL_GPIO_PIN5)
+#define FLASH_MISO_PORT                 (HAL_GPIO_PORT0)
+#define FLASH_MISO_PIN                  (HAL_GPIO_PIN5)
 
-#define FLASH_SPI_ID                     (HAL_SPI1)
-#define FLASH_SPI_TYPE                   (HAL_SPI_TYPE_SW)
+#define FLASH_SPI_ID                    (HAL_SPI1)
+#define FLASH_SPI_TYPE                  (HAL_SPI_TYPE_SW)
 
-#define FLASH_CS_PIN_SET                 (OB_GPIO0->DATA |= GPIO_PIN8)
-#define FLASH_CS_PIN_CLR                 (OB_GPIO0->DATA &= ~GPIO_PIN8)
-#define FLASH_CLK_PIN_SET                (OB_GPIO2->DATA |= GPIO_PIN10)
-#define FLASH_CLK_PIN_CLR                (OB_GPIO2->DATA &= ~GPIO_PIN10)
-#define FLASH_MOSI_PIN_SET               (OB_GPIO0->DATA |= GPIO_PIN4)
-#define FLASH_MOSI_PIN_CLR               (OB_GPIO0->DATA &= ~GPIO_PIN4)
-#define FLASH_MISO_READ_PIN              (OB_GPIO0->PIN & GPIO_PIN5)
-
-///< SPI  CS IO软件控制
-#define SPI_INIT_DEF                                                                                 \
-    do                                                                                               \
-    {                                                                                                \
-        HAL_GPIO_Init(FLASH_CLK_PORT, FLASH_CLK_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);   \
-        HAL_GPIO_Init(FLASH_MOSI_PORT, FLASH_MOSI_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-        HAL_GPIO_Init(FLASH_MISO_PORT, FLASH_MISO_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-        HAL_GPIO_Write(FLASH_CLK_PORT, FLASH_CLK_PIN, 0);                                            \
-        HAL_GPIO_Write(FLASH_MOSI_PORT, FLASH_MOSI_PIN, 0);                                          \
-        HAL_GPIO_Write(FLASH_MISO_PORT, FLASH_MISO_PIN, 0);                                          \
-    } while (0)
+#define FLASH_CS_PIN_SET                (OB_GPIO0->DATA |= GPIO_PIN8)
+#define FLASH_CS_PIN_CLR                (OB_GPIO0->DATA &= ~GPIO_PIN8)
+#define FLASH_CLK_PIN_SET               (OB_GPIO2->DATA |= GPIO_PIN10)
+#define FLASH_CLK_PIN_CLR               (OB_GPIO2->DATA &= ~GPIO_PIN10)
+#define FLASH_MOSI_PIN_SET              (OB_GPIO0->DATA |= GPIO_PIN4)
+#define FLASH_MOSI_PIN_CLR              (OB_GPIO0->DATA &= ~GPIO_PIN4)
+#define FLASH_MISO_READ_PIN             (OB_GPIO0->PIN & GPIO_PIN5)
 
 ///< End SPI FLASH
 
 
 // led
-#define RED_LED_GPIO                        (HAL_GPIO_PORT0)
-#define RED_LED_PIN                         (HAL_GPIO_PIN14)
-#define GREEN_LED_GPIO                      (HAL_GPIO_PORT0)
-#define GREEN_LED_PIN                       (HAL_GPIO_PIN1)
-#define WHITE_LED_GPIO                      (HAL_GPIO_PORT0)
-#define WHITE_LED_PIN                       (HAL_GPIO_PIN13)
-#define BLUE_LED_GPIO                       (HAL_GPIO_PORT1)
-#define BLUE_LED_PIN                        (HAL_GPIO_PIN7)
+#define RED_LED_GPIO                    (OB_GPIO0)
+#define RED_LED_PIN                     (GPIO_PIN14)
+#define GREEN_LED_GPIO                  (OB_GPIO0)
+#define GREEN_LED_PIN                   (GPIO_PIN1)
+#define WHITE_LED_GPIO                  (OB_GPIO0)
+#define WHITE_LED_PIN                   (GPIO_PIN13)
+#define BLUE_LED_GPIO                   (OB_GPIO1)
+#define BLUE_LED_PIN                    (GPIO_PIN7)
 
 //back uart
-#define BACK_UART_SEL                       (UART_0)
+#define BACK_UART_SEL                   (UART_0)
 
 
 //uart
-#define BACK_UART0_TX_GPIO                  (HAL_GPIO_PORT3)
-#define BACK_UART0_TX_PIN                   (HAL_GPIO_PIN1)
-#define BACK_UART0_RX_GPIO                  (HAL_GPIO_PORT3)
-#define BACK_UART0_RX_PIN                   (HAL_GPIO_PIN0)
-
-#define UART_INT_GPIO                       (BACK_UART0_RX_GPIO)
-#define UART_INT_PIN                        (BACK_UART0_RX_PIN)
-
-
-
+#define UART_INT_GPIO                   (OB_GPIO3)
+#define UART_INT_PIN                    (GPIO_PIN0)
 
 // soft uart    
-#define SIMU_UART_GPIO                  (HAL_GPIO_PORT0)
-#define SIMU_UART_PIN                   (HAL_GPIO_PIN9)
-#define SIMU_UART_TX_PIN_SET            (OB_GPIO0->DATA |= GPIO_PIN9)     //中断执行，需要直接寄存器操作
-#define SIMU_UART_TX_PIN_CLR            (OB_GPIO0->DATA &= ~GPIO_PIN9)    //中断执行，需要直接寄存器操作
+#define SIMU_UART_GPIO                  (OB_GPIO0)
+#define SIMU_UART_PIN                   (GPIO_PIN9)
 
-#define LOG_UART_TX_GPIO                (HAL_GPIO_PORT3)
-#define LOG_UART_TX_PIN                 (HAL_GPIO_PIN1)
-#define LOG_UART_RX_GPIO                (HAL_GPIO_PORT3)
-#define LOG_UART_RX_PIN                 (HAL_GPIO_PIN0)
 #define LOG_UART_SEL                    (UART_0)
 
 #define UART0_TX_GPIO                   (OB_GPIO3)
@@ -194,10 +163,10 @@ typedef enum
 #define FP_TX_PIN                       (HAL_GPIO_PIN1)
 #define FP_RX_GPIO                      (HAL_GPIO_PORT2)
 #define FP_RX_PIN                       (HAL_GPIO_PIN0)
-#define FP_POWER_GPIO                   (HAL_GPIO_PORT0)
-#define FP_POWER_PIN                    (HAL_GPIO_PIN6)
-#define FP_WAKE_GPIO                    (HAL_GPIO_PORT0)
-#define FP_WAKE_PIN                     (HAL_GPIO_PIN7)
+#define FP_POWER_GPIO                   (OB_GPIO0)
+#define FP_POWER_PIN                    (GPIO_PIN6)
+#define FP_WAKE_GPIO                    (OB_GPIO0)
+#define FP_WAKE_PIN                     (GPIO_PIN7)
 #define FINGER_UART_SEL                 (UART_1)
 
 // face
@@ -211,14 +180,14 @@ typedef enum
 
 //touch key
 #define TOUCH_CH_CNT                    (14)
-#define TOUCH_WAKE_GPIO                 (HAL_GPIO_PORT2)
-#define TOUCH_WAKE_PIN                  (HAL_GPIO_PIN7)
-#define TOUCH_RESET_GPIO                (HAL_GPIO_PORT1)
-#define TOUCH_RESET_PIN                 (HAL_GPIO_PIN2)
-#define TOUCH_I2C_SCL_GPIO              (HAL_GPIO_PORT1)
-#define TOUCH_I2C_SCL_PIN               (HAL_GPIO_PIN6)
-#define TOUCH_I2C_SDA_GPIO              (HAL_GPIO_PORT1)
-#define TOUCH_I2C_SDA_PIN               (HAL_GPIO_PIN5)
+#define TOUCH_WAKE_GPIO                 (OB_GPIO2)
+#define TOUCH_WAKE_PIN                  (GPIO_PIN7)
+#define TOUCH_RESET_GPIO                (OB_GPIO1)
+#define TOUCH_RESET_PIN                 (GPIO_PIN2)
+#define TOUCH_I2C_SCL_GPIO              (OB_GPIO1)
+#define TOUCH_I2C_SCL_PIN               (GPIO_PIN6)
+#define TOUCH_I2C_SDA_GPIO              (OB_GPIO1)
+#define TOUCH_I2C_SDA_PIN               (GPIO_PIN5)
 
 #define KEYBOAD_MAX 14
 

@@ -124,8 +124,7 @@ static void volume_calc(uint8_t level,uint8_t *data,uint16_t len)
 
 static void player_pin_en_init(void)
 {
-    HAL_GPIO_Init(PLAYER_EN_PORT,PLAYER_EN_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
-    HAL_GPIO_Write(PLAYER_EN_PORT,PLAYER_EN_PIN,0);
+    PLAYER_EN_INIT();
 }
 static void event_handler(void)
 {
@@ -185,8 +184,7 @@ void module_player_init(void)
 	player_pin_en_init();
 	pwm_stop();
 
-    HAL_GPIO_Init(PLAYER_DATA_PORT,PLAYER_DATA_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
-    HAL_GPIO_Write(PLAYER_DATA_PORT,PLAYER_DATA_PIN,0);
+    PLAYER_DATA_INIT();
 }
 static void module_player_stop(void)
 {
@@ -212,8 +210,7 @@ void module_player_start(void)
     if (player_state == false && player_ctrl.enable == true)
     {
 		pwm_start();
-        HAL_GPIO_Init(PLAYER_EN_PORT,PLAYER_EN_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
-        HAL_GPIO_Write(PLAYER_EN_PORT,PLAYER_EN_PIN,1);
+        SET_PLAYER_EN_PIN_OPEN();
 		hal_timer_config_t config ={
 			.event_handler = event_handler,
 			.period        = 78,//78.125
@@ -336,7 +333,7 @@ void player_list_add(uint16_t type,uint16_t index)
 	module_player_list_handler();
 	module_player_start();
     if(player_ctrl.volume_level != OB_LOCK_VOLUME_MUTE){
-        HAL_GPIO_Write(PLAYER_EN_PORT,PLAYER_EN_PIN,1);
+        SET_PLAYER_EN_PIN_OPEN();
 	}
 	
 }

@@ -14,39 +14,39 @@
 #include "hal_gpio.h"
 
 /*****************Macro****************/
-#define SET_RED_LED_OPEN()                      HAL_GPIO_Write(RED_LED_GPIO,RED_LED_PIN,1)
-#define SET_RED_LED_CLOSE()                     HAL_GPIO_Write(RED_LED_GPIO,RED_LED_PIN,0)
+#define SET_RED_LED_OPEN()                      (RED_LED_GPIO->DATA |= RED_LED_PIN)
+#define SET_RED_LED_CLOSE()                     (RED_LED_GPIO->DATA &= ~RED_LED_PIN)
 
-#define SET_GREEN_LED_OPEN()                    HAL_GPIO_Write(GREEN_LED_GPIO,GREEN_LED_PIN,1)
-#define SET_GREEN_LED_CLOSE()                   HAL_GPIO_Write(GREEN_LED_GPIO,GREEN_LED_PIN,0)
+#define SET_GREEN_LED_OPEN()                    (GREEN_LED_GPIO->DATA |= GREEN_LED_PIN)
+#define SET_GREEN_LED_CLOSE()                   (GREEN_LED_GPIO->DATA &= ~GREEN_LED_PIN)
 
-#define SET_BLUE_LED_OPEN()                     HAL_GPIO_Write(BLUE_LED_GPIO,BLUE_LED_PIN,1)
-#define SET_BLUE_LED_CLOSE()                    HAL_GPIO_Write(BLUE_LED_GPIO,BLUE_LED_PIN,0)
+#define SET_BLUE_LED_OPEN()                     (BLUE_LED_GPIO->DATA |= BLUE_LED_PIN)
+#define SET_BLUE_LED_CLOSE()                    (BLUE_LED_GPIO->DATA &= ~BLUE_LED_PIN)
 
-#define SET_WHITE_LED_OPEN()                    HAL_GPIO_Write(WHITE_LED_GPIO,WHITE_LED_PIN,1)
-#define SET_WHITE_LED_CLOSE()                   HAL_GPIO_Write(WHITE_LED_GPIO,WHITE_LED_PIN,0)
+#define SET_WHITE_LED_OPEN()                    (WHITE_LED_GPIO->DATA |= WHITE_LED_PIN)
+#define SET_WHITE_LED_CLOSE()                   (WHITE_LED_GPIO->DATA &= ~WHITE_LED_PIN)
 
 #define SET_ALL_LED_CLOSE()                     {SET_RED_LED_CLOSE(); SET_GREEN_LED_CLOSE(); SET_BLUE_LED_CLOSE();SET_WHITE_LED_CLOSE();}
 
-#define RED_LED_INIT()                                                                        \
-    {                                                                                         \
-        HAL_GPIO_Init(RED_LED_GPIO, RED_LED_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_LOW); \
-        SET_RED_LED_CLOSE();                                                                  \
+#define RED_LED_INIT()                                                                           \
+    {                                                                                            \
+        GPIO_SetPinMFType(RED_LED_GPIO, RED_LED_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+        SET_RED_LED_CLOSE();                                                                     \
     }
-#define GREEN_LED_INIT()                                                                          \
-    {                                                                                             \
-        HAL_GPIO_Init(GREEN_LED_GPIO, GREEN_LED_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_LOW); \
-        SET_GREEN_LED_CLOSE();                                                                    \
+#define GREEN_LED_INIT()                                                                             \
+    {                                                                                                \
+        GPIO_SetPinMFType(GREEN_LED_GPIO, GREEN_LED_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+        SET_GREEN_LED_CLOSE();                                                                       \
     }
-#define BLUE_LED_INIT()                                                                         \
-    {                                                                                           \
-        HAL_GPIO_Init(BLUE_LED_GPIO, BLUE_LED_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_LOW); \
-        SET_BLUE_LED_CLOSE();                                                                   \
+#define BLUE_LED_INIT()                                                                            \
+    {                                                                                              \
+        GPIO_SetPinMFType(BLUE_LED_GPIO, BLUE_LED_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+        SET_BLUE_LED_CLOSE();                                                                      \
     }
-#define WHITE_LED_INIT()                                                                          \
-    {                                                                                             \
-        HAL_GPIO_Init(WHITE_LED_GPIO, WHITE_LED_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_LOW); \
-        SET_WHITE_LED_CLOSE();                                                                    \
+#define WHITE_LED_INIT()                                                                             \
+    {                                                                                                \
+        GPIO_SetPinMFType(WHITE_LED_GPIO, WHITE_LED_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+        SET_WHITE_LED_CLOSE();                                                                       \
     }
 
 #define LOGO_RED_LED_OPEN()    \

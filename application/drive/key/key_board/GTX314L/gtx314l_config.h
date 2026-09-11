@@ -16,44 +16,54 @@
 /***********Macro***********/
 #define GTX314L_IIC_ADDR (0xB6 >> 1)
 
-#define READ_TOUCH_I2C_SDA() (HAL_GPIO_Read(TOUCH_I2C_SDA_GPIO, TOUCH_I2C_SDA_PIN))
-#define READ_TOUCH_WAKE() (HAL_GPIO_Read(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN))
+#define SET_TOUCH_WAKE_PIN_OPEN()       (TOUCH_WAKE_GPIO->DATA |= TOUCH_WAKE_PIN)
+#define SET_TOUCH_WAKE_PIN_CLOSE()      (TOUCH_WAKE_GPIO->DATA &= ~TOUCH_WAKE_PIN)
 
-#define SET_TOUCH_RESET(_level) (HAL_GPIO_Write(TOUCH_RESET_GPIO, TOUCH_RESET_PIN, _level))
+#define SET_TOUCH_RESET_PIN_OPEN()      (TOUCH_RESET_GPIO->DATA |= TOUCH_RESET_PIN)
+#define SET_TOUCH_RESET_PIN_CLOSE()     (TOUCH_RESET_GPIO->DATA &= ~TOUCH_RESET_PIN)
 
-#define TOUCH_I2C_SCL_INIT(_level)                                                                            \
-    do                                                                                                        \
-    {                                                                                                         \
-        HAL_GPIO_Write(TOUCH_I2C_SCL_GPIO, TOUCH_I2C_SCL_PIN, _level);                                        \
-        HAL_GPIO_Init(TOUCH_I2C_SCL_GPIO, TOUCH_I2C_SCL_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_NONE); \
+#define SET_TOUCH_SDA_PIN_OPEN()        (TOUCH_I2C_SDA_GPIO->DATA |= TOUCH_I2C_SDA_PIN)
+#define SET_TOUCH_SDA_PIN_CLOSE()       (TOUCH_I2C_SDA_GPIO->DATA &= ~TOUCH_I2C_SDA_PIN)
+
+#define SET_TOUCH_SCL_PIN_OPEN()        (TOUCH_I2C_SCL_GPIO->DATA |= TOUCH_I2C_SCL_PIN)
+#define SET_TOUCH_SCL_PIN_CLOSE()       (TOUCH_I2C_SCL_GPIO->DATA &= ~TOUCH_I2C_SCL_PIN)
+
+#define READ_TOUCH_I2C_SDA()            (TOUCH_I2C_SDA_GPIO->PIN & TOUCH_I2C_SDA_PIN)
+#define READ_TOUCH_WAKE()               (TOUCH_WAKE_GPIO->PIN & TOUCH_WAKE_PIN)
+
+#define TOUCH_I2C_SCL_INIT()                                                                               \
+    do                                                                                                     \
+    {                                                                                                      \
+        SET_TOUCH_SCL_PIN_OPEN();                                                                          \
+        GPIO_SetPinMFType(TOUCH_I2C_SCL_GPIO, TOUCH_I2C_SCL_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PULL_UP); \
     } while (0)
 
-#define TOUCH_I2C_SDA_INIT(_level)                                                                            \
-    do                                                                                                        \
-    {                                                                                                         \
-        HAL_GPIO_Write(TOUCH_I2C_SDA_GPIO, TOUCH_I2C_SDA_PIN, _level);                                        \
-        HAL_GPIO_Init(TOUCH_I2C_SDA_GPIO, TOUCH_I2C_SDA_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_NONE); \
+#define TOUCH_I2C_SDA_INIT()                                                                               \
+    do                                                                                                     \
+    {                                                                                                      \
+        SET_TOUCH_SDA_PIN_OPEN();                                                                          \
+        GPIO_SetPinMFType(TOUCH_I2C_SDA_GPIO, TOUCH_I2C_SDA_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PULL_UP); \
     } while (0)
 
-#define TOUCH_WAKE_INIT(_level)                                                                  \
-    do                                                                                           \
-    {                                                                                            \
-        HAL_GPIO_Write(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN, _level);                                 \
-        HAL_GPIO_Init(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN, HAL_GPIO_MODE_INPUT, HAL_GPIO_PULL_NONE); \
+#define TOUCH_WAKE_INIT()                                                                          \
+    do                                                                                             \
+    {                                                                                              \
+        SET_TOUCH_WAKE_PIN_OPEN();                                                                 \
+        GPIO_SetPinMFType(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_INPUT); \
     } while (0)
 
-#define TOUCH_RESET_INIT(_level)                                                                       \
-    do                                                                                                 \
-    {                                                                                                  \
-        HAL_GPIO_Write(TOUCH_RESET_GPIO, TOUCH_RESET_PIN, _level);                                     \
-        HAL_GPIO_Init(TOUCH_RESET_GPIO, TOUCH_RESET_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
+#define TOUCH_RESET_INIT()                                                                               \
+    do                                                                                                   \
+    {                                                                                                    \
+        SET_TOUCH_RESET_PIN_CLOSE();                                                                     \
+        GPIO_SetPinMFType(TOUCH_RESET_GPIO, TOUCH_RESET_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
     } while (0)
 
-#define TOUCH_WAKE_PIN_ENABLE() (HAL_GPIO_EnableIRQ(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN, HAL_GPIO_IRQ_FALLING))
-#define TOUCH_WAKE_PIN_DISABLE() (HAL_GPIO_DisableIRQ(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN))
+#define TOUCH_WAKE_PIN_ENABLE()         {GPIO_EnableINT(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN, GPIO_INTMODE_FALLING_EDGE);}
+#define TOUCH_WAKE_PIN_DISABLE()        {GPIO_EnableINT(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN, GPIO_INTMODE_DISABLE);}
 
-#define TOUCH_WAKE_READ_INTSTATE() (HAL_GPIO_ReadIntState(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN))
-#define TOUCH_WAKE_CLEAR_INTSTATE() (HAL_GPIO_ClearIntState(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN))
+#define TOUCH_WAKE_READ_INTSTATE()      (hal_read_gpio_int_flag(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN))
+#define TOUCH_WAKE_CLEAR_INTSTATE()     (hal_clear_gpio_int_flag(TOUCH_WAKE_GPIO, TOUCH_WAKE_PIN))
 
 /***********Enum***********/
 

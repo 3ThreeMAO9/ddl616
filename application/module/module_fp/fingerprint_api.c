@@ -33,10 +33,10 @@ static void fingerprint_uart_IRQ(const uint8_t value) {
 }
 
 static inline void fingerprint_hw_init(void) {
-    FINGERPRINT_WAKE_INIT(1);
+    FINGERPRINT_WAKE_INIT();
     FINGERPRINT_TX_INIT(0);
     FINGERPRINT_RX_INIT(0);
-    FINGERPRINT_POWER_INIT(0);
+    FINGERPRINT_POWER_INIT();
 }
 
 static inline void fingerprint_uart_init(uint8_t turn_on)
@@ -67,13 +67,13 @@ static inline void fingerprint_power(uint8_t turn_on) {
             OB_LOGD(TAG, "enable wake irq");
             FINGERPRINT_WAKE_ENABLE();
         }
-        SET_FINGERPRINT_POWER(1);
+        SET_FINGERPRINT_POWER_ON();
         fingerprint_uart_init(1);
         fp_handle.ctx.status.power = 1;
     }
     else {
         fingerprint_uart_init(0);
-        SET_FINGERPRINT_POWER(0);
+        SET_FINGERPRINT_POWER_OFF();
         FINGERPRINT_WAKE_ENABLE();
         fp_handle.ctx.status.power = 0;
         fp_handle.ctx.status.wait_lift = 0;

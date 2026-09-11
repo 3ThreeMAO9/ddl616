@@ -18,27 +18,36 @@
 /*****************Macro****************/
 #define NFC_SOPT_SPI_SEL                1
 
+#define SET_NFC_NRST_HIGH()             (NFC_NRST_GPIO->DATA |= NFC_NRST_PIN)
+#define CLR_NFC_NRST_LOW()              (NFC_NRST_GPIO->DATA &= ~NFC_NRST_PIN)
 
-#define READ_NFC_IRQ_PIN()              HAL_GPIO_Read(NFC_IRQ_GPIO,NFC_IRQ_PIN)
+#define READ_NFC_IRQ_PIN()              (NFC_IRQ_GPIO->PIN & NFC_IRQ_PIN)
 
-#define READ_NFC_IRQ_STATE()            HAL_GPIO_ReadIntState(NFC_IRQ_GPIO,NFC_IRQ_PIN)   //读取GPIO中断信号
-#define CLEAR_NFC_IRQ_STATE()           HAL_GPIO_ClearIntState(NFC_IRQ_GPIO,NFC_IRQ_PIN)  //清空GPIO中断信号
+#define READ_NFC_IRQ_STATE()            hal_read_gpio_int_flag(NFC_IRQ_GPIO,NFC_IRQ_PIN)   //读取GPIO中断信号
+#define CLEAR_NFC_IRQ_STATE()           hal_clear_gpio_int_flag(NFC_IRQ_GPIO,NFC_IRQ_PIN)  //清空GPIO中断信号
 
-#define NFC_IRQ_INT_ENABLE()                                                 \
-    {                                                                        \
-        HAL_GPIO_EnableIRQ(NFC_IRQ_GPIO, NFC_IRQ_PIN, HAL_GPIO_IRQ_FALLING); \
-        CLEAR_NFC_IRQ_STATE();                                               \
+#define NFC_NRST_INIT()                                                                            \
+    {                                                                                              \
+        GPIO_SetPinMFType(NFC_NRST_GPIO, NFC_NRST_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+        SET_NFC_NRST_HIGH();                                                                       \
     }
 
-#define NFC_IRQ_INT_DISABLE()                                                 \
-    {                                                                        \
-        HAL_GPIO_EnableIRQ(NFC_IRQ_GPIO, NFC_IRQ_PIN, HAL_GPIO_IRQ_NONE);   \
-        CLEAR_NFC_IRQ_STATE();                                               \
+#define NFC_IRQ_INT_ENABLE()                                                  \
+    {                                                                         \
+        GPIO_EnableINT(NFC_IRQ_GPIO, NFC_IRQ_PIN, GPIO_INTMODE_FALLING_EDGE); \
+        CLEAR_NFC_IRQ_STATE();                                                \
     }
 
-#define NFC_IRQ_INIT()                                                                            \
-    {                                                                                             \
-        HAL_GPIO_Init(NFC_IRQ_GPIO, NFC_IRQ_PIN, HAL_GPIO_MODE_INPUT_PULLUP, HAL_GPIO_PULL_HIGH); \
+#define NFC_IRQ_INT_DISABLE()                                            \
+    {                                                                    \
+        GPIO_EnableINT(NFC_IRQ_GPIO, NFC_IRQ_PIN, GPIO_INTMODE_DISABLE); \
+        CLEAR_NFC_IRQ_STATE();                                           \
+    }
+
+#define NFC_IRQ_INIT()                                                                       \
+    {                                                                                        \
+        GPIO_SetPinMFType(NFC_IRQ_GPIO, NFC_IRQ_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_INPUT); \
+        SET_NFC_NRST_HIGH();                                                                 \
     }
 
 /*****************Enum*****************/

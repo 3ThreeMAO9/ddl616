@@ -54,9 +54,8 @@ uint8_t nfc_hardware_init(void) {
 #if (NFC_SOPT_SPI_SEL)
 	// SPI init
     if (SPI_Init(&nfc_spi_config)) {
-        HAL_GPIO_Init(NFC_NRST_GPIO,NFC_NRST_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
-        HAL_GPIO_Write(NFC_NRST_GPIO,NFC_NRST_PIN,1);
-        HAL_GPIO_Init(NFC_IRQ_GPIO,NFC_IRQ_PIN,HAL_GPIO_MODE_INPUT,HAL_GPIO_PULL_HIGH);
+        NFC_NRST_INIT();
+        NFC_IRQ_INIT();
 
         return true;
     }
@@ -77,10 +76,8 @@ uint8_t nfc_hardware_init(void) {
         .miso_pin  = NFC_MISO_PIN,
     };
     hal_spi_init(&config);
-
-    HAL_GPIO_Init(NFC_NRST_GPIO,NFC_NRST_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
-    HAL_GPIO_Write(NFC_NRST_GPIO,NFC_NRST_PIN,1);
-    HAL_GPIO_Init(NFC_IRQ_GPIO,NFC_IRQ_PIN,HAL_GPIO_MODE_INPUT,HAL_GPIO_PULL_HIGH);
+    NFC_NRST_INIT();
+    NFC_IRQ_INIT();
     return true;
 #endif
 }

@@ -16,22 +16,22 @@
 
 /*****************Macro****************/
 //user config
-#define SET_MOTOR_LA_HIGH                           HAL_GPIO_Write(MOTOR_LA_GPIO,MOTOR_LA_PIN,1)
-#define CLR_MOTOR_LA_LOW                            HAL_GPIO_Write(MOTOR_LA_GPIO,MOTOR_LA_PIN,0)
+#define SET_MOTOR_LA_HIGH                           (MOTOR_LA_GPIO->DATA |= MOTOR_LA_PIN)
+#define CLR_MOTOR_LA_LOW                            (MOTOR_LA_GPIO->DATA &= ~MOTOR_LA_PIN)
 
-#define SET_MOTOR_LB_HIGH                           HAL_GPIO_Write(MOTOR_LB_GPIO,MOTOR_LB_PIN,1)
-#define CLR_MOTOR_LB_LOW                            HAL_GPIO_Write(MOTOR_LB_GPIO,MOTOR_LB_PIN,0)
+#define SET_MOTOR_LB_HIGH                           (MOTOR_LB_GPIO->DATA |= MOTOR_LB_PIN)
+#define CLR_MOTOR_LB_LOW                            (MOTOR_LB_GPIO->DATA &= ~MOTOR_LB_PIN)
 
-#define MOTOR_LA_SLEEP()                                                                        \
-    {                                                                                           \
-        HAL_GPIO_Init(MOTOR_LA_GPIO,MOTOR_LA_PIN,HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);  \
-        CLR_MOTOR_LA_LOW;                                                                       \
+#define MOTOR_LA_SLEEP()                                                                           \
+    {                                                                                              \
+        GPIO_SetPinMFType(MOTOR_LA_GPIO, MOTOR_LA_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+        CLR_MOTOR_LA_LOW;                                                                          \
     }
 
-#define MOTOR_LB_SLEEP()                                                                        \
-    {                                                                                           \
-        HAL_GPIO_Init(MOTOR_LB_GPIO,MOTOR_LB_PIN,HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);  \
-        CLR_MOTOR_LB_LOW;                                                                       \
+#define MOTOR_LB_SLEEP()                                                                           \
+    {                                                                                              \
+        GPIO_SetPinMFType(MOTOR_LB_GPIO, MOTOR_LB_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); \
+        CLR_MOTOR_LB_LOW;                                                                          \
     }
 
 /*****************Enum*****************/

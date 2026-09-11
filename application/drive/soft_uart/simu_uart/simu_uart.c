@@ -14,11 +14,11 @@ void delay_simu_uart(void)
 }
 
 void simu_uart_init(void) {
-   SIMU_UART_INIT(1);
+   SIMU_UART_INIT();
 }
 
 uint8_t simu_putchar (uint8_t s_data) {
-	SIMU_UART_INIT(1);
+	SIMU_UART_INIT();
     TIMER16_Close(OB_CT16B0);
 
     OUT_START_BIT;
