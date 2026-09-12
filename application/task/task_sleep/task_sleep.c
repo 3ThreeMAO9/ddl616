@@ -15,6 +15,7 @@
 
 #include "task_uart.h"
 #include "task_fingerprint.h"
+#include "task_battery.h"
 
 #include "task_nfc.h"
 
@@ -137,6 +138,8 @@ static uint8_t exit_sleep_event_scan(void){
     else
         wake_type = sleep_task_driver.attribute.wake_source;
     handleEventPush(HANDLE_EVENT_WAKE, wake_type);
+    batteryTaskScan(BATTERY_VOL_COMPENSATION_VALUE);
+
 #if (Enabled == WAKE_STAT_ENABLE)
     OB_LOGD(TAG, "all[%u] keyBoard[%u] setKey[%u] switchKey[%u] NFC[%u] doorState[%u] hotWarn[%u] remote[%u]", \
             Wake_allCnt, Wake_keyBoardCnt, Wake_setKeyCnt, \

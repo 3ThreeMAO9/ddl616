@@ -216,6 +216,11 @@ static void configure_gpio(HalGpioPort port, HalGpioPin pin, HalGpioMode mode, H
                 pin_type = GPIO_MF_ADC;
                 pin_mode = GPIO_PINMODE_INPUT;
             }
+            else if ((port == HAL_GPIO_PORT0) && (pin == HAL_GPIO_PIN0))
+            {
+                pin_type = GPIO_MF_ADC;
+                pin_mode = GPIO_PINMODE_INPUT;
+            }
             // 设置GPIO为模拟模式
             break;
         default:

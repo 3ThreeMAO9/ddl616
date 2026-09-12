@@ -43,7 +43,7 @@ uint32_t hal_readChannelCurrentCalibrate(ADC_Channel_t channel, uint8_t sampleCn
     result = 0;
     for (i = 0; i < sampleCnt; i++)
     {
-        delay_us(500);
+        delay_ms(1);
 
         ADC_StartConvert(OB_ADC, 1);
         ADC_GetSampleResult(OB_ADC, sample_value, 1);
@@ -51,7 +51,7 @@ uint32_t hal_readChannelCurrentCalibrate(ADC_Channel_t channel, uint8_t sampleCn
     }
 
     result /= sampleCnt;
-    result = ((600 * result) / 725);
+    result = ((600 * result) / 740);    // 0.6V 理论上是745，采样电容推荐用1uf，但实际电容采用的是1nf，值会偏小
 
     ADC_CLOSE();
 

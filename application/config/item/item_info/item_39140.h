@@ -18,15 +18,16 @@
 #define PATCH_VERSION               1
 
 
-#define PRINTF_USER                 Enabled
-#define PRINTF_FLASH                Enabled
-#define PRINTF_ERR                  Enabled
-#define PRINTF_PASSWORD             Enabled
+#define PRINTF_FUN                  Enabled
+
+#define PRINTF_USER                 PRINTF_FUN
+#define PRINTF_FLASH                PRINTF_FUN
+#define PRINTF_ERR                  PRINTF_FUN
+#define PRINTF_PASSWORD             PRINTF_FUN
 #define PRINTF_MOTOR                Disabled
-#define PRINTF_FSM                  Enabled
-#define PRINTF_HMI                  Enabled
-
-
+#define PRINTF_FSM                  PRINTF_FUN
+#define PRINTF_HMI                  PRINTF_FUN
+#define PRINTF_VOLTAGE              PRINTF_FUN
 
 /***********Enum***********/
 

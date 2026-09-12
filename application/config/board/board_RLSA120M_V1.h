@@ -101,6 +101,13 @@ typedef enum
 
 ///<endNFC
 
+//Battery
+#define BATTERY_ADC_GPIO                (HAL_GPIO_PORT0)
+#define BATTERY_ADC_PIN                 (HAL_GPIO_PIN0)
+#define BATTERY_ADC_CHANNEL             (ADC_CHANNEL_5)
+
+///<endBattery
+
 ///< SPI FLASH
 #define FLASH_CS_PORT                    (HAL_GPIO_PORT0)
 #define FLASH_CS_PIN                     (HAL_GPIO_PIN8)

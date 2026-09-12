@@ -17,6 +17,7 @@
 #include "task_hmi.h"
 #include "task_motor.h"
 #include "task_protocol.h"
+#include "task_battery.h"
 
 #include "module_spi_flash.h"
 
@@ -91,6 +92,7 @@ static void task_init(void)
     // face_task_init();
     fp_task_init();
     sleep_task_init();
+    batteryTaskInit();
 }
 
 static void app_init(void)
