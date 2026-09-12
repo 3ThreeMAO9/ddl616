@@ -13,6 +13,7 @@
 #include "task_motor.h"
 #include "task_key.h"
 #include "task_nfc.h"
+#include "task_battery.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -40,8 +41,13 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             nfc_task_set_state(NFC_STATE_VERIFY);
             hmiTaskSetAllowSelintFlag(true);
             // face_task_set_mode(FACE_TASK_MODE_DEFAULT);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-            hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
+            if (BATTERY_STATE_LOW_SYSTEM_LOCK == batteryTaskReadState()){
+                state = Q_TRAN(lock_fsm_low_power_system_lock);
+            }
+            else{
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
+            }
             break;
         case Q_EXIT_SIG:
             break;
@@ -56,8 +62,6 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 keyEventVerifyUser(e->dynamic_[0]);
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
             }
-            break;
-        case Q_KEY_PRESS_SIG:
             break;
         case Q_HANDLE_SIG:
             if ((EVENT_RESULT_FAIL_TOO_SHORT == e->dynamic_[0]) || (EVENT_RESULT_FAIL_TOO_LONG == e->dynamic_[0]))
@@ -97,8 +101,6 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             // else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP){
             //     state = Q_TRAN(lock_fsm_sleep);
             // }
-            break;
-        case Q_USER_KEY_SIG:
             break;
         case Q_USER_HANDLE_SIG:
             me->branch = (QStateHandler)(lock_fsm_idle);

@@ -46,7 +46,7 @@ uint16_t batteryTaskReadVoltage(void);
 uint8_t batteryTaskReadPercent(void);
 void batteryTaskScan(uint16_t compensationValue);
 void batteryTaskWarnConfig(uint8_t flag);
-bool IsBatteryLow(void);
+bool isBatteryLow(void);
 
 /***********************************************/
 

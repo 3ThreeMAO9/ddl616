@@ -7,6 +7,8 @@
 #include "task_motor.h"
 #include "task_hmi.h"
 #include "task_nfc.h"
+#include "task_battery.h"
+
 #include "parameter.h"
 #include "user.h"
 

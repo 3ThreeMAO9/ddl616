@@ -9,6 +9,7 @@
 #include "task_hmi.h"
 #include "task_key.h"
 #include "task_nfc.h"
+#include "task_battery.h"
 
 #include "event.h"
 #include "key_event.h"
@@ -47,9 +48,13 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
             break;
         case Q_KEY_BOARD_PRESS_SIG:
             break;
-        case Q_KEY_PRESS_SIG:
-            break;
         case Q_HANDLE_SIG:
+            if (BATTERY_STATE_LOW_SYSTEM_LOCK == batteryTaskReadState())
+            {
+                state = Q_TRAN(lock_fsm_low_power_system_lock);
+                break;
+            }
+
             if (HANDLE_EVENT_WAKE == e->dynamic_[0]){
                 OB_LOGW(TAG,"wake [%08X]",e->dynamic_[1]);
                 // lock_wake();
@@ -61,8 +66,6 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
                 system_time_task_set_work_time(250);
                 OB_LOGI(TAG, "Fsm_state[%s], HANDLE_EVENT_SLEEP_BUSY!!!!", "sleep");
             }
-            break;
-        case Q_USER_KEY_SIG:
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;

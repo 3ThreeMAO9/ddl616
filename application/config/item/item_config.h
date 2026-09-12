@@ -120,6 +120,7 @@ typedef enum{
 #define VERIFY_FAIL_CNT_DEFAULT                      0
 
 #define WORK_TIME_OUT_VAULE                         (10 * 1000)     // unit: ms
+#define WORK_WAKE_TIME_OUT_VAULE                    (1500)          // unit: ms
 #define WORK_TIME_OUT_MAX_VAULE                     (30000)         // unit: ms
 #define WORK_TIME_OUT_VAULE_LOWBATTERY              (4000)         // unit: ms
 #define HANDLE_RESULT_TIME_OUT                      (1500+100)      // unit: ms

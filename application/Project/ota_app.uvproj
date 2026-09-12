@@ -767,6 +767,11 @@
               <FileType>1</FileType>
               <FilePath>..\fsm\state\fsm_state_reset.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm_state_low_power_system_lock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\state\fsm_state_low_power_system_lock.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
