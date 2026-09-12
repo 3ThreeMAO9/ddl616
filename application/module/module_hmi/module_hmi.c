@@ -147,8 +147,8 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_VERIFY_FAIL:
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
             hmi_key_board_led_config(TRUN_ON, TRUN_OFF, HMI_STATE_KEEP_TIME_100ms, 4);
-            if (!silentFlag)
-                PLAYER_LIST_CLEAR_ADD(VOICE_Verification_failed);
+            // if (!silentFlag)
+            //     PLAYER_LIST_CLEAR_ADD(VOICE_Verification_failed);
             keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
 
