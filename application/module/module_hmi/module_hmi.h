@@ -49,6 +49,7 @@ typedef enum{
     HMI_STATE_UNLOCK_SUCCESS,           //开锁成功
     HMI_STATE_VERIFY_SUCCESS,           //验证成功
     HMI_STATE_DEMO_VERIFY_SUCCESS,      //体验模式验证成功
+    HMI_STATE_LOW_PWOER_VERIFY_SUCCESS, //低电验证成功
     HMI_STATE_VERIFY_FAIL,              //验证失败
     HMI_STATE_INPUT_ERROR,              //输入错误
     HMI_STATE_VERIFY_ADMIN_SUCCESS,     //验证成功+绿灯长亮

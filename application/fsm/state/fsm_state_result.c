@@ -179,10 +179,13 @@ QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e)
 #if (Enabled==PRINTF_FSM)
     OB_LOGD(TAG, "Now State[verify user success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
-    uint8_t state = HMI_STATE_VERIFY_SUCCESS;
+    uint8_t state = HMI_STATE_VERIFY_SUCCESS;   // 正常验证成功
 
     if (isEmptyUser(false))
-        state = HMI_STATE_DEMO_VERIFY_SUCCESS;
+        state = HMI_STATE_DEMO_VERIFY_SUCCESS;  // 体验模式验证成功
+
+    if (isBatteryLow())
+        state = HMI_STATE_LOW_PWOER_VERIFY_SUCCESS; // 低电验证成功
 
     return lockFsmSuccessDeal(me, e, state);
 }
