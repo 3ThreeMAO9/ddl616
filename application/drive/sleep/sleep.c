@@ -71,12 +71,6 @@ void sleep_loop(void)
     // hal_uart_sotp(UART_0);
     // hal_uart_sotp(UART_1);
 
-    // HAL_GPIO_Write(FACE_TX_GPIO, FACE_TX_PIN, 0);
-    // HAL_GPIO_Init(FACE_TX_GPIO, FACE_TX_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
-    // HAL_GPIO_Write(FACE_RX_GPIO, FACE_RX_PIN, 0);
-    // HAL_GPIO_Init(FACE_RX_GPIO, FACE_RX_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); 
-
-
     do{
         clear_feed_dog_cnt();
         mcuSleep();

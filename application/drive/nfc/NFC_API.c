@@ -3,7 +3,8 @@
 #include "FM17622.h"
 #include "DEVICE_CFG.h"
 #include "MIFARE.h"
-
+#include "hal_rtc.h"
+#include "hal_adc.h"
 #include "system_timer.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
@@ -15,7 +16,51 @@ static nfc_handle_t nfc_handle;
 static nfc_event_callback_t nfc_event_callback;
 static const uint8_t mifare_key[2][6] = {{0xFA, 0x14, 0x35, 0x72, 0xC9, 0xA3}, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}};
 
+static nfc_adc_t nfc_adc_handle = {0};
+
+uint8_t nfc_power_val = NFC_CHECK_CARD_POWER;
 // ------------------------------------------
+void Cal_Card_Base(uint32_t ADC_Value)
+{
+    uint8_t i = 0;
+    uint32_t Sum = 0;
+    uint32_t max, min;
+    static uint32_t NFC_Card_Cal_Value[10];
+    if (nfc_adc_handle.cal_cnt < 10)
+    {
+        NFC_Card_Cal_Value[nfc_adc_handle.cal_cnt++] = ADC_Value;
+        nfc_adc_handle.ave_value = ADC_Value;
+    }
+    else
+    {
+        for (i = 0; i < 9; i++)
+        {
+            NFC_Card_Cal_Value[i] = NFC_Card_Cal_Value[i + 1];
+            Sum += NFC_Card_Cal_Value[i];
+        }
+        NFC_Card_Cal_Value[9] = ADC_Value;
+        Sum += NFC_Card_Cal_Value[9];
+
+        max = min = NFC_Card_Cal_Value[0];
+        for (i = 0; i < 10; i++)
+        {
+            if (NFC_Card_Cal_Value[i] > max)
+                max = NFC_Card_Cal_Value[i];
+            if (NFC_Card_Cal_Value[i] < min)
+                min = NFC_Card_Cal_Value[i];
+        }
+        Sum = Sum - (max + min);
+        nfc_adc_handle.ave_value = Sum >> 3;
+    }
+    nfc_adc_handle.gay_value = (nfc_adc_handle.ave_value * NFC_CHECK_CARD_THRESHOLD_VALUE) / 100;
+
+    OB_LOGI(TAG, "NFC_Card_Cal_Value %ld %ld %ld %ld %ld %ld %ld %ld %ld %ld", NFC_Card_Cal_Value[0], NFC_Card_Cal_Value[1], NFC_Card_Cal_Value[2], NFC_Card_Cal_Value[3], NFC_Card_Cal_Value[4], NFC_Card_Cal_Value[5], NFC_Card_Cal_Value[6], NFC_Card_Cal_Value[7], NFC_Card_Cal_Value[8], NFC_Card_Cal_Value[9]);
+}
+
+void save_adc_base(void)
+{
+    Cal_Card_Base(nfc_adc_handle.adc_voltage);
+}
 
 uint8_t nfc_set_mode(uint8_t mode) {
 
@@ -30,7 +75,7 @@ uint8_t nfc_set_mode(uint8_t mode) {
                 FM17622_HardReset();
                 nfc_handle.time_out = system_inc_time_cnt(0);
                 break;
-            case NFC_MODE_SLEEP:
+            case NFC_MODE_CHECK:
                 FM17622_HardReset();
                 nfc_handle.time_out = system_inc_time_cnt(0);
                 break;
@@ -61,6 +106,64 @@ uint8_t nfc_set_mode(uint8_t mode) {
     }
 
     return true;
+}
+
+uint8_t nfc_adc_wake_up(void)
+{
+    uint8_t ret = FM17622_READING;
+    hal_adc_start_up(NFC_ADC_CHANNEL , 20);
+
+    FM17622_Initial_ReaderA();
+
+    NfcSetReg(JREG_CWGSP, nfc_power_val); //Config GSP
+    if(nfc_adc_handle.detection_count >= 5)
+        nfc_adc_handle.detection_count = 0;
+    nfc_adc_handle.detection_count++;
+
+    SetCW(TX1_TX2_CW_ENABLE);
+    hal_adc_convert_result(&nfc_adc_handle.adc_voltage, 1);
+    SetCW(TX1_TX2_CW_DISABLE);
+    hal_adc_end();
+
+    if(nfc_adc_handle.detection_count == 5 || nfc_adc_handle.cal_cnt < 10)
+    {
+        if(nfc_adc_handle.adc_voltage + nfc_adc_handle.gay_value < nfc_adc_handle.ave_value)
+            ;
+        else if(nfc_adc_handle.adc_voltage > nfc_adc_handle.ave_value + nfc_adc_handle.gay_value)
+            ;
+        else
+        {
+            save_adc_base();
+        }
+    }
+    if(nfc_adc_handle.cal_cnt == 0)
+    {
+        save_adc_base();
+    }
+
+    OB_LOGW(TAG, "0x%x %ld %ld %ld %ld", nfc_power_val, nfc_adc_handle.adc_voltage, nfc_adc_handle.ave_value, nfc_adc_handle.gay_value, nfc_adc_handle.adc_voltage - nfc_adc_handle.ave_value);
+
+    if (nfc_adc_handle.adc_voltage < 100)
+        ret = FM17622_ADCING;
+    else if (nfc_adc_handle.adc_voltage + nfc_adc_handle.gay_value < nfc_adc_handle.ave_value)
+        ret = FM17622_SUCCESS;
+    else if (nfc_adc_handle.adc_voltage > nfc_adc_handle.gay_value + nfc_adc_handle.ave_value)
+        ret = FM17622_SUCCESS;
+    else
+        ret = FM17622_ADCING;
+
+    return ret;
+}
+
+uint8_t is_nfc_wake(void)
+{
+    if (hal_get_rtc_interrupt()) // 是否RTC唤醒
+    {
+        hal_set_rtc_interrupt(0);
+        if (FM17622_SUCCESS == nfc_adc_wake_up())
+            return true;
+    }
+    return false;
 }
 
 uint8_t nfc_set_attr(const nfc_attribute_t* nfc_attr) {
@@ -186,8 +289,17 @@ static unsigned char Card_Handle_Event(const nfc_attribute_t* nfc_attr) {
 
 void nfc_loop(void) {
     switch (nfc_handle.mode) {
-        case NFC_MODE_SLEEP:
+        case NFC_MODE_CHECK:
         case NFC_MODE_FUNC:
+            if (is_nfc_wake())  // adc检卡，并且默认1.9s读卡一次
+            {
+                nfc_handle.time_out = system_inc_time_cnt(0);
+            }
+            else if (system_out_time_cnt(nfc_handle.time_out)) {
+                nfc_handle.time_out = system_inc_time_cnt(NFC_READ_TIME_OUT);
+                Card_Handle_Event(&nfc_handle.attr);
+            }
+            break;
         case NFC_MODE_SCAN:
             if (system_out_time_cnt(nfc_handle.time_out)) {
                 nfc_handle.time_out = system_inc_time_cnt(NFC_SCAN_TIME_OUT);

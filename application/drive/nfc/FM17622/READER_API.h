@@ -29,6 +29,8 @@
 
 #define FM17622_SUCCESS				0x00
 #define FM17622_READING      		0x01
+#define FM17622_ADCING              0x02
+
 #define FM17622_RATS_ERR 	        0xD1
 #define FM17622_PPS_ERR 	        0xD2
 #define FM17622_PCB_ERR 	        0xD3

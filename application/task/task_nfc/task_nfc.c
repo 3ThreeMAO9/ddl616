@@ -183,12 +183,12 @@ void nfc_task_set_state(uint8_t state)
     case NFC_STATE_SLEEP:
         nfc_task_driver.attr.encrypt = 0;
         nfc_task_driver.attr.sector_id = NFC_USER_CARD_SECTOR_ID;
-        mode = NFC_MODE_SLEEP; // 根据硬件支持LPCD唤醒或ADC唤醒中的一种
+        mode = NFC_MODE_IDLE; // 根据硬件支持LPCD唤醒或ADC唤醒中的一种
         break;
     case NFC_STATE_VERIFY:
         nfc_task_driver.attr.encrypt = 0;
         nfc_task_driver.attr.sector_id = NFC_USER_CARD_SECTOR_ID;
-        mode = NFC_MODE_SLEEP; // 根据硬件支持LPCD唤醒或ADC唤醒中的一种
+        mode = NFC_MODE_CHECK; // 根据硬件支持LPCD唤醒或ADC唤醒中的一种
         break;
     case NFC_STATE_REGISTER:
         nfc_task_driver.attr.encrypt = 1;

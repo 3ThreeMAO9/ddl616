@@ -5,13 +5,13 @@
 
 
 /*****************Macro****************/
-#define NFC_SCAN_TIME_OUT           250
-
+#define NFC_SCAN_TIME_OUT           1000
+#define NFC_READ_TIME_OUT           1900
 /*****************Enum*****************/
 typedef enum {
     NFC_MODE_NONE = 0,          // NONE
     NFC_MODE_DEEP_SLEEP,        // 关闭LPCD
-    NFC_MODE_SLEEP,             // LPCD or adc检卡
+    NFC_MODE_CHECK,             // LPCD or adc检卡
     NFC_MODE_IDLE,              // 关闭天线状态
     NFC_MODE_SCAN,              // 定时扫描
     NFC_MODE_FUNC,              // 功能卡
@@ -77,6 +77,15 @@ typedef struct {
 
 }nfc_event_t;
 
+typedef struct{
+    uint32_t gay_value;
+    uint32_t ave_value;
+    uint32_t adc_voltage;
+    uint32_t cal_cnt;
+    uint32_t detection_count;
+}nfc_adc_t;
+
+
 /**************************************/
 typedef unsigned char (*card_handle_callback_t)(const nfc_attribute_t*);
 typedef void (*nfc_event_callback_t)(nfc_event_t*);
@@ -90,6 +99,7 @@ uint8_t nfc_set_attr(const nfc_attribute_t* nfc_attr);
 uint8_t nfc_set_mode(uint8_t mode);
 void nfc_loop(void);
 void nfc_event_register_callback(nfc_event_callback_t callback);
+uint8_t is_nfc_wake(void);
 
 /**************************************/
 

@@ -7,13 +7,26 @@
 /***********Variable***********/
 static rtc_callback_t rtc_callback;
 
+uint32_t volatile g_RTC_Interrupt = 0;
 // ----------------------------
 
 void rtc_IRQ_callback(void)
 {
+    g_RTC_Interrupt++;
     if (NULL != rtc_callback)
         rtc_callback();
 }
+
+uint32_t hal_get_rtc_interrupt(void)
+{
+    return g_RTC_Interrupt;
+}
+
+void hal_set_rtc_interrupt(uint32_t data)
+{
+    g_RTC_Interrupt = data;
+}
+
 
 void hal_set_default_time(void)
 {

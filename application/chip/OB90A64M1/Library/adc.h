@@ -7,24 +7,6 @@
 #define ADC_MODE_12BIT      0
 #define ADC_MODE_10BIT      1
 
-#define ADC_CHANNEL_0       0x00
-#define ADC_CHANNEL_1       0x01
-#define ADC_CHANNEL_2       0x02
-#define ADC_CHANNEL_3       0x03
-#define ADC_CHANNEL_4       0x04
-#define ADC_CHANNEL_5       0x05
-#define ADC_CHANNEL_6       0x06
-#define ADC_CHANNEL_7       0x07
-#define ADC_CHANNEL_8       0x08
-#define ADC_CHANNEL_9       0x09
-#define ADC_CHANNEL_10      0x0A
-#define ADC_CHANNEL_11      0x0B
-#define ADC_CHANNEL_12      0x0C
-#define ADC_CHANNEL_13      0x0D
-#define ADC_CHANNEL_14      0x0E
-#define ADC_CHANNEL_15      0x0F
-#define ADC_CHANNEL_16      0x10
-
 #define ADC_INPUT_1ST       0x00
 #define ADC_INPUT_2ND       0x01
 #define ADC_INPUT_3RD       0x02
@@ -33,14 +15,47 @@
 #define ADC_INPUT_6TH       0x05
 #define ADC_INPUT_7TH       0x06
 #define ADC_INPUT_8TH       0x07
+#define ADC_INPUT_8TH        0x07
+
+#define ADC_SetInputSource(pADC, nInputSel, nChannelNO)\
+    do{\
+        switch (nInputSel)\
+        {\
+            case ADC_INPUT_1ST:\
+                pADC->A0SC0 = ( pADC->A0SC0 & 0xFFFFFF00 ) | (nChannelNO << 0x00);\
+                break;\
+            case ADC_INPUT_2ND:\
+                pADC->A0SC0 = ( pADC->A0SC0 & 0xFFFF00FF ) | (nChannelNO << 0x08);\
+                break;\
+            case ADC_INPUT_3RD:\
+                pADC->A0SC0 = ( pADC->A0SC0 & 0xFF00FFFF ) | (nChannelNO << 0x10);\
+                break;\
+            case ADC_INPUT_4TH:\
+                pADC->A0SC0 = ( pADC->A0SC0 & 0x00FFFFFF ) | (nChannelNO << 0x18);\
+                break;\
+            case ADC_INPUT_5TH:\
+                pADC->A0SC1 = ( pADC->A0SC1 & 0xFFFFFF00 ) | (nChannelNO << 0x00);\
+                break;\
+            case ADC_INPUT_6TH:\
+                pADC->A0SC1 = ( pADC->A0SC1 & 0xFFFF00FF ) | (nChannelNO << 0x08);\
+                break;\
+            case ADC_INPUT_7TH:\
+                pADC->A0SC1 = ( pADC->A0SC1 & 0xFF00FFFF ) | (nChannelNO << 0x10);\
+                break;\
+            case ADC_INPUT_8TH:\
+                pADC->A0SC1 = ( pADC->A0SC1 & 0x00FFFFFF ) | (nChannelNO << 0x18);\
+                break;\
+            default:\
+                break;\
+        }\
+    }while(0)
 
 void ADC_Open(OB_ADC_Type* pADC, uint32_t nADCMode);
 void ADC_Close(OB_ADC_Type* pADC);
 
 void ADC_EnableINT(OB_ADC_Type *pADC, uint32_t nINTSel);
 void ADC_DisableINT(OB_ADC_Type *pADC, uint32_t nINTSel);
-
-void ADC_SetInputSource(OB_ADC_Type *pADC,uint32_t nInputSel, uint32_t nChannelNO);
+void ADC_SetSHTime(OB_ADC_Type *pADC, uint32_t SHTime);
 
 void ADC_StartConvert(OB_ADC_Type *pADC, uint32_t nLength);
 void ADC_StopConvert(OB_ADC_Type *pADC);

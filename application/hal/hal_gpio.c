@@ -211,6 +211,11 @@ static void configure_gpio(HalGpioPort port, HalGpioPin pin, HalGpioMode mode, H
                 pin_type = GPIO_MF_UART1_RX;
                 pin_mode = GPIO_PINMODE_PULL_UP;            
             }
+            else if ((port == HAL_GPIO_PORT1) && (pin == HAL_GPIO_PIN3))
+            {
+                pin_type = GPIO_MF_ADC;
+                pin_mode = GPIO_PINMODE_INPUT;
+            }
             // 设置GPIO为模拟模式
             break;
         default:

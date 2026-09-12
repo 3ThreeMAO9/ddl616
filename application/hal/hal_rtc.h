@@ -24,6 +24,9 @@ typedef void (*rtc_callback_t)(void);
 /***********Function***********/
 void hal_rtc_init(rtc_callback_t callback);
 void hal_get_rtc_time(void);
+uint32_t hal_get_rtc_interrupt(void);
+void hal_set_rtc_interrupt(uint32_t data);
+
 /*****************************/
 
 #endif //HAL_RTC_HH

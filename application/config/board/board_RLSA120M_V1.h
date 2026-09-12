@@ -94,11 +94,10 @@ typedef enum
 #define NFC_MISO_GPIO                   (HAL_GPIO_PORT3)
 #define NFC_MISO_PIN                    (HAL_GPIO_PIN7)
 
+#define NFC_ADC_CHANNEL                 (ADC_CHANNEL_1)
+
 #define NFC_SPI                         (HAL_SPI0)
 #define NFC_SPI_TYPE                    (HAL_SPI_TYPE_HW)
-
-// #define NFC_IRQ_ADC_CHANNEL           (ADC_CHANNEL_4)
-// #define NFC_IRQ_ADC_MODE              (1)
 
 ///<endNFC
 

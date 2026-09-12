@@ -57,47 +57,6 @@ void ADC_SetSHTime(OB_ADC_Type *pADC, uint32_t SHTime)
      pADC->SH0 = SHTime;
 }
 
-void ADC_SetInputSource(OB_ADC_Type *pADC, uint32_t nInputSel, uint32_t nChannelNO)
-{
-    switch(nInputSel)
-    {
-        case ADC_INPUT_1ST:
-            pADC->A0SC0 = ( pADC->A0SC0 & 0xFFFFFF00 ) |  (nChannelNO << 0x00);
-            break;
-
-        case ADC_INPUT_2ND:
-            pADC->A0SC0 = ( pADC->A0SC0 & 0xFFFF00FF ) |  (nChannelNO << 0x08);
-            break;
-
-        case ADC_INPUT_3RD:
-            pADC->A0SC0 = ( pADC->A0SC0 & 0xFF00FFFF ) |  (nChannelNO << 0x10);
-            break;
-
-        case ADC_INPUT_4TH:
-            pADC->A0SC0 = ( pADC->A0SC0 & 0x00FFFFFF ) |  (nChannelNO << 0x18);
-            break;
-
-        case ADC_INPUT_5TH:
-            pADC->A0SC1 = ( pADC->A0SC1 & 0xFFFFFF00 ) |  (nChannelNO << 0x00);
-            break;
-
-        case ADC_INPUT_6TH:
-            pADC->A0SC1 = ( pADC->A0SC1 & 0xFFFF00FF ) |  (nChannelNO << 0x08);
-            break;
-
-        case ADC_INPUT_7TH:
-            pADC->A0SC1 = ( pADC->A0SC1 & 0xFF00FFFF ) |  (nChannelNO << 0x10);
-            break;
-
-        case ADC_INPUT_8TH:
-            pADC->A0SC1 = ( pADC->A0SC1 & 0x00FFFFFF ) |  (nChannelNO << 0x18);
-            break;
-
-        default:
-            break;
-    }
-}
-
 void ADC_StartConvert(OB_ADC_Type *pADC, uint32_t nLength)
 {
     uint32_t nINTType = ADC_INT_SEQUENCE;

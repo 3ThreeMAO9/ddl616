@@ -79,7 +79,7 @@ static uint8_t enter_sleep_event_deal(void){
 static uint8_t exit_sleep_event_scan(void){
     sleep_task_driver.attribute.wake_source |= key_task_check_wake();   //  触摸
     sleep_task_driver.attribute.wake_source |= fp_task_is_wake();       //  指纹
-    // sleep_task_driver.attribute.wake_source |= nfc_task_is_wake();      //  NFC
+    sleep_task_driver.attribute.wake_source |= nfc_task_is_wake();      //  NFC
     sleep_task_driver.attribute.wake_source |= system_timer_loop();     //  WDT定时
     // sleep_task_driver.attribute.wake_source |= uart_task_is_wake();     //  串口
 

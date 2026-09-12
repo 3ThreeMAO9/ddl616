@@ -50,7 +50,7 @@
 
 #define NFC_CHECK_ADC                   0x01
 #define NFC_CHECK_LPCD                  0x02
-#define NFC_CHECK_SEL                   NFC_CHECK_LPCD        // NFC的检测方式
+#define NFC_CHECK_SEL                   NFC_CHECK_ADC        // NFC的检测方式
 
 #define NFC_WAKE_UP_READ_CARD           Disabled       // NFC唤醒定时读卡
 
