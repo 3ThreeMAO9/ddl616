@@ -16,7 +16,7 @@
 #include <stdlib.h>
 
 // #define OB_LOG_ENABLE 1
-#define OB_LOG_ENABLE 0
+#define OB_LOG_ENABLE 1
 
 /**
  * @brief Log output function,

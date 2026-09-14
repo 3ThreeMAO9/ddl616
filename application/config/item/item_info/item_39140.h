@@ -15,7 +15,7 @@
 /***********Macro***********/
 //firmware version
 #define MINOR_VERSION               PROJECT_NUMBER
-#define PATCH_VERSION               1
+#define PATCH_VERSION               2
 
 
 #define PRINTF_FUN                  Enabled
