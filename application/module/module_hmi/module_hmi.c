@@ -128,7 +128,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = 6000;
             break;
         case HMI_STATE_DEMO_VERIFY_SUCCESS:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
+            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_2s, 2);
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
             keepTime = 6000;
             break;
