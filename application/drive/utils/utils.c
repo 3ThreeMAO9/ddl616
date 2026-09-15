@@ -82,3 +82,16 @@ uint32_t arraysConvertNumber(uint8_t* data, uint8_t len)
 
 	return number;
 }
+
+// 将输入时区转为无符号整数
+uint16_t convert_timezone(int16_t input)
+{
+    return (uint16_t)(input + 48);
+}
+
+// 将无符号整数转换为时区
+int16_t reverse_convert(uint32_t value)
+{
+    return (uint16_t)(value - 48);
+}
+

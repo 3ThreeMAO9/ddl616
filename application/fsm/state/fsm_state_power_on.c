@@ -7,6 +7,8 @@
 #include "task_fingerprint.h"
 #include "task_battery.h"
 
+#include "event.h"
+#include "key_event.h"
 #include "parameter.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT

@@ -31,7 +31,7 @@ static uint16_t system_time_task_callback(uint8_t source, uint8_t timeOutId)
 
     }
     else if (DOWN_COUNT_SOURCE_RTC == source) {
-        hal_get_rtc_time();
+
     }
     return true;
 }

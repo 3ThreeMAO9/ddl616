@@ -5,7 +5,7 @@
 #include "system_timer.h"
 #include "event.h"
 #include "parameter.h"
-// #include "msg_protocol_kds_017.h"
+
 // #include "lock_log.h"
 
 // #include "shell.h"

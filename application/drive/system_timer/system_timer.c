@@ -11,6 +11,9 @@
 #include "system_timer.h"
 #include "hal_wdt.h"
 #include "hal_rtc.h"
+#include "utils.h"
+#include "parameter.h"
+#include "timestamp.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -76,8 +79,18 @@ void system_timer_init(uint8_t count_type)
         hal_wdt_init(wdt_irq_callback);
         break;
     case DOWN_COUNT_SOURCE_RTC:
+    {
+        hal_set_rtc_time_zone(reverse_convert(readUserParameter(BLE_TIME_ZONE_ID)));    // 设置时区
+        if (0)
+            hal_set_rtc_local_timestamp(0);// 读取日志最后一条的时间
+        else
+            hal_set_rtc_local_timestamp(hal_set_default_time());    // 获取默认编译时间
+
+        hal_set_rtc_utc_timestamp(hal_get_rtc_local_timestamp() - ((int32_t)hal_get_rtc_time_zone() * 15 * 60));    // 设置UTC时间
+        timestamp_to_data_time(hal_get_rtc_local_timestamp());
         hal_rtc_init(rtc_irq_callback);
         break;
+    }
     default:
         break;
     }
