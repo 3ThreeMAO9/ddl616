@@ -23,6 +23,7 @@
 
 #include "ota_helper.h"
 #include "flash_data.h"
+#include "lock_log.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -83,6 +84,8 @@ static void task_init(void)
     // module_flash_test();
 
     flash_data_init();
+    lock_log_init();
+
     keyTaskPowerOnInit();
     hmiTaskInit();
     motorTaskInit();

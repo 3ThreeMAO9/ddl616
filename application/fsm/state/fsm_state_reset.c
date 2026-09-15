@@ -10,8 +10,9 @@
 #include "key_event.h"
 #include "user.h"
 #include "flash_data.h"
+#include "lock_log.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "fsm_reset"
 
@@ -44,6 +45,10 @@ QState lock_fsm_reset(LockFsm *me, QEvent const *e)
             };
             fp_task_reset_all_fp(delete_param);
             flash_page_system_init();
+
+            flash_data_init();
+
+            lock_log_flash_clear();
 
             hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_BLUE_OB); // 复位过程中蓝灯常亮
             // 复位完成绿灯2s

@@ -17,7 +17,7 @@
 #define SPI_FLASH_SECTOR_NUM            (1)
 #define PARAMETER_PAGE_CNT              (1)
 #define PRODUCE_DATA_PAGE_CNT           (1)
-#define LOCK_LOG_SECTOR_NUM             (2)
+#define LOCK_LOG_SECTOR_NUM             (4)
 #define GC_SECTOR_CNT                   (1)
 #define WAKEUP_STATE_CNT                (1)
 #define ONE_LINE_KEY_CNT                (1)

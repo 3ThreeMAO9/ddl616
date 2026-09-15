@@ -3,7 +3,7 @@
 #include "user.h"
 #include "parameter.h"
 #include "utils.h"
-// #include "lock_log.h"
+#include "lock_log.h"
 #include "task_sleep.h"
 #include "task_key.h"
 #include "led.h"
@@ -43,6 +43,36 @@ static uint8_t keyEventCombineFunctionHandle(void)
         baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_RESET);
         return true;
     }
+    // else if (111 == value)
+    // {
+    //     lock_log_flash_test(50 , 0 , 1);
+    //     return true;
+    // }
+    // else if (112 == value)
+    // {
+    //     lock_log_flash_test(50 , 0 , 2);
+    //     return true;
+    // }
+    // else if (116 == value)
+    // {
+    //     lock_log_flash_test(50 , 0 , 6);
+    //     return true;
+    // }
+    // else if (117 == value)
+    // {
+    //     lock_log_flash_test(50 , 0 , 4);
+    //     return true;
+    // }
+    // else if (118 == value)
+    // {
+    //     open_log_pr();
+    //     return true;
+    // }
+    // else if (119 == value)
+    // {
+    //     lock_log_flash_clear();
+    //     return true;
+    // }
 
     if (isEmptyUser(false))
     {

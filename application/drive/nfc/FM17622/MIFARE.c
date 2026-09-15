@@ -2,7 +2,7 @@
 #include "READER_API.h"
 #include "FM17622.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "MIFARE"
 

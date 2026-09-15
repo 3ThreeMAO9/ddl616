@@ -2,10 +2,9 @@
 #include "string.h"
 //  #include "sm4.h"
 
-// #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
-
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#include "ob_log.h"
 #define TAG "validation"
-
 uint8_t validation_u8_sum_u8(const uint8_t *buf, uint32_t size)
 {
     uint8_t sum = 0;

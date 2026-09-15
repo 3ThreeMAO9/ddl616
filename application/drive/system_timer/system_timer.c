@@ -14,6 +14,7 @@
 #include "utils.h"
 #include "parameter.h"
 #include "timestamp.h"
+#include "lock_log.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -80,10 +81,14 @@ void system_timer_init(uint8_t count_type)
         break;
     case DOWN_COUNT_SOURCE_RTC:
     {
-        hal_set_rtc_time_zone(reverse_convert(readUserParameter(BLE_TIME_ZONE_ID)));    // 设置时区
-        if (0)
-            hal_set_rtc_local_timestamp(0);// 读取日志最后一条的时间
-        else
+        // uint32_t log_num = get_log_ranger_num();
+        // uint32_t log_max = get_log_seq_max();
+
+        // OB_LOGI(TAG, "log_num[%ld]   log_max[%ld]", log_num, log_max);
+        // hal_set_rtc_time_zone(reverse_convert(readUserParameter(BLE_TIME_ZONE_ID))); // 设置时区
+        // if (log_num)
+        //     hal_set_rtc_local_timestamp(lock_log_get_timestamp(log_max) + ((int32_t)hal_get_rtc_time_zone() * 15 * 60));// 读取日志最后一条的时间
+        // else
             hal_set_rtc_local_timestamp(hal_set_default_time());    // 获取默认编译时间
 
         hal_set_rtc_utc_timestamp(hal_get_rtc_local_timestamp() - ((int32_t)hal_get_rtc_time_zone() * 15 * 60));    // 设置UTC时间
