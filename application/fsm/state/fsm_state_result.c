@@ -49,6 +49,7 @@ static QState lockFsmSuccessDeal(LockFsm *me, QEvent const *e, uint8_t hmiState)
             if (HMI_STATE_LOCK_SUCCESS != hmiState)
             {
                 me->verify_fail_cnt = 0;
+                me->verify_fail_time = 0;
                 setUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID, me->verify_fail_cnt);
             }
             system_time_task_set_work_time(keepTimeOut);
@@ -108,8 +109,20 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
             OB_LOGW(TAG, "keepTimeOut[%ld]", keepTimeOut);
             if ((errCntFlag) && ((me->verify_fail_cnt) < VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK))
             {
+                if (me->verify_fail_cnt == 0)
+                    me->verify_fail_time = hal_get_rtc_work_time();
+
+                if (hal_get_rtc_work_time() > ((me->verify_fail_time) + VERIFY_FAIL_CNT_TIMEOUT))
+                {
+                    me->verify_fail_time = hal_get_rtc_work_time();
+                    me->verify_fail_cnt = 0;
+                }
+
                 (me->verify_fail_cnt)++;
                 setUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID, me->verify_fail_cnt);
+                if (me->verify_fail_cnt >= VERIFY_FAIL_CNT_FOR_WARN)
+                    hmiTaskSetState(HMI_STATE_VERIFY_FAIL_WARN);
+                OB_LOGW(TAG, "verify_fail_cnt[%ld]", me->verify_fail_cnt);
             }
             break;
         case Q_EXIT_SIG:
@@ -121,8 +134,7 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
             {
                 if ((me->verify_fail_cnt) >= VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK)
                 {
-                    state = Q_TRAN(me->branch);
-                    // state = Q_TRAN(lockFsmSystemLock);
+                    state = Q_TRAN(lock_fsm_system_lock);
                 }
                 else
                 {

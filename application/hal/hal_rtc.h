@@ -30,6 +30,7 @@ typedef struct{
 typedef struct{
     time_t utc_timestamp;       // 格林时间戳
     time_t local_timestamp;     // 本地时间戳
+    time_t work_time;           // 系统工作时间戳
     int16_t time_zone;          // 时区  东8区为+32；西8区为-32
 }rtc_time_info_t;
 
@@ -41,6 +42,7 @@ void hal_rtc_init(rtc_callback_t callback);
 uint32_t hal_get_rtc_time(void);
 uint32_t hal_get_rtc_interrupt(void);
 void hal_set_rtc_interrupt(uint32_t data);
+uint32_t hal_get_rtc_work_time(void);
 
 void hal_set_rtc_local_timestamp(uint32_t timestamp);
 time_t hal_get_rtc_local_timestamp(void);

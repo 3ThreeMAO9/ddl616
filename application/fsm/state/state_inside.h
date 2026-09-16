@@ -39,7 +39,7 @@ QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e);
 
 
 QState lockFsmWake(LockFsm *me, QEvent const *e);
-QState lockFsmSystemLock(LockFsm *me, QEvent const *e);
+QState lock_fsm_system_lock(LockFsm *me, QEvent const *e);
 QState lockFsmLowEnergySystemLock(LockFsm *me, QEvent const *e);
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e);

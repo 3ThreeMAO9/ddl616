@@ -10,7 +10,6 @@
  */
 #include "system_timer.h"
 #include "hal_wdt.h"
-#include "hal_rtc.h"
 #include "utils.h"
 #include "parameter.h"
 #include "timestamp.h"

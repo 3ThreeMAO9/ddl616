@@ -31,6 +31,9 @@ static QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            me->verify_fail_cnt = readUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID);
+            if (me->verify_fail_cnt)
+                me->verify_fail_time = hal_get_rtc_work_time();
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             fp_task_set_mode(FP_MODE_SLEEP);
@@ -54,6 +57,11 @@ static QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
             if (BATTERY_STATE_LOW_SYSTEM_LOCK == batteryTaskReadState())
             {
                 state = Q_TRAN(lock_fsm_low_power_system_lock);
+                break;
+            }
+            else if (Enabled == readUserParameter(USER_PARA_SYSTEM_LOCK_ID))
+            {
+                state = Q_TRAN(lock_fsm_system_lock);
             }
             else if (Enabled == readUserParameter(USER_PARA_BREAK_ID))
             {

@@ -160,6 +160,18 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
 
+        case HMI_STATE_VERIFY_FAIL_WARN:
+            PLAYER_LIST_CLEAR_ADD(SOUND_WARN);
+            keepTime = HMI_STATE_KEEP_TIME_1s;
+            break;
+
+        case HMI_STATE_SYSTEM_LOCK:
+            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 6);
+            hmi_key_board_led_config(TRUN_ON, TRUN_OFF, HMI_STATE_KEEP_TIME_500ms, 6);
+            PLAYER_LIST_CLEAR_ADD(SOUND_WARN);
+            keepTime = HMI_STATE_KEEP_TIME_2s;
+            break;
+
         case HMI_STATE_ENTER_ADMIN_MODE:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             if (!silentFlag)
@@ -254,7 +266,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
         
         case HMI_STATE_TAMPER_WARN:
-            PLAYER_LIST_CLEAR_ADD(SOUND_WARN,SOUND_WARN,SOUND_WARN);
+            PLAYER_LIST_CLEAR_ADD(SOUND_WARN);
             break;
 
         case HMI_STATE_HANDLE_SUCCESS:

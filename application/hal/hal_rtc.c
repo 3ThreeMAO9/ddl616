@@ -15,6 +15,7 @@ void rtc_IRQ_callback(void)
 {
     rtc_handle.interrupt++;
     rtc_time.local_timestamp++;       // 本地时间戳累加
+    rtc_time.work_time++;
     // hal_get_rtc_time();
     if (NULL != rtc_callback)
         rtc_callback();
@@ -29,6 +30,11 @@ void hal_set_rtc_interrupt(uint32_t data)
 {
     // OB_LOGD(TAG, "Set rtc interrupt: %u", data);
     rtc_handle.interrupt = data;
+}
+
+uint32_t hal_get_rtc_work_time(void)
+{
+    return rtc_time.work_time;
 }
 
 void hal_set_rtc_local_timestamp(uint32_t timestamp)

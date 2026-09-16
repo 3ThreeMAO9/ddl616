@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include "hal_timer.h"
+#include "hal_rtc.h"
 // #include "uart.h"
 
 typedef uint16_t (*system_time_callback_t)(uint8_t, uint8_t);

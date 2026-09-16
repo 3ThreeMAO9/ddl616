@@ -15,6 +15,7 @@ static void lockFsm_ctor(LockFsm* lock_fsm)
     QFsm_ctor(&(lock_fsm->super), (QStateHandler)(lock_fsm_init));
     lock_fsm->branch = NULL;
     lock_fsm->verify_fail_cnt = 0;
+    lock_fsm->verify_fail_time = 0;
 }
 
 void qpFsmInit(void)

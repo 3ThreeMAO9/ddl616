@@ -74,8 +74,12 @@ typedef enum
     SOUND_START,
     SOUND_WAKEUP,    // 1-唤醒音效
     SOUND_BUTTON_DI, // 2.按键音Di
-    SOUND_WARN,      // 5-报警音效
-    SOUND_NULL,      // 6-静音
+    SOUND_BUTTON_DO, // 3.指纹音DO
+    SOUND_WARN,      // 4-报警音效
+    SOUND_DI_DI,     // 5-按键音DiDi
+    SOUND_FAIL,      // 6-失败音效
+    SOUND_SUCC,      // 7-成功音效
+    SOUND_BELL,      // 8-门铃音效
     SOUND_A,
     SOUND_B,
     SOUND_C,

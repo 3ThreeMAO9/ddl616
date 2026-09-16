@@ -36,11 +36,13 @@
 #define FIGNER_MODULE_CHECK                         (Disabled)
 
 //verify fail' cnt
+#define VERIFY_FAIL_CNT_FOR_WARN                    (3)
 #define VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK             (5)
+#define VERIFY_FAIL_CNT_TIMEOUT                     (5 * 60)        // unit:s
 
 //time out
-#define SYSTEM_LOCK_TIME                            (3*60*1000)      //unit: ms
-#define SYSTEM_LOCK_TIMEOUT                         (3000)          // unit:ms
+#define SYSTEM_LOCK_TIME                            (100 * 1000)    // unit:ms
+#define SYSTEM_LOCK_TIMEOUT                         (10 * 1000)     // unit:ms
 #define WORK_TIMEOUT                                (10000)         // unit:ms
 #define WAKE_TIMEOUT                                (1500)          // unit:ms
 
