@@ -9,9 +9,10 @@
 #include "event.h"
 #include "key_event.h"
 #include "user.h"
+#include "parameter.h"
 #include "flash_data.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "fsm_system_lock"
 

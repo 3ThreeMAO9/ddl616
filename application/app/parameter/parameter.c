@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "flash_drive.h"
 #include "bsp_rom_config.h"
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "parameter"
 
@@ -12,22 +12,24 @@
 static parameter_t userParameter;
 static produce_info_t produceInfo;
 static const parameter_range_t parameter_range[USER_PARA_CNT] = {
-    {AUTO_LOCK_TIME_MIN, AUTO_LOCK_TIME_MAX, AUTO_LOCK_TIME_DEFAULT},
-    {AUTO_LOCK_MODE_MIN, AUTO_LOCK_MODE_MAX, AUTO_LOCK_MODE_DEFAULT},
-    {SILENT_MODE_MIN, SILENT_MODE_MAX, SILENT_MODE_DEFAULT},
-    {VACATION_MODE_MIN, VACATION_MODE_MAX, VACATION_MODE_DEFAULT},
-    {MOTOR_DIRECTION_MIN, MOTOR_DIRECTION_MAX, MOTOR_DIRECTION_DEFAULT},
-    {SYSTEM_LOCK_FLAG_MIN, SYSTEM_LOCK_FLAG_MAX, SYSTEM_LOCK_FLAG_DEFAULT},
-    {VERIFY_FAIL_CNT_MIN, VERIFY_FAIL_CNT_MAX, VERIFY_FAIL_CNT_DEFAULT},
-    {INIT_BREAK_MIN, INIT_BREAK_MAX, INIT_BREAK_DEFAULT},
-    {LANGUAGE_MODE_MIN, LANGUAGE_MODE_MAX, LANGUAGE_MODE_DEFAULT},
-    {BLE_ACTIVATION_FLAG_MIN, BLE_ACTIVATION_FLAG_MAX, BLE_ACTIVATION_FLAG_DEFAULT},
-    {BLE_NET_STATUS_FLAG_MIN, BLE_NET_STATUS_FLAG_MAX, BLE_NET_STATUS_FLAG_DEFAULT},
-    {BLE_RESET_STATUS_MIN, BLE_RESET_STATUS_MAX, BLE_RESET_STATUS_DEFAULT},
-    {BLE_BING_FLAG_MIN, BLE_BING_FLAG_MAX, BLE_BING_FLAG_DEFAULT},
-    {BLE_TIME_ZONE_MIN, BLE_TIME_ZONE_MAX, BLE_TIME_ZONE_DEFAULT},
-    {VACATION_WARN_FLAG_MIN, VACATION_WARN_FLAG_MAX, VACATION_WARN_FLAG_DEFAULT},
-    {LOCKED_ROTOR_WARM_FLAG_MIN, LOCKED_ROTOR_WARM_FLAG_MAX, LOCKED_ROTOR_WARM_FLAG_DEFAULT}};
+    [USER_PARA_VERIFY_MODE_ID]       = {VERIFY_MODE_MIN,        VERIFY_MODE_MAX,        VERIFY_MODE_DEFAULT},
+    [USER_PARA_AUTO_LOCK_MODE_ID]    = {AUTO_LOCK_MODE_MIN,     AUTO_LOCK_MODE_MAX,     AUTO_LOCK_MODE_DEFAULT},
+    [USER_PARA_SILENT_MODE_ID]       = {SILENT_MODE_MIN,        SILENT_MODE_MAX,        SILENT_MODE_DEFAULT},
+    [USER_PARA_VACATION_MODE_ID]     = {VACATION_MODE_MIN,      VACATION_MODE_MAX,      VACATION_MODE_DEFAULT},
+    [USER_PARA_MOTOR_DIRECTION_ID]   = {MOTOR_DIRECTION_MIN,    MOTOR_DIRECTION_MAX,    MOTOR_DIRECTION_DEFAULT},
+    [USER_PARA_SYSTEM_LOCK_ID]       = {SYSTEM_LOCK_FLAG_MIN,   SYSTEM_LOCK_FLAG_MAX,   SYSTEM_LOCK_FLAG_DEFAULT},
+    [USER_PARA_VERIFY_FAIL_CNT_ID]   = {VERIFY_FAIL_CNT_MIN,    VERIFY_FAIL_CNT_MAX,    VERIFY_FAIL_CNT_DEFAULT},
+    [USER_PARA_BREAK_ID]             = {INIT_BREAK_MIN,         INIT_BREAK_MAX,         INIT_BREAK_DEFAULT},
+    [USER_PARA_LANGUAGE_MODE_ID]     = {LANGUAGE_MODE_MIN,      LANGUAGE_MODE_MAX,      LANGUAGE_MODE_DEFAULT},
+    [USER_PARA_VACATION_WARM_ID]     = {VACATION_WARN_FLAG_MIN, VACATION_WARN_FLAG_MAX, VACATION_WARN_FLAG_DEFAULT},
+    [USER_PARA_LOCKED_ROTOR_WARM_ID] = {LOCKED_ROTOR_WARM_FLAG_MIN, LOCKED_ROTOR_WARM_FLAG_MAX, LOCKED_ROTOR_WARM_FLAG_DEFAULT},
+
+    [BLE_ACTIVATION_FLAG_ID]         = {BLE_ACTIVATION_FLAG_MIN, BLE_ACTIVATION_FLAG_MAX, BLE_ACTIVATION_FLAG_DEFAULT},
+    [BLE_NET_STATUS_FLAG_ID]         = {BLE_NET_STATUS_FLAG_MIN, BLE_NET_STATUS_FLAG_MAX, BLE_NET_STATUS_FLAG_DEFAULT},
+    [BLE_RESET_STATUS_ID]            = {BLE_RESET_STATUS_MIN,   BLE_RESET_STATUS_MAX,   BLE_RESET_STATUS_DEFAULT},
+    [BLE_BIND_FLAG_ID]               = {BLE_BING_FLAG_MIN,      BLE_BING_FLAG_MAX,      BLE_BING_FLAG_DEFAULT},
+    [BLE_TIME_ZONE_ID]               = {BLE_TIME_ZONE_MIN,      BLE_TIME_ZONE_MAX,      BLE_TIME_ZONE_DEFAULT},
+};
 
 // ------------------------------------------
 uint8_t *readUserParameterAddr(void)
@@ -51,14 +53,20 @@ void userParameterInit(void)
 
     for (i = 0; i < USER_PARA_CNT; i++)
     {
+        // 跳过未定义的预留参数（min=max=0 是预留位特征）
+        if (parameter_range[i].max_value == 0 && parameter_range[i].min_value == 0) {
+            // OB_LOGD(TAG, "parameter[%u]:    预留", i);
+            continue;
+        }
+
         if (!IS_NUMBER_IN_RANGE(userParameter.function[i], parameter_range[i].min_value, parameter_range[i].max_value))
         {
             userParameter.function[i] = parameter_range[i].default_value;
         }
         // OB_LOGD(TAG,"parameter[%u]: %u", i, userParameter.function[i]);
 
-        if (i == USER_PARA_AUTO_LOCK_TIME_ID)
-            OB_LOGD(TAG, "parameter[%u]: %u  延时上锁时间", i, userParameter.function[i]);
+        if (i == USER_PARA_VERIFY_MODE_ID)
+            OB_LOGD(TAG, "parameter[%u]: %u  验证方式", i, userParameter.function[i]);
         else if (i == USER_PARA_AUTO_LOCK_MODE_ID)
             OB_LOGD(TAG, "parameter[%u]: %u  延时上锁功能", i, userParameter.function[i]);
         else if (i == USER_PARA_SILENT_MODE_ID)
@@ -75,6 +83,10 @@ void userParameterInit(void)
             OB_LOGD(TAG, "parameter[%u]: %u  防撬", i, userParameter.function[i]);
         else if (i == USER_PARA_LANGUAGE_MODE_ID)
             OB_LOGD(TAG, "parameter[%u]: %u  语言", i, userParameter.function[i]);
+        else if (i == USER_PARA_VACATION_WARM_ID)
+            OB_LOGD(TAG, "parameter[%u]: %u  离家报警", i, userParameter.function[i]);
+        else if (i == USER_PARA_LOCKED_ROTOR_WARM_ID)
+            OB_LOGD(TAG, "parameter[%u]: %u  堵转报警", i, userParameter.function[i]);
         else if (i == BLE_ACTIVATION_FLAG_ID)
             OB_LOGD(TAG, "parameter[%u]: %u  BLE activation", i, userParameter.function[i]);
         else if (i == BLE_NET_STATUS_FLAG_ID)
@@ -85,10 +97,6 @@ void userParameterInit(void)
             OB_LOGD(TAG, "parameter[%u]: %u  BLE bind", i, userParameter.function[i]);
         else if (i == BLE_TIME_ZONE_ID)
             OB_LOGD(TAG, "parameter[%u]: %u  BLE time zone", i, userParameter.function[i]);
-        else if (i == USER_PARA_VACATION_WARM_ID)
-            OB_LOGD(TAG, "parameter[%u]: %u  离家报警", i, userParameter.function[i]);
-        else if (i == USER_PARA_LOCKED_ROTOR_WARM_ID)
-            OB_LOGD(TAG, "parameter[%u]: %u  堵转报警", i, userParameter.function[i]);
     }
 }
 
@@ -157,11 +165,13 @@ void produceInfoInit(void)
     OB_LOGI(TAG, "produceInfo.reboot_flag           %u", produceInfo.reboot_flag);
     OB_LOGI(TAG, "produceInfo.blockkey_flag         %u", produceInfo.blockkey_flag);
     OB_LOGI(TAG, "produceInfo.model");
-    OB_LOGI_DUMP(produceInfo.model,KDS_MODEL_LEN_MAX);
+    OB_LOGI_DUMP(produceInfo.model, KDS_MODEL_LEN_MAX);
     OB_LOGI(TAG, "produceInfo.pid");
-    OB_LOGI_DUMP(produceInfo.pid,KDS_PID_LEN_MAX);
+    OB_LOGI_DUMP(produceInfo.pid, KDS_PID_LEN_MAX);
     OB_LOGI(TAG, "produceInfo.bat_cali              %ld", produceInfo.bat_cali);
     OB_LOGI(TAG, "produceInfo.allow_motor_test      %u", produceInfo.allow_motor_test);
+    OB_LOGI(TAG, "produceInfo.activecode            %u", produceInfo.activecode.flag);
+    OB_LOGI_DUMP(produceInfo.activecode.code, ACTIVECODE_LEN_MAX);
 }
 
 uint8_t isProduceReboot(void)

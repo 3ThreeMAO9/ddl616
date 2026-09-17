@@ -9,6 +9,7 @@
 #define DEVICE_SN_LEN_MAX                       32
 #define KDS_MODEL_LEN_MAX                       16
 #define KDS_PID_LEN_MAX                         16
+#define ACTIVECODE_LEN_MAX                      32
 
 /*****************Enum*****************/
 typedef enum{
@@ -71,6 +72,12 @@ typedef struct{
     uint32_t flag;          //enum device_test_flag_id_e
 
 }device_test_t;
+
+typedef struct{
+    uint8_t flag;
+    uint8_t code[ACTIVECODE_LEN_MAX];
+}device_code_t;
+
 typedef struct{
     device_sn_t sn[DEVICE_SN_CNT];
     device_test_t deviceTest;
@@ -80,6 +87,8 @@ typedef struct{
     uint8_t pid[KDS_PID_LEN_MAX];
     int16_t bat_cali;                   //电压补偿值
     uint8_t allow_motor_test;
+    device_code_t activecode;           //激活码
+
 }produce_info_t;
 
 /***************Variable***************/

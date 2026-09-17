@@ -69,10 +69,22 @@
 #define PARAMETER_BLOCK_SIZE                        (4)
 #define DATA_BLOCK_SIZE                             (MAX(USER_BLOCK_SIZE, PARAMETER_BLOCK_SIZE))
 
-//auto lock' time
-#define AUTO_LOCK_TIME_MAX                          (180)        //unit: s
-#define AUTO_LOCK_TIME_MIN                          (10)        //unit: s
-#define AUTO_LOCK_TIME_DEFAULT                      (30)        //unit: s
+// //auto lock' time
+// #define AUTO_LOCK_TIME_MAX                          (180)        //unit: s
+// #define AUTO_LOCK_TIME_MIN                          (10)        //unit: s
+// #define AUTO_LOCK_TIME_DEFAULT                      (30)        //unit: s
+
+// verify mode
+typedef enum
+{
+    VERIFY_MODE_SINGLE      = 0x00, // 单一验证模式
+    VERIFY_MODE_DUAL        = 0x01, // 双重验证模式
+    VERIFY_MODE_ALWAYS_OPEN = 0x02, // 常开模式
+} verify_mode_t;
+
+#define VERIFY_MODE_MIN                             VERIFY_MODE_SINGLE
+#define VERIFY_MODE_MAX                             VERIFY_MODE_ALWAYS_OPEN
+#define VERIFY_MODE_DEFAULT                         VERIFY_MODE_SINGLE
 
 //auto lock mode
 #define AUTO_LOCK_MODE_MIN                          Disabled
