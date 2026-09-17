@@ -31,19 +31,19 @@
 
 /***********Enum***********/
 
-#define TOUCH_IC_CH0    0x20    //
-#define TOUCH_IC_CH1    0x20    //
-#define TOUCH_IC_CH2    0x20    //
-#define TOUCH_IC_CH3    0x20    //
-#define TOUCH_IC_CH4    0x20    //
-#define TOUCH_IC_CH5    0x20    //
-#define TOUCH_IC_CH6    0x20    //
-#define TOUCH_IC_CH7    0x20    //
-#define TOUCH_IC_CH8    0x20    //
-#define TOUCH_IC_CH9    0x20    //
-#define TOUCH_IC_CH10   0x20    //
-#define TOUCH_IC_CH11   0x20    //
-#define TOUCH_IC_CH12   0x20    //
+#define TOUCH_IC_CH0    0x25    //
+#define TOUCH_IC_CH1    0x25    //
+#define TOUCH_IC_CH2    0x25    //
+#define TOUCH_IC_CH3    0x25    //
+#define TOUCH_IC_CH4    0x25    //
+#define TOUCH_IC_CH5    0x25    //
+#define TOUCH_IC_CH6    0x25    //
+#define TOUCH_IC_CH7    0x25    //
+#define TOUCH_IC_CH8    0x25    //
+#define TOUCH_IC_CH9    0x25    //
+#define TOUCH_IC_CH10   0x25    //
+#define TOUCH_IC_CH11   0x25    //
+#define TOUCH_IC_CH12   0x25    //
 #define TOUCH_IC_CH13   0x3F    //无对应按键
 #define TOUCH_IC_CH14   0x3F    //无对应按键
 #define TOUCH_IC_CH15   0x3F    //无对应按键

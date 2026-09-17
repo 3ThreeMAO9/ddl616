@@ -10,7 +10,7 @@
 #include "flash_data.h"
 // #include "offlinekey_port.h"
 // #include "offlinekey.h"
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEBUG
 #include "ob_log.h"
 #define TAG "key_event"
 
