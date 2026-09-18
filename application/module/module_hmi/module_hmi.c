@@ -118,6 +118,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
             break;
 
+        case HMI_STATE_ALL_LED_OFF:
+            hmi_logo_led_config(LOGO_LED_COLOR_IDLE, LOGO_LED_COLOR_IDLE, 0, 0);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            break;
+
         case HMI_STATE_KEY_BOARD_LED_BLUE_OB:
             hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, 0, 0);
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);

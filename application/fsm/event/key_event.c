@@ -171,10 +171,18 @@ void keyEventVerifyAdmin(uint8_t key_value)
 
     if (KEY_CAN == key_value)
     {
-        CLEAR_KEY_EVENT();
+        if (keyBoardEvent.input[0].len)
+        {
+            CLEAR_KEY_EVENT();
 #if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
 #endif
+        }
+        else
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            CLEAR_KEY_EVENT();
+        }
     }
     else if (KEY_OK == key_value)
     {
@@ -246,10 +254,18 @@ void keyEventVerifyUser(uint8_t key_value)
 
     if (KEY_CAN == key_value)
     {
-        CLEAR_KEY_EVENT();
+        if (keyBoardEvent.input[0].len)
+        {
+            CLEAR_KEY_EVENT();
 #if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
+            OB_LOGD(TAG, "InputCode: input[%u]->", keyBoardEvent.input[0].len);
 #endif
+        }
+        else
+        {
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL);
+            CLEAR_KEY_EVENT();
+        }
     }
     else if (KEY_OK == key_value)
     {

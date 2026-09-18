@@ -95,6 +95,10 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 state = Q_TRAN(lock_fsm_reset);
             }
+            else if (EVENT_RESULT_FAIL == e->dynamic_[0])
+            {
+                state = Q_TRAN(lock_fsm_sleep); // 输入密码空的时候,再按*键
+            }
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
             //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             // }

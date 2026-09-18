@@ -115,6 +115,7 @@ typedef enum{
     HMI_STATE_KEY_BOARD_LED_BLUE_OB,    //键盘灯全亮,蓝灯常亮
     HMI_STATE_KEY_BOARD_LED_ON,         //键盘灯全亮
     HMI_STATE_KEY_BOARD_LED_OFF,        //键盘灯全灭
+    HMI_STATE_ALL_LED_OFF,              //所有灯全灭
     HMI_STATE_OTA_MODE,                 //ota模式
     HMI_STATE_KEY_BOARD_WAKE_UP,        //键盘唤醒灯效
 

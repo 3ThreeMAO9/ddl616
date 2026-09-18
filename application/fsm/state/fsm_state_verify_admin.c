@@ -61,7 +61,10 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
                 me->branch = (QStateHandler)(lock_fsm_verify_admin);
                 state = Q_TRAN(lockFsmInputError);
             }
-            
+            else if (EVENT_RESULT_FAIL == e->dynamic_[0])
+            {
+                state = Q_TRAN(lock_fsm_sleep); // 输入密码空的时候,再按*键
+            }
             break;
         case Q_USER_HANDLE_SIG:
             me->branch = (QStateHandler)(lock_fsm_verify_admin);

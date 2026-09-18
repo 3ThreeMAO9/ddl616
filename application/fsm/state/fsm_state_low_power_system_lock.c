@@ -36,7 +36,7 @@ QState lock_fsm_low_power_system_lock(LockFsm *me, QEvent const *e)
             fp_task_set_mode(FP_MODE_IDLE);
 
             hmiTaskSetAllowSelintFlag(false);
-            hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_OFF);
+            hmiTaskSetState(HMI_STATE_ALL_LED_OFF);
 
             system_time_task_set_work_time(WORK_WAKE_TIME_OUT_VAULE);
             break;
