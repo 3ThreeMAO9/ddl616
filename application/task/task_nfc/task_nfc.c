@@ -102,6 +102,11 @@ static void set_nfc_encrypt_type(uint8_t encrypt_type)
     set_nfc_attr(&nfc_task_driver.attr);
 }
 
+void nfc_task_scan_get_tick(uint32_t time)
+{
+    nfc_task_driver.io->scan_get_tick(time);
+}
+
 void nfc_task_set_encrypt(uint8_t flag)
 {
     // Write flash

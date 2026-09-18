@@ -28,6 +28,7 @@ typedef struct{
     void (*loop)(void);
     uint8_t (*set_mode)(uint8_t);
     uint8_t (*is_wake)(void);
+    void (*scan_get_tick)(uint32_t);
 
 }bsp_nfc_drive_io_t;
 

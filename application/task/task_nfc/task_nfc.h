@@ -82,7 +82,12 @@ void nfc_task_set_state(uint8_t state);
  * 出口参数：none
  */
 void nfc_task_set_encrypt(uint8_t flag);
-
+/**
+ * @brief NFC重置读卡时间
+ * 入口参数: time (ms)；
+ * 出口参数：none
+ */
+void nfc_task_scan_get_tick(uint32_t time);
 /**************************************/
 
 #endif 

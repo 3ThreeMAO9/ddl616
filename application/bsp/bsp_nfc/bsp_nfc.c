@@ -15,7 +15,7 @@ const bsp_nfc_drive_io_t bsp_nfc = {
     .set_mode = nfc_set_mode,
     .is_wake = is_nfc_wake,
     .set_attr = nfc_set_attr,
-
+    .scan_get_tick = nfc_sacn_handle_get_tick,
 };
 
 // ------------------------------------------

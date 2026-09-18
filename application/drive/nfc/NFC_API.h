@@ -100,6 +100,7 @@ uint8_t nfc_set_mode(uint8_t mode);
 void nfc_loop(void);
 void nfc_event_register_callback(nfc_event_callback_t callback);
 uint8_t is_nfc_wake(void);
+void nfc_sacn_handle_get_tick(uint32_t time);
 
 /**************************************/
 

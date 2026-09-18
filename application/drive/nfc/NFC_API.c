@@ -62,6 +62,11 @@ void save_adc_base(void)
     Cal_Card_Base(nfc_adc_handle.adc_voltage);
 }
 
+void nfc_sacn_handle_get_tick(uint32_t time)
+{
+    nfc_handle.time_out = system_inc_time_cnt(time);
+}
+
 uint8_t nfc_set_mode(uint8_t mode) {
 
     if (nfc_handle.mode != mode) {
@@ -73,22 +78,22 @@ uint8_t nfc_set_mode(uint8_t mode) {
         switch (mode) {
             case NFC_MODE_DEEP_SLEEP:
                 FM17622_HardReset();
-                nfc_handle.time_out = system_inc_time_cnt(0);
+                nfc_sacn_handle_get_tick(0);
                 break;
             case NFC_MODE_CHECK:
                 FM17622_HardReset();
-                nfc_handle.time_out = system_inc_time_cnt(0);
+                nfc_sacn_handle_get_tick(0);
                 break;
             case NFC_MODE_IDLE:
                 FM17622_HardReset();
-                nfc_handle.time_out = system_inc_time_cnt(0);
+                nfc_sacn_handle_get_tick(0);
             case NFC_MODE_FUNC:
                 FM17622_HardReset();
-                nfc_handle.time_out = system_inc_time_cnt(0);
+                nfc_sacn_handle_get_tick(0);
                 break;
             case NFC_MODE_SCAN:
                 FM17622_HardReset();
-                nfc_handle.time_out = system_inc_time_cnt(0);
+                nfc_sacn_handle_get_tick(0);
                 break;
             case NFC_MODE_READ_BLOCK:
                 
@@ -291,18 +296,18 @@ void nfc_loop(void) {
     switch (nfc_handle.mode) {
         case NFC_MODE_CHECK:
         case NFC_MODE_FUNC:
-            if (is_nfc_wake())  // adc检卡
-            {
-                Card_Handle_Event(&nfc_handle.attr);
-            }
-            // if (is_nfc_wake())  // adc检卡，并且默认1.9s读卡一次
+            // if (is_nfc_wake())  // adc检卡
             // {
-            //     nfc_handle.time_out = system_inc_time_cnt(0);
-            // }
-            // else if (system_out_time_cnt(nfc_handle.time_out)) {
-            //     nfc_handle.time_out = system_inc_time_cnt(NFC_READ_TIME_OUT);
             //     Card_Handle_Event(&nfc_handle.attr);
             // }
+            if (is_nfc_wake())  // adc检卡，并且默认1.9s读卡一次
+            {
+                nfc_sacn_handle_get_tick(0);
+            }
+            else if (system_out_time_cnt(nfc_handle.time_out)) {
+                nfc_handle.time_out = system_inc_time_cnt(NFC_READ_TIME_OUT);
+                Card_Handle_Event(&nfc_handle.attr);
+            }
             break;
         case NFC_MODE_SCAN:
             if (system_out_time_cnt(nfc_handle.time_out)) {

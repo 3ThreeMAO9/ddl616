@@ -14,6 +14,8 @@
 #include "task_system_time.h"
 #include "task_sleep.h"
 #include "task_player.h"
+#include "task_nfc.h"
+
 #include "event.h"
 #include "msg_protocol.h"
 #include "user.h"
@@ -44,6 +46,7 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
         if(true == g_key_task_driver.attribute.enable[KEY_TYPE_KEY_BOARD])
         {
             OB_LOGD(TAG, "key_value = %d", key_value);
+            nfc_task_scan_get_tick(3500);   // 3.5s后再去读卡
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             baseEventPush(Q_KEY_BOARD_PRESS_SIG, key_value);
         }
