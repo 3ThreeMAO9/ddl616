@@ -22,7 +22,7 @@ void ob_log_init(void)
 #if (OB_LOG_UART_SEL == OB_LOG_UART_SIMU)
     simu_uart_init();
 #elif (OB_LOG_UART_SEL == OB_LOG_UART_1)
-    hal_uart_init(LOG_UART_SEL, UART_BAUDRATE_1000000, NULL);
+    hal_uart_init(LOG_UART_SEL, UART_BAUDRATE_230400, NULL);
 #endif
 
 #endif
