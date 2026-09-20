@@ -67,11 +67,6 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
     }
 }
 
-void key_task_wake(void)
-{
-    uart_msg_key_board(EVENT_CODE_KEY_PRESS, 1);
-}
-
 uint8_t key_task_sleep(uint8_t type)
 {
     return g_key_task_driver.io->sleep(type);

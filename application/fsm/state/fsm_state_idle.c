@@ -4,6 +4,7 @@
 #include "event.h"
 #include "key_event.h"
 #include "parameter.h"
+#include "user.h"
 
 #include "task_sleep.h"
 #include "task_system_time.h"
@@ -99,6 +100,17 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 state = Q_TRAN(lock_fsm_sleep); // 输入密码空的时候,再按*键
             }
+            else if (EVENT_RESULT_ADD_ADMIN == e->dynamic_[0])
+            {
+                if (isEmptyUser(false))   // 初始化状态
+                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
+            }
+            else if (EVENT_RESULT_ENTER_LOCAL_MENU == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_ENTER_ADMIN_MODE);
+                state = Q_TRAN(lock_fsm_verify_admin);
+            }
+            
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
             //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             // }

@@ -16,7 +16,7 @@
 #include "system_timer.h"
 #include "lock_uart.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "module_uart"
 
@@ -218,7 +218,7 @@ uint8_t module_uart_is_wake(void)
 
 void module_uart_init(void)
 {
-    hal_uart_init(BACK_UART_SEL, UART_BAUDRATE_115200, NULL);
+    hal_uart_init(BACK_UART_SEL, UART_BAUDRATE_230400, NULL);
     uart_queue_init();
 }
 

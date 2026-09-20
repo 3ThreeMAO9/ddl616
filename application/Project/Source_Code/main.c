@@ -43,7 +43,7 @@ void MainLoop(void)
             time_out = system_inc_time_cnt(1000);
         }
         keyTaskLoop();          // Key task loop
-        // uartTaskLoop();         // uart task loop
+        uartTaskLoop();         // uart task loop
         motorTaskLoop();
         hmiTaskLoop();
         nfc_task_loop();        // nfc task loop
@@ -89,7 +89,7 @@ static void task_init(void)
     keyTaskPowerOnInit();
     hmiTaskInit();
     motorTaskInit();
-    // uartTaskInit();
+    uartTaskInit();
     nfc_task_init();
     player_task_init();
     // face_task_init();

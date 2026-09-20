@@ -49,7 +49,11 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             else if (EVENT_RESULT_SUCCESS == e->dynamic_[0])
             {
-                me->branch = (QStateHandler)(lock_fsm_menu_user_settings);
+                if (me->admin_flag == false)
+                    me->branch = (QStateHandler)(lock_fsm_menu_admin);
+                else
+                    me->branch = (QStateHandler)(lock_fsm_menu_user_settings);
+
                 state = Q_TRAN(lockFsmHandleAddSuccess);
             }
             else if ((EVENT_RESULT_FAIL_DIFFERENT == e->dynamic_[0])

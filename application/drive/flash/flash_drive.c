@@ -43,24 +43,9 @@ uint32_t user_flash_read(uint32_t addr, void *buf, uint32_t size)
     return hal_flash_read(addr, buf, size);
 }
 
-static void flash_write_data_block(uint32_t pageAddr, uint16_t index, uint8_t* pData, uint16_t blockSize)
-{
-    user_flash_write((pageAddr + (blockSize * index)), pData, blockSize);
-}
-
 void flash_read_data_block(uint32_t pageAddr, uint16_t index, uint8_t* pData, uint16_t blockSize)
 {
     user_flash_read((pageAddr + (blockSize * index)), pData, blockSize);
-}
-
-static void flash_write_page_flag(uint32_t pageAddr, uint16_t blockSize)
-{
-    uint8_t dataBlock[DATA_BLOCK_SIZE];
-
-    //write page flag
-    memset(dataBlock, 0xFF, blockSize);
-    dataBlock[0] = true;
-    flash_write_data_block(pageAddr, 0, dataBlock, blockSize);
 }
 
 void flash_write_data_pages(uint32_t pageAddr, uint32_t backupAddr, uint8_t* pData, uint16_t size)

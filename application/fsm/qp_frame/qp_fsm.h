@@ -25,6 +25,7 @@ typedef struct{
     QStateHandler branch;               /* branch of state */
     uint8_t verify_fail_cnt;            // 验证错误次数
     uint32_t verify_fail_time;          // 验证错误的时间戳 
+    uint8_t admin_flag;                 // 进入管理员菜单
 
 }LockFsm;
 

@@ -16,13 +16,6 @@
 
 HANDLER_DEFINE(UP_CMD_ACK_HEART)
 {
-    // OB_LOGD(TAG,"cmd 0x%02X tsn 0x%02X",packet->cmd,packet->TSN);
-    uartTaskRetryClean((packet->cmd & (~0x80)),packet->TSN);    //清空UartTx的重发数据
-
-    if (ota_helper_get_state() == OTA_STATE_END)
-    {
-        ota_helper_set_state(OTA_STATE_IDLE);
-    }
 
     return 0;
 }

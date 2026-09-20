@@ -17,7 +17,7 @@
 /***********Macro***********/
 #define UART_MAX_RETRY_CNT    2       // 最大重传次数
 #define UART_RETRY_INTERVAL   300     // 重传间隔（毫秒）
-#define UART_TX_BUF_MAX_LEN   128      // tx_buf长度一致
+#define UART_TX_BUF_MAX_LEN   256      // tx_buf长度一致
 
 /***********Enum***********/
 typedef enum {

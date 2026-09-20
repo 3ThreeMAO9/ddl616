@@ -197,7 +197,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         
         case HMI_STATE_CHANGE_MASTER_CODE:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_master_PIN_code,VOICE_End_with_pound_key);
+            PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_master_PIN_code, VOICE_End_with_pound_key, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
         case HMI_STATE_PIN_CODE_TOO_SIMPLE:

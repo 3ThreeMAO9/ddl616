@@ -40,6 +40,50 @@ static uint32_t ota_to_boot_time_out = 0;
 static uint8_t param_data_flag = false;// 参数同步
 static uint32_t param_data_time_out = 0;
 
+/*****************Inline*****************/
+static inline uint8_t lock_packet_build_attr(uint8_t addr, uint8_t enc)
+{
+    addr &= LOCK_PACKET_ATTR_ADDR_MASK;
+    addr |= (enc << LOCK_PACKET_ATTR_ENC_SHIFT) & LOCK_PACKET_ATTR_ENC_MASK;
+    return addr;
+}
+
+static inline uint8_t lock_packet_get_addr(uint8_t attr)
+{
+    return attr & LOCK_PACKET_ATTR_ADDR_MASK;
+}
+
+static inline uint8_t lock_packet_get_enc(uint8_t attr)
+{
+    return (attr & LOCK_PACKET_ATTR_ENC_MASK) >> LOCK_PACKET_ATTR_ENC_SHIFT;
+}
+
+static inline uint8_t lock_packet_is_encrypted(uint8_t attr)
+{
+    return lock_packet_get_enc(attr) != LOCK_PACKET_ENCRYPT_TYPE_NONE;
+}
+
+// 累加求和
+static uint16_t calc_sum(uint8_t* data, uint16_t len)
+{
+    uint16_t sum = 0;
+    for (uint16_t i = 0; i < len; i++) {
+        sum += data[i];
+    }
+    return sum;
+}
+
+// checksum2 = SUM(明文 payload)
+static uint16_t calc_checksum2(uint8_t* payload, uint16_t len)
+{
+    return calc_sum(payload, len);
+}
+
+// checksum1 = SUM(sn~payload)，偏移 4 开始，长度 8 + payload_len
+static uint16_t calc_checksum1(uint8_t* raw, uint16_t payload_len)
+{
+    return calc_sum(raw + 4, 8 + payload_len);
+}
 void uart_protocol_heart_inc_time_out(void)
 {
     protocol_time_out = system_inc_time_cnt(HEART_TIME_OUT);
@@ -72,118 +116,77 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
     switch (packet->cmd)
     {
         HANDLER_IMPORT(UP_CMD_ACK_HEART)        // (0xAA)   // 心跳应答
-
+        HANDLER_IMPORT(UP_CMD_ACK_KEY)          // (0x60)   // 按键事件
     default:
         return 0;
     }
 }
 #undef HANDLER_IMPORT
 
-/**
- * @brief UART协议接收数据处理函数
- * @param data 接收的原始数据指针（非NULL）
- * @param len  接收的数据长度（>0）
- * @return 0：处理成功；0xff：处理失败（校验/参数错误）
- */
 uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
 {
-    uint8_t ret = 0xff; // 默认返回失败
-    uart_packet_t uart_packet;
-
-    // ========== 1. 基础参数校验 ==========
-    // 空指针/长度为0/非法长度直接返回失败
-    if (data == NULL || len == 0)
-    {
-        OB_LOGE(TAG, "[%s] invalid param: data=%p, len=%d", __func__, data, len);
-        return ret;
+    if (data == NULL || len < LOCK_PACKET_HEAD_SIZE) {
+        return 0xff;
     }
 
-    // ========== 2. 动态缓冲区长度校验（适配UART0/UART1） ==========
     uint16_t max_buf_len = CURRENT_UART_BUF_LEN;
-    // 校验BACK_UART_SEL合法性
-    if (max_buf_len == 0)
-    {
-        OB_LOGE(TAG, "[%s] invalid BACK_UART_SEL: %d", __func__, BACK_UART_SEL);
-        return ret;
+    if (max_buf_len == 0 || len > max_buf_len) {
+        return 0xff;
     }
-    // 校验数据长度不超过当前UART缓冲区最大值
-    if (len > max_buf_len)
-    {
-        OB_LOGE(TAG, "[%s] len=%d exceed max size(%d)", __func__, len, max_buf_len);
-        return ret;
+
+    uart_packet_t* pkt = (uart_packet_t*)data;
+
+    // 1. 帧头
+    if (pkt->mark != LOCK_PACKET_MARK) {
+        OB_LOGE(TAG, "invalid mark: 0x%02X", pkt->mark);
+        return 0xff;
     }
-#if (ENCRYPT_EN == false)
-    // ========== 3. 安全打印日志（避免数组越界） ==========
-    // 仅当数据长度≥8时才打印cmd（data[7]），否则提示长度不足
-    if (len >= 8)
-    {
-        OB_LOGW(TAG, "[uart rx]cmd: 0x%02X, len=%d", data[7], len);
+
+    // 2. 长度
+    uint16_t expect_len = LOCK_PACKET_HEAD_SIZE + pkt->length;
+    if (len < expect_len) {
+        OB_LOGE(TAG, "incomplete: %u < %u", len, expect_len);
+        return 0xff;
     }
-    else
-    {
-        OB_LOGW(TAG, "[uart rx]len=%d < 8, skip cmd print", len);
-    }
-    // 打印原始数据（日志接口需确保data非NULL、len>0，此处已校验）
+
+    // 3. 打印接收信息
+    uint8_t addr = lock_packet_get_addr(pkt->attr);
+    uint8_t enc  = lock_packet_get_enc(pkt->attr);
+    OB_LOGW(TAG, "[uart rx] cmd=0x%02X, sn=%u, len=%u, addr=%u, enc=%u",
+            pkt->cmd, pkt->sn, pkt->length, addr, enc);
     OB_LOGW_DUMP(data, len);
-#endif
-    // ========== 4. 初始化接收结构体 ==========
-    memset(&uart_packet, 0, sizeof(uart_packet_t));
 
-    uint16_t crc_calc_len = len - sizeof(uint16_t);
-    uint16_t calc_crc = crc16_ccitt(data, crc_calc_len);
-    uint16_t recv_crc = (data[crc_calc_len] << 8) | data[crc_calc_len + 1];
-
-    if (calc_crc != recv_crc)
-    {
-        OB_LOGE(TAG, "[%s] CRC check failed! calc=0x%04X, recv=0x%04X", __func__, calc_crc, recv_crc);
-        return ret;
+    // 4. 校验 checksum1（头部 + 密文 payload）
+    uint16_t calc1 = calc_checksum1(data, pkt->length);
+    if (calc1 != pkt->checksum1) {
+        OB_LOGE(TAG, "checksum1 fail: calc=0x%04X, recv=0x%04X",
+                calc1, pkt->checksum1);
+        return 0xff;
     }
 
+    // 5. 解密（如果需要）
 #if (ENCRYPT_EN == true)
-    if (data[2] & 0x80){
-        data_decrypt(data[6], &data[8], (data[5] - 2));
+    if (enc != LOCK_PACKET_ENCRYPT_TYPE_NONE) {
+        data_decrypt(pkt->random, pkt->payload, pkt->length);
+        OB_LOGW(TAG, "[uart rx-decrypt]");
+        OB_LOGW_DUMP(pkt->payload, pkt->length);
     }
-
-    if (len >= 8)
-    {
-        OB_LOGW(TAG, "[uart rx]cmd: 0x%02X, len=%d", data[7], len);
-    }
-    else
-    {
-        OB_LOGW(TAG, "[uart rx]len=%d < 8, skip cmd print", len);
-    }
-
-    OB_LOGW_DUMP(data, len);
 #endif
 
-    // ========== 5. 数据拷贝（区分加密/未加密，简化冗余逻辑） ==========
-    // 原代码中if(1)/else分支逻辑完全一致，可合并；若后续需扩展加密校验，再补充
-    uint8_t encrypt_check_pass = 1; // 加密校验标记（0=失败，1=成功）
-    if (encrypt_check_pass)
-    {
-        if(0)
-        {
-            //校验失败
-            OB_LOGE(TAG, "[%s]  check failed",__func__);
-            return ret;
-        }
-        // 安全拷贝：避免len超过结构体长度导致内存越界
-        uint16_t copy_len = (len > sizeof(uart_packet)) ? sizeof(uart_packet) : len;
-        memcpy(&uart_packet, data, copy_len);
-        ret = 0; // 处理成功
-    }
-    else
-    {
-        // 未加密数据处理
-        memcpy(&uart_packet, data, len);
-        ret = 0;
+    // 6. 校验 checksum2（明文 payload）
+    uint16_t calc2 = calc_checksum2(pkt->payload, pkt->length);
+    if (calc2 != pkt->checksum2) {
+        OB_LOGE(TAG, "checksum2 fail: calc=0x%04X, recv=0x%04X",
+                calc2, pkt->checksum2);
+        return 0xff;
     }
 
-    // ========== 6. 协议业务处理 ==========
-    uart_protocol_try_handle(&uart_packet);
+    // 7. 业务处理
+    uart_protocol_try_handle(pkt);
     uart_protocol_heart_inc_time_out();
     uart_protocol_clean_heart_send_cnt();
-    return ret;
+
+    return 0;
 }
 
 
@@ -195,43 +198,43 @@ void uart_protocol_clean_heart_send_cnt(void)
 
 void uart_protocol_poll(void)
 {
-    if (system_out_time_cnt(protocol_time_out))
-    {
-        uart_protocol_heart_inc_time_out();
-        uart_msg_heartbeat();
-        if (ota_helper_get_state() == OTA_STATE_IDLE)
-        {
-            uart_protocol_heart_send_cnt++;
-            if (uart_protocol_heart_send_cnt > 3)
-            {
+    // if (system_out_time_cnt(protocol_time_out))
+    // {
+    //     uart_protocol_heart_inc_time_out();
+    //     uart_msg_heartbeat();
+    //     if (ota_helper_get_state() == OTA_STATE_IDLE)
+    //     {
+    //         uart_protocol_heart_send_cnt++;
+    //         if (uart_protocol_heart_send_cnt > 3)
+    //         {
                 
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
 }
 
 void uart_protocol_ota_poll(void)
 {
-    if (ota_to_boot_flag == 1)
-    {
-        if (system_out_time_cnt(ota_to_boot_time_out))
-        {
-            ota_helper_set_boot(1);
-        }
-    }
+    // if (ota_to_boot_flag == 1)
+    // {
+    //     if (system_out_time_cnt(ota_to_boot_time_out))
+    //     {
+    //         ota_helper_set_boot(1);
+    //     }
+    // }
 }
 
 void uart_protocol_param_poll(void)
 {
     // 如果数据没同步，则需要发送0x07指令请求
-    if (param_data_flag == false)
-    {
-        if (system_out_time_cnt(param_data_time_out))
-        {
-            param_data_time_out = system_inc_time_cnt(PARAM_DATA_TIME_OUT);
-            uart_msg_param_req();
-        }
-    }
+    // if (param_data_flag == false)
+    // {
+    //     if (system_out_time_cnt(param_data_time_out))
+    //     {
+    //         param_data_time_out = system_inc_time_cnt(PARAM_DATA_TIME_OUT);
+    //         uart_msg_param_req();
+    //     }
+    // }
 }
 
 

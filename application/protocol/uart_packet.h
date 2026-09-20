@@ -14,34 +14,41 @@
 #include "hal_uart.h"
 /***********Macro***********/
 
-/***********Enum***********/
-
 /***********Struct***********/
 #pragma pack(1)
 typedef struct
 {
-    uint16_t frame_start;        // 帧起始标志
-    uint8_t control_version : 7; // 版本号
-    uint8_t encrypt : 1;         // 加密控制位
-    uint8_t tycmd;               // 命令字
-    uint16_t tylength;           // 数据长度
-    uint8_t TSN;                 // 时间序列号
-    uint8_t cmd;                 // 命令字
-    uint16_t length;             // 数据长度
-    // union
-    // {
-    //     uint8_t data[12]; // 数据域
-    // };
-#if (BACK_UART_SEL == UART0)
-    uint8_t payload[UART0_BUF_LEN]; // UART0对应长度
-#elif (BACK_UART_SEL == UART1)
-    uint8_t payload[UART1_BUF_LEN]; // UART1对应长度
-#else
-    #error "BACK_UART_SEL must be UART0 or UART1!"
-#endif
+    uint8_t  mark;          // 0xA5
+    uint8_t  attr;          // bit0-3=地址, bit4-5=加密类型
+    uint16_t checksum1;     // 头部校验 = SUM(序号~数据内容)
+    uint16_t sn;            // 序列号
+    uint8_t  cmd;           // 命令字
+    uint8_t  random;        // 随机数
+    uint16_t checksum2;     // 数据校验 = SUM(加密前数据内容)
+    uint16_t length;        // 数据长度（payload 字节数）
+    uint8_t  payload[];     // 数据内容（加密后）
 } uart_packet_t;
 
 #pragma pack()
+
+/***********Enum***********/
+#define LOCK_PACKET_MARK                (0xA5)
+#define LOCK_PACKET_HEAD_SIZE           (sizeof(uart_packet_t))   // 12 字节
+
+// attr 位定义
+#define LOCK_PACKET_ATTR_ADDR_MASK      (0x0F)
+#define LOCK_PACKET_ATTR_ENC_MASK       (0x30)
+#define LOCK_PACKET_ATTR_ENC_SHIFT      (4)
+
+// 地址定义
+#define LOCK_PACKET_ADDR_TEST           (0)  // 测试架
+#define LOCK_PACKET_ADDR_FRONT          (1)  // 前板
+#define LOCK_PACKET_ADDR_BACK           (2)  // 背板
+#define LOCK_PACKET_ADDR_WIFI           (3)  // 猫眼
+
+// 加密类型
+#define LOCK_PACKET_ENCRYPT_TYPE_NONE   (0)
+#define LOCK_PACKET_ENCRYPT_TYPE_XOR    (1)
 
 /***********Variable***********/
 

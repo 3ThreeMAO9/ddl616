@@ -15,6 +15,7 @@
 #include "task_uart.h"
 #include "msg_protocol.h"
 
+#include "event.h"
 
 /***********Macro***********/
 
@@ -70,6 +71,10 @@
 #define STATUS_FAILED                       (0x01)  // 操作失败
 #define STATUS_TSN_DUPLICATE                (0x90)  // TSN序列号重复
 #define STATUS_CRC_ERR                      (0x91)  // 数据校验（CRC）失败
+
+#define UP_CMD_ACK_KEY                      (0x60)  // 按键事件
+
+
 /***********Enum***********/
 
 /***********Struct***********/

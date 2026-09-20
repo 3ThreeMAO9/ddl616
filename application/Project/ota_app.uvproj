@@ -1057,6 +1057,11 @@
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_heart.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_protocol_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_key.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

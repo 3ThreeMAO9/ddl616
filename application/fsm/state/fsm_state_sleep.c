@@ -23,10 +23,6 @@
 
 /***************Function***************/
 
-void lock_wake(void)
-{
-    uart_msg_wake(0x80);
-}
 // ------------------------------------------
 
 QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
@@ -36,6 +32,8 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            me->admin_flag = false;
+
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
             fp_task_set_mode(FP_MODE_SLEEP);
@@ -57,7 +55,6 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
 
             if (HANDLE_EVENT_WAKE == e->dynamic_[0]){
                 OB_LOGW(TAG,"wake [%08X]",e->dynamic_[1]);
-                // lock_wake();
                 if (e->dynamic_[1] == WAKE_UP_TYPE_KEY_BOARD)
                     hmiTaskSetState(HMI_STATE_KEY_BOARD_WAKE_UP);
                 state = Q_TRAN(lock_fsm_idle);

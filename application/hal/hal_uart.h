@@ -21,7 +21,7 @@
 #define UART_BAUDRATE_2000000   (2000000)
 
 // Buf len
-#define UART0_BUF_LEN   (64)
+#define UART0_BUF_LEN   (256)
 #define UART1_BUF_LEN   (64)
 #define UART2_BUF_LEN   (64)
 
