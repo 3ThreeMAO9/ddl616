@@ -38,10 +38,14 @@ static void flash_write_page_flag(uint32_t pageAddr, uint16_t blockSize)
 }
 
 static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8_t pageCnt,
-                                 uint16_t index, uint8_t* pData, uint16_t blockSize)
+                                 uint16_t startIdx, uint16_t blockNum,
+                                 uint8_t* pData, uint16_t blockSize)
 {
     // 安全检查：块大小有效且是其整数倍（确保对齐）
     if (blockSize == 0 || (BATCH_SIZE % blockSize) != 0) {
+        return;
+    }
+    if (blockNum == 0) {
         return;
     }
 
@@ -53,9 +57,11 @@ static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8
 
     // 计算总块数
     blockCnt = (FLASH_ERASE_SIZE / blockSize) * pageCnt;
-    if (index >= blockCnt) {
+    if (startIdx >= blockCnt || startIdx + blockNum > blockCnt) {
         return;
     }
+
+    uint16_t endIdx = startIdx + blockNum;   // 目标区间末尾
 
     // 1. 擦除目标区域
     user_flash_erase(pageAddr, (uint32_t)pageCnt * FLASH_ERASE_SIZE);
@@ -64,7 +70,7 @@ static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8
 
     // 2. 遍历所有块，按对齐批量处理
     for (i = 1; i < blockCnt; i++) {
-        if (i != index) {
+        if (i < startIdx || i >= endIdx) {   // 非目标块
             // 累计连续非目标块
             currentBlocks++;
 
@@ -73,10 +79,10 @@ static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8
                 const uint32_t startIndex = i - currentBlocks + 1;  // 批量起始块索引
                 const uint32_t readAddr = backupAddr + (uint32_t)startIndex * blockSize;
                 const uint32_t writeAddr = pageAddr + (uint32_t)startIndex * blockSize;
-                OB_LOGD(TAG,"user_flash_read readAddr       [%08X] BATCH_SIZE[%08X]",readAddr,BATCH_SIZE);
+                // OB_LOGD(TAG,"user_flash_read readAddr       [%08X] BATCH_SIZE[%08X]",readAddr,BATCH_SIZE);
                 // 一次性读取数据（连续块）
                 user_flash_read(readAddr, buf, BATCH_SIZE);
-                OB_LOGD(TAG,"user_flash_write writeAddr     [%08X] BATCH_SIZE[%08X]",writeAddr,BATCH_SIZE);
+                // OB_LOGD(TAG,"user_flash_write writeAddr     [%08X] BATCH_SIZE[%08X]",writeAddr,BATCH_SIZE);
                 // 一次性写入数据
                 user_flash_write(writeAddr, buf, BATCH_SIZE);
 
@@ -84,7 +90,7 @@ static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8
                 currentBlocks = 0;
                 memset(buf, 0xFF, BATCH_SIZE);
             }
-        } else {
+        } else {                             // 目标块
             // 2.1 先处理已累计但未达的连续块（不足的部分）
             if (currentBlocks > 0) {
                 const uint32_t startIndex = i - currentBlocks;
@@ -93,9 +99,9 @@ static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8
                 const uint32_t writeAddr = pageAddr + (uint32_t)startIndex * blockSize;
 
                 // 读取并写入不足的剩余部分
-                OB_LOGD(TAG,"user_flash_read readAddr       [%08X]  totalSize[%08X]",readAddr,totalSize);
+                // OB_LOGD(TAG,"user_flash_read readAddr       [%08X]  totalSize[%08X]",readAddr,totalSize);
                 user_flash_read(readAddr, buf, totalSize);
-                OB_LOGD(TAG,"user_flash_write writeAddr     [%08X]  totalSize[%08X]",writeAddr,totalSize);
+                // OB_LOGD(TAG,"user_flash_write writeAddr     [%08X]  totalSize[%08X]",writeAddr,totalSize);
                 user_flash_write(writeAddr, buf, totalSize);
 
                 currentBlocks = 0;
@@ -104,8 +110,8 @@ static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8
 
             // 2.2 处理目标块
             const uint32_t targetAddr = pageAddr + (uint32_t)i * blockSize;
-            memcpy(buf, pData, blockSize);
-            OB_LOGD(TAG,"user_flash_write targetAddr    [%08X]  blockSize[%08X]   +++",targetAddr,blockSize);
+            memcpy(buf, pData + (i - startIdx) * blockSize, blockSize);
+            // OB_LOGD(TAG,"user_flash_write targetAddr    [%08X]  blockSize[%08X]   +++",targetAddr,blockSize);
             user_flash_write(targetAddr, buf, blockSize);
         }
     }
@@ -116,9 +122,9 @@ static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8
         const uint32_t totalSize = (uint32_t)currentBlocks * blockSize;
         const uint32_t readAddr = backupAddr + (uint32_t)startIndex * blockSize;
         const uint32_t writeAddr = pageAddr + (uint32_t)startIndex * blockSize;
-        OB_LOGD(TAG,"user_flash_read readAddr       [%08X]  totalSize[%08X]",readAddr,totalSize);
+        // OB_LOGD(TAG,"user_flash_read readAddr       [%08X]  totalSize[%08X]",readAddr,totalSize);
         user_flash_read(readAddr, buf, totalSize);
-        OB_LOGD(TAG,"user_flash_write writeAddr     [%08X]  totalSize[%08X]",writeAddr,totalSize);
+        // OB_LOGD(TAG,"user_flash_write writeAddr     [%08X]  totalSize[%08X]",writeAddr,totalSize);
         user_flash_write(writeAddr, buf, totalSize);
     }
 
@@ -148,24 +154,39 @@ static void user_flash_renew(void)
 
     if (isLoseDataPage(USER_PAGE_START_ADDR)) {
         flash_data_block_renew(USER_PAGE_START_ADDR, USER_PAGE_BACKUP_ADDR, USER_PAGE_CNT,
-                               index, pData, USER_BLOCK_SIZE);
+                               index, 1, pData, USER_BLOCK_SIZE);
     }
 
     if (isLoseDataPage(PARAMETER_PAGE_START_ADDR)) {
         flash_data_block_renew(PARAMETER_PAGE_START_ADDR, PARAMETER_PAGE_BACKUP_ADDR, PARAMETER_PAGE_CNT,
-                               index, pData, DATA_BLOCK_SIZE);
+                               index, 1, pData, DATA_BLOCK_SIZE);
+    }
+
+    // 用户档案页检查
+    if (isLoseDataPage(PROFILE_PAGE_START_ADDR)) {
+        flash_data_block_renew(PROFILE_PAGE_START_ADDR, PROFILE_PAGE_BACKUP_ADDR, PROFILE_PAGE_CNT,
+                               index, 1, pData, PROFILE_BLOCK_SIZE);
     }
 }
 
 static void flash_data_block_modify(uint32_t pageAddr, uint32_t backupAddr, uint8_t pageCnt,
                                     uint16_t index, uint8_t* pData, uint16_t blockSize)
 {
-    OB_LOGW(TAG,"flash_data_block_modify start");
+    // OB_LOGW(TAG,"flash_data_block_modify start");
     //first write backup page
-    flash_data_block_renew(backupAddr, pageAddr, pageCnt, index, pData, blockSize);
+    flash_data_block_renew(backupAddr, pageAddr, pageCnt, index, 1, pData, blockSize);
     //first write data page
-    flash_data_block_renew(pageAddr, backupAddr, pageCnt, index, pData, blockSize);
-    OB_LOGW(TAG,"flash_data_block_modify end");
+    flash_data_block_renew(pageAddr, backupAddr, pageCnt, index, 1, pData, blockSize);
+    // OB_LOGW(TAG,"flash_data_block_modify end");
+}
+
+static void flash_data_block_modify_multi(uint32_t pageAddr, uint32_t backupAddr,
+                                          uint8_t pageCnt, uint16_t startIdx,
+                                          uint16_t blockNum, uint8_t* pData,
+                                          uint16_t blockSize)
+{
+    flash_data_block_renew(backupAddr, pageAddr, pageCnt, startIdx, blockNum, pData, blockSize);
+    flash_data_block_renew(pageAddr, backupAddr, pageCnt, startIdx, blockNum, pData, blockSize);
 }
 
 // -------- 密码用户 (块1~20) --------
@@ -382,10 +403,10 @@ static void flash_user_data_init(void)
 {
 #if (Enabled == PRINTF_FLASH)
     OB_LOGD(TAG, "flash_user_data_init: fixed address layout");
-    OB_LOGD(TAG, "  Code:   %d users, start block %d", PERMANENT_USER_CODE_CNT, BLOCK_INDEX_CODE_START);
-    OB_LOGD(TAG, "  Finger: %d users, start block %d", USER_FINGERPRINTS_CNT, BLOCK_INDEX_FINGER_START);
-    OB_LOGD(TAG, "  Card:   %d users, start block %d", USER_CARD_CNT, BLOCK_INDEX_CARD_START);
-    OB_LOGD(TAG, "  Face:   %d users, start block %d", USER_FACE_CNT, BLOCK_INDEX_FACE_START);
+    OB_LOGD(TAG, "  Code:   %d users,  offset 0x%08X start block %d", PERMANENT_USER_CODE_CNT, USER_OFFSET_CODE_START, BLOCK_INDEX_CODE_START);
+    OB_LOGD(TAG, "  Finger: %d users,  offset 0x%08X start block %d", USER_FINGERPRINTS_CNT, USER_OFFSET_FINGER_START, BLOCK_INDEX_FINGER_START);
+    OB_LOGD(TAG, "  Card:   %d users,  offset 0x%08X start block %d", USER_CARD_CNT, USER_OFFSET_CARD_START, BLOCK_INDEX_CARD_START);
+    OB_LOGD(TAG, "  Face:   %d users,  offset 0x%08X start block %d", USER_FACE_CNT, USER_OFFSET_FACE_START, BLOCK_INDEX_FACE_START);
     OB_LOGD(TAG, "  Total:  %d users, %d blocks, %d pages", 
             USER_CNT, USER_TOTAL_BLOCKS, USER_PAGE_CNT);
 #endif
@@ -416,6 +437,8 @@ void flash_data_init(void)
     OB_LOGD(TAG, "flash_data_init");
     OB_LOGD(TAG, "user addr[0x%08X], backup[0x%08X], cnt[%u]", 
             USER_PAGE_START_ADDR, USER_PAGE_BACKUP_ADDR, USER_PAGE_CNT);
+    OB_LOGD(TAG, "profile addr[0x%08X], backup[0x%08X], cnt[%u]",
+            PROFILE_PAGE_START_ADDR, PROFILE_PAGE_BACKUP_ADDR, PROFILE_PAGE_CNT);
 #endif
 
     user_flash_renew();      // renew data page
@@ -447,6 +470,142 @@ void save_user_data(uint16_t user_sn, uint8_t* pData)
     flash_data_block_modify(addr, backupAddr, 1, blockInPage, temp, USER_BLOCK_SIZE);
 }
 
+// ============================================================
+// 用户档案读写（独立区域）
+// ============================================================
+
+/**
+ * @brief 读取单条用户档案
+ * @param index   档案索引 0~49
+ * @param profile 输出档案数据
+ * @return 1=读取成功，0=参数错误
+ */
+uint8_t read_profile(uint8_t index, user_profile_t* profile)
+{
+    if (index >= PROFILE_COUNT || profile == NULL) {
+        return 0;
+    }
+    uint32_t addr = PROFILE_ADDR(index);
+    user_flash_read(addr, (uint8_t*)profile, sizeof(user_profile_t));
+    return 1;
+}
+
+/**
+ * @brief 保存单条用户档案（双备份）
+ * @param index   档案索引 0~49
+ * @param profile 档案数据
+ */
+void save_profile(uint8_t index, user_profile_t* profile)
+{
+    if (index >= PROFILE_COUNT || profile == NULL) {
+        return;
+    }
+
+    // 准备 64 字节临时缓冲
+    uint8_t temp[PROFILE_USER_SIZE];
+    memset(temp, 0xFF, PROFILE_USER_SIZE);
+    memcpy(temp, profile, sizeof(user_profile_t));
+
+    uint32_t addr = PROFILE_ADDR(index);
+    uint32_t backupAddr = PROFILE_ADDR_BACKUP(index);
+
+    // 页起始地址（4KB 对齐）
+    uint32_t pageStartAddr = (addr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
+    uint32_t backupPageStartAddr = (backupAddr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
+
+    // 页内起始块索引
+    uint32_t blockInPage = (addr - pageStartAddr) / PROFILE_BLOCK_SIZE;
+
+#if (Enabled == PRINTF_FLASH)
+    OB_LOGD(TAG, "save_profile[%u]: addr=0x%08X, page=0x%08X, block=%u",
+            index, addr, pageStartAddr, blockInPage);
+#endif
+
+    // 一次调用，写 2 块
+    flash_data_block_modify_multi(pageStartAddr, backupPageStartAddr, 1,
+                                  blockInPage, PROFILE_BLOCK_PER_USER,
+                                  temp, PROFILE_BLOCK_SIZE);
+    // // 每条档案占 2 块，分两次调用（每次擦除重建整页）
+    // flash_data_block_modify(pageStartAddr, backupPageStartAddr, 1,
+    //                         blockInPage, temp, PROFILE_BLOCK_SIZE);
+    // flash_data_block_modify(pageStartAddr, backupPageStartAddr, 1,
+    //                         blockInPage + 1, temp + PROFILE_BLOCK_SIZE, PROFILE_BLOCK_SIZE);
+}
+
+/**
+ * @brief 通过 user_id 查找档案索引
+ * @param user_id 对外用户 ID
+ * @return 0~49=找到，0xFF=未找到
+ */
+uint8_t find_profile_idx_by_user_id(uint8_t user_id)
+{
+    user_profile_t temp;
+
+    for (uint8_t i = 0; i < PROFILE_COUNT; i++) {
+        read_profile(i, &temp);
+        if (temp.user_id == user_id) {
+            return i;
+        }
+    }
+    return 0xFF;
+}
+
+/**
+ * @brief 通过 user_id 读取档案
+ * @param user_id 对外用户 ID
+ * @param profile 输出档案数据
+ * @return 1=找到并读取，0=未找到
+ */
+uint8_t read_profile_by_user_id(uint8_t user_id, user_profile_t* profile)
+{
+    uint8_t idx = find_profile_idx_by_user_id(user_id);
+    if (idx == 0xFF) {
+        return 0;
+    }
+    return read_profile(idx, profile);
+}
+
+/**
+ * @brief 删除档案（清零）
+ * @param user_id 对外用户 ID
+ */
+void del_profile(uint8_t user_id)
+{
+    uint8_t idx = find_profile_idx_by_user_id(user_id);
+    if (idx == 0xFF) {
+        return;
+    }
+
+    user_profile_t empty;
+    memset(&empty, 0xFF, sizeof(user_profile_t));   // 全部填充 0xFF
+    save_profile(idx, &empty);
+
+#if (Enabled == PRINTF_FLASH)
+    OB_LOGD(TAG, "del_profile: user_id=%u, idx=%u", user_id, idx);
+#endif
+}
+
+/**
+ * @brief 统计有效档案数量
+ * @return 有效档案数
+ */
+uint8_t get_profile_cnt(void)
+{
+    user_profile_t temp;
+    uint8_t cnt = 0;
+
+    for (uint8_t i = 0; i < PROFILE_COUNT; i++) {
+        read_profile(i, &temp);
+        // 判断是否为空：user_id == 0xFF 视为空
+        if (temp.user_id != 0xFF) {
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
+
+
 void save_parameter_data(uint8_t* pData, uint16_t size)
 {
     flash_write_data_pages(PARAMETER_PAGE_START_ADDR, PARAMETER_PAGE_BACKUP_ADDR, pData, size);
@@ -469,5 +628,9 @@ void flash_page_system_init(void)
 
     //wakeup state
     user_flash_erase(WAKEUP_STATE_ADDR, (PARAMETER_PAGE_CNT * FLASH_ERASE_SIZE));
+
+    //用户档案页
+    user_flash_erase(PROFILE_PAGE_BACKUP_ADDR, (PROFILE_PAGE_CNT * FLASH_ERASE_SIZE));
+    user_flash_erase(PROFILE_PAGE_START_ADDR, (PROFILE_PAGE_CNT * FLASH_ERASE_SIZE));
 }
 

@@ -50,6 +50,9 @@
 #define LOG_CNT                                     (200)
 
 //user cnt
+#define PROFILE_USER_CNT                            (PROFILE_COUNT)
+#define PROFILE_NAME_MAX_LEN                        (PROFILE_NAME_LEN)
+
 #define MASTER_USER_CODE_CNT                        (1)
 #define COMMON_USER_CODE_CNT      		            (19)
 #define PERMANENT_USER_CODE_CNT                     (MASTER_USER_CODE_CNT + COMMON_USER_CODE_CNT)

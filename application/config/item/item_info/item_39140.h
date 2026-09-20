@@ -21,7 +21,7 @@
 #define PRINTF_FUN                  Enabled
 
 #define PRINTF_USER                 PRINTF_FUN
-#define PRINTF_FLASH                PRINTF_FUN
+#define PRINTF_FLASH                Disabled
 #define PRINTF_ERR                  PRINTF_FUN
 #define PRINTF_PASSWORD             PRINTF_FUN
 #define PRINTF_MOTOR                Disabled

@@ -8,6 +8,8 @@
 #include "task_key.h"
 #include "led.h"
 #include "flash_data.h"
+#include "hal_rtc.h"
+
 // #include "offlinekey_port.h"
 // #include "offlinekey.h"
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
@@ -366,10 +368,12 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
     uint16_t user_sn;
     uint16_t user_ble_sn;
     user_time_t parameter;
-    parameter.attribute = USER_TYPE_PERMANENT_CODE;
-    parameter.week = 0xFF;
-    parameter.start_time = 0xFFFFFFFF;
-    parameter.end_time = 0xFFFFFFFF;
+
+    // 本地密码录入 user_id = 0xff;为空
+    parameter.user_id = 0xff;
+    parameter.user_policy = USER_POLICY_PERMANENT;
+    parameter.key_urgent = KEY_URGENT_NORMAL;
+    parameter.timestamp = hal_get_rtc_time();
 
 #if (Enabled == PRINTF_PASSWORD)
     OB_LOGD(TAG, "%s  input_cnt: %d", __FUNCTION__, input_cnt);

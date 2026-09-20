@@ -60,4 +60,13 @@ void flash_update_user_cnt(user_key_cnt_t* cnt);
 // ========== 工具函数 ==========
 uint32_t get_user_addr_by_sn(uint16_t user_sn);
 
+// ========== 用户档案读写 ==========
+uint8_t read_profile(uint8_t index, user_profile_t* profile);
+void    save_profile(uint8_t index, user_profile_t* profile);
+uint8_t find_profile_idx_by_user_id(uint8_t user_id);
+uint8_t read_profile_by_user_id(uint8_t user_id, user_profile_t* profile);
+void    del_profile(uint8_t user_id);
+uint8_t get_profile_cnt(void);
+
+
 #endif /* FLASH_DATA__HH */

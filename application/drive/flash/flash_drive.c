@@ -63,50 +63,6 @@ static void flash_write_page_flag(uint32_t pageAddr, uint16_t blockSize)
     flash_write_data_block(pageAddr, 0, dataBlock, blockSize);
 }
 
-static void flash_data_block_renew(uint32_t pageAddr, uint32_t backupAddr, uint8_t pageCnt,
-                                 uint16_t index, uint8_t* pData, uint16_t blockSize)
-{
-	uint16_t i;
-    uint16_t blockCnt;
-    uint8_t dataBlock[DATA_BLOCK_SIZE];
-
-    //write data block
-    user_flash_erase(pageAddr, (pageCnt * FLASH_ERASE_SIZE));
-
-    blockCnt = (FLASH_ERASE_SIZE / blockSize) * pageCnt;
-    
-    for (i = 1; i < blockCnt ; i++)
-    {
-        memset(dataBlock, 0xFF, DATA_BLOCK_SIZE);
-        if(index == i)
-        {
-            memcpy(dataBlock, pData, blockSize);
-        }
-        else
-        {
-            flash_read_data_block(backupAddr, i, dataBlock, blockSize);
-        }
-        flash_write_data_block(pageAddr, i, dataBlock, blockSize);
-    }
-
-    //write page flag
-    flash_write_page_flag(pageAddr, blockSize);
-}
-
-void falsh_data_block_modify( uint32_t pageAddr, 
-                            uint32_t backupAddr, 
-                            uint8_t pageCnt, 
-                            uint16_t index, 
-                            uint8_t* pData, 
-                            uint16_t blockSize)
-{
-    //first write backup page
-    flash_data_block_renew(backupAddr, pageAddr, pageCnt, index, pData, blockSize);
-
-    //first write data page
-    flash_data_block_renew(pageAddr, backupAddr, pageCnt, index, pData, blockSize);
-}
-
 void flash_write_data_pages(uint32_t pageAddr, uint32_t backupAddr, uint8_t* pData, uint16_t size)
 {
     const uint32_t flag = true;

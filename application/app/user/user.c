@@ -2,6 +2,7 @@
 #include "flash_data.h"
 #include "hal_rtc.h"
 #include "timestamp.h"
+#include "system_timer.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -17,7 +18,7 @@ static uint16_t current_user_sn = 0;
 
 static uint16_t g_pending_user_id = 0;
 /***************Function Implementation***************/
-// 用户 ID 位图（每个 bit 表示一个 user_id 是否已用）
+// 用户 ID 位图（每个 bit 表示一个 user_key_id 是否已用）
 #define USER_ID_BITMAP_SIZE     ((USER_CNT + 7) / 8)   // 28 字节
 
 static uint16_t get_next_user_id(void)
@@ -27,37 +28,37 @@ static uint16_t get_next_user_id(void)
     uint8_t i;
     uint16_t id;
 
-    // ---- 遍历所有类型，标记已使用的 user_id ----
+    // ---- 遍历所有类型，标记已使用的 user_key_id ----
     for (i = 0; i < PERMANENT_USER_CODE_CNT; i++) {
         if (read_code_user(i, &temp) && temp.flag) {
-            id = temp.user_id;
+            id = temp.key_user_id;
             if (id > 0 && id <= USER_CNT)
                 used_bitmap[id / 8] |= (1 << (id % 8));
         }
     }
     for (i = 0; i < USER_FINGERPRINTS_CNT; i++) {
         if (read_finger_user(i, &temp) && temp.flag) {
-            id = temp.user_id;
+            id = temp.key_user_id;
             if (id > 0 && id <= USER_CNT)
                 used_bitmap[id / 8] |= (1 << (id % 8));
         }
     }
     for (i = 0; i < USER_CARD_CNT; i++) {
         if (read_card_user(i, &temp) && temp.flag) {
-            id = temp.user_id;
+            id = temp.key_user_id;
             if (id > 0 && id <= USER_CNT)
                 used_bitmap[id / 8] |= (1 << (id % 8));
         }
     }
     for (i = 0; i < USER_FACE_CNT; i++) {
         if (read_face_user(i, &temp) && temp.flag) {
-            id = temp.user_id;
+            id = temp.key_user_id;
             if (id > 0 && id <= USER_CNT)
                 used_bitmap[id / 8] |= (1 << (id % 8));
         }
     }
 
-    // ---- 找最小未使用的 user_id ----
+    // ---- 找最小未使用的 user_key_id ----
     for (id = 1; id <= USER_CNT; id++) {
         if ((used_bitmap[id / 8] & (1 << (id % 8))) == 0) {
             return id;
@@ -139,29 +140,27 @@ void updateUserTable(uint16_t index, user_info_t* user_info)
         {
             if (user_info->key_type == USER_TYPE_PERMANENT_CODE)
             {
-                OB_LOGI(TAG, "user sn[%u], id[%u] type[%u] key id[%u] password len[%d] attribute[%02X] week[%02X] start[%08X] end[%08X]", 
-                        user_info->user_sn, user_info->user_id ,user_info->key_type, user_info->key_id, 
-                        user_info->info.password.len, user_info->parameter.attribute, 
-                        user_info->parameter.week, user_info->parameter.start_time, 
-                        user_info->parameter.end_time);
+                OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] password len[%d]", 
+                        user_info->key_sn, user_info->key_user_id ,user_info->key_type, user_info->key_id, 
+                        user_info->info.password.len);
                 OB_LOGI_DUMP(&user_info->info.password.buffer, user_info->info.password.len);
             }
             else if (user_info->key_type == USER_TYPE_PERMANENT_FINGERPRINTS)
             {
-                OB_LOGI(TAG, "user sn[%u], id[%u] type[%u] key id[%u] finger id %04X", 
-                        user_info->user_sn, user_info->user_id, user_info->key_type, user_info->key_id, 
+                OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] finger id %04X", 
+                        user_info->key_sn, user_info->key_user_id, user_info->key_type, user_info->key_id, 
                         user_info->info.finger.id);
             }
             else if (user_info->key_type == USER_TYPE_PERMANENT_CARD)
             {
-                OB_LOGI(TAG, "user sn[%u], id[%u] type[%u] key id[%u] nfc id", 
-                        user_info->user_sn, user_info->user_id, user_info->key_type, user_info->key_id);
+                OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] nfc id", 
+                        user_info->key_sn, user_info->key_user_id, user_info->key_type, user_info->key_id);
                 OB_LOGI_DUMP(&user_info->info.card.id, 4);
             }
             else if (user_info->key_type == USER_TYPE_PERMANENT_FACE)
             {
-                OB_LOGI(TAG, "user sn[%u], id[%u] type[%u] key id[%u] face id %04X", 
-                        user_info->user_sn, user_info->user_id, user_info->key_type, user_info->key_id, 
+                OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] face id %04X", 
+                        user_info->key_sn, user_info->key_user_id, user_info->key_type, user_info->key_id, 
                         user_info->info.face.id);
             }
         }
@@ -212,7 +211,7 @@ static uint8_t compareUserCode(uint8_t* input, uint8_t input_len, uint16_t index
     // 精确匹配
     if (input_len == user->info.password.len) {
         if (compare_arrays(input, user->info.password.buffer, user->info.password.len)) {
-            *user_id = user->user_id;
+            *user_id = user->key_user_id;
             return true;
         }
     }
@@ -220,7 +219,7 @@ static uint8_t compareUserCode(uint8_t* input, uint8_t input_len, uint16_t index
     else if (dummy_flag && (input_len > user->info.password.len)) {
         for (i = 0; i < (input_len - user->info.password.len + 1); i++) {
             if (compare_arrays(&input[i], user->info.password.buffer, user->info.password.len)) {
-                *user_id = user->user_id;
+                *user_id = user->key_user_id;
                 return true;
             }
         }
@@ -390,10 +389,15 @@ uint8_t compareUserParameter(uint16_t index)
         return false;
     }
     
-    uint8_t attribute = user->parameter.attribute;
-    uint8_t week = user->parameter.week;
-    uint32_t start_time = user->parameter.start_time;
-    uint32_t end_time = user->parameter.end_time + 59;
+    // uint8_t attribute = user->parameter.attribute;
+    // uint8_t week = user->parameter.week;
+    // uint32_t start_time = user->parameter.start_time;
+    // uint32_t end_time = user->parameter.end_time + 59;
+    uint8_t attribute = 0;
+    uint8_t week = 0;
+    uint32_t start_time = 0;
+    uint32_t end_time = 0;
+
     uint32_t local_time = 0; // 后续实现
 
     switch (attribute)
@@ -452,11 +456,8 @@ uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, ui
             {
                 if(time_flag == true)
                 {
-                    if(true == compareUserParameter(i))
-                    {
-                        *user_id = matched_id;
-                        return true;
-                    }
+                    *user_id = matched_id;
+                    return true;
                 }
                 else
                 {
@@ -497,7 +498,7 @@ uint8_t isValidUserFingerprint(uint16_t* user_id)
             
             if(user->info.finger.id == finger_id)
             {
-                *user_id = user->user_id;
+                *user_id = user->key_user_id;
 #if (Enabled == PRINTF_USER)
                 OB_LOGD(TAG,"isValidUserFingerprint[%u]", *user_id);
 #endif
@@ -532,7 +533,7 @@ uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id)
             
             if (0 == memcmp(card_id, user->info.card.id, 4))
             {
-                *user_id = user->user_id;
+                *user_id = user->key_user_id;
 #if (Enabled == PRINTF_USER)
                 OB_LOGD(TAG,"isValidUserCard[%u]", *user_id);
 #endif
@@ -546,47 +547,6 @@ uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id)
 #endif
     return false;
 }
-
-// /**
-//  * @brief 验证人脸用户
-//  */
-// uint8_t isValidUserFace(uint16_t* user_sn)
-// {
-//     uint16_t i;
-//     uint16_t face_id = *user_sn;
-
-//     if(isEmptyUser(false))
-//     {
-// #if (Enabled == PRINTF_USER)
-//         OB_LOGD(TAG,"EmptyUser");
-// #endif
-//         return false;
-//     }
-//     else
-//     {
-//         for (i = 0; i < USER_FACE_CNT; i++)
-//         {
-//             user_info_t* user = get_user_data(PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT + i + 1);
-//             if (!user || !user->flag || user->key_type != USER_TYPE_PERMANENT_FACE) {
-//                 continue;
-//             }
-            
-//             if(user->info.face.id == face_id)
-//             {
-//                 *user_sn = user->user_sn;
-// #if (Enabled == PRINTF_USER)
-//                 OB_LOGD(TAG,"isValidUserFace[%u]", *user_sn);
-// #endif
-//                 return true;
-//             }
-//         }
-//     }
-
-// #if (Enabled == PRINTF_USER)
-//     OB_LOGD(TAG,"face is invalid");
-// #endif
-//     return false;
-// }
 
 static uint8_t readEmptyUserId(uint16_t* user_sn, uint8_t userType)
 {
@@ -725,17 +685,18 @@ uint8_t addUserCode(uint8_t *input, uint8_t len, uint8_t userType, uint16_t *use
         }
         
         user_info.flag = true;
-        user_info.user_sn = user_sn;
-        user_info.user_id = g_pending_user_id;
+        user_info.key_sn = user_sn;
+        user_info.key_user_id = g_pending_user_id;
         user_info.key_type = userType;
         user_info.info.password.len = len;
         user_info.key_id = read_empty_min_key_id(userType);
 
-        user_info.parameter.attribute = para->attribute;
-        user_info.parameter.week = para->week;
-        user_info.parameter.start_time = para->start_time;
-        user_info.parameter.end_time = para->end_time;
-        *user_id = user_info.user_id;
+        user_info.parameter.user_id = para->user_id;
+        user_info.parameter.user_policy = para->user_policy;
+        user_info.parameter.key_urgent = para->key_urgent;
+        user_info.parameter.timestamp = para->timestamp;
+
+        *user_id = user_info.key_user_id;
         
         memcpy(user_info.info.password.buffer, input, len);
         
@@ -784,16 +745,16 @@ void modifyUserCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* p
     uint8_t slot = user_sn - 1;
     
     user_info.flag = true;
-    user_info.user_sn = user_sn;
-    user_info.user_id = old_user->user_id;
+    user_info.key_sn = user_sn;
+    user_info.key_user_id = old_user->key_user_id;
     user_info.key_type = USER_TYPE_PERMANENT_CODE;
     user_info.info.password.len = len;
     user_info.key_id = old_user->key_id;
 
-    user_info.parameter.attribute = para->attribute;
-    user_info.parameter.week = para->week;
-    user_info.parameter.start_time = para->start_time;
-    user_info.parameter.end_time = para->end_time;
+    user_info.parameter.user_id = 0x00;
+    user_info.parameter.user_policy = USER_POLICY_PERMANENT;
+    user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
+    user_info.parameter.timestamp = hal_get_rtc_time();
 
     memcpy(user_info.info.password.buffer, input, len);
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
@@ -817,10 +778,10 @@ void moidfyUserParameter(uint8_t user_sn, user_time_t* para)
     if (!old_user) return;
     
     user_info_t user_info = *old_user;
-    user_info.parameter.attribute = para->attribute;
-    user_info.parameter.week = para->week;
-    user_info.parameter.start_time = para->start_time;
-    user_info.parameter.end_time = para->end_time;
+    user_info.parameter.user_id = 0x00;
+    user_info.parameter.user_policy = USER_POLICY_PERMANENT;
+    user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
+    user_info.parameter.timestamp = hal_get_rtc_time();
 
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
     save_user_data(user_sn, (uint8_t*)(&user_info));
@@ -841,7 +802,7 @@ void modifyUserAttribute(uint8_t user_sn, uint8_t attribute)
     if (!old_user) return;
     
     user_info_t user_info = *old_user;
-    user_info.parameter.attribute = attribute;
+    // user_info.parameter.attribute = attribute;
 
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
     save_user_data(user_sn, (uint8_t*)(&user_info));
@@ -865,30 +826,30 @@ uint8_t addUserFinger(uint16_t id, uint16_t* userSn)
         uint8_t slot = *userSn - PERMANENT_USER_CODE_CNT - 1;
         
         user_info.flag = true;
-        user_info.user_sn = (*userSn);
-        user_info.user_id = g_pending_user_id;
+        user_info.key_sn = (*userSn);
+        user_info.key_user_id = g_pending_user_id;
         user_info.key_type = USER_TYPE_PERMANENT_FINGERPRINTS;
         user_info.info.finger.id = id;
         user_info.key_id = read_empty_min_key_id(USER_TYPE_PERMANENT_FINGERPRINTS);
 
-        user_info.parameter.attribute = PERMANENT_KEY;
-        user_info.parameter.week = 0xFF;
-        user_info.parameter.start_time = 0xFFFFFFFF;
-        user_info.parameter.end_time = 0xFFFFFFFF;
+        user_info.parameter.user_id = 0x00;
+        user_info.parameter.user_policy = USER_POLICY_PERMANENT;
+        user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
+        user_info.parameter.timestamp = hal_get_rtc_time();
 
         user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
         save_finger_user(slot, &user_info);
 
-        if (current_user_sn == user_info.user_sn) {
+        if (current_user_sn == user_info.key_sn) {
             memcpy(&current_user, &user_info, sizeof(user_info_t));
         }
         updateUserCnt();
 
-        *userSn = user_info.user_id;
+        *userSn = user_info.key_user_id;
 
 #if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG,"add user finger: sn[%u], user_id[%u], finger[%u], key_id[%u]", 
-                user_info.user_sn, user_info.user_id, id, user_info.key_id);
+        OB_LOGD(TAG,"add user finger: sn[%u], user_key_id[%u], finger[%u], key_id[%u]", 
+                user_info.key_sn, user_info.key_user_id, id, user_info.key_id);
 #endif
         return true;
     }
@@ -905,31 +866,31 @@ uint8_t addUserCard(uint8_t* card_id, uint16_t* userSn)
         uint8_t slot = *userSn - PERMANENT_USER_CODE_CNT - USER_FINGERPRINTS_CNT - 1;
         
         user_info.flag = true;
-        user_info.user_sn = (*userSn);
-        user_info.user_id = g_pending_user_id;
+        user_info.key_sn = (*userSn);
+        user_info.key_user_id = g_pending_user_id;
         user_info.key_type = USER_TYPE_PERMANENT_CARD;
         user_info.key_id = read_empty_min_key_id(USER_TYPE_PERMANENT_CARD);
 
-        user_info.parameter.attribute = PERMANENT_KEY;
-        user_info.parameter.week = 0xFF;
-        user_info.parameter.start_time = 0xFFFFFFFF;
-        user_info.parameter.end_time = 0xFFFFFFFF;
+        user_info.parameter.user_id = 0x00;
+        user_info.parameter.user_policy = USER_POLICY_PERMANENT;
+        user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
+        user_info.parameter.timestamp = hal_get_rtc_time();
 
         memcpy(user_info.info.card.id, card_id, 4);
         
         user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
         save_card_user(slot, &user_info);
 
-        if (current_user_sn == user_info.user_sn) {        // ← 用内部 SN 判断缓存
+        if (current_user_sn == user_info.key_sn) {        // ← 用内部 SN 判断缓存
             memcpy(&current_user, &user_info, sizeof(user_info_t));
         }
         updateUserCnt();
 
-        *userSn = user_info.user_id;
+        *userSn = user_info.key_user_id;
 
 #if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG,"add user card: sn[%u], user_id[%u], key_id[%u], card[%02X %02X %02X %02X]", 
-                user_info.user_sn, user_info.user_id, user_info.key_id, 
+        OB_LOGD(TAG,"add user card: sn[%u], user_key_id[%u], key_id[%u], card[%02X %02X %02X %02X]", 
+                user_info.key_sn, user_info.key_user_id, user_info.key_id, 
                 card_id[0], card_id[1], card_id[2], card_id[3]);
 #endif
         return true;
@@ -943,16 +904,16 @@ void modifyUserMasterCode(uint8_t* input, uint8_t len)
     user_info_t user_info;
     
     user_info.flag = true;
-    user_info.user_sn = 1;
-    user_info.user_id = 0;
+    user_info.key_sn = 1;
+    user_info.key_user_id = 0;
     user_info.key_type = USER_TYPE_PERMANENT_CODE;
     user_info.info.password.len = len;
     user_info.key_id = 0;
 
-    user_info.parameter.attribute = PERMANENT_KEY;
-    user_info.parameter.week = 0xFF;
-    user_info.parameter.start_time = 0xFFFFFFFF;
-    user_info.parameter.end_time = 0xFFFFFFFF;
+    user_info.parameter.user_id = 0x00;
+    user_info.parameter.user_policy = USER_POLICY_PERMANENT;
+    user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
+    user_info.parameter.timestamp = hal_get_rtc_time();
 
     memcpy(user_info.info.password.buffer, input, len);
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
@@ -1067,3 +1028,425 @@ uint8_t getUserFingerID(uint16_t *user_sn, uint16_t id)
     }
     return false;
 }
+
+// ============================================================
+// 用户档案业务层
+// ============================================================
+
+/**
+ * @brief 创建用户档案
+ * @param user_id 对外 ID（g_pending_user_id）
+ * @param name    用户名，可为 NULL（默认 "User"）
+ * @return 1=成功，0=失败（已存在/已满）
+ */
+uint8_t user_profile_add(uint16_t user_id, const char* name)
+{
+    // 1. 检查 user_id 是否已存在
+    if (find_profile_idx_by_user_id((uint8_t)user_id) != 0xFF) {
+        OB_LOGW(TAG, "user_profile_add: user_id %u already exists", user_id);
+        return 0;
+    }
+
+    // 2. 找空闲槽位
+    user_profile_t temp;
+    uint8_t idx = 0xFF;
+    for (uint8_t i = 0; i < PROFILE_COUNT; i++) {
+        read_profile(i, &temp);
+        if (temp.user_id == 0xFF) {     // 空槽位
+            idx = i;
+            break;
+        }
+    }
+    if (idx == 0xFF) {
+        OB_LOGE(TAG, "user_profile_add: profile table full");
+        return 0;
+    }
+
+    // 3. 填充默认档案
+    user_profile_t profile;
+    memset(&profile, 0, sizeof(user_profile_t));
+
+    profile.user_id        = (uint8_t)user_id;
+    profile.policy         = 0;                              // 默认永久
+    profile.timestamp      = hal_get_rtc_time();
+    profile.effective_date = 0xFFFFFFFF;
+    profile.expire_date    = 0xFFFFFFFF;
+    profile.valid_day      = 0xFF;
+    profile.effective_time = 0xFFFFFFFF;
+    profile.expire_time    = 0xFFFFFFFF;
+
+    if (name != NULL && name[0] != '\0') {
+        strncpy(profile.user_name, name, PROFILE_NAME_LEN - 1);
+        profile.user_name[PROFILE_NAME_LEN - 1] = '\0';
+    } else {
+        snprintf(profile.user_name, PROFILE_NAME_LEN, "User%d", user_id);
+    }
+
+    // 4. 保存
+    save_profile(idx, &profile);
+
+#if (Enabled == PRINTF_USER)
+    OB_LOGI(TAG, "user_profile_add: id=%u, idx=%u, name=%s",
+            user_id, idx, profile.user_name);
+#endif
+    return 1;
+}
+
+/**
+ * @brief 更新用户档案（改昵称、有效期、策略等）
+ * @param user_id 对外 ID
+ * @param profile 新的档案数据（完整的 user_profile_t）
+ * @return 1=成功，0=未找到
+ */
+uint8_t user_profile_update(uint16_t user_id, user_profile_t* profile)
+{
+    if (profile == NULL) return 0;
+
+    uint8_t idx = find_profile_idx_by_user_id((uint8_t)user_id);
+    if (idx == 0xFF) {
+        OB_LOGW(TAG, "user_profile_update: user_id %u not found", user_id);
+        return 0;
+    }
+
+    // 保持 user_id 不变
+    profile->user_id = (uint8_t)user_id;
+    profile->timestamp = hal_get_rtc_time();    // 更新编辑时间
+
+    save_profile(idx, profile);
+
+#if (Enabled == PRINTF_USER)
+    OB_LOGI(TAG, "user_profile_update: id=%u, idx=%u", user_id, idx);
+#endif
+    return 1;
+}
+
+/**
+ * @brief 删除用户档案
+ * @param user_id 对外 ID
+ */
+void user_profile_delete(uint16_t user_id)
+{
+    del_profile((uint8_t)user_id);
+
+#if (Enabled == PRINTF_USER)
+    OB_LOGI(TAG, "user_profile_delete: id=%u", user_id);
+#endif
+}
+
+/**
+ * @brief 获取用户名
+ * @param user_id 对外 ID
+ * @param buf     输出缓冲区
+ * @param len     缓冲区长度
+ * @return 1=成功，0=未找到
+ */
+uint8_t user_get_name(uint16_t user_id, char* buf, uint8_t len)
+{
+    if (buf == NULL || len == 0) return 0;
+
+    user_profile_t profile;
+    if (!read_profile_by_user_id((uint8_t)user_id, &profile)) {
+        return 0;
+    }
+
+    strncpy(buf, profile.user_name, len - 1);
+    buf[len - 1] = '\0';
+    return 1;
+}
+
+/**
+ * @brief 获取完整档案
+ * @param user_id 对外 ID
+ * @param profile 输出
+ * @return 1=成功，0=未找到
+ */
+uint8_t user_get_profile(uint16_t user_id, user_profile_t* profile)
+{
+    if (profile == NULL) return 0;
+    return read_profile_by_user_id((uint8_t)user_id, profile);
+}
+
+/**
+ * @brief 检查用户当前是否在有效期内
+ * @param user_id 对外 ID
+ * @return 1=有效，0=无效或未找到
+ */
+uint8_t user_is_valid_period(uint16_t user_id)
+{
+    user_profile_t profile;
+    if (!read_profile_by_user_id((uint8_t)user_id, &profile)) {
+        return 0;
+    }
+
+    // 永久策略：直接有效
+    if (profile.policy == 0) {
+        return 1;
+    }
+
+    // 自定义策略：检查日期、周、时段
+    uint32_t now = hal_get_rtc_time();
+    if (now == 0) {
+        // RTC 未初始化，无法判断，默认放行
+        return 1;
+    }
+
+    // 1. 日期范围
+    if (now < profile.effective_date || now > profile.expire_date) {
+#if (Enabled == PRINTF_USER)
+        OB_LOGD(TAG, "user %u: out of date range", user_id);
+#endif
+        return 0;
+    }
+
+    // 2. 周几判断
+    struct tm* lt = localtime((time_t*)&now);
+    if (lt == NULL) return 0;
+
+    if ((profile.valid_day & (1 << lt->tm_wday)) == 0) {
+#if (Enabled == PRINTF_USER)
+        OB_LOGD(TAG, "user %u: not valid on weekday %d", user_id, lt->tm_wday);
+#endif
+        return 0;
+    }
+
+    // 3. 时段判断
+    uint32_t sec = lt->tm_hour * 3600 + lt->tm_min * 60 + lt->tm_sec;
+    if (sec < profile.effective_time || sec >= profile.expire_time) {
+#if (Enabled == PRINTF_USER)
+        OB_LOGD(TAG, "user %u: out of time range (%u)", user_id, sec);
+#endif
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief 获取有效用户总数（用于 BLE 上报、HMI 显示）
+ * @return 用户数量
+ */
+uint8_t user_get_total_cnt(void)
+{
+    return get_profile_cnt();
+}
+
+#if 0
+/**
+ * @brief 清空所有用户档案（恢复出厂设置时调用）
+ */
+void user_profile_clear_all(void)
+{
+    user_flash_erase(PROFILE_PAGE_BACKUP_ADDR, (PROFILE_PAGE_CNT * FLASH_ERASE_SIZE));
+    user_flash_erase(PROFILE_PAGE_START_ADDR, (PROFILE_PAGE_CNT * FLASH_ERASE_SIZE));
+
+#if (Enabled == PRINTF_USER)
+    OB_LOGW(TAG, "user_profile_clear_all: all profiles cleared");
+#endif
+}
+
+void test_user_profile_basic(void)
+{
+    OB_LOGI(TAG, "========== Test: Profile Basic ==========");
+
+    // 1. 清空所有档案
+    user_profile_clear_all();
+    OB_LOGI(TAG, "Cleared, total = %u", user_get_total_cnt());
+
+    // 2. 添加 3 个用户
+    user_profile_add(1, "Alice");
+    user_profile_add(2, "Bob");
+    user_profile_add(3, "Charlie");
+    OB_LOGI(TAG, "Added 3 users, total = %u", user_get_total_cnt());
+
+    // 3. 读取用户名
+    char name[PROFILE_NAME_LEN];
+    if (user_get_name(1, name, sizeof(name))) {
+        OB_LOGI(TAG, "user 1 name = %s", name);
+    }
+    if (user_get_name(2, name, sizeof(name))) {
+        OB_LOGI(TAG, "user 2 name = %s", name);
+    }
+
+    // 4. 修改 user 2 的名字
+    user_profile_t profile;
+    if (user_get_profile(2, &profile)) {
+        strncpy(profile.user_name, "Bobby", PROFILE_NAME_LEN - 1);
+        user_profile_update(2, &profile);
+        OB_LOGI(TAG, "Updated user 2 name");
+    }
+    if (user_get_name(2, name, sizeof(name))) {
+        OB_LOGI(TAG, "user 2 new name = %s", name);
+    }
+
+    // 5. 删除 user 3
+    user_profile_delete(3);
+    OB_LOGI(TAG, "Deleted user 3, total = %u", user_get_total_cnt());
+
+    // 6. 验证删除后无法读取
+    if (!user_get_name(3, name, sizeof(name))) {
+        OB_LOGI(TAG, "user 3 correctly not found");
+    }
+
+    OB_LOGI(TAG, "========== Test Complete ==========");
+}
+
+void test_user_profile_period(void)
+{
+    OB_LOGI(TAG, "========== Test: Profile Period ==========");
+
+    user_profile_clear_all();
+
+    uint32_t now = hal_get_rtc_time();
+
+    // 1. 永久有效用户
+    user_profile_add(1, "Permanent");
+    OB_LOGI(TAG, "user 1 (permanent) valid = %u", user_is_valid_period(1));
+
+    // 2. 自定义 - 有效期内
+    user_profile_add(2, "Valid");
+    user_profile_t profile;
+    if (user_get_profile(2, &profile)) {
+        profile.policy         = 1;
+        profile.effective_date = now - 3600;        // 1 小时前生效
+        profile.expire_date    = now + 3600;        // 1 小时后失效
+        profile.valid_day      = 0x7F;              // 周一~周日
+        profile.effective_time = 0;
+        profile.expire_time    = 86400;
+        user_profile_update(2, &profile);
+    }
+    OB_LOGI(TAG, "user 2 (valid period) valid = %u", user_is_valid_period(2));
+
+    // 3. 自定义 - 已过期
+    user_profile_add(3, "Expired");
+    if (user_get_profile(3, &profile)) {
+        profile.policy         = 1;
+        profile.effective_date = now - 7200;
+        profile.expire_date    = now - 3600;        // 1 小时前失效
+        profile.valid_day      = 0x7F;
+        profile.effective_time = 0;
+        profile.expire_time    = 86400;
+        user_profile_update(3, &profile);
+    }
+    OB_LOGI(TAG, "user 3 (expired) valid = %u", user_is_valid_period(3));
+
+    // 4. 自定义 - 未生效
+    user_profile_add(4, "Future");
+    if (user_get_profile(4, &profile)) {
+        profile.policy         = 1;
+        profile.effective_date = now + 3600;        // 1 小时后生效
+        profile.expire_date    = now + 7200;
+        profile.valid_day      = 0x7F;
+        profile.effective_time = 0;
+        profile.expire_time    = 86400;
+        user_profile_update(4, &profile);
+    }
+    OB_LOGI(TAG, "user 4 (future) valid = %u", user_is_valid_period(4));
+
+    OB_LOGI(TAG, "========== Test Complete ==========");
+}
+
+void test_user_profile_boundary(void)
+{
+    OB_LOGI(TAG, "========== Test: Profile Boundary ==========");
+
+    user_profile_clear_all();
+
+    // 1. 加满 50 个用户
+    uint32_t start = system_ms_get();
+    for (uint16_t i = 1; i <= PROFILE_COUNT; i++) {
+        clear_feed_dog_cnt();
+        if (!user_profile_add(i, NULL)) {
+            OB_LOGE(TAG, "Add user %u failed", i);
+        }
+    }
+    uint32_t elapsed = system_ms_get() - start;
+    OB_LOGI(TAG, "Added %u users, elapsed = %u ms", PROFILE_COUNT, elapsed);
+    OB_LOGI(TAG, "Total = %u (expected %u)", user_get_total_cnt(), PROFILE_COUNT);
+
+    // 2. 再加一个（应该失败，表满）
+    if (!user_profile_add(PROFILE_COUNT + 1, "Overflow")) {
+        OB_LOGI(TAG, "Overflow correctly rejected");
+    }
+
+    // 3. 重复 user_id（应该失败）
+    if (!user_profile_add(1, "Duplicate")) {
+        OB_LOGI(TAG, "Duplicate correctly rejected");
+    }
+
+    // 4. 删除中间一个，再加一个（应该复用空槽）
+    user_profile_delete(25);
+    OB_LOGI(TAG, "Deleted user 25, total = %u", user_get_total_cnt());
+
+    if (user_profile_add(100, "Reused")) {
+        OB_LOGI(TAG, "Added user 100, total = %u", user_get_total_cnt());
+    }
+
+    // 5. 遍历打印所有
+    user_profile_t profile;
+    uint8_t cnt = 0;
+    for (uint8_t i = 0; i < PROFILE_COUNT; i++) {
+        read_profile(i, &profile);
+        if (profile.user_id != 0xFF) {
+            cnt++;
+        }
+    }
+    OB_LOGI(TAG, "Traverse count = %u", cnt);
+
+    OB_LOGI(TAG, "========== Test Complete ==========");
+}
+
+void test_user_profile_perf(void)
+{
+    OB_LOGI(TAG, "========== Test: Profile Performance ==========");
+
+    user_profile_clear_all();
+
+    // 测单条写入
+    uint32_t start = system_ms_get();
+    user_profile_add(1, "Perf");
+    uint32_t elapsed = system_ms_get() - start;
+    OB_LOGI(TAG, "Add single profile: %u ms", elapsed);
+
+    // 测单条读取
+    user_profile_t profile;
+    start = system_ms_get();
+    for (int i = 0; i < 100; i++) {
+        user_get_profile(1, &profile);
+    }
+    elapsed = system_ms_get() - start;
+    OB_LOGI(TAG, "Read 100 times: %u ms (avg %u us)", elapsed, elapsed * 10);
+
+    // 测查找
+    start = system_ms_get();
+    for (int i = 0; i < 100; i++) {
+        find_profile_idx_by_user_id(1);
+    }
+    elapsed = system_ms_get() - start;
+    OB_LOGI(TAG, "Find 100 times: %u ms", elapsed);
+
+    OB_LOGI(TAG, "========== Test Complete ==========");
+}
+
+void test_user_profile_all(void)
+{
+    OB_LOGW(TAG, "============ PROFILE TEST START ============");
+    clear_feed_dog_cnt();
+    test_user_profile_basic();
+
+    clear_feed_dog_cnt();
+    test_user_profile_period();
+
+    clear_feed_dog_cnt();
+    test_user_profile_boundary();
+
+    clear_feed_dog_cnt();
+    test_user_profile_perf();
+
+    clear_feed_dog_cnt();
+    // 测试完清空，避免影响正常使用
+    user_profile_clear_all();
+
+    OB_LOGW(TAG, "============ PROFILE TEST END ============");
+}
+
+#endif

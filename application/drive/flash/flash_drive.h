@@ -51,9 +51,6 @@ uint32_t user_flash_erase(uint32_t sector_addr, uint32_t size);
 uint32_t user_flash_write(uint32_t addr, const void *buf, uint32_t size);
 uint32_t user_flash_read(uint32_t addr, void *buf, uint32_t size);
 
-void falsh_data_block_modify(uint32_t pageAddr, uint32_t backupAddr, uint8_t pageCnt, 
-                            uint16_t index, uint8_t* pData, uint16_t blockSize);
-
 void flash_read_data_block(uint32_t pageAddr, uint16_t index, uint8_t* pData, uint16_t size);
 
 void flash_write_data_pages(uint32_t pageAddr, uint32_t backupAddr, uint8_t* pData, uint16_t size);

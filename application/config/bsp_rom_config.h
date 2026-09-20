@@ -21,6 +21,7 @@
 #define GC_SECTOR_CNT                   (1)
 #define WAKEUP_STATE_CNT                (1)
 #define ONE_LINE_KEY_CNT                (1)
+#define PROFILE_PAGE_CNT                (1) 
 
 //audio index addr
 #define SPI_FLASH_INFO_BEGIN_ADDR       (FLASH_USER_DEFINE_START_ADDR)
@@ -48,7 +49,9 @@
 //blue one line key data addr
 #define ONE_LINE_KEY_ADDR               (WAKEUP_STATE_ADDR + FLASH_ERASE_SIZE * WAKEUP_STATE_CNT)
 
-
+//user profile addr
+#define PROFILE_PAGE_START_ADDR         (ONE_LINE_KEY_ADDR + FLASH_ERASE_SIZE * ONE_LINE_KEY_CNT)
+#define PROFILE_PAGE_BACKUP_ADDR        (PROFILE_PAGE_START_ADDR + FLASH_ERASE_SIZE * PROFILE_PAGE_CNT)
 
 // ========== 用户数据固定地址布局 ==========
 // 每个用户块 32 字节，块0为页标记
@@ -85,6 +88,24 @@
 #define USER_OFFSET_CARD_START          (BLOCK_INDEX_CARD_START * USER_BLOCK_SIZE)
 #define USER_OFFSET_FACE_START          (BLOCK_INDEX_FACE_START * USER_BLOCK_SIZE)
 
+// ========== 用户档案固定地址布局 ==========
+// 块0为页标记，档案从块1开始
+// 布局：页标记(1块) + 档案(50条 × 2块) = 101块
+// 每条档案 64 字节（2 块 × 32 字节）
+
+#define PROFILE_BLOCK_SIZE              (32)                                            // 32 字节/块
+#define PROFILE_BLOCK_PER_USER          (2)                                             // 每条档案 2 块
+#define PROFILE_USER_SIZE               (PROFILE_BLOCK_SIZE * PROFILE_BLOCK_PER_USER)   // 64 字节
+#define PROFILE_NAME_LEN                (41)                                            // 用户名长度
+#define PROFILE_COUNT                   (50)                                            // 用户档案数量
+
+#define PROFILE_DATA_BLOCKS             (PROFILE_COUNT * PROFILE_BLOCK_PER_USER)       // 100 块
+#define PROFILE_TOTAL_BLOCKS            (BLOCK_INDEX_CODE_START + PROFILE_DATA_BLOCKS) // 101 块
+#define PROFILE_TOTAL_SIZE              (PROFILE_TOTAL_BLOCKS * PROFILE_BLOCK_SIZE)    // 3232 字节
+
+// 单条档案Flash地址宏（跳块0页标记）
+#define PROFILE_ADDR(index)             (PROFILE_PAGE_START_ADDR  + (BLOCK_INDEX_CODE_START + (index) * PROFILE_BLOCK_PER_USER) * PROFILE_BLOCK_SIZE)
+#define PROFILE_ADDR_BACKUP(index)      (PROFILE_PAGE_BACKUP_ADDR + (BLOCK_INDEX_CODE_START + (index) * PROFILE_BLOCK_PER_USER) * PROFILE_BLOCK_SIZE)
 
 ///END SPI FLASH
 
