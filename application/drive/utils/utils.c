@@ -95,3 +95,22 @@ int16_t reverse_convert(uint32_t value)
     return (uint16_t)(value - 48);
 }
 
+/**
+ * @brief 计算 32 位 FNV-1a 哈希
+ * @param data 输入数据
+ * @param len  数据长度
+ * @return 32 位哈希值
+ */
+uint32_t utils_hash_fnv1a_32(uint8_t* data, uint32_t len)
+{
+    if (data == NULL || len == 0) {
+        return 0;
+    }
+
+    uint32_t hash = 0x811C9DC5;   // FNV-1a 32-bit offset basis
+    for (uint32_t i = 0; i < len; i++) {
+        hash ^= data[i];
+        hash *= 0x01000193;       // FNV-1a 32-bit prime
+    }
+    return hash;
+}

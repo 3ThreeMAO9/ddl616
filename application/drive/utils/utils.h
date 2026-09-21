@@ -63,6 +63,7 @@ uint16_t crc16_ccitt(const uint8_t *data, uint16_t len);
 uint32_t arraysConvertNumber(uint8_t* data, uint8_t len);
 uint16_t convert_timezone(int16_t input);
 int16_t reverse_convert(uint32_t value);
+uint32_t utils_hash_fnv1a_32(uint8_t* data, uint32_t len);
 /*****************************/
 
 #endif /* UTILS_H */

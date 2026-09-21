@@ -24,6 +24,7 @@
 #include "ota_helper.h"
 #include "flash_data.h"
 #include "lock_log.h"
+#include "test.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -103,6 +104,10 @@ static void app_init(void)
     OB_LOGD(TAG, "[%s]",__func__);
     read_device_version_info();
     qp_fsm_task_init();
+
+#ifdef TEST_ENABLE
+    test_run();
+#endif
 }
 
 int main(void)

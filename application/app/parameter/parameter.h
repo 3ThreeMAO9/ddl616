@@ -6,12 +6,20 @@
 
 
 /*****************Macro****************/
-#define DEVICE_SN_LEN_MAX                       32
-#define KDS_MODEL_LEN_MAX                       16
-#define KDS_PID_LEN_MAX                         16
-#define ACTIVECODE_LEN_MAX                      32
+#define DEVICE_SN_LEN_MAX                       (32)
+#define KDS_MODEL_LEN_MAX                       (16)
+#define KDS_PID_LEN_MAX                         (16)
+
+#define ACTIVECODE_LEN_MAX                      (6)     // 激活码实际长度（6位）
+#define ACTIVECODE_HASH_LEN                     (4)     // 哈希值长度（4字节）
 
 /*****************Enum*****************/
+typedef enum {
+    ACTIVECODE_FLAG_NONE    = 0,    // 未写入激活码
+    ACTIVECODE_FLAG_PENDING = 1,    // 待激活
+    ACTIVECODE_FLAG_VALID   = 2,    // 已激活
+} activecode_flag_e;
+
 typedef enum{
     DEVICE_SN_OB_ID = 0,
     DEVICE_SN_CLIENT_ID,
@@ -74,8 +82,8 @@ typedef struct{
 }device_test_t;
 
 typedef struct{
-    uint8_t flag;
-    uint8_t code[ACTIVECODE_LEN_MAX];
+    uint8_t flag;           // activecode_flag_e
+    uint8_t hash[ACTIVECODE_HASH_LEN];
 }device_code_t;
 
 typedef struct{
@@ -85,7 +93,7 @@ typedef struct{
     uint8_t blockkey_flag;
     uint8_t model[KDS_MODEL_LEN_MAX];
     uint8_t pid[KDS_PID_LEN_MAX];
-    int16_t bat_cali;                   //电压补偿值
+    int16_t bat_cali;                   // 废弃
     uint8_t allow_motor_test;
     device_code_t activecode;           //激活码
 
@@ -95,6 +103,7 @@ typedef struct{
 
 
 /***************Function***************/
+uint8_t* get_produce_info(void);
 void userParameterInit(void);
 uint8_t* readUserParameterAddr(void);
 uint32_t readUserParameter(uint8_t index);
@@ -124,10 +133,15 @@ uint8_t writeProductionModel(uint8_t* data);
 void readProductionModel(uint8_t* data);
 uint8_t writeProductionPID(uint8_t* data);
 void readProductionPID(uint8_t* data);
-uint8_t setBatterycali(int16_t result, uint8_t write);
-int16_t ReadBatterycali(void);
 uint8_t isallowMotorTest(void);
 void setallowMotorTest(uint8_t flag);
+// ========== 激活码 ==========
+uint8_t write_activecode_hash(uint8_t* code, uint8_t len);   // 生产工具：写哈希 → PENDING
+uint8_t verify_activecode(uint8_t* code, uint8_t len);       // 用户激活：验证 → VALID
+uint8_t is_device_locked(void);                              // 是否功能受限
+uint8_t is_activated(void);                                  // 是否已激活
+void    clear_activecode(void);                              // 恢复出厂 → NONE
+
 /**************************************/
 
 #endif 

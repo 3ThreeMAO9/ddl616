@@ -32,6 +32,11 @@ static const parameter_range_t parameter_range[USER_PARA_CNT] = {
 };
 
 // ------------------------------------------
+uint8_t* get_produce_info(void)
+{
+    return (uint8_t*)&produceInfo;
+}
+
 uint8_t *readUserParameterAddr(void)
 {
     // OB_LOGD(TAG, "userParameter addr[%08X]", (uint8_t *)(&userParameter));
@@ -171,7 +176,6 @@ void produceInfoInit(void)
     OB_LOGI(TAG, "produceInfo.bat_cali              %ld", produceInfo.bat_cali);
     OB_LOGI(TAG, "produceInfo.allow_motor_test      %u", produceInfo.allow_motor_test);
     OB_LOGI(TAG, "produceInfo.activecode            %u", produceInfo.activecode.flag);
-    OB_LOGI_DUMP(produceInfo.activecode.code, ACTIVECODE_LEN_MAX);
 }
 
 uint8_t isProduceReboot(void)
@@ -340,33 +344,6 @@ void readProductionPID(uint8_t *data)
     memcpy(data, (uint8_t *)(&produceInfo.pid), KDS_PID_LEN_MAX);
 }
 
-uint8_t setBatterycali(int16_t result, uint8_t write)
-{
-    if(result == 0)
-    {
-        result = 1; //补偿为0的时候，默认补偿1，区分是否经过补偿。
-    }
-    produceInfo.bat_cali = result;
-    if (write)
-    {
-        user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
-        user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
-        produceInfoInit();
-    }
-    if (result == produceInfo.bat_cali)
-        return true;
-    return false;
-}
-
-int16_t ReadBatterycali(void)
-{
-    if (produceInfo.bat_cali > 300)
-        return 300;
-    if (produceInfo.bat_cali < -300)
-        return -300;
-    return produceInfo.bat_cali;
-}
-
 uint8_t isallowMotorTest(void)
 {
     return produceInfo.allow_motor_test;
@@ -377,4 +354,123 @@ void setallowMotorTest(uint8_t flag)
     produceInfo.allow_motor_test = flag;
     user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
     user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
+}
+// ============================================================
+// 激活码
+// ============================================================
+
+/**
+ * @brief 生产工具：写入激活码哈希（出厂用）
+ * @param code 激活码明文
+ * @param len  长度（必须 = ACTIVECODE_LEN_MAX）
+ * @return 1=成功，0=失败
+ * @note 写入后设备进入"待激活"状态，功能受限
+ */
+uint8_t write_activecode_hash(uint8_t* code, uint8_t len)
+{
+    if (code == NULL || len != ACTIVECODE_LEN_MAX) {
+        OB_LOGE(TAG, "write_activecode_hash param error: len=%u", len);
+        return 0;
+    }
+
+    // 1. 计算哈希
+    uint32_t hash = utils_hash_fnv1a_32(code, len);
+
+    // 2. 更新 RAM 缓存 → 待激活状态
+    produceInfo.activecode.flag = ACTIVECODE_FLAG_PENDING;
+    memcpy(produceInfo.activecode.hash, &hash, ACTIVECODE_HASH_LEN);
+
+    // 3. 擦除 + 写入 Flash
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR,
+                     (uint8_t*)(&produceInfo), sizeof(produceInfo));
+
+#if (Enabled == PRINTF_FLASH)
+    OB_LOGI(TAG, "write_activecode_hash: hash=0x%08X, state=PENDING", hash);
+#endif
+    return 1;
+}
+
+/**
+ * @brief 用户激活：验证激活码，验证成功后进入已激活状态
+ * @param code 用户输入的激活码明文
+ * @param len  长度（必须 = ACTIVECODE_LEN_MAX）
+ * @return 1=验证通过并激活成功，0=失败
+ */
+uint8_t verify_activecode(uint8_t* code, uint8_t len)
+{
+    if (code == NULL || len != ACTIVECODE_LEN_MAX) {
+        OB_LOGE(TAG, "verify_activecode param error: len=%u", len);
+        return 0;
+    }
+
+    // 1. 只有"待激活"状态才需要验证
+    if (produceInfo.activecode.flag != ACTIVECODE_FLAG_PENDING) {
+        OB_LOGW(TAG, "device not in PENDING state (flag=%u)",
+                produceInfo.activecode.flag);
+        return 0;
+    }
+
+    // 2. 计算输入哈希
+    uint32_t hash = utils_hash_fnv1a_32(code, len);
+
+    // 3. 与存储的哈希对比
+    uint32_t stored;
+    memcpy(&stored, produceInfo.activecode.hash, ACTIVECODE_HASH_LEN);
+
+    if (hash != stored) {
+#if (Enabled == PRINTF_FLASH)
+        OB_LOGW(TAG, "activecode verify FAIL: 0x%08X != 0x%08X", hash, stored);
+#endif
+        return 0;
+    }
+
+    // 4. 验证成功 → 进入已激活状态
+    produceInfo.activecode.flag = ACTIVECODE_FLAG_VALID;
+
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR,
+                     (uint8_t*)(&produceInfo), sizeof(produceInfo));
+
+#if (Enabled == PRINTF_FLASH)
+    OB_LOGI(TAG, "activecode verify OK, state=VALID");
+#endif
+    return 1;
+}
+
+/**
+ * @brief 判断设备功能是否受限
+ * @return 1=受限（待激活），0=不受限（未写入 或 已激活）
+ * @note 业务层调用此函数决定是否限制功能
+ */
+uint8_t is_device_locked(void)
+{
+    return (produceInfo.activecode.flag == ACTIVECODE_FLAG_PENDING) ? 1 : 0;
+}
+
+/**
+ * @brief 判断设备是否已激活
+ * @return 1=已激活，0=其他（未写入/待激活）
+ */
+uint8_t is_activated(void)
+{
+    return (produceInfo.activecode.flag == ACTIVECODE_FLAG_VALID) ? 1 : 0;
+}
+
+/**
+ * @brief 清除激活码（恢复出厂设置时调用）
+ * @note 回到"未写入"状态
+ */
+void clear_activecode(void)
+{
+    produceInfo.activecode.flag = ACTIVECODE_FLAG_NONE;
+    memset(produceInfo.activecode.hash, 0, ACTIVECODE_HASH_LEN);
+
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR,
+                     (uint8_t*)(&produceInfo), sizeof(produceInfo));
+
+#if (Enabled == PRINTF_FLASH)
+    OB_LOGW(TAG, "clear_activecode: state=NONE");
+#endif
 }

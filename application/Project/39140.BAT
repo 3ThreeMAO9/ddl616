@@ -127,6 +127,8 @@ SET CPU_CLOCK=0x02FAF080
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\task_battery.__i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ota_helper.__i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\encrypt.__i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\parameter_test.__i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\test.__i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmLink" --Via "..\Build\Objects\ota_app.lnp"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\system_ob90a64m1._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\main._2i"
