@@ -23,6 +23,12 @@ void test_run(void)
     test_activecode_all();
 #endif
 
+#ifdef TEST_USER_PROFILE_ENABLE
+    OB_LOGW(TAG, "--- [user_profile] ---");
+    test_user_profile_all();
+#endif
+
+
     OB_LOGW(TAG, "========== TEST RUN END ==========");
 }
 

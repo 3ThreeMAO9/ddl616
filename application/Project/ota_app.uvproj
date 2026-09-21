@@ -1153,14 +1153,19 @@
           <GroupName>test</GroupName>
           <Files>
             <File>
-              <FileName>parameter_test.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\test\parameter_test.c</FilePath>
-            </File>
-            <File>
               <FileName>test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\test\test.c</FilePath>
+            </File>
+            <File>
+              <FileName>parameter_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\test\test_file\parameter_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>user_profile_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\test\test_file\user_profile_test.c</FilePath>
             </File>
           </Files>
         </Group>

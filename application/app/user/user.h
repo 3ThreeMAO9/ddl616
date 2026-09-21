@@ -223,7 +223,6 @@ uint8_t  user_get_name(uint16_t user_id, char* buf, uint8_t len);
 uint8_t  user_get_profile(uint16_t user_id, user_profile_t* profile);
 uint8_t  user_is_valid_period(uint16_t user_id);
 uint8_t  user_get_total_cnt(void);
-void     user_profile_clear_all(void);
 
 /**************************************/
 
