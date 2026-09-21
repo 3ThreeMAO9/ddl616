@@ -913,11 +913,6 @@
               <FilePath>..\drive\flash\flash.c</FilePath>
             </File>
             <File>
-              <FileName>dual_sector.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\drive\dual_sector\dual_sector.c</FilePath>
-            </File>
-            <File>
               <FileName>spi_software.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\drive\spi_software\spi_software.c</FilePath>

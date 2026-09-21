@@ -47,14 +47,24 @@ static uint8_t keyEventCombineFunctionHandle(void)
     }
     // else if (111 == value)
     // {
-    //     lock_log_flash_test(50 , 0 , 1);
+    //     clear_activecode();
     //     return true;
     // }
     // else if (112 == value)
     // {
-    //     lock_log_flash_test(50 , 0 , 2);
+    //     uint8_t code[ACTIVECODE_LEN_MAX] = {6, 7, 8, 9, 1, 2};
+    //     write_activecode_hash(code, ACTIVECODE_LEN_MAX);
     //     return true;
     // }
+    // else if (114 == value)
+    // {
+    //     produce_info_t* info = (produce_info_t*)get_produce_info();
+    //     OB_LOGW(TAG, "debug: flag=%u, locked=%u, activated=%u",
+    //             info->activecode.flag, is_device_locked(), is_activated());
+    //     return true;
+    // }
+
+
     // else if (116 == value)
     // {
     //     lock_log_flash_test(50 , 0 , 6);
@@ -293,6 +303,19 @@ void keyEventVerifyUser(uint8_t key_value)
         {
             if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, true, true))
             {
+                // 判断是否处于待激活
+                if (is_device_locked() && (keyBoardEvent.input[0].len == ACTIVECODE_LEN_MAX))
+                {
+                    if (verify_activecode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len))
+                    {
+                        OB_LOGI(TAG, "activecode verify OK");
+                        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_ACTIVECODE_SUCCESS);
+                        CLEAR_KEY_EVENT();
+                        return;
+                    }
+                }
+
+
 #if (Enabled == PRINTF_PASSWORD)
                 OB_LOGI(TAG, "verify success: password user[%u]", user_sn);
 #endif

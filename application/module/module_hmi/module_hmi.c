@@ -143,12 +143,14 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = 6000;
             break;
 
+        case HMI_STATE_ACTIVECODE_SUCCESS:
         case HMI_STATE_RESET_SUCCESS:
             hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
             break;
         case HMI_STATE_VERIFY_ADMIN_SUCCESS:
             break;
-
+        
+        case HMI_STATE_HANDLE_FAIL:
         case HMI_STATE_VERIFY_FAIL:
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
             hmi_key_board_led_config(TRUN_ON, TRUN_OFF, HMI_STATE_KEEP_TIME_100ms, 4);

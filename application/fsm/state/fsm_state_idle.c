@@ -102,19 +102,45 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_ADD_ADMIN == e->dynamic_[0])
             {
-                if (isEmptyUser(false))   // 初始化状态
-                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
+                if (is_device_locked()) {
+                    me->branch = (QStateHandler)(lock_fsm_sleep);
+                    state = Q_TRAN(lockFsmHandleFail);
+                }
+                else {
+                    if (isEmptyUser(false))   // 初始化状态
+                        state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
+                }
             }
             else if (EVENT_RESULT_ENTER_LOCAL_MENU == e->dynamic_[0])
             {
-                // 初始化状态下，单击和双击SET都进入修改管理员密码
-                if (isEmptyUser(false)){
-                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
+                if (is_device_locked()) {
+                    me->branch = (QStateHandler)(lock_fsm_sleep);
+                    state = Q_TRAN(lockFsmHandleFail);
                 }
-                else{
-                    hmiTaskSetState(HMI_STATE_ENTER_ADMIN_MODE);
-                    state = Q_TRAN(lock_fsm_verify_admin);
+                else {
+                    // 初始化状态下，单击和双击SET都进入修改管理员密码
+                    if (isEmptyUser(false)){
+                        state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
+                    }
+                    else{
+                        hmiTaskSetState(HMI_STATE_ENTER_ADMIN_MODE);
+                        state = Q_TRAN(lock_fsm_verify_admin);
+                    }
                 }
+            }
+            else if (EVENT_RESULT_ENTER_NET_CONFIG == e->dynamic_[0])
+            {
+                if (is_device_locked()) {
+                    me->branch = (QStateHandler)(lock_fsm_sleep);
+                    state = Q_TRAN(lockFsmHandleFail);
+                }
+                else {
+
+                }
+            }
+            else if (EVENT_RESULT_ACTIVECODE_SUCCESS == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_ACTIVECODE_SUCCESS);
             }
             
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){

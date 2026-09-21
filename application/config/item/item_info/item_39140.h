@@ -23,11 +23,11 @@
 #define PRINTF_USER                 PRINTF_FUN
 #define PRINTF_FLASH                Disabled
 #define PRINTF_ERR                  PRINTF_FUN
-#define PRINTF_PASSWORD             PRINTF_FUN
+#define PRINTF_PASSWORD             Disabled
 #define PRINTF_MOTOR                Disabled
 #define PRINTF_FSM                  PRINTF_FUN
 #define PRINTF_HMI                  PRINTF_FUN
-#define PRINTF_VOLTAGE              PRINTF_FUN
+#define PRINTF_VOLTAGE              Disabled
 
 /***********Enum***********/
 
