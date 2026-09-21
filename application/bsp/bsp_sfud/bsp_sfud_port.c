@@ -155,7 +155,7 @@ sfud_err sfud_spi_port_init(sfud_flash *flash) {
     return result;
 }
 
-#if 1
+#if 0
 static char log_buf[256];
 
 /**
@@ -193,4 +193,7 @@ void sfud_log_info(const char *format, ...) {
     OB_LOGD(TAG,"%s",log_buf);
     va_end(args);
 }
+#else
+void sfud_log_debug(const char *file, const long line, const char *format, ...) {};
+void sfud_log_info(const char *format, ...) {};
 #endif
