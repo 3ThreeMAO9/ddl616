@@ -22,8 +22,8 @@ typedef uart_event_callback_t bsp_uart_callback_t;
 /*************************Struct*************************/
 typedef struct {
     void (*init)(void);
-    void (*queue_put)(uint8_t *, uint8_t, uint8_t, uint16_t);
-    uint8_t (*retry_clean)(uint8_t, uint8_t);
+    void (*queue_put)(uint8_t *, uint16_t, uint8_t, uint16_t);
+    uint8_t (*retry_clean)(uint8_t, uint16_t);
     uint8_t (*is_wake)(void);
     void (*loop)(void);
     void (*sleep)(void);

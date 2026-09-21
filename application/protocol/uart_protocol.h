@@ -26,53 +26,16 @@
 #define OTA_TO_BOOT_TIME_OUT                (1000)   // OTA重启 ms
 #define PARAM_DATA_TIME_OUT                 (1000)   // 参数数据同步 ms
 
-#define UP_CMD_AUTH                         (0x01)   // 鉴权命令
-#define UP_CMD_LOCK_CTL                     (0x02)   // 锁控命令
-#define UP_CMD_REPORT_ORDER                 (0x03)   // 锁操作上报命令
-#define UP_CMD_LIGHT_CTL                    (0x04)   // 灯控命令
-#define UP_CMD_WORK_MODE                    (0x05)   // 工作模式命令
-#define UP_CMD_RESET                        (0x06)   // 恢复出厂设置命令
-#define UP_CMD_PARAM_REQ                    (0x07)   // 参数请求指令
-#define UP_CMD_REPORT_PARAM                 (0x08)   // 参数上报指令
-#define UP_CMD_SLEEP                        (0x09)   // 休眠命令
-#define UP_CMD_VERSION                      (0x0A)   // 版本号命令
-#define UP_CMD_ENCRYPT                      (0x0B)   // 加密指令
-#define UP_CMD_TOUCH_SENSITIVITY            (0x0C)   // 触摸灵敏度指令
-#define UP_CMD_PA_CTL                       (0x0D)   // PA控制指令
-
-
 #define UP_CMD_HEART                        (0x2A)   // 心跳命令
-
-#define UP_CMD_OTA_REQUEST                  (0x73)  // OTA升级请求
-#define UP_CMD_OTA_TRANSFER                 (0x71)  // OTA升级数据传输
-#define UP_CMD_OTA_CONTROL                  (0x72)  // OTA升级控制
-
-#define UP_CMD_ACK_AUTH                     (0x81)   // 鉴权应答
-#define UP_CMD_ACK_LOCK_CTL                 (0x82)   // 锁控应答
-#define UP_CMD_ACK_REPORT_ORDER             (0x83)   // 锁操作上报应答
-#define UP_CMD_ACK_LIGHT_CTL                (0x84)   // 灯控应答
-#define UP_CMD_ACK_WORK_MODE                (0x85)   // 工作模式应答
-#define UP_CMD_ACK_RESET                    (0x86)   // 恢复出厂设置应答
-#define UP_CMD_ACK_PARAM_REQ                (0x87)   // 参数请求应答指令
-#define UP_CMD_ACK_REPORT_PARAM             (0x88)   // 参数上报应答指令
-#define UP_CMD_ACK_SLEEP                    (0x89)   // 休眠命令
-#define UP_CMD_ACK_VERSION                  (0x8A)   // 版本号应答命令
-#define UP_CMD_ACK_ENCRYPT                  (0x8B)   // 加密应答命令
-#define UP_CMD_ACK_TOUCH_SENSITIVITY        (0x8C)   // 触摸灵敏度应答指令
-#define UP_CMD_ACK_PA_CTL                   (0x8D)   // PA控制应答指令
-
 #define UP_CMD_ACK_HEART                    (0xAA)   // 心跳应答
 
-#define UP_CMD_ACK_OTA_REQUEST              (0xF3)  // OTA升级请求应答
-#define UP_CMD_ACK_OTA_TRANSFER             (0xF1)  // OTA升级数据传输应答
-#define UP_CMD_ACK_OTA_CONTROL              (0xF2)  // OTA升级控制应答
-
+/*************************/
 #define STATUS_SUCCESS                      (0x00)  // 操作成功
 #define STATUS_FAILED                       (0x01)  // 操作失败
 #define STATUS_TSN_DUPLICATE                (0x90)  // TSN序列号重复
-#define STATUS_CRC_ERR                      (0x91)  // 数据校验（CRC）失败
 
-#define UP_CMD_ACK_KEY                      (0x60)  // 按键事件
+
+#define UP_CMD_KEY                          (0x60)  // 按键事件
 
 
 /***********Enum***********/
@@ -86,7 +49,7 @@
 /***********Variable***********/
 
 /***********Function***********/
-uint8_t get_tsn(void);
+uint16_t get_tsn(void);
 uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len);
 void uart_protocol_heart_inc_time_out(void);
 void uart_protocol_poll(void);

@@ -46,7 +46,7 @@ static void on_setting_key(uint8_t report)
     }
 }
 
-HANDLER_DEFINE(UP_CMD_ACK_KEY)
+HANDLER_DEFINE(UP_CMD_KEY)
 {
     frame_key_t *key = (frame_key_t *)packet->payload;
     OB_LOGI(TAG, "event_key_id[%u], event_key_report[%u]", key->event_key_id, key->event_key_report);
@@ -63,6 +63,7 @@ HANDLER_DEFINE(UP_CMD_ACK_KEY)
         OB_LOGW(TAG, "   unknown id=%u", key->event_key_id);
         break;
     }
+    uart_msg_ack(UP_CMD_KEY, STATUS_SUCCESS);
 
     return 0;
 }

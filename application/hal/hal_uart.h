@@ -23,7 +23,6 @@
 // Buf len
 #define UART0_BUF_LEN   (256)
 #define UART1_BUF_LEN   (64)
-#define UART2_BUF_LEN   (64)
 
 // Time out
 #define UART_TIME_OUT   (8)     // unit:ms

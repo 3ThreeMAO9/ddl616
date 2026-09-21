@@ -107,8 +107,14 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_ENTER_LOCAL_MENU == e->dynamic_[0])
             {
-                hmiTaskSetState(HMI_STATE_ENTER_ADMIN_MODE);
-                state = Q_TRAN(lock_fsm_verify_admin);
+                // 初始化状态下，单击和双击SET都进入修改管理员密码
+                if (isEmptyUser(false)){
+                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
+                }
+                else{
+                    hmiTaskSetState(HMI_STATE_ENTER_ADMIN_MODE);
+                    state = Q_TRAN(lock_fsm_verify_admin);
+                }
             }
             
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){

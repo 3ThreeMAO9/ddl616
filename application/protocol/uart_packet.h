@@ -50,6 +50,32 @@ typedef struct
 #define LOCK_PACKET_ENCRYPT_TYPE_NONE   (0)
 #define LOCK_PACKET_ENCRYPT_TYPE_XOR    (1)
 
+// 设置 ACK 命令（最高位置 1）
+#define SET_UART_ACK_CMD(cmd)           ((cmd) | 0x80)
+
+/*****************Inline*****************/
+static inline uint8_t lock_packet_build_attr(uint8_t addr, uint8_t enc)
+{
+    addr &= LOCK_PACKET_ATTR_ADDR_MASK;
+    addr |= (enc << LOCK_PACKET_ATTR_ENC_SHIFT) & LOCK_PACKET_ATTR_ENC_MASK;
+    return addr;
+}
+
+static inline uint8_t lock_packet_get_addr(uint8_t attr)
+{
+    return attr & LOCK_PACKET_ATTR_ADDR_MASK;
+}
+
+static inline uint8_t lock_packet_get_enc(uint8_t attr)
+{
+    return (attr & LOCK_PACKET_ATTR_ENC_MASK) >> LOCK_PACKET_ATTR_ENC_SHIFT;
+}
+
+static inline uint8_t lock_packet_is_encrypted(uint8_t attr)
+{
+    return lock_packet_get_enc(attr) != LOCK_PACKET_ENCRYPT_TYPE_NONE;
+}
+
 /***********Variable***********/
 
 /***********Function***********/

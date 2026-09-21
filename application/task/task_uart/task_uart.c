@@ -48,7 +48,7 @@ void uartTaskInit(void)
     }
 }
 
-void uartTaskQueuePut(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len)
+void uartTaskQueuePut(uint8_t *data, uint16_t tsn, uint8_t cmd, uint16_t len)
 {
     if (uartTaskDriver.attribute.enable)
     {
@@ -56,7 +56,7 @@ void uartTaskQueuePut(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len)
     }
 }
 
-uint8_t uartTaskRetryClean(uint8_t cmd, uint8_t tsn)
+uint8_t uartTaskRetryClean(uint8_t cmd, uint16_t tsn)
 {
     if (uartTaskDriver.attribute.enable)
     {

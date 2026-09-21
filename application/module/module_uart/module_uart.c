@@ -74,7 +74,7 @@ void uartReceiveDeal_callback(void)
 static void uart_poll_rx(void)
 {
     uint16_t data_len;
-    uint8_t rx_buf[UART_TX_BUF_MAX_LEN]; // 栈缓冲区
+    uint8_t rx_buf[UART0_BUF_LEN]; // 栈缓冲区
 
     data_len = uart_rx_queue_get_len();
     if (data_len)
@@ -146,7 +146,7 @@ static void uart_poll_tx(void)
     uart_pri_t cur_pri;
     uint16_t data_len;
     UartTxCtrlInfo tx_ctrl_info = {0};
-    uint8_t tx_buf[UART_TX_BUF_MAX_LEN]; // 栈缓冲区
+    uint8_t tx_buf[UART0_BUF_LEN]; // 栈缓冲区
     // 优先处理高优先级队列，再处理普通优先级
     if (uart_queue_get_len(UART_PRI_HIGH) >= sizeof(UartTxCtrlInfo))
     {
@@ -167,7 +167,7 @@ static void uart_poll_tx(void)
 
     // OB_LOGD(TAG,"data_len %d",data_len);
     // 校验长度（避免越界）
-    if (data_len == 0 || data_len > UART_TX_BUF_MAX_LEN) {
+    if (data_len == 0 || data_len > UART0_BUF_LEN) {
         return;
     }
 
@@ -223,14 +223,14 @@ void module_uart_init(void)
 }
 
 
-void module_uart_queue_put(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len)
+void module_uart_queue_put(uint8_t *data, uint16_t tsn, uint8_t cmd, uint16_t len)
 {
     if (data == NULL || len == 0) {
         OB_LOGE(TAG, "invalid data/len");
         return;
     }
 
-    if (len > UART_TX_BUF_MAX_LEN)
+    if (len > UART0_BUF_LEN)
     {
         OB_LOGE(TAG, "[%s]  len=%d exceed max size",__func__, len);
         return;
@@ -248,7 +248,7 @@ void module_uart_queue_put(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len
     uart_queue_put(UART_PRI_HIGH, data, len);
 }
 
-uint8_t module_uart_retry_clean(uint8_t cmd, uint8_t tsn)
+uint8_t module_uart_retry_clean(uint8_t cmd, uint16_t tsn)
 {
     uint8_t ret = 0;
     // OB_LOGI(TAG,"tx.tsn:0x%02X  tsn:0x%02X  tx.cmd:0x%02X  cmd:0x%02X ",s_uart_tx.ctrl.tsn,tsn,s_uart_tx.ctrl.cmd,cmd);

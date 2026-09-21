@@ -14,6 +14,7 @@
 #include "system_timer.h"
 #include "ota_helper.h"
 #include "task_sleep.h"
+#include "utils.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -31,73 +32,40 @@
     ((BACK_UART_SEL == UART_0) ? UART0_BUF_LEN : \
      (BACK_UART_SEL == UART_1) ? UART1_BUF_LEN : 0)
 
-static uint32_t protocol_time_out = HEART_TIME_OUT;
+// static uint32_t protocol_time_out = HEART_TIME_OUT;
 
-static uint8_t ota_to_boot_flag = 0;
-static uint32_t ota_to_boot_time_out = 0;
+// static uint8_t ota_to_boot_flag = 0;
+// static uint32_t ota_to_boot_time_out = 0;
 
 
-static uint8_t param_data_flag = false;// 参数同步
-static uint32_t param_data_time_out = 0;
-
-/*****************Inline*****************/
-static inline uint8_t lock_packet_build_attr(uint8_t addr, uint8_t enc)
-{
-    addr &= LOCK_PACKET_ATTR_ADDR_MASK;
-    addr |= (enc << LOCK_PACKET_ATTR_ENC_SHIFT) & LOCK_PACKET_ATTR_ENC_MASK;
-    return addr;
-}
-
-static inline uint8_t lock_packet_get_addr(uint8_t attr)
-{
-    return attr & LOCK_PACKET_ATTR_ADDR_MASK;
-}
-
-static inline uint8_t lock_packet_get_enc(uint8_t attr)
-{
-    return (attr & LOCK_PACKET_ATTR_ENC_MASK) >> LOCK_PACKET_ATTR_ENC_SHIFT;
-}
-
-static inline uint8_t lock_packet_is_encrypted(uint8_t attr)
-{
-    return lock_packet_get_enc(attr) != LOCK_PACKET_ENCRYPT_TYPE_NONE;
-}
-
-// 累加求和
-static uint16_t calc_sum(uint8_t* data, uint16_t len)
-{
-    uint16_t sum = 0;
-    for (uint16_t i = 0; i < len; i++) {
-        sum += data[i];
-    }
-    return sum;
-}
+// static uint8_t param_data_flag = false;// 参数同步
+// static uint32_t param_data_time_out = 0;
 
 // checksum2 = SUM(明文 payload)
 static uint16_t calc_checksum2(uint8_t* payload, uint16_t len)
 {
-    return calc_sum(payload, len);
+    return check_sum(payload, len);
 }
 
 // checksum1 = SUM(sn~payload)，偏移 4 开始，长度 8 + payload_len
 static uint16_t calc_checksum1(uint8_t* raw, uint16_t payload_len)
 {
-    return calc_sum(raw + 4, 8 + payload_len);
+    return check_sum(raw + 4, 8 + payload_len);
 }
 void uart_protocol_heart_inc_time_out(void)
 {
-    protocol_time_out = system_inc_time_cnt(HEART_TIME_OUT);
+    // protocol_time_out = system_inc_time_cnt(HEART_TIME_OUT);
 }
 
 void uart_protocol_ota_to_boot_inc_time_out(void)
 {
-    ota_to_boot_flag = 1;
-    ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
+    // ota_to_boot_flag = 1;
+    // ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
 }
 
 void uart_protocol_set_param_data_flag(uint8_t data)
 {
-    param_data_flag = data;
+    // param_data_flag = data;
 }
 
 // void uart_protocol_set_ota_to_boot_flag(uint8_t data)
@@ -105,9 +73,9 @@ void uart_protocol_set_param_data_flag(uint8_t data)
 //     ota_to_boot_flag = data;
 // }
 
-uint8_t get_tsn(void)
+uint16_t get_tsn(void)
 {
-    static uint8_t tsn = 0;
+    static uint16_t tsn = 0;
     return tsn++;
 }
 
@@ -116,7 +84,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
     switch (packet->cmd)
     {
         HANDLER_IMPORT(UP_CMD_ACK_HEART)        // (0xAA)   // 心跳应答
-        HANDLER_IMPORT(UP_CMD_ACK_KEY)          // (0x60)   // 按键事件
+        HANDLER_IMPORT(UP_CMD_KEY)              // (0x60)   // 按键事件
     default:
         return 0;
     }
@@ -184,17 +152,17 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
     // 7. 业务处理
     uart_protocol_try_handle(pkt);
     uart_protocol_heart_inc_time_out();
-    uart_protocol_clean_heart_send_cnt();
+    // uart_protocol_clean_heart_send_cnt();
 
     return 0;
 }
 
 
-static uint8_t uart_protocol_heart_send_cnt = 0;
-void uart_protocol_clean_heart_send_cnt(void)
-{
-    uart_protocol_heart_send_cnt = 0;
-}
+// static uint8_t uart_protocol_heart_send_cnt = 0;
+// void uart_protocol_clean_heart_send_cnt(void)
+// {
+//     uart_protocol_heart_send_cnt = 0;
+// }
 
 void uart_protocol_poll(void)
 {

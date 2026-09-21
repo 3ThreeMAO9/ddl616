@@ -12,12 +12,12 @@
 
 #include <stdint.h>
 #include <string.h>
+#include "hal_uart.h"
 #include "uart_queue.h"
 
 /***********Macro***********/
 #define UART_MAX_RETRY_CNT    2       // 最大重传次数
 #define UART_RETRY_INTERVAL   300     // 重传间隔（毫秒）
-#define UART_TX_BUF_MAX_LEN   256      // tx_buf长度一致
 
 /***********Enum***********/
 typedef enum {
@@ -45,14 +45,14 @@ typedef enum {
 
 /***********Struct***********/
 typedef struct {
-    uint8_t tsn;                       // 待重传数据(TSN)
+    uint16_t tsn;                      // 待重传数据(TSN)
     uint8_t cmd;                       // 待重传数据(CMD)
     uint16_t len;                      // 数据长度
 } UartTxCtrlInfo;
 
 typedef struct {
     UartTxCtrlInfo ctrl;
-    uint8_t data[UART_TX_BUF_MAX_LEN]; // 待重传数据
+    uint8_t data[UART0_BUF_LEN];        // 待重传数据
     uart_pri_t pri;                    // 数据优先级
     uint8_t retry_cnt;                 // 已重传次数
     uint32_t send_timestamp;           // 上次发送时间戳（毫秒）
@@ -72,8 +72,8 @@ typedef void (*uart_event_callback_t)(uint8_t, uint8_t, uint8_t, uint8_t);
 void uartEventRegister_callback(uart_event_callback_t callback);
 void module_uart_sleep(void);
 void module_uart_init(void);
-void module_uart_queue_put(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len);
-uint8_t module_uart_retry_clean(uint8_t cmd, uint8_t tsn);
+void module_uart_queue_put(uint8_t *data, uint16_t tsn, uint8_t cmd, uint16_t len);
+uint8_t module_uart_retry_clean(uint8_t cmd, uint16_t tsn);
 void module_uart_poll(void);
 uint8_t module_uart_is_wake(void);
 

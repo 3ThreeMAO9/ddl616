@@ -33,8 +33,8 @@ typedef struct{
 
 /***********Function***********/
 void uartTaskInit(void);
-void uartTaskQueuePut(uint8_t *data, uint8_t tsn, uint8_t cmd, uint16_t len);
-uint8_t uartTaskRetryClean(uint8_t cmd, uint8_t tsn);
+void uartTaskQueuePut(uint8_t *data, uint16_t tsn, uint8_t cmd, uint16_t len);
+uint8_t uartTaskRetryClean(uint8_t cmd, uint16_t tsn);
 void uartTaskWake(void);
 void uartTaskSleep(void);
 void uartTaskLoop(void);
