@@ -28,6 +28,7 @@
 #define PRINTF_FSM                  PRINTF_FUN
 #define PRINTF_HMI                  PRINTF_FUN
 #define PRINTF_VOLTAGE              Disabled
+#define PRINTF_TEST                 PRINTF_FUN
 
 /***********Enum***********/
 

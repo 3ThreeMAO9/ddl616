@@ -378,7 +378,7 @@
               <MiscControls>--locale=english</MiscControls>
               <Define>CLIENT_ITEM_SN=39140,PROJECT_NUMBER=140,CONFIG_SEL=39</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\common\Device;..\chip\OB90A64M1\Library;..\config;..\hal;.\Source_Code\device;..\drive\i2c_software;..\drive\utils;..\drive\key;..\3rd\multi_button;..\3rd\multi_button\examples;..\drive\system_timer;..\drive\ob_log;..\config\board;..\config\item;..\config\item\item_info;..\task\task_key;..\bsp\bsp_key;..\protocol\handler;..\protocol;..\drive\led;..\bsp\bsp_led;..\task\task_led;..\3rd\ringbuffer;..\3rd\rt-thread;..\task\task_uart;..\drive\uart_queue;..\bsp\bsp_uart;..\module\module_uart;..\bsp\bsp_nfc;..\drive\nfc;..\drive\nfc\FM17622;..\task\task_nfc;..\bsp\bsp_fingerprint;..\drive\fingerprint;..\module\module_fp;..\task\task_fingerprint;..\bsp\bsp_face;..\drive\face;..\drive\face\face_st;..\module\module_face;..\task\task_face;..\drive\soft_uart;..\drive\soft_uart\simu_uart;..\drive\soft_uart\soft_uart_finger;..\drive\soft_uart\soft_uart_log;..\drive\radar;..\drive\radar\iic_radar;..\task\task_radar;..\bsp\bsp_radar;..\module\module_radar;..\task\task_system_time;..\bsp\bsp_system_time;..\bsp\bsp_sleep;..\drive\sleep;..\task\task_sleep;..\task\task_qp_fsm;..\bsp\bsp_qp_fsm;..\fsm\event;..\fsm\qp_frame;..\fsm\state;..\drive\key\key_board;..\drive\key\key_board\GTX314L;..\drive\key\tamper_key;..\bsp\bsp_flash;..\drive\flash;..\task\task_flash;..\drive\dual_sector;..\drive\parameter;..\task\task_protocol;..\drive\spi_software;..\app\protocol_func_card;..\..\common\CMSIS\5.4.0;..\..\common\Library;..\..\common\ota_helper;..\..\common\Device;..\drive\radar\iic_radar\include;..\drive\radar\io_radar\include;..\drive\lock_uart;..\..\common\encrypt;..\3rd\sfud\src;..\3rd\sfud\inc;..\bsp\bsp_sfud;..\module\module_spi_flash;..\module\module_flash_data;..\app\parameter;..\app\user;..\bsp\bsp_player;..\module\module_player;..\task\task_player;..\bsp\bsp_hmi;..\module\module_hmi;..\task\task_hmi;..\bsp\bsp_motor;..\drive\motor;..\task\task_motor;..\module\module_motor;..\fsm\menu;..\bsp\bsp_battery;..\module\module_battery;..\task\task_battery;..\module\module_lock_log;..\test</IncludePath>
+              <IncludePath>..\..\common\Device;..\chip\OB90A64M1\Library;..\config;..\hal;.\Source_Code\device;..\drive\i2c_software;..\drive\utils;..\drive\key;..\3rd\multi_button;..\3rd\multi_button\examples;..\drive\system_timer;..\drive\ob_log;..\config\board;..\config\item;..\config\item\item_info;..\task\task_key;..\bsp\bsp_key;..\protocol\handler;..\protocol;..\drive\led;..\bsp\bsp_led;..\task\task_led;..\3rd\ringbuffer;..\3rd\rt-thread;..\task\task_uart;..\drive\uart_queue;..\bsp\bsp_uart;..\module\module_uart;..\bsp\bsp_nfc;..\drive\nfc;..\drive\nfc\FM17622;..\task\task_nfc;..\bsp\bsp_fingerprint;..\drive\fingerprint;..\module\module_fp;..\task\task_fingerprint;..\bsp\bsp_face;..\drive\face;..\drive\face\face_st;..\module\module_face;..\task\task_face;..\drive\soft_uart;..\drive\soft_uart\simu_uart;..\drive\soft_uart\soft_uart_finger;..\drive\soft_uart\soft_uart_log;..\drive\radar;..\drive\radar\iic_radar;..\task\task_radar;..\bsp\bsp_radar;..\module\module_radar;..\task\task_system_time;..\bsp\bsp_system_time;..\bsp\bsp_sleep;..\drive\sleep;..\task\task_sleep;..\task\task_qp_fsm;..\bsp\bsp_qp_fsm;..\fsm\event;..\fsm\qp_frame;..\fsm\state;..\drive\key\key_board;..\drive\key\key_board\GTX314L;..\drive\key\tamper_key;..\bsp\bsp_flash;..\drive\flash;..\task\task_flash;..\drive\dual_sector;..\drive\parameter;..\task\task_protocol;..\drive\spi_software;..\app\protocol_func_card;..\..\common\CMSIS\5.4.0;..\..\common\Library;..\..\common\ota_helper;..\..\common\Device;..\drive\radar\iic_radar\include;..\drive\radar\io_radar\include;..\drive\lock_uart;..\..\common\encrypt;..\3rd\sfud\src;..\3rd\sfud\inc;..\bsp\bsp_sfud;..\module\module_spi_flash;..\module\module_flash_data;..\app\parameter;..\app\user;..\bsp\bsp_player;..\module\module_player;..\task\task_player;..\bsp\bsp_hmi;..\module\module_hmi;..\task\task_hmi;..\bsp\bsp_motor;..\drive\motor;..\task\task_motor;..\module\module_motor;..\fsm\menu;..\bsp\bsp_battery;..\module\module_battery;..\task\task_battery;..\module\module_lock_log;..\test;..\bsp\bsp_produce_test;..\drive\produce_test;..\module\module_produce_test;..\task\task_produce_test</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -697,6 +697,11 @@
               <FileType>1</FileType>
               <FilePath>..\bsp\bsp_battery\bsp_battery.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_produce_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bsp\bsp_produce_test\bsp_produce_test.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -947,6 +952,11 @@
               <FileType>1</FileType>
               <FilePath>..\drive\motor\motor.c</FilePath>
             </File>
+            <File>
+              <FileName>produce_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\drive\produce_test\produce_test.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1031,6 +1041,11 @@
               <FileName>lock_log_flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\module\module_lock_log\lock_log_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>module_produce_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\module\module_produce_test\module_produce_test.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1121,6 +1136,11 @@
               <FileName>task_battery.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\task\task_battery\task_battery.c</FilePath>
+            </File>
+            <File>
+              <FileName>task_produce_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\task\task_produce_test\task_produce_test.c</FilePath>
             </File>
           </Files>
         </Group>

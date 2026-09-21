@@ -13,7 +13,7 @@
 #include "type_def.h"
 #include "base_attribute.h"
 /***********Macro***********/
-#define NFC_ENABLE                              Enabled
+#define NFC_ENABLE                                  (Enabled)
 
 // user config
 #define KEY_CNT_MAX                                 (300)
@@ -255,12 +255,12 @@ void read_device_version_info(void);
 /*************************Project Adaptation*************************/
 /**
 *******************************************/
-#define COFNIG_KDS      (39)
+#define COFNIG_KDS              (39)
 /*******************************************/
 
 /**
 *******************************************/
-#define PROJECT_140             140
+#define PROJECT_140             (140)
 /*******************************************/
 
 /**
@@ -277,36 +277,6 @@ void read_device_version_info(void);
 
 #define DEVICE_TEST_KEY_BOARD_TAB {KEY_NUM_1, KEY_NUM_2, KEY_NUM_3, KEY_NUM_4, KEY_NUM_5, KEY_NUM_6, \
                                    KEY_NUM_7, KEY_NUM_8, KEY_CAN, KEY_NUM_9, KEY_NUM_0, KEY_OK}
-
-///< 0-防撬报警参数
-#define TAMPER_ALARM_FLAG_MIN          Disabled
-#define TAMPER_ALARM_FLAG_MAX          Enabled
-#define TAMPER_ALARM_FLAG_DEFAULT      Enabled
-
-///< 1-逗留报警参数
-#define LOITER_ALARM_FLAG_MIN          Disabled
-#define LOITER_ALARM_FLAG_MAX          Enabled
-#define LOITER_ALARM_FLAG_DEFAULT      Enabled
-
-///< 2-人脸功能设置参数
-#define FACE_FUNC_SETTING_MIN          Disabled
-#define FACE_FUNC_SETTING_MAX          Enabled
-#define FACE_FUNC_SETTING_DEFAULT      Enabled
-
-///< 3-人体感应设置参数
-typedef enum {
-    OB_LOCK_MOTION_DETECT_SETTINGS_DISABLE,
-    OB_LOCK_MOTION_DETECT_SETTINGS_LOW,
-    OB_LOCK_MOTION_DETECT_SETTINGS_MID,
-    OB_LOCK_MOTION_DETECT_SETTINGS_HIGH,
-    OB_LOCK_MOTION_DETECT_SETTINGS_MAX,
-
-} ob_lock_motion_detect_sen_e;
-
-#define HUMAN_SENSOR_SETTING_MIN       (OB_LOCK_MOTION_DETECT_SETTINGS_DISABLE)
-#define HUMAN_SENSOR_SETTING_MAX       (OB_LOCK_MOTION_DETECT_SETTINGS_HIGH)
-#define HUMAN_SENSOR_SETTING_DEFAULT   (OB_LOCK_MOTION_DETECT_SETTINGS_HIGH)
-
 
 
 

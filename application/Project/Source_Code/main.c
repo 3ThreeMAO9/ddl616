@@ -18,6 +18,7 @@
 #include "task_motor.h"
 #include "task_protocol.h"
 #include "task_battery.h"
+#include "task_produce_test.h"
 
 #include "module_spi_flash.h"
 
@@ -55,6 +56,7 @@ void MainLoop(void)
         system_time_task_loop();// system time task loop
         sleep_task_loop();      // sleep task loop
         qp_fsm_task_loop();     // fsm task loop
+        produceTestTaskLoop();  // produce test task loop
         // protocol_task_loop();   // protocol task loop
     }
 }
@@ -86,7 +88,7 @@ static void task_init(void)
 
     flash_data_init();
     lock_log_init();
-
+    produceTestTaskInit();
     keyTaskPowerOnInit();
     hmiTaskInit();
     motorTaskInit();
