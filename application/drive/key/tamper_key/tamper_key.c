@@ -21,10 +21,7 @@ void tamper_key_init(void)
     TAMPER_KEY_INIT(1);
 
     tamper_key_init_value = READ_TAMPER_KEY_LEVEL();
-    if(tamper_key_init_value)
-        TAMPER_KEY_IRQ_FALLING();
-    else
-        TAMPER_KEY_IRQ_RISING();
+    tamper_key_set_irq();
 }
 
 void tamper_key_sleep(uint8_t event)
@@ -35,6 +32,19 @@ void tamper_key_sleep(uint8_t event)
     else{
 
     }
+}
+
+void tamper_key_set_irq(void)
+{
+    if(tamper_key_init_value)
+        TAMPER_KEY_IRQ_FALLING();
+    else
+        TAMPER_KEY_IRQ_RISING();
+}
+
+void tamper_key_disabled_irq(void)
+{
+    TAMPER_KEY_IRQ_DISABLE();
 }
 
 uint8_t read_tamper_key_level(uint8_t id)
@@ -50,7 +60,7 @@ uint16_t tamper_key_check_wake(void)
     if (READ_TAMPER_KEY_STATE())
     {
         CLEAR_TAMPER_KEY_STATE();
-        if(tamper_key_init_value == READ_TAMPER_KEY_LEVEL())
+        if(tamper_key_init_value != READ_TAMPER_KEY_LEVEL())
             return true;
     }
     return false;

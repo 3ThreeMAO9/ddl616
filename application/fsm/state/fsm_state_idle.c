@@ -66,13 +66,18 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             break;
         case Q_HANDLE_SIG:
-            if ((EVENT_RESULT_FAIL_TOO_SHORT == e->dynamic_[0]) || (EVENT_RESULT_FAIL_TOO_LONG == e->dynamic_[0]))
+            if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
+            {
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            }
+            else if ((EVENT_RESULT_FAIL_TOO_SHORT == e->dynamic_[0]) || (EVENT_RESULT_FAIL_TOO_LONG == e->dynamic_[0]))
             {
                 me->branch = (QStateHandler)(lock_fsm_idle);
                 state = Q_TRAN(lockFsmInputError);
             }
             else if (EVENT_RESULT_VOICE_MODE == e->dynamic_[0])
             {
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
                 keyEventInit(); // 清空已输入的密码
                 if (readUserParameter(USER_PARA_SILENT_MODE_ID)){
                     setUserParameter(USER_PARA_SILENT_MODE_ID, Disabled);
@@ -136,7 +141,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                     state = Q_TRAN(lockFsmHandleFail);
                 }
                 else {
-
+                    state = Q_TRAN(lock_fsm_join_net);
                 }
             }
             else if (EVENT_RESULT_ACTIVECODE_SUCCESS == e->dynamic_[0])

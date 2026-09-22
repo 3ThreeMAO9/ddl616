@@ -41,6 +41,13 @@
         CLEAR_TAMPER_KEY_STATE();                                                 \
     } while (0)
 
+#define TAMPER_KEY_IRQ_DISABLE()                              \
+    do                                                        \
+    {                                                         \
+        HAL_GPIO_DisableIRQ(TAMPER_KEY_GPIO, TAMPER_KEY_PIN); \
+        CLEAR_TAMPER_KEY_STATE();                             \
+    } while (0)
+
 /***********Enum***********/
 
 /***********Struct***********/
@@ -49,6 +56,8 @@
 
 /***********Function***********/
 void tamper_key_init(void);
+void tamper_key_set_irq(void);
+void tamper_key_disabled_irq(void);
 void tamper_key_sleep(uint8_t event);
 uint8_t read_tamper_key_level(uint8_t id);
 uint16_t tamper_key_check_wake(void);

@@ -65,11 +65,11 @@ static uint8_t keyEventCombineFunctionHandle(void)
     // }
 
 
-    // else if (116 == value)
-    // {
-    //     lock_log_flash_test(50 , 0 , 6);
-    //     return true;
-    // }
+    else if (116 == value)
+    {
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_ENTER_NET_CONFIG);
+        return true;
+    }
     // else if (117 == value)
     // {
     //     lock_log_flash_test(50 , 0 , 4);

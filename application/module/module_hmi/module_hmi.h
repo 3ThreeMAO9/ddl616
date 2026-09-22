@@ -78,6 +78,7 @@ typedef enum{
     HMI_STATE_PIN_CODE_TOO_SIMPLE,      //密码过于简单
     // HMI_STATE_ENTER_USER_PIN_CODE,      //请输入用户密码         Enter user PIN code
     // HMI_STATE_PLACE_FINGER_ON_READER,   //请按指纹              Place_your_finger_on_the_reader
+    HMI_STATE_JOIN_NET,                 //配网模式
     HMI_STATE_ENROLLMENT_FAIL,          //添加失败              
     HMI_STATE_ADMIN,                    //管理员菜单
     HMI_STATE_USER_SETTINGS,            //用户设置
@@ -199,6 +200,7 @@ void module_hmi_loop(void);
 uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag);
 void module_hmi_config(uint8_t sleepFlag);
 void module_hmi_tamper_warn_time(uint32_t warn_time);
+uint8_t module_hmi_get_tamper_warn_busy(void);
 void hmiEventRegister_callback(hmi_callback_t callback);
 
 /**************************************/

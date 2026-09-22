@@ -7,6 +7,7 @@ const bsp_hmi_drive_io_t bsp_hmi = {
     .setState = module_hmi_handle,
     .config = module_hmi_config,
     .tamperwarn = module_hmi_tamper_warn_time,
+    .tamperwarn_busy = module_hmi_get_tamper_warn_busy,
 };
 
 // ------------------------------------------

@@ -49,6 +49,7 @@ uint32_t hmiTaskSetState(uint8_t state);
 void hmiTaskSetAllowSelintFlag(uint8_t allowSelintFlag);
 uint8_t isallowSlient(void);
 void hmi_task_tamper_warn_time(uint32_t time);
+uint8_t hmi_task_tamper_warn_is_busy(void);
 
 /**************************************/
 

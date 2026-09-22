@@ -16,7 +16,7 @@
 #include "task_uart.h"
 #include "task_fingerprint.h"
 #include "task_battery.h"
-
+#include "task_hmi.h"
 #include "task_nfc.h"
 
 #include "event.h"
@@ -52,19 +52,20 @@ static uint8_t enter_sleep_event_deal(void){
 
     if (fp_task_is_busy()) {
         OB_LOGD(TAG, "fp_task_is_busy");
-        baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP_BUSY);
+        handleEventPush(HANDLE_EVENT_SLEEP_BUSY, 3);   //3 * 100ms 
         return false;
     }
 
-    // if (face_task_is_busy()) {
-    //     OB_LOGD(TAG, "face_task_is_busy");
-    //     baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP_BUSY);
-    //     return false;
-    // }
+    if (hmi_task_tamper_warn_is_busy()) {
+        OB_LOGD(TAG, "hmi_task_tamper_warn_is_busy");
+        handleEventPush(HANDLE_EVENT_SLEEP_BUSY, 40);   //40 * 100ms 
+        return false;
+    }
+
 
     if (!key_task_sleep(KEY_TYPE_KEY_BOARD)) {
         OB_LOGD(TAG, "key_task_is_busy");
-        baseEventPush(Q_HANDLE_SIG, HANDLE_EVENT_SLEEP_BUSY);
+        handleEventPush(HANDLE_EVENT_SLEEP_BUSY, 3);   //3 * 100ms 
         return false;
     }
 

@@ -27,6 +27,7 @@ typedef struct{
     uint32_t (*setState)(uint8_t, uint8_t);
     void (*config)(uint8_t);
     void (*tamperwarn)(uint32_t);
+    uint8_t (*tamperwarn_busy)(void);
 
 }bsp_hmi_drive_io_t;
 

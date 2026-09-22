@@ -20,8 +20,6 @@
 #include "ob_log.h"
 #define TAG "module_uart"
 
-#define IS_UART_ACK_CMD(cmd)  ((cmd) & 0x80)  // ACK指令特征：最高位为1
-
 static uart_event_callback_t uart_callback;
 
 #if (BACK_UART_SEL == UART0)

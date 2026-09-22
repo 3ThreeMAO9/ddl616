@@ -72,6 +72,7 @@ void produceTestInit(void)
     // setProduceReboot(0);
     // if (isEmptyUser(false))
     //     dev_init_resp(); // 没用户，默认上电会发送数据给产测工具
+    produceTestHandleEvent_callback(EVENT_RESULT_PRODUCE_INIT, 0);
 }
 
 // uint8_t pcbaKeyBoardTestPressHandle(uint8_t keyValue)

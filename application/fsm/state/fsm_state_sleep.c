@@ -35,7 +35,7 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
             me->admin_flag = false;
 
             keyEventInit();
-            keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           //key board
+            keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_SLEEP);
             nfc_task_set_state(NFC_STATE_SLEEP);
             hmiTaskSetAllowSelintFlag(true);
@@ -45,6 +45,8 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            hmiTaskSetState(HMI_STATE_KEY_BOARD_WAKE_UP);
+            state = Q_TRAN(lock_fsm_idle);
             break;
         case Q_HANDLE_SIG:
             if (BATTERY_STATE_LOW_SYSTEM_LOCK == batteryTaskReadState())
@@ -60,17 +62,17 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
                 state = Q_TRAN(lock_fsm_idle);
             }
             else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP_BUSY){
-                system_time_task_set_work_time(250);
-                OB_LOGI(TAG, "Fsm_state[%s], HANDLE_EVENT_SLEEP_BUSY!!!!", "sleep");
+                system_time_task_set_work_time(e->dynamic_[1] * 100);
+                OB_LOGI(TAG, "Fsm_state[%s] timeout[%ld], HANDLE_EVENT_SLEEP_BUSY!!!!", "sleep", e->dynamic_[1] * 100);
+            }
+            else if (EVENT_RESULT_BREAK_WARN == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_TAMPER_WARN);
             }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;
         case Q_WORK_TIME_OUT_SIG:
-            // if (fp_task_is_busy()) {
-            //     system_time_task_set_work_time(250);
-            //     break;
-            // }
             sleep_task_set_flag();
             break;
         default:

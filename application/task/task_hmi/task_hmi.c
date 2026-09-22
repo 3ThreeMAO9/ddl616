@@ -86,3 +86,8 @@ void hmi_task_tamper_warn_time(uint32_t time)
     hmi_task_driver.io->tamperwarn(time);
 }
 
+uint8_t hmi_task_tamper_warn_is_busy(void)
+{
+    return hmi_task_driver.io->tamperwarn_busy();
+}
+

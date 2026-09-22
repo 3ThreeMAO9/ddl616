@@ -155,6 +155,7 @@ void module_keySwitch(uint8_t type, uint8_t flag)
             case KEY_TYPE_TAMPER_KEY:
                 button_stop(&keyHandle.keyBtn[KEY_CNT]);
                 keyHandle.tamper_key.busy = false;
+                tamper_key_disabled_irq();
                 break;
             case KEY_TYPE_KEY_BOARD:
                 for (i=0; i<KEY_CNT; i++)

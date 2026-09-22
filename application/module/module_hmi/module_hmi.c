@@ -114,6 +114,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_3s, 1);
             break;
 
+        case HMI_STATE_JOIN_NET:
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 0xffffffff);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            break;
+
         case HMI_STATE_KEY_BOARD_LED_ON:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             break;
@@ -394,6 +399,11 @@ void module_hmi_tamper_warn_time(uint32_t warn_time)
     }
 }
 
+uint8_t module_hmi_get_tamper_warn_busy(void)
+{
+    return hmihandle.tamper.busy;
+}
+
 static void hmi_break_warn_loop(void)
 {
     if (hmihandle.tamper.cnt){
@@ -401,7 +411,10 @@ static void hmi_break_warn_loop(void)
         {
             hmihandle.tamper.cnt--;
             if (hmihandle.tamper.cnt == 0)
+            {
                 setUserParameter(USER_PARA_BREAK_ID, Disabled);
+                hmihandle.tamper.busy = false;
+            }
             hmihandle.tamper.timeOut = system_inc_time_cnt(TAMPER_WARN_PERIOD_TIME);
             if (!play_task_is_busy())
             {
