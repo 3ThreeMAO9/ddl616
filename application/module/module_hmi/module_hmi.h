@@ -74,7 +74,8 @@ typedef enum{
     // HMI_STATE_FINGER_FULL,              //指纹库已满            Fingerprint database is full
     HMI_STATE_VACATION_MODE_FAIL,       //离家模式              away mode
     HMI_STATE_TAMPER_WARN,              //防撬报警
-    HMI_STATE_CHANGE_MASTER_CODE,       //请及时修改管理密码     Please_modify_master_PIN_code_as_soon_as_possible
+    HMI_STATE_CHANGE_MASTER_CODE,       // 添加管理用戶，请输入六至十二位管理密码，以井号键结束，取消请按星号键
+    HMI_STATE_MENU_CHANGE_MASTER_CODE,  // 请输入6-12位密码，以井号键结束，返回上级菜单请按星号键
     HMI_STATE_PIN_CODE_TOO_SIMPLE,      //密码过于简单
     // HMI_STATE_ENTER_USER_PIN_CODE,      //请输入用户密码         Enter user PIN code
     // HMI_STATE_PLACE_FINGER_ON_READER,   //请按指纹              Place_your_finger_on_the_reader

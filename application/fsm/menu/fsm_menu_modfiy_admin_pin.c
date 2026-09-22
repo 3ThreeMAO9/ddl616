@@ -40,7 +40,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             if (isEmptyUser(false))   // 初始化状态
                 hmiTaskSetState(HMI_STATE_CHANGE_MASTER_CODE); // 添加管理用戶，请输入六至十二位管理密码，以井号键结束，取消请按星号键
             else
-                hmiTaskSetState(HMI_STATE_CHANGE_MASTER_CODE); // 请输入6-12位密码，以井号键结束，返回上级菜单请按星号键
+                hmiTaskSetState(HMI_STATE_MENU_CHANGE_MASTER_CODE); // 请输入6-12位密码，以井号键结束，返回上级菜单请按星号键
             break;
         case Q_EXIT_SIG:
             break;
@@ -59,6 +59,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             else
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
                 keyEventHandleCode((e->dynamic_[0]), CODE_HANDLE_CHANGE_MASTER, 0);
             }
             break;
@@ -71,8 +72,13 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL_INPUT == e->dynamic_[0])
             {
-                hmiTaskSetState(HMI_STATE_INPUT_ERROR_AGAIN);
-                state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);     // 修改管理用户
+                if (isEmptyUser(false)) {
+                    state = Q_TRAN(lock_fsm_idle);
+                }
+                else {
+                    hmiTaskSetState(HMI_STATE_INPUT_ERROR_AGAIN);
+                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);     // 修改管理用户
+                }
             }
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
@@ -80,13 +86,23 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL_TOO_SIMPLE == e->dynamic_[0])
             {
-                hmiTaskSetState(HMI_STATE_PIN_CODE_TOO_SIMPLE);
-                state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);     // 修改管理用户
+                if (isEmptyUser(false)) {
+                    state = Q_TRAN(lock_fsm_idle);
+                }
+                else {
+                    hmiTaskSetState(HMI_STATE_PIN_CODE_TOO_SIMPLE);
+                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);     // 修改管理用户
+                }
             }
             else if (EVENT_RESULT_FAIL_REPEAT == e->dynamic_[0])
             {
-                hmiTaskSetState(HMI_STATE_PIN_REPEAT);
-                state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);     // 修改管理用户
+                if (isEmptyUser(false)) {
+                    state = Q_TRAN(lock_fsm_idle);
+                }
+                else {
+                    hmiTaskSetState(HMI_STATE_PIN_REPEAT);
+                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);     // 修改管理用户
+                }
             }
             break;
         case Q_USER_HANDLE_SIG:

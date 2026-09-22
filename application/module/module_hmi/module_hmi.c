@@ -183,23 +183,24 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_ENTER_ADMIN_MODE:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            if (!silentFlag)
-                PLAYER_LIST_CLEAR_ADD(VOICE_Entered_management_mode);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Entered_management_mode);
             break;
 
         case HMI_STATE_VERIFY_ADMIN_CODE:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            if (!silentFlag)
-                PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_master_PIN_code);
+            PLAYER_LIST_ADD(VOICE_Please_verify_master_access_method, VOICE_To_cancel_please_press_the_asterisk_key);
             break;
 
         case HMI_STATE_ADMIN:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            PLAYER_LIST_CLEAR_ADD(VOICE_One);
-            PLAYER_LIST_ADD(VOICE_Two);
+            PLAYER_LIST_CLEAR_ADD(VOICE_For_user_settings_press, VOICE_One, VOICE_For_system_settings_press, VOICE_Two);
             break;
         
         case HMI_STATE_CHANGE_MASTER_CODE:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_ADD(VOICE_To_add_a_master_user, VOICE_Please_enter_a_6_to_12_digit_master_PIN_code, VOICE_End_with_pound_key, VOICE_To_cancel_please_press_the_asterisk_key);
+            break;
+        case HMI_STATE_MENU_CHANGE_MASTER_CODE:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_master_PIN_code, VOICE_End_with_pound_key, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
@@ -223,11 +224,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         }
 
         case HMI_STATE_SYSTEM_SETTINGS:
-            PLAYER_LIST_CLEAR_ADD(VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
+            PLAYER_LIST_CLEAR_ADD(VOICE_For_language_settings_press, VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
             break;
 
         case HMI_STATE_LANGAGESETTING:
-            PLAYER_LIST_CLEAR_ADD(VOICE_One,VOICE_Two);
+            PLAYER_LIST_CLEAR_ADD(VOICE_For_Chinese_press, VOICE_One, VOICE_For_English_press, VOICE_Two);
             break;
 
         case HMI_STATE_REPEAT_INPUT_CODE:

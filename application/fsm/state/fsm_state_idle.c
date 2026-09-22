@@ -57,6 +57,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             if (KEY_NUM_13 == e->dynamic_[0])   // 门铃
             {
                 hmiTaskSetState(HMI_STATE_BELL);

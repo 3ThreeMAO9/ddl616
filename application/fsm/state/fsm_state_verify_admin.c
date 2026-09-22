@@ -41,14 +41,16 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             if (KEY_NUM_13 == e->dynamic_[0])   // 门铃
             {
-                
+                hmiTaskSetState(HMI_STATE_BELL);
+                uart_msg_bell(2, 1000);
             }
             else
             {
-                keyEventVerifyAdmin(e->dynamic_[0]);
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+                keyEventVerifyAdmin(e->dynamic_[0]);
             }
             break;
         case Q_HANDLE_SIG:
@@ -72,7 +74,7 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
             }
             break;
         case Q_USER_HANDLE_SIG:
-            me->branch = (QStateHandler)(lock_fsm_verify_admin);
+            // me->branch = (QStateHandler)(lock_fsm_verify_admin);
 
             if (EVENT_RESULT_SUCCESS_VERIFY_ADMIN == (e->dynamic_[0]))
             {

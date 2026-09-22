@@ -67,6 +67,7 @@ QState lock_fsm_menu_linked_unlock(LockFsm *me, QEvent const *e)
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             state = menu_linked_unloc_event_handle(me, e);
             break;
         case Q_HANDLE_SIG:

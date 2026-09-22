@@ -70,6 +70,7 @@ QState lock_fsm_menu_language_settings(LockFsm *me, QEvent const *e)
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             state = menu_system_language_event_handle(me, e);
             break;
         case Q_HANDLE_SIG:

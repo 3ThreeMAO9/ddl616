@@ -51,6 +51,7 @@ QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e)
             else
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
                 keyEventHandleCode((e->dynamic_[0]), CODE_HANDLE_ADD, 0);
             }
             break;

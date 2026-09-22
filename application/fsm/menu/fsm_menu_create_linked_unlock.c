@@ -35,12 +35,17 @@ QState lock_fsm_menu_create_linked_unlock(LockFsm *me, QEvent const *e)
             if (e->dynamic_[0] <= KEY_OK)
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
                 keyEventLinkedUnlock((e->dynamic_[0]), LINKED_UNLOCK_CREATE, 0);
             }
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            else if (EVENT_RESULT_FAIL == e->dynamic_[0])
+            {
+                state = Q_TRAN(lock_fsm_menu_linked_unlock); // 输入密码空的时候,再按*键
+            }
             break;
         case Q_USER_HANDLE_SIG:
             break;

@@ -62,9 +62,14 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
             {
                 hmiTaskSetState(HMI_STATE_PIN_DIFFERENT);
                 if (code_handle == CODE_HANDLE_CHANGE_MASTER)
-                    state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);     // 修改管理用户
+                {
+                    if (isEmptyUser(false))
+                        state = Q_TRAN(lock_fsm_idle);
+                    else
+                        state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin); // 修改管理用户
+                }
                 else if (code_handle == CODE_HANDLE_ADD)
-                    state = Q_TRAN(lock_fsm_menu_add_normal_user);      // 添加普通用户
+                    state = Q_TRAN(lock_fsm_menu_add_normal_user); // 添加普通用户
             }
             break;
         case Q_USER_HANDLE_SIG:
