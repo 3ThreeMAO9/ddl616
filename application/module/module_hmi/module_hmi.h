@@ -184,6 +184,13 @@ typedef struct{
 }break_warn_handle_t;
 
 typedef struct{
+    uint8_t busy;
+    uint8_t cnt;
+    uint32_t timeOut;
+
+}join_net_handle_t;
+
+typedef struct{
     uint8_t busy;               // bit0--logo灯； bit1--key board led； bit2： beep
     uint8_t state;
 
@@ -192,6 +199,7 @@ typedef struct{
     beep_handle_t beep;
 
     break_warn_handle_t tamper;
+    join_net_handle_t join_net;
 }hmi_handle_t;
 
 /***************Function***************/
@@ -201,7 +209,10 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag);
 void module_hmi_config(uint8_t sleepFlag);
 void module_hmi_tamper_warn_time(uint32_t warn_time);
 uint8_t module_hmi_get_tamper_warn_busy(void);
+void module_hmi_join_net_time(uint32_t warn_time);
+uint8_t module_hmi_get_join_net_busy(void);
 void hmiEventRegister_callback(hmi_callback_t callback);
+uint8_t module_hmi_get_key_board_led_state(void);
 
 /**************************************/
 

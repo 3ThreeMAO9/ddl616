@@ -17,6 +17,7 @@ static void lockFsm_ctor(LockFsm* lock_fsm)
     lock_fsm->verify_fail_cnt = 0;
     lock_fsm->verify_fail_time = 0;
     lock_fsm->admin_flag = false;
+    lock_fsm->idle_sleep_flag = false;
 }
 
 void qpFsmInit(void)

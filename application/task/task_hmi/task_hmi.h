@@ -50,7 +50,9 @@ void hmiTaskSetAllowSelintFlag(uint8_t allowSelintFlag);
 uint8_t isallowSlient(void);
 void hmi_task_tamper_warn_time(uint32_t time);
 uint8_t hmi_task_tamper_warn_is_busy(void);
-
+void hmi_task_join_net_time(uint32_t time);
+uint8_t hmi_task_join_net_is_busy(void);
+uint8_t hmi_task_read_keyboard_state(void);
 /**************************************/
 
 #endif 

@@ -56,14 +56,19 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
             {
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             }
+            else if (EVENT_RESULT_VERIFY_INPUT_ERROR == e->dynamic_[0])
+            {
+                me->branch = (QStateHandler)(lock_fsm_idle);
+                state = Q_TRAN(lockFsmInputError);
+            }
             else if ((EVENT_RESULT_FAIL_TOO_SHORT == e->dynamic_[0]) || (EVENT_RESULT_FAIL_TOO_LONG == e->dynamic_[0]))
             {
-                me->branch = (QStateHandler)(lock_fsm_verify_admin);
-                state = Q_TRAN(lockFsmInputError);
+                me->branch = (QStateHandler)(lock_fsm_idle);
+                state = Q_TRAN(lockFsmVerifyFail);
             }
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
-                state = Q_TRAN(lock_fsm_sleep); // 输入密码空的时候,再按*键
+                state = Q_TRAN(lock_fsm_idle); // 输入密码空的时候,再按*键
             }
             break;
         case Q_USER_HANDLE_SIG:

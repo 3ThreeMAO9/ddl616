@@ -45,8 +45,8 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            hmiTaskSetState(HMI_STATE_KEY_BOARD_WAKE_UP);
-            state = Q_TRAN(lock_fsm_idle);
+            me->branch = (QStateHandler)(lock_fsm_idle);
+            state = Q_TRAN(lockFsmHandleWakeUpSuccess);
             break;
         case Q_HANDLE_SIG:
             if (BATTERY_STATE_LOW_SYSTEM_LOCK == batteryTaskReadState())
@@ -57,9 +57,14 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
 
             if (HANDLE_EVENT_WAKE == e->dynamic_[0]){
                 OB_LOGW(TAG,"wake [%08X]",e->dynamic_[1]);
-                if (e->dynamic_[1] == WAKE_UP_TYPE_KEY_BOARD)
-                    hmiTaskSetState(HMI_STATE_KEY_BOARD_WAKE_UP);
-                state = Q_TRAN(lock_fsm_idle);
+                if (e->dynamic_[1] == WAKE_UP_TYPE_KEY_BOARD) {
+                    me->branch = (QStateHandler)(lock_fsm_idle);
+                    state = Q_TRAN(lockFsmHandleWakeUpSuccess);
+                }
+                else{
+                    me->idle_sleep_flag = true;
+                    state = Q_TRAN(lock_fsm_idle);
+                }
             }
             else if (e->dynamic_[0] == HANDLE_EVENT_SLEEP_BUSY){
                 system_time_task_set_work_time(e->dynamic_[1] * 100);
@@ -67,7 +72,15 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
             }
             else if (EVENT_RESULT_BREAK_WARN == e->dynamic_[0])
             {
+                me->idle_sleep_flag = true;
+                state = Q_TRAN(lock_fsm_idle);
                 hmiTaskSetState(HMI_STATE_TAMPER_WARN);
+            }
+            else if (EVENT_RESULT_JOIN_NET_MODE == e->dynamic_[0])
+            {
+                me->idle_sleep_flag = true;
+                state = Q_TRAN(lock_fsm_idle);
+                hmiTaskSetState(HMI_STATE_JOIN_NET);
             }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:

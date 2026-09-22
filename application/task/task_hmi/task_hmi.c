@@ -18,6 +18,10 @@ static void hmiTask_callback(uint8_t event, uint32_t value)
     {
         handleEventPush(EVENT_RESULT_BREAK_WARN, value);
     }
+    else if (event == HMI_STATE_JOIN_NET)
+    {
+        handleEventPush(EVENT_RESULT_JOIN_NET_MODE, value);
+    }
 }
 void hmiTaskInit(void)
 {
@@ -89,5 +93,20 @@ void hmi_task_tamper_warn_time(uint32_t time)
 uint8_t hmi_task_tamper_warn_is_busy(void)
 {
     return hmi_task_driver.io->tamperwarn_busy();
+}
+
+void hmi_task_join_net_time(uint32_t time)
+{
+    hmi_task_driver.io->join_net(time);
+}
+
+uint8_t hmi_task_join_net_is_busy(void)
+{
+    return hmi_task_driver.io->join_net_busy();
+}
+
+uint8_t hmi_task_read_keyboard_state(void)
+{
+    return hmi_task_driver.io->keyboardState();
 }
 

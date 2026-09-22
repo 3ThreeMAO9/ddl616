@@ -107,7 +107,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_KEY_BOARD_WAKE_UP:
             hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            keepTime = HMI_STATE_KEEP_TIME_1s;
+            keepTime = HMI_STATE_KEEP_TIME_250ms;
             break;
 
         case HMI_STATE_BELL:
@@ -115,8 +115,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_JOIN_NET:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 0xffffffff);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 2);
             break;
 
         case HMI_STATE_KEY_BOARD_LED_ON:
@@ -158,7 +157,8 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
         case HMI_STATE_VERIFY_ADMIN_SUCCESS:
             break;
-        
+
+        case HMI_STATE_INPUT_ERROR:
         case HMI_STATE_HANDLE_FAIL:
         case HMI_STATE_VERIFY_FAIL:
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
@@ -168,13 +168,6 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
 
-        case HMI_STATE_INPUT_ERROR:
-            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
-            hmi_key_board_led_config(TRUN_ON, TRUN_OFF, HMI_STATE_KEEP_TIME_100ms, 4);
-            if (!silentFlag)
-                PLAYER_LIST_CLEAR_ADD(VOICE_Input_error);
-            keepTime = HMI_STATE_KEEP_TIME_1s;
-            break;
 
         case HMI_STATE_VERIFY_FAIL_WARN:
             PLAYER_LIST_CLEAR_ADD(SOUND_WARN);
@@ -384,6 +377,40 @@ void hmiEventRegister_callback(hmi_callback_t callback)
     hmi_callback = callback;
 }
 
+void module_hmi_join_net_time(uint32_t warn_time)
+{
+    hmihandle.join_net.cnt = (warn_time / JOIN_NET_PERIOD_TIME);
+    if (warn_time)
+    {
+        hmihandle.join_net.timeOut = system_inc_time_cnt(500);
+        hmihandle.join_net.busy = true;
+    }
+    else
+    {
+        hmihandle.join_net.busy = false;
+        hmihandle.join_net.cnt = 0;
+    }
+}
+
+uint8_t module_hmi_get_join_net_busy(void)
+{
+    return hmihandle.join_net.busy;
+}
+
+static void hmi_join_net_loop(void)
+{
+    if (hmihandle.join_net.cnt){
+        if (system_out_time_cnt(hmihandle.join_net.timeOut))
+        {
+            hmihandle.join_net.cnt--;
+            if (hmihandle.join_net.cnt == 0)
+                hmihandle.join_net.busy = false;
+            hmihandle.join_net.timeOut = system_inc_time_cnt(JOIN_NET_PERIOD_TIME);
+            hmiHandleEvent_callback(HMI_STATE_JOIN_NET,0);
+        }
+    }
+}
+
 void module_hmi_tamper_warn_time(uint32_t warn_time)
 {
     hmihandle.tamper.cnt = (warn_time / TAMPER_WARN_PERIOD_TIME);
@@ -426,6 +453,11 @@ static void hmi_break_warn_loop(void)
     }
 }
 
+uint8_t module_hmi_get_key_board_led_state(void)
+{
+    return keyBoardLedGetState();
+}
+
 void module_hmi_loop(void)
 {
     if (hmihandle.keyBoardLed.halfPeriod && system_out_time_cnt(hmihandle.keyBoardLed.timeOut))
@@ -444,4 +476,6 @@ void module_hmi_loop(void)
 
     // 防撬报警逻辑
     hmi_break_warn_loop();
+    // 配网模式灯光逻辑
+    hmi_join_net_loop();
 }

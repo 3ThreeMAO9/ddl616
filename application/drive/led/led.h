@@ -92,6 +92,7 @@ typedef enum{
 void ledInit(void);
 void ledPowerOnInit(void);
 void keyBoardLedDrive(uint8_t ledSw);
+uint8_t keyBoardLedGetState(void);
 void logoLedDrive(uint8_t color);
 /**************************************/
 

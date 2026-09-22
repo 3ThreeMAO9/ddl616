@@ -79,6 +79,7 @@ typedef enum{
     EVENT_RESULT_FAIL_SIMPLY,
     EVENT_RESULT_FAIL_INPUT,
     EVENT_RESULT_FAIL_DIFFERENT,        //输入不一样
+    EVENT_RESULT_VERIFY_INPUT_ERROR,   // 验证错误，不计入错误次数
     EVENT_RESULT_BACK_MENU,
     EVENT_RESULT_EXIT_MENU,             //退出菜单
     EVENT_RESULT_REPEAT_MENU,           //重新进入状态机
@@ -97,6 +98,7 @@ typedef enum{
     EVENT_RESULT_ADD_ADMIN,             // 添加管理员
     EVENT_RESULT_ENTER_LOCAL_MENU,      // 进入本地菜单
     EVENT_RESULT_ENTER_NET_CONFIG,      // 进入配网状态
+    EVENT_RESULT_JOIN_NET_MODE,         // 配网模式
     EVENT_RESULT_ACTIVECODE_SUCCESS,    // 激活成功
     EVENT_RESULT_KEY_LONG_PRESS_RELEASE,
     EVENT_RESULT_RESET_LONG_PRESS_RELEASE,

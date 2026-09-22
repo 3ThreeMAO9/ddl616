@@ -210,7 +210,10 @@ void keyEventVerifyAdmin(uint8_t key_value)
 #if (Enabled == PRINTF_PASSWORD)
             OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
 #endif
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
+            if (keyBoardEvent.input[0].len == 0)
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERIFY_INPUT_ERROR);
+            else
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
             CLEAR_KEY_EVENT();
         }
         else
@@ -295,7 +298,10 @@ void keyEventVerifyUser(uint8_t key_value)
 #if (Enabled == PRINTF_PASSWORD)
                 OB_LOGE(TAG, "handle fail: input len is too short[%u]", keyBoardEvent.input[0].len);
 #endif
-                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
+                if (keyBoardEvent.input[0].len == 0)
+                    baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERIFY_INPUT_ERROR);
+                else
+                    baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_FAIL_TOO_SHORT);
             }
             CLEAR_KEY_EVENT();
         }

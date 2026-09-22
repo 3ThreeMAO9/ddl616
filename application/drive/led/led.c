@@ -6,7 +6,7 @@
 #define TAG "led"
 
 /***************Variable***************/
-
+static uint8_t LedSwLast = TRUN_OFF;
 
 // ------------------------------------------
 void ledPowerOnInit(void)
@@ -65,10 +65,13 @@ void logoLedDrive(uint8_t color)
     }
 }
 
+uint8_t keyBoardLedGetState(void)
+{
+    return LedSwLast;
+}
+
 void keyBoardLedDrive(uint8_t ledSw)
 {
-    static uint8_t LedSwLast = TRUN_OFF;
-
     ledSw &= 0x0F;
     if(LedSwLast == ledSw)
     {

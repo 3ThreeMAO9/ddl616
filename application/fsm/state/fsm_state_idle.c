@@ -48,7 +48,10 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else{
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-                hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
+                if (me->idle_sleep_flag == true)
+                    me->idle_sleep_flag = false;
+                else
+                    hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
             }
             break;
         case Q_EXIT_SIG:
@@ -61,8 +64,13 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else
             {
-                keyEventVerifyUser(e->dynamic_[0]);
-                hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+                if ((TRUN_OFF == hmi_task_read_keyboard_state()) && (e->dynamic_[0] < KEY_CNT)){
+                    hmiTaskSetState(HMI_STATE_KEY_BOARD_WAKE_UP);
+                }
+                else {
+                    hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+                    keyEventVerifyUser(e->dynamic_[0]);
+                }
             }
             break;
         case Q_HANDLE_SIG:
@@ -70,10 +78,15 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             }
-            else if ((EVENT_RESULT_FAIL_TOO_SHORT == e->dynamic_[0]) || (EVENT_RESULT_FAIL_TOO_LONG == e->dynamic_[0]))
+            else if (EVENT_RESULT_VERIFY_INPUT_ERROR == e->dynamic_[0])
             {
                 me->branch = (QStateHandler)(lock_fsm_idle);
                 state = Q_TRAN(lockFsmInputError);
+            }
+            else if ((EVENT_RESULT_FAIL_TOO_SHORT == e->dynamic_[0]) || (EVENT_RESULT_FAIL_TOO_LONG == e->dynamic_[0]))
+            {
+                me->branch = (QStateHandler)(lock_fsm_idle);
+                state = Q_TRAN(lockFsmVerifyFail);
             }
             else if (EVENT_RESULT_VOICE_MODE == e->dynamic_[0])
             {
@@ -104,7 +117,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
-                state = Q_TRAN(lock_fsm_sleep); // 输入密码空的时候,再按*键
+                // state = Q_TRAN(lock_fsm_sleep); // 输入密码空的时候,再按*键
             }
             else if (EVENT_RESULT_ADD_ADMIN == e->dynamic_[0])
             {
@@ -141,12 +154,17 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                     state = Q_TRAN(lockFsmHandleFail);
                 }
                 else {
-                    state = Q_TRAN(lock_fsm_join_net);
+                    hmi_task_join_net_time(JOIN_NET_TIMEOUT);
+                    state = Q_TRAN(lock_fsm_sleep);
                 }
             }
             else if (EVENT_RESULT_ACTIVECODE_SUCCESS == e->dynamic_[0])
             {
                 hmiTaskSetState(HMI_STATE_ACTIVECODE_SUCCESS);
+            }
+            else if (EVENT_RESULT_JOIN_NET_MODE == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_JOIN_NET);
             }
             
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){

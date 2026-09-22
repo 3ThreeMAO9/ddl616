@@ -26,6 +26,7 @@ typedef struct{
     uint8_t verify_fail_cnt;            // 验证错误次数
     uint32_t verify_fail_time;          // 验证错误的时间戳 
     uint8_t admin_flag;                 // 进入管理员菜单
+    uint8_t idle_sleep_flag;            // 空闲状态机，需要表现和休眠一样
 
 }LockFsm;
 

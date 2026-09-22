@@ -28,7 +28,9 @@ typedef struct{
     void (*config)(uint8_t);
     void (*tamperwarn)(uint32_t);
     uint8_t (*tamperwarn_busy)(void);
-
+    void (*join_net)(uint32_t);
+    uint8_t (*join_net_busy)(void);
+    uint8_t (*keyboardState)(void);
 }bsp_hmi_drive_io_t;
 
 /***************Variable***************/

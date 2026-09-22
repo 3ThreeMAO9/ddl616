@@ -164,6 +164,15 @@ QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e)
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_ADD_SUCCESS);
 }
 
+QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e)
+{
+#if (Enabled==PRINTF_FSM)
+    OB_LOGD(TAG, "Now State[wake up success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
+#endif
+    return lockFsmSuccessDeal(me, e, HMI_STATE_KEY_BOARD_WAKE_UP);
+}
+
+
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e)
 {
 #if (Enabled==PRINTF_FSM)
@@ -264,7 +273,7 @@ QState lockFsmInputError(LockFsm *me, QEvent const *e)
 #if (Enabled==PRINTF_FSM)
     OB_LOGD(TAG, "Now State[input error], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
-    return lockFsmFailDeal(me, e, HMI_STATE_INPUT_ERROR, true);
+    return lockFsmFailDeal(me, e, HMI_STATE_INPUT_ERROR, false);
 }
 
 

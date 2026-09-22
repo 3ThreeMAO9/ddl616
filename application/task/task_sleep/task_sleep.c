@@ -62,6 +62,12 @@ static uint8_t enter_sleep_event_deal(void){
         return false;
     }
 
+    if (hmi_task_join_net_is_busy()) {
+        OB_LOGD(TAG, "hmi_task_join_net_is_busy");
+        handleEventPush(HANDLE_EVENT_SLEEP_BUSY, 40);   //40 * 100ms 
+        return false;
+    }
+
 
     if (!key_task_sleep(KEY_TYPE_KEY_BOARD)) {
         OB_LOGD(TAG, "key_task_is_busy");
