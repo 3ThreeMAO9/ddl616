@@ -46,8 +46,9 @@ static void uart_msg_common_send(uint8_t cmd, uint8_t* payload, uint16_t payload
     // 4. 加密（如果启用）
     // if (enc != NONE) data_encrypt(pkt->random, pkt->payload, payload_len);
 
-    // 5. 算 checksum1（对密文 payload，此处未加密所以等价）
-    pkt->checksum1 = check_sum(buf + 4, 8 + payload_len);
+    // 5. 算 checksum1（attr + sn~payload，跳过 checksum1）
+    pkt->checksum1 = check_sum(buf + 1, 1)                // attr (1 字节)
+                   + check_sum(buf + 4, 8 + payload_len); // sn~payload
 
     // 6. 打印日志
     // OB_LOGD(TAG, "tx cmd=0x%02X, sn=%u, len=%u", cmd, pkt->sn, payload_len);

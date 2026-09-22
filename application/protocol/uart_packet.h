@@ -20,7 +20,7 @@ typedef struct
 {
     uint8_t  mark;          // 0xA5
     uint8_t  attr;          // bit0-3=地址, bit4-5=加密类型
-    uint16_t checksum1;     // 头部校验 = SUM(序号~数据内容)
+    uint16_t checksum1;     // 头部校验 = SUM(attr) + SUM(sn~payload)
     uint16_t sn;            // 序列号
     uint8_t  cmd;           // 命令字
     uint8_t  random;        // 随机数

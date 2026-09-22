@@ -168,27 +168,26 @@ uint32_t play_task_is_busy(void)
 
 void play_num(uint32_t num)
 {
-	uint8_t temp;
-	uint8_t t=0;
-	uint8_t voice_data[10];
+    uint8_t temp;
+    uint8_t t = 0;
+    uint8_t voice_data[10];
     player_task_play_list_clear();
-    if(!num)
+    if (!num)
     {
-		PLAYER_LIST_ADD(SOUND_ZERO);
-        return ;
+        PLAYER_LIST_ADD(VOICE_Zero);
+        return;
     }
-	memset(voice_data,0,sizeof(voice_data));
-	while (num)
-	{
-		voice_data[++t]=SOUND_ZERO+num%10;
-		num/=10;
-	}
-	for(temp=0;temp<t;temp++)
-	{
-		PLAYER_LIST_ADD(voice_data[t-temp]);
-	}
+    memset(voice_data, 0, sizeof(voice_data));
+    while (num)
+    {
+        voice_data[++t] = VOICE_Zero + num % 10;
+        num /= 10;
+    }
+    for (temp = 0; temp < t; temp++)
+    {
+        PLAYER_LIST_ADD(voice_data[t - temp]);
+    }
 }
-
 
 //测试
 #if 1

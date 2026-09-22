@@ -145,11 +145,11 @@ void flash_addr_update_handler(const sfud_flash *flash,const spi_flash_frame_t  
     }
 
 	uint32_t opt_length = flash_info_frame.index_length*flash_info_frame.size;//索引长度
-    if(flash_info_frame.data_length == 0xFFFF)///长度不固定
-    {
-        opt_length += flash_info_frame.index_length;
-    }
-	flash_info_frame.start_addr = addr+sizeof(spi_flash_frame_t)+opt_length;
+    // if(flash_info_frame.data_length == 0xFFFF)///长度不固定
+    // {
+    //     opt_length += flash_info_frame.index_length;
+    // }
+	flash_info_frame.start_addr = addr+sizeof(spi_flash_frame_t) + opt_length;
 
 	flash_info_frame.sum = validation_u8_sum_u16((uint8_t *)&flash_info_frame.version,sizeof(flash_pack_t)-4);
 
@@ -196,7 +196,7 @@ uint32_t flash_info_seach(void)
     flash_erase_flag = true;
 
     // for (uint32_t addr = 0; addr < flash->chip.capacity;)
-    for (uint32_t addr = 0; addr < 0xB0000;)    //遍历全部FLASH时间需要3s，太长了，缩短有效区域
+    for (uint32_t addr = 0; addr < 0x200000;)    //遍历全部FLASH时间需要3s，太长了，缩短有效区域
     {
         int result = sfud_read(flash, addr, sizeof(spi_flash_frame_t), (uint8_t *)&spi_flash_frame);
         if (result == SFUD_SUCCESS)
@@ -211,7 +211,10 @@ uint32_t flash_info_seach(void)
                 }
                 OB_LOGD(TAG, "addr:%X,ver:%d,size:%d,type:%x", addr, spi_flash_frame.version, spi_flash_frame.size, spi_flash_frame.data_type);
 
-                addr = spi_flash_aligned_addr(addr + spi_flash_frame.total_length, FLASH_HEADER_OFFSET_SIZE);
+				if (addr == 0)
+					addr = FLASH_PAGE_ALIGN_DOWN(FLASH_USER_DEFINE_END_ADDR);
+				else
+                	addr = spi_flash_aligned_addr(addr + spi_flash_frame.total_length, FLASH_HEADER_OFFSET_SIZE);
             }
             else
             {

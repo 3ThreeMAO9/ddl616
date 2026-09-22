@@ -13,6 +13,12 @@
 #define FLASH_USER_DEFINE_START_ADDR    (0x1000)
 #define FLASH_USER_DEFINE_END_ADDR      (0x17FFF)
 
+// 页对齐：向下取整到 FLASH_ERASE_SIZE 边界
+#define FLASH_PAGE_ALIGN_DOWN(addr)     ((addr) & ~(FLASH_ERASE_SIZE - 1))
+
+// 页对齐：向上取整到 FLASH_ERASE_SIZE 边界
+#define FLASH_PAGE_ALIGN_UP(addr)       (((addr) + FLASH_ERASE_SIZE - 1) & ~(FLASH_ERASE_SIZE - 1))
+
 //page cnt
 #define SPI_FLASH_SECTOR_NUM            (1)
 #define PARAMETER_PAGE_CNT              (1)

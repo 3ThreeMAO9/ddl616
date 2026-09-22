@@ -47,10 +47,12 @@ static uint16_t calc_checksum2(uint8_t* payload, uint16_t len)
     return check_sum(payload, len);
 }
 
-// checksum1 = SUM(sn~payload)，偏移 4 开始，长度 8 + payload_len
+// checksum1 = SUM(attr) + SUM(sn~payload)
+// attr 在偏移 1，sn~payload 在偏移 4 开始，长度 8 + payload_len
 static uint16_t calc_checksum1(uint8_t* raw, uint16_t payload_len)
 {
-    return check_sum(raw + 4, 8 + payload_len);
+    return check_sum(raw + 1, 1)                // attr (1 字节)
+         + check_sum(raw + 4, 8 + payload_len); // sn~payload
 }
 void uart_protocol_heart_inc_time_out(void)
 {
@@ -129,7 +131,7 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
             pkt->cmd, pkt->sn, pkt->length, addr, enc);
     OB_LOGW_DUMP(data, len);
 
-    // 4. 校验 checksum1（头部 + 密文 payload）
+    // 4. 校验 checksum1（attr + 头部 + 密文 payload）
     uint16_t calc1 = calc_checksum1(data, pkt->length);
     if (calc1 != pkt->checksum1) {
         OB_LOGE(TAG, "checksum1 fail: calc=0x%04X, recv=0x%04X",
