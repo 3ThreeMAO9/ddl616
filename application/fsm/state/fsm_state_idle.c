@@ -5,6 +5,7 @@
 #include "key_event.h"
 #include "parameter.h"
 #include "user.h"
+#include "msg_protocol.h"
 
 #include "task_sleep.h"
 #include "task_system_time.h"
@@ -55,8 +56,8 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
         case Q_KEY_BOARD_PRESS_SIG:
             if (KEY_NUM_13 == e->dynamic_[0])   // 门铃
             {
-                hmiTaskSetState(HMI_STATE_ENTER_ADMIN_MODE);
-                state = Q_TRAN(lock_fsm_verify_admin);
+                hmiTaskSetState(HMI_STATE_BELL);
+                uart_msg_bell(2, 1000);
             }
             else
             {

@@ -36,8 +36,10 @@
 
 
 #define UP_CMD_KEY                          (0x60)  // 按键事件
+#define UP_CMD_BELL                         (0x61)  // 门铃事件
 
-
+#define UP_CMD_KEY_ACK                      SET_UART_ACK_CMD(UP_CMD_KEY)   // 按键事件
+#define UP_CMD_BELL_ACK                     SET_UART_ACK_CMD(UP_CMD_BELL)  // 门铃事件
 /***********Enum***********/
 
 /***********Struct***********/

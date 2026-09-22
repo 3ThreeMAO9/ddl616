@@ -58,8 +58,17 @@ static void uart_msg_common_send(uint8_t cmd, uint8_t* payload, uint16_t payload
     uartTaskQueuePut(buf, pkt->sn, pkt->cmd, total_len);
 }
 
+void uart_msg_bell(uint8_t cnt, uint32_t timeout)
+{
+    frame_bell_def_t data = {
+        .cnt = cnt,
+        .timeout = timeout,
+    };
+    uart_msg_common_send(UP_CMD_BELL, (uint8_t *)&data, sizeof(frame_bell_def_t));
+}
+
 void uart_msg_ack(uint8_t cmd, uint8_t status)
 {
     frame_ack_def_t ack = {.status = status};
-    uart_msg_common_send(SET_UART_ACK_CMD(cmd), (uint8_t *)&ack, sizeof(frame_ack_def_t));
+    uart_msg_common_send(cmd, (uint8_t *)&ack, sizeof(frame_ack_def_t));
 }

@@ -63,7 +63,7 @@ HANDLER_DEFINE(UP_CMD_KEY)
         OB_LOGW(TAG, "   unknown id=%u", key->event_key_id);
         break;
     }
-    uart_msg_ack(UP_CMD_KEY, STATUS_SUCCESS);
+    uart_msg_ack(UP_CMD_KEY_ACK, STATUS_SUCCESS);
 
     return 0;
 }

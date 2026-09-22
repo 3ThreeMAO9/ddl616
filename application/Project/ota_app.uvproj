@@ -1072,6 +1072,11 @@
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_key.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_protocol_ack_bell.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_ack_bell.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

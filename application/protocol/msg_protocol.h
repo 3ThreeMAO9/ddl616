@@ -48,6 +48,11 @@ typedef struct {
     uint8_t status;
 } frame_ack_def_t;
 
+typedef struct {
+    uint8_t cnt;            // 响几次
+    uint32_t timeout;       // 间隔多久  单位：1ms
+} frame_bell_def_t;
+
 
 
 /**************************************************/
@@ -57,6 +62,9 @@ typedef struct {
 /***********Variable***********/
 
 /***********Function***********/
+void uart_msg_bell(uint8_t cnt, uint32_t timeout);
+
+
 void uart_msg_ack(uint8_t cmd, uint8_t status);
 
 /*****************************/

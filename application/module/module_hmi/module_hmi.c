@@ -110,6 +110,10 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = HMI_STATE_KEEP_TIME_1s;
             break;
 
+        case HMI_STATE_BELL:
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_3s, 1);
+            break;
+
         case HMI_STATE_KEY_BOARD_LED_ON:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             break;

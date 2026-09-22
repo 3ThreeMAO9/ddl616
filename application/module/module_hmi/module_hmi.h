@@ -118,7 +118,7 @@ typedef enum{
     HMI_STATE_ALL_LED_OFF,              //所有灯全灭
     HMI_STATE_OTA_MODE,                 //ota模式
     HMI_STATE_KEY_BOARD_WAKE_UP,        //键盘唤醒灯效
-
+    HMI_STATE_BELL,                     //门铃状态
     // HMI_STATE_ENROLL_SUCCESS,           //添加成功
     HMI_STATE_ENROLL_FINGER_PRESS,      //嘀，请拿开手指，再按一次
     HMI_STATE_ENROLL_FINGER_PRESS_END,  //最后一次按压，不亮灯

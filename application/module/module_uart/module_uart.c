@@ -253,7 +253,7 @@ uint8_t module_uart_retry_clean(uint8_t cmd, uint16_t tsn)
     uint8_t ret = 0;
     // OB_LOGI(TAG,"tx.tsn:0x%02X  tsn:0x%02X  tx.cmd:0x%02X  cmd:0x%02X ",s_uart_tx.ctrl.tsn,tsn,s_uart_tx.ctrl.cmd,cmd);
 
-    if ((s_uart_tx.ctrl.tsn == tsn) && (s_uart_tx.ctrl.cmd == cmd))
+    if (s_uart_tx.ctrl.cmd == cmd)
     {
         // 清空重发逻辑：重置结构体字段
         memset(s_uart_tx.data, 0, sizeof(s_uart_tx.data)); // 清空待重传数据

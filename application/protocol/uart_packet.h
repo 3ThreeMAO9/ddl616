@@ -50,8 +50,17 @@ typedef struct
 #define LOCK_PACKET_ENCRYPT_TYPE_NONE   (0)
 #define LOCK_PACKET_ENCRYPT_TYPE_XOR    (1)
 
+// 判断是否为 ACK 命令（最高位为 1）
+#define IS_UART_ACK_CMD(cmd)            (((cmd) & 0x80) != 0)
+
 // 设置 ACK 命令（最高位置 1）
 #define SET_UART_ACK_CMD(cmd)           ((cmd) | 0x80)
+
+// 获取原始请求命令字（去掉最高位）
+#define GET_UART_RAW_CMD(cmd)           ((cmd) & ~0x80)
+
+// 判断是否为有效的请求命令字（最高位为 0）
+#define IS_UART_REQ_CMD(cmd)            (((cmd) & 0x80) == 0)
 
 /*****************Inline*****************/
 static inline uint8_t lock_packet_build_attr(uint8_t addr, uint8_t enc)
