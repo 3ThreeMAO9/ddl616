@@ -24,15 +24,15 @@ static void motorTask_callback(uint8_t event, uint32_t value)
 
     switch (event)
     {
-    case MOTOR_EVENT_VACATION_MODE_WARN:
-        break;
-    case MOTOR_EVENT_UNLOCKED:
-        break;
     case MOTOR_EVENT_LOCKED:
         baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS_LOCKED);
         break;
-    case MOTOR_EVENT_IDLE:
-        break;
+    // case MOTOR_EVENT_OPENED:
+    //     baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS_OPENED);
+    //     break;
+    // case MOTOR_EVENT_CLOSED:
+    //     baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SUCCESS_CLOSED);
+    //     break;
     default:
         break;
     }

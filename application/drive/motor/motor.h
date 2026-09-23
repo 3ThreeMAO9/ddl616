@@ -41,6 +41,9 @@ typedef enum{
     MOTOR_HANDLE_UNLOCK,
     MOTOR_HANDLE_PCBA_TEST,
     MOTOR_HANDLE_DEVICE_TEST,
+    MOTOR_HANDLE_OPEN,
+    MOTOR_HANDLE_CLOSE,
+    MOTOR_HANDLE_CNT,
 }motor_handle_e;
 
 typedef enum{

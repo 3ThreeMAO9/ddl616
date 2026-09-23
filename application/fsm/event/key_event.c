@@ -123,12 +123,12 @@ static uint8_t keyEventCombineFunctionHandle(void)
 
     if (isEmptyUser(false))
     {
-        if (COMBINE_KEY_BOARD_AGING_TEST == value && !is_block_hotkey())
+        if (COMBINE_KEY_BOARD_AGING_TEST == value)
         {
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_AGING_TEST);
             return true;
         }
-        else if (COMBINE_KEY_BOARD_DEVICE_TEST == value && !is_block_hotkey())
+        else if (COMBINE_KEY_BOARD_DEVICE_TEST == value)
         {
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DEVICE_TEST_STEP1);
             return true;

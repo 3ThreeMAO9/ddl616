@@ -21,18 +21,8 @@
 /***************Variable***************/
 static motor_handle_t motorHandle;
 static motor_callback_t motor_callback;
-static uint8_t aging_mode = 0;
 
 // ------------------------------------------
-uint8_t isagingmode(void)
-{
-    return aging_mode;
-}
-
-void set_agingmode(uint8_t mode)
-{
-    aging_mode = mode;
-}
 
 static void motorHandleEvent_callback(uint8_t event, uint32_t value)
 {
@@ -109,6 +99,16 @@ void module_motorHandle(uint8_t handle, uint16_t value)
         motorHandle.busy = true;
         motorHandleStartup(MOTOR_STEP_UNLOCK, 0, MOTOR_UNLOCK_TIME_OUT);
         break;
+    case MOTOR_HANDLE_OPEN:
+        OB_LOGD(TAG, "motor open");
+        motorHandle.busy = true;
+        motorHandleStartup(MOTOR_STEP_UNLOCK, 0, MOTOR_UNLOCK_TIME_OUT);
+        break;
+    case MOTOR_HANDLE_CLOSE:
+        OB_LOGD(TAG, "motor close");
+        motorHandle.busy = true;
+        motorHandleStartup(MOTOR_STEP_UNLOCK_REVERSE, 0, MOTOR_UNLOCK_REVERSE_TIME_OUT);
+        break;
     default:
         break;
     }
@@ -164,6 +164,67 @@ static void motorUnlockLoop(void)
     }
 }
 
+static void motorOpenLoop(void)
+{
+    switch (motorHandle.motorStep)
+    {
+    case MOTOR_STEP_UNLOCK:
+        if (system_out_time_cnt(motorHandle.timeOut))
+        {
+#if (Enabled == PRINTF_MOTOR)
+            OB_LOGI(TAG, "%s ===TP[%u]: value[%lu]=== MOTOR_STEP_UNLOCK", __FUNCTION__, motorHandle.motorStep, 0);
+#endif
+            motorHandleStartup(MOTOR_STEP_BRAKE, 0, MOTOR_BRAKE_TIME_OUT);
+        }
+        break;
+
+    case MOTOR_STEP_BRAKE:
+        if (system_out_time_cnt(motorHandle.timeOut))
+        {
+#if (Enabled == PRINTF_MOTOR)
+            OB_LOGI(TAG, "%s ===TP[%u]: value[%lu]=== MOTOR_STEP_BRAKE", __FUNCTION__, motorHandle.motorStep, 0);
+#endif
+            motorHandleStartup(MOTOR_STEP_IDLE, 0, 0);
+            motorHandle.handle = MOTOR_HANDLE_NULL;
+            motorHandle.busy = false;
+            // motorHandleEvent_callback(MOTOR_EVENT_OPENED, MOTOR_TYPE_NULL);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+static void motorCloseLoop(void)
+{
+    switch (motorHandle.motorStep)
+    {
+    case MOTOR_STEP_UNLOCK_REVERSE:
+        if (system_out_time_cnt(motorHandle.timeOut))
+        {
+#if (Enabled == PRINTF_MOTOR)
+            OB_LOGI(TAG, "%s ===TP[%u]: value[%lu]=== MOTOR_STEP_UNLOCK_REVERSE", __FUNCTION__, motorHandle.motorStep, 0);
+#endif
+            motorHandleStartup(MOTOR_STEP_BRAKE, 0, MOTOR_BRAKE_TIME_OUT);
+        }
+        break;
+    case MOTOR_STEP_BRAKE:
+        if (system_out_time_cnt(motorHandle.timeOut))
+        {
+#if (Enabled == PRINTF_MOTOR)
+            OB_LOGI(TAG, "%s ===TP[%u]: value[%lu]=== MOTOR_STEP_BRAKE", __FUNCTION__, motorHandle.motorStep, 0);
+#endif
+            motorHandleStartup(MOTOR_STEP_IDLE, 0, 0);
+            motorHandle.handle = MOTOR_HANDLE_NULL;
+            motorHandle.busy = false;
+            // motorHandleEvent_callback(MOTOR_EVENT_CLOSED, MOTOR_TYPE_NULL);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
 uint8_t module_motorReadMotorBusyAndWarn(void)
 {
     return (motorHandle.busy | motorHandle.warnBusy);
@@ -175,6 +236,12 @@ void module_motorLoop(void)
     {
     case MOTOR_HANDLE_UNLOCK:
         motorUnlockLoop();
+        break;
+    case MOTOR_HANDLE_OPEN:
+        motorOpenLoop();
+        break;
+    case MOTOR_HANDLE_CLOSE:
+        motorCloseLoop();
         break;
     default:
         break;

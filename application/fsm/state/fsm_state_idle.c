@@ -187,6 +187,10 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
 
             }
+            else if (EVENT_RESULT_AGING_TEST == e->dynamic_[0])
+            {
+                state = Q_TRAN(lock_fsm_aging_test);
+            }
 #ifdef DEFINE_299_CHECK_TIME
             else if (EVENT_RESULT_TIME == e->dynamic_[0])
             {

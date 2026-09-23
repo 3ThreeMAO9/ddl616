@@ -35,6 +35,8 @@ typedef enum{
 
     MOTOR_EVENT_DEVICE_TEST,
 
+    MOTOR_EVENT_OPENED,
+    MOTOR_EVENT_CLOSED,
 }motor_event_e;
 
 typedef enum{

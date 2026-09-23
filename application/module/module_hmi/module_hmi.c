@@ -283,7 +283,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_TAMPER_WARN:
             PLAYER_LIST_CLEAR_ADD(SOUND_WARN);
             break;
-
+            
         case HMI_STATE_HANDLE_SUCCESS:
             PLAYER_LIST_CLEAR_ADD(VOICE_Setup_successful);
             break;
@@ -329,6 +329,17 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
         }
 
+        case HMI_STATE_AGING_TEST_OPEN:
+            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            PLAYER_LIST_ADD(VOICE_Door_opened);
+            break;
+
+        case HMI_STATE_AGING_TEST_CLOSE:
+            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            PLAYER_LIST_ADD(VOICE_Door_closed);
+            break;
         default:
             return keepTime;
     }

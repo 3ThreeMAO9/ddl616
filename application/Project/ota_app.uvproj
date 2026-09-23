@@ -782,6 +782,11 @@
               <FileType>1</FileType>
               <FilePath>..\fsm\state\fsm_state_system_lock.c</FilePath>
             </File>
+            <File>
+              <FileName>fsm_state_aging_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\state\fsm_state_aging_test.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
