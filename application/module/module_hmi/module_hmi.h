@@ -93,6 +93,7 @@ typedef enum{
     HMI_STATE_AUTO_LOCK,                //自动上锁菜单
     HMI_STATE_VERSION,                  //版本号
     HMI_STATE_TIME,                     //当前时间
+    HMI_STATE_BLUE_MAC,                 //蓝牙MAC
     HMI_STATE_AGING_TEST_TIME_2H,       //老化2小时
     HMI_STATE_AGING_TEST_TIME_4H,       //老化4小时
     HMI_STATE_AGING_TEST_TIME_8H,       //老化8小时

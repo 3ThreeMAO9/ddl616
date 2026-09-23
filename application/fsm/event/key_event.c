@@ -91,6 +91,36 @@ static uint8_t keyEventCombineFunctionHandle(void)
     //     return true;
     // }
 
+
+    if (COMBINE_KEY_BOARD_VERSION == value)
+    {
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERSION);
+        return true;
+    }
+    else if (COMBINE_KEY_BOARD_BLUE_MAC == value)
+    {
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_BLUE_MAC);
+        return true;
+    }
+    else if (COMBINE_KEY_BOARD_SN == value)
+    {
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_SN);
+        return true;
+    }
+    else if (COMBINE_KEY_BOARD_PID == value)
+    {
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_PID);
+        return true;
+    }
+
+#ifdef DEFINE_299_CHECK_TIME
+    else if (COMBINE_KEY_BOARD_TIME == value)
+    {
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_TIME);
+        return true;
+    }
+#endif
+
     if (isEmptyUser(false))
     {
         if (COMBINE_KEY_BOARD_AGING_TEST == value && !is_block_hotkey())
@@ -103,14 +133,9 @@ static uint8_t keyEventCombineFunctionHandle(void)
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DEVICE_TEST_STEP1);
             return true;
         }
-        else if (COMBINE_KEY_BOARD_VERSION == value)
+        else if (COMBINE_KEY_BOARD_DEVICE_TEST_RESULT == value)
         {
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERSION);
-            return true;
-        }
-        else if (COMBINE_KEY_BOARD_TIME == value)
-        {
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_TIME);
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DEVICE_TEST_RESULT);
             return true;
         }
 #if (Enabled == WAKE_STAT_ENABLE)
@@ -165,19 +190,6 @@ static uint8_t keyEventCombineFunctionHandle(void)
             return true;
         }
 #endif
-    }
-    else
-    {
-        if (COMBINE_KEY_BOARD_VERSION == value)
-        {
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERSION);
-            return true;
-        }
-        else if (COMBINE_KEY_BOARD_TIME == value)
-        {
-            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_TIME);
-            return true;
-        }
     }
     return false;
 }

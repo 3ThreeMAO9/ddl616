@@ -9,6 +9,7 @@
 #include "event.h"
 #include "key_event.h"
 #include "user.h"
+#include "msg_protocol.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"

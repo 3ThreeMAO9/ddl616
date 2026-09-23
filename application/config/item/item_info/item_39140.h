@@ -30,6 +30,8 @@
 #define PRINTF_VOLTAGE              Disabled
 #define PRINTF_TEST                 PRINTF_FUN
 
+#define DEFINE_299_CHECK_TIME       // 299快捷键查询时间
+
 /***********Enum***********/
 
 #define TOUCH_IC_CH0    0x25    //

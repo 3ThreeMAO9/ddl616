@@ -167,7 +167,32 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 hmiTaskSetState(HMI_STATE_JOIN_NET);
             }
-            
+            else if (EVENT_RESULT_VERSION == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_VERSION);
+            }
+            else if (EVENT_RESULT_BLUE_MAC == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_BLUE_MAC);
+            }
+            else if (EVENT_RESULT_SN == e->dynamic_[0])
+            {
+
+            }
+            else if (EVENT_RESULT_PID == e->dynamic_[0])
+            {
+                
+            }
+            else if (EVENT_RESULT_DEVICE_TEST_RESULT == e->dynamic_[0])
+            {
+
+            }
+#ifdef DEFINE_299_CHECK_TIME
+            else if (EVENT_RESULT_TIME == e->dynamic_[0])
+            {
+                hmiTaskSetState(HMI_STATE_TIME);
+            }
+#endif
             // if (e->dynamic_[0] == HANDLE_EVENT_UART_RX){
             //     system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             // }

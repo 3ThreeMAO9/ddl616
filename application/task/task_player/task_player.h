@@ -44,7 +44,10 @@ uint32_t play_task_is_busy(void);
 uint32_t player_task_list_size_get(void);
 
 uint32_t player_task_register_callback(module_player_callback_t callback);
+
 void play_num(uint32_t num);
+
+void voice_play_hex_bytes(const uint8_t* data, uint8_t len);
 
 #define PLAYER_LIST_ADD(num, ...)                                                                                                              \
     do {                                                                                                                                       \

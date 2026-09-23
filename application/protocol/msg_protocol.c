@@ -68,6 +68,16 @@ void uart_msg_bell(uint8_t cnt, uint32_t timeout)
     uart_msg_common_send(UP_CMD_BELL, (uint8_t *)&data, sizeof(frame_bell_def_t));
 }
 
+void uart_msg_blue_mac(void)
+{
+    uart_msg_common_send(UP_CMD_BLUE_MAC, NULL, 0);
+}
+
+void uart_msg_blue_version(void)
+{
+    uart_msg_common_send(UP_CMD_BLUE_VERSION, NULL, 0);
+}
+
 void uart_msg_ack(uint8_t cmd, uint8_t status)
 {
     frame_ack_def_t ack = {.status = status};

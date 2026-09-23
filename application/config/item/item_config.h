@@ -174,10 +174,17 @@ typedef enum{
 
 
 //combine key board
-#define COMBINE_KEY_BOARD_AGING_TEST                (555)           //555+#
-#define COMBINE_KEY_BOARD_DEVICE_TEST               (258)           //258+#
-#define COMBINE_KEY_BOARD_VERSION                   (114)           //114+#
-#define COMBINE_KEY_BOARD_TIME                      (299)           //299+#
+#define COMBINE_KEY_BOARD_AGING_TEST                (555)           //555+#     老化测试
+#define COMBINE_KEY_BOARD_DEVICE_TEST               (258)           //258+#     整机产测
+#define COMBINE_KEY_BOARD_VERSION                   (114)           //114+#     版本号
+#define COMBINE_KEY_BOARD_BLUE_MAC                  (115)           //115+#     蓝牙MAC
+#define COMBINE_KEY_BOARD_SN                        (400)           //400+#     SN
+#define COMBINE_KEY_BOARD_PID                       (504)           //504+#     PID
+#define COMBINE_KEY_BOARD_DEVICE_TEST_RESULT        (257)           //257+#     产测结果
+
+#define COMBINE_KEY_BOARD_TIME                      (299)           //299+#     获取时间
+
+
 #define COMBINE_KEY_BOARD_FINGER_WAKE               (101)           
 #define COMBINE_KEY_BOARD_PASSWORD_WAKE             (102)           
 #define COMBINE_KEY_BOARD_NFC_WAKE                  (103)           

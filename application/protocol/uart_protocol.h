@@ -37,9 +37,14 @@
 
 #define UP_CMD_KEY                          (0x60)  // 按键事件
 #define UP_CMD_BELL                         (0x61)  // 门铃事件
+#define UP_CMD_BLUE_MAC                     (0x62)  // 获取蓝牙MAC
+#define UP_CMD_BLUE_VERSION                 (0x63)  // 获取蓝牙版本号
 
-#define UP_CMD_KEY_ACK                      SET_UART_ACK_CMD(UP_CMD_KEY)   // 按键事件
-#define UP_CMD_BELL_ACK                     SET_UART_ACK_CMD(UP_CMD_BELL)  // 门铃事件
+#define UP_CMD_KEY_ACK                      SET_UART_ACK_CMD(UP_CMD_KEY)            // 0xE0
+#define UP_CMD_BELL_ACK                     SET_UART_ACK_CMD(UP_CMD_BELL)           // 0xE1
+#define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)       // 0xE2
+#define UP_CMD_BLUE_VERSION_ACK             SET_UART_ACK_CMD(UP_CMD_BLUE_VERSION)   // 0xE3
+
 /***********Enum***********/
 
 /***********Struct***********/

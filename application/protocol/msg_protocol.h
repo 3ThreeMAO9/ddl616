@@ -42,6 +42,13 @@ typedef struct
     uint8_t event_key_report;
 } frame_key_t;
 
+typedef struct
+{
+    uint8_t status;
+    uint8_t MAC[6];
+} frame_ble_mac_t;
+
+
 
 /*********************发送处理的结构体********************/
 typedef struct {
@@ -63,7 +70,8 @@ typedef struct {
 
 /***********Function***********/
 void uart_msg_bell(uint8_t cnt, uint32_t timeout);
-
+void uart_msg_blue_mac(void);
+void uart_msg_blue_version(void);
 
 void uart_msg_ack(uint8_t cmd, uint8_t status);
 

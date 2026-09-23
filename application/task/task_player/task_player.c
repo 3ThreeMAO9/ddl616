@@ -166,6 +166,35 @@ uint32_t play_task_is_busy(void)
     return player_task_handle.driver->is_busy();
 }
 
+static uint16_t voice_get_id(uint8_t c)
+{
+    if (c <= 9) {
+        return VOICE_Zero + c;
+    } else if (c <= 35) {
+        return SOUND_A + (c - 10);
+    }
+    return 0;   // 无效
+}
+static void voice_play_one_char(uint8_t c)
+{
+    uint16_t id = voice_get_id(c);
+    if (id != 0)
+        PLAYER_LIST_ADD(id);
+}
+
+void voice_play_hex_bytes(const uint8_t* data, uint8_t len)
+{
+    if (data == NULL || len == 0) 
+        return;
+
+    player_task_play_list_clear();
+
+    for (uint8_t i = 0; i < len; i++) {
+        voice_play_one_char((data[i] >> 4) & 0x0F);
+        voice_play_one_char(data[i] & 0x0F);
+    }
+}
+
 void play_num(uint32_t num)
 {
     uint8_t temp;

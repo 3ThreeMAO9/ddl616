@@ -13,6 +13,7 @@
 #include "hal_rtc.h"
 #include "timestamp.h"
 #include "system_timer.h"
+#include "uart_protocol_blue_mac.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -226,6 +227,10 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_SYSTEM_SETTINGS:
             PLAYER_LIST_CLEAR_ADD(VOICE_For_language_settings_press, VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
             break;
+        
+        case HMI_STATE_LINKED_UNLOCK:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Create_linked_unlocking_please_press, VOICE_One, VOICE_Join_linked_unlocking_please_press, VOICE_Two, VOICE_Exit_linked_unlocking_please_press, VOICE_Three);
+            break;
 
         case HMI_STATE_LANGAGESETTING:
             PLAYER_LIST_CLEAR_ADD(VOICE_For_Chinese_press, VOICE_One, VOICE_For_English_press, VOICE_Two);
@@ -290,6 +295,40 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_JOIN_LINKED_UNLOCK:
             PLAYER_LIST_ADD(VOICE_Please_enter_a_4_digit_pairing_code, VOICE_End_with_pound_key);
             break;
+
+        case HMI_STATE_VERSION:
+            play_num(CLIENT_ITEM_SN);
+            PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION / 10));
+            PLAYER_LIST_ADD(VOICE_Zero + PATCH_VERSION);
+            PLAYER_LIST_ADD(VOICE_Zero + Audio_Version[0]);
+            PLAYER_LIST_ADD(VOICE_Zero + Audio_Version[1]);
+            PLAYER_LIST_ADD(VOICE_Zero + Audio_Version[2]);
+            break;
+#ifdef DEFINE_299_CHECK_TIME
+        case HMI_STATE_TIME:
+        {
+            struct tm *time_info = timestamp_to_data_time(hal_get_rtc_time());
+            play_num(time_info->tm_year + 1900);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mon + 1) / 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mon + 1) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mday + 1) / 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mday + 1) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_hour + 1) / 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_hour + 1) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_min + 1) / 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_min + 1) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_sec + 1) / 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_sec + 1) % 10);
+            break;
+        }
+#endif
+        case HMI_STATE_BLUE_MAC:
+        {
+            uint8_t* mac = blue_mac_get();
+            voice_play_hex_bytes(mac, BLUE_MAC_LEN_MAX);
+            break;
+        }
+
         default:
             return keepTime;
     }

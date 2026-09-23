@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2026 GZ-OB, All rights reserved.
- * File name: uart_protocol_ack_bell.c
+ * File name: uart_protocol_blue_version.c
  * Desc:
  * Version: 1.0.0
  * Revision: James_Zhang
@@ -12,9 +12,9 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "uart_protocol_ack_bell"
+#define TAG "uart_protocol_blue_version"
 
-HANDLER_DEFINE(UP_CMD_BELL_ACK)
+HANDLER_DEFINE(UP_CMD_BLUE_VERSION_ACK)
 {
     uartTaskRetryClean(GET_UART_RAW_CMD(packet->cmd), packet->sn);
 
