@@ -4,33 +4,43 @@
 #include "stddef.h"
 #include <string.h>
 
+#include "config.h"
+#include "gpio.h"
+
 volatile uint32_t g_SPIRxCounter = 0x00;
 volatile uint8_t g_SPIRxData[SPI_RX_SiZE];
 
 void SPI_IRQHandler(void)
 {
-    if ((OB_SPI->SR & SPI_SR_RNE) == SPI_SR_RNE)
-    {
-        if (g_SPIRxCounter < SPI_RX_SiZE) // 防止缓冲区溢出
-            g_SPIRxData[g_SPIRxCounter] = OB_SPI->DR;
-        g_SPIRxCounter++;
+    // if ((OB_SPI->SR & SPI_SR_RNE) == SPI_SR_RNE)
+    // {
+    //     if (g_SPIRxCounter < SPI_RX_SiZE) // 防止缓冲区溢出
+    //         g_SPIRxData[g_SPIRxCounter] = OB_SPI->DR;
+    //     g_SPIRxCounter++;
 
-        OB_SPI->ICR = SPI_INT_RTIM;
-    }
+    //     OB_SPI->ICR = SPI_INT_RTIM;
+    // }
 }
 
+// SPI库的busclosk算法有问题，目前直接固化最高SPI速率
 uint32_t SPI_MasterOpen(OB_SPI_Type *pSPI, uint32_t nSPICapability, uint32_t nBusClock)
 {
-    NVIC_EnableIRQ(SPI_IRQn);
-
+    // 1. 写入基础配置 (CPOL, CPHA, 数据位等)
     pSPI->CR0 = nSPICapability;
 
+    // 2. 硬编码 6MHz (基于 PCLK = 24MHz)
+    // 设置 SCR = 0，即把 CR0 的第 8~15 位清零
+    pSPI->CR0 &= 0xFFFF00FF; 
+    // 设置 CPSDVSR = 2 (符合手册要求的最小偶数)
+    pSPI->CPSR = 2;                       
+
+    // 3. 基础控制配置
     pSPI->CR1_b.MS   = 0; // Master Mode
     pSPI->CR1_b.SSNP = 0; // Slave Hardware Control
     // pSPI->CR1_b.SSNP = 1; // Slave Hardware Control     //CS 引脚控制是软件：0   硬件：1
     pSPI->CR1_b.SSE  = 1; // SPI Enable
 
-    return (SPI_SetBusClock(pSPI, nBusClock) );
+    return 0; 
 }
 
 void SPI_Close(OB_SPI_Type *pSPI)
@@ -51,9 +61,6 @@ void SPI_DisableINT(OB_SPI_Type *pSPI, uint32_t nINTSel)
 
 void SPI_ClearRxFIFO(OB_SPI_Type *pSPI)
 {
-    if (pSPI == NULL)  // 增加空指针校验，避免崩溃
-        return;
-
     volatile uint32_t dummy;  // 用于读取并丢弃数据
     // 循环读取，直到接收FIFO为空（RNE=0）
     while ((pSPI->SR & SPI_SR_RNE) != 0)
@@ -72,31 +79,31 @@ uint8_t SPI_ClearTxFIFO(OB_SPI_Type *pSPI)
     return 1; // 超时错误
 }
 
-uint32_t SPI_SetBusClock(OB_SPI_Type *pSPI, uint32_t nBusClock)
-{
-    uint32_t nClock;
+// uint32_t SPI_SetBusClock(OB_SPI_Type *pSPI, uint32_t nBusClock)
+// {
+//     uint32_t nClock;
 
-    nClock = GetPeripheralClock(APB_SPI);
-    nClock = nClock / nBusClock;
-    nClock = sqrt(nClock);
-    pSPI->CR0 = (pSPI->CR0 & 0xFFFF00FF) | (nClock << 8);
-    pSPI->CPSR = nClock;
+//     nClock = GetPeripheralClock(APB_SPI);
+//     nClock = nClock / nBusClock;
+//     nClock = sqrt(nClock);
+//     pSPI->CR0 = (pSPI->CR0 & 0xFFFF00FF) | (nClock << 8);
+//     pSPI->CPSR = nClock;
 
-    return SPI_GetBusClock(pSPI);
-}
+//     return SPI_GetBusClock(pSPI);
+// }
 
-uint32_t SPI_GetBusClock(OB_SPI_Type *pSPI)
-{
-    uint32_t nClock, nSCR;
+// uint32_t SPI_GetBusClock(OB_SPI_Type *pSPI)
+// {
+//     uint32_t nClock, nSCR;
 
-    nClock = GetPeripheralClock(APB_SPI);
-    nSCR   = (pSPI->CR0 >> 0x08) & 0xFF;
-    nClock = nClock /(pSPI->CPSR * (nSCR + 1));
-    return nClock;
-}
+//     nClock = GetPeripheralClock(APB_SPI);
+//     nSCR   = (pSPI->CR0 >> 0x08) & 0xFF;
+//     nClock = nClock /(pSPI->CPSR * (nSCR + 1));
+//     return nClock;
+// }
 
 // 向SPI发送FIFO写入数据
-uint8_t SPI_WriteFIFO(OB_SPI_Type *pSPI, const uint8_t *pBuf, uint32_t len)
+uint32_t SPI_WriteFIFO(OB_SPI_Type *pSPI, const uint8_t *pBuf, uint32_t len)
 {
     // 增加SPI外设指针的空指针校验，避免非法访问
     if (pSPI == NULL || pBuf == NULL || len == 0)
@@ -124,7 +131,7 @@ uint8_t SPI_WriteFIFO(OB_SPI_Type *pSPI, const uint8_t *pBuf, uint32_t len)
     return write_cnt;
 }
 
-uint8_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len)
+uint32_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len)
 {
     if (pSPI == NULL || pBuf == NULL || len == 0)
         return 0;
@@ -137,10 +144,14 @@ uint8_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len)
     {
         pSPI->DR = (uint32_t)dummy;
 
-        uint32_t timeout = 10000;
-        while (--timeout && (pSPI->SR & SPI_SR_BSY));
-        if (timeout == 0)
-            break;
+        // uint32_t timeout_rx = 10000;
+        // while (timeout_rx--)
+        // {
+        //     if (pSPI->SR & SPI_SR_RNE)
+        //         break;
+        // }
+        // pBuf[total_read++] = (uint8_t)pSPI->DR;
+
 
         if (pSPI->SR & SPI_SR_RNE)
         {
@@ -149,4 +160,26 @@ uint8_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len)
     }
 
     return total_read;
+}
+
+void spi_init(void)
+{
+    GPIO_SetPinMFType(FLASH_CS_PORT, FLASH_CS_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); // SSP_CS
+    FLASH_CS_PIN_SET;
+
+    GPIO_SetPinMFType(FLASH_CLK_PORT, FLASH_CLK_PIN, GPIO_MF_SPI_MASTER_CLK, GPIO_PINMODE_PULL_UP);  // SSP_CLK
+    GPIO_SetPinMFType(FLASH_MOSI_PORT, FLASH_MOSI_PIN, GPIO_MF_SPI_MASTER_MOSI, GPIO_PINMODE_PULL_UP); // SSP_MOSI
+    GPIO_SetPinMFType(FLASH_MISO_PORT, FLASH_MISO_PIN, GPIO_MF_SPI_MASTER_MISO, GPIO_PINMODE_PULL_UP); // SSP_MISO
+    // SPI库的busclosk算法有问题，目前直接固化最高SPI速率
+    SPI_MasterOpen(OB_SPI, (SPI_OUT_PHASE_FIRST | SPI_OUT_POLARITY_HI | SPI_SIZE_8BIT), 6000000);
+}
+
+void spi_sleep_init(void)
+{
+    GPIO_SetPinMFType(FLASH_CLK_PORT, FLASH_CLK_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); // SSP_CLK
+    GPIO_SetPinMFType(FLASH_MOSI_PORT, FLASH_MOSI_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); // SSP_MOSI
+    GPIO_SetPinMFType(FLASH_MISO_PORT, FLASH_MISO_PIN, GPIO_MF_TYPE_GPIO, GPIO_PINMODE_PUSH_PULL); // SSP_MISO
+    FLASH_CLK_PIN_CLR;
+    FLASH_MOSI_PIN_CLR;
+    FLASH_MISO_PIN_CLR;
 }

@@ -1,13 +1,15 @@
 #include "module_spi_flash.h"
 #include "hal_gpio.h"
 #include "hal_timer.h"
-#include "hal_spi.h"
+
 #include "bsp_system_def.h"
 #include "bsp_rom_config.h"
 #include "config.h"
 #include "ob_error_codes.h"
 #include "validation.h"
 #include "hal_flash.h"
+#include "spi.h"
+
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "module_spi_flash"
@@ -600,32 +602,26 @@ void module_spi_flash_read(uint32_t addr,uint32_t size)
 void module_spi_flash_enter_deep_sleep(void)
 {
     uint8_t addr = 0xB9;
-    hal_spi_enable(FLASH_SPI_ID);
-    hal_spi_write(FLASH_SPI_ID,&addr,sizeof(uint8_t));
-    hal_spi_disable(FLASH_SPI_ID);
+    FLASH_CS_PIN_CLR;
+    SPI_WriteFIFO(OB_SPI, &addr, sizeof(uint8_t));
+    FLASH_CS_PIN_SET;
 }
 
 void module_spi_flash_wake_up_deep_sleep(void)
 {
     uint8_t addr = 0xAB;
-    hal_spi_enable(FLASH_SPI_ID);
-    hal_spi_write(FLASH_SPI_ID,&addr,sizeof(uint8_t));
-    hal_spi_disable(FLASH_SPI_ID);
+    FLASH_CS_PIN_CLR;
+    SPI_WriteFIFO(OB_SPI, &addr, sizeof(uint8_t));
+    FLASH_CS_PIN_SET;
 }
 
 void module_spi_flash_sleep_init(void)
 {
-    HAL_GPIO_Init(FLASH_CLK_PORT, FLASH_CLK_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
-    HAL_GPIO_Init(FLASH_MOSI_PORT, FLASH_MOSI_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
-    HAL_GPIO_Init(FLASH_MISO_PORT, FLASH_MISO_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
-    HAL_GPIO_Write(FLASH_CLK_PORT,FLASH_CLK_PIN,0);
-    HAL_GPIO_Write(FLASH_MOSI_PORT,FLASH_MOSI_PIN,0);
-    HAL_GPIO_Write(FLASH_MISO_PORT,FLASH_MISO_PIN,0);
+    spi_sleep_init();
 }
-
 void module_spi_flash_wake_init(void)
 {
-    SPI_INIT_DEF;
+    spi_init();
 }
 
 static uint8_t spi_flash_sleep_flag = false;

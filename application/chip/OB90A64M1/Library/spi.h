@@ -51,7 +51,10 @@ uint8_t  SPI_ClearTxFIFO(OB_SPI_Type *pSPI);
 uint32_t SPI_SetBusClock(OB_SPI_Type *pSPI, uint32_t BusClock);
 uint32_t SPI_GetBusClock(OB_SPI_Type *pSPI);
 
-uint8_t SPI_WriteFIFO(OB_SPI_Type *pSPI, const uint8_t *pBuf, uint32_t len);
-uint8_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len);
+uint32_t SPI_WriteFIFO(OB_SPI_Type *pSPI, const uint8_t *pBuf, uint32_t len);
+uint32_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len);
+
+void spi_init(void);
+void spi_sleep_init(void);
 
 #endif

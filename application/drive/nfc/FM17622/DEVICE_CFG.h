@@ -12,7 +12,7 @@
 
 #include "config.h"
 #include "hal_gpio.h"
-#include "hal_spi.h"
+
 #include "spi_software.h"
 
 /*****************Macro****************/

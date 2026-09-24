@@ -588,16 +588,6 @@
               <FilePath>..\hal\hal_iic.c</FilePath>
             </File>
             <File>
-              <FileName>hal_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\hal\hal_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>hal_spi_software.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\hal\hal_spi_software.c</FilePath>
-            </File>
-            <File>
               <FileName>hal_timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\hal\hal_timer.c</FilePath>

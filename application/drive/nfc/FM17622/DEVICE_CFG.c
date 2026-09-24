@@ -8,6 +8,7 @@
 
 
 // ------------------------------------------
+#if (NFC_SOPT_SPI_SEL)
 /************************** SPI drive config *************************/
 // 1. 实现GPIO操作函数
 static inline void NFC_SPI_Init(void) {
@@ -49,6 +50,7 @@ static const SPI_Config nfc_spi_config = {
         .get_miso = NFC_SPI_GetMISO,
     },
 };
+#endif
 
 uint8_t nfc_hardware_init(void) {
 #if (NFC_SOPT_SPI_SEL)
@@ -64,24 +66,24 @@ uint8_t nfc_hardware_init(void) {
     return false;
 
 #else
-    const hal_spi_config_t config = {
-        .spi       = NFC_SPI,
-		.type      = NFC_SPI_TYPE,
-        .ss_port   = NFC_NSS_GPIO,
-        .ss_pin    = NFC_NSS_PIN,
-        .sck_port  = NFC_CLK_GPIO,
-        .sck_pin   = NFC_CLK_PIN,
-        .mosi_port = NFC_MOSI_GPIO,
-        .mosi_pin  = NFC_MOSI_PIN,
-        .miso_port = NFC_MISO_GPIO,
-        .miso_pin  = NFC_MISO_PIN,
-    };
-    hal_spi_init(&config);
+    // const hal_spi_config_t config = {
+    //     .spi       = NFC_SPI,
+	// 	.type      = NFC_SPI_TYPE,
+    //     .ss_port   = NFC_NSS_GPIO,
+    //     .ss_pin    = NFC_NSS_PIN,
+    //     .sck_port  = NFC_CLK_GPIO,
+    //     .sck_pin   = NFC_CLK_PIN,
+    //     .mosi_port = NFC_MOSI_GPIO,
+    //     .mosi_pin  = NFC_MOSI_PIN,
+    //     .miso_port = NFC_MISO_GPIO,
+    //     .miso_pin  = NFC_MISO_PIN,
+    // };
+    // hal_spi_init(&config);
 
-    HAL_GPIO_Init(NFC_NRST_GPIO, NFC_NRST_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
-    HAL_GPIO_Write(NFC_NRST_GPIO, NFC_NRST_PIN, 1);
-    HAL_GPIO_Init(NFC_IRQ_GPIO, NFC_IRQ_PIN, HAL_GPIO_MODE_ANALOG, HAL_GPIO_PULL_NONE);
-    return true;
+    // HAL_GPIO_Init(NFC_NRST_GPIO, NFC_NRST_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
+    // HAL_GPIO_Write(NFC_NRST_GPIO, NFC_NRST_PIN, 1);
+    // HAL_GPIO_Init(NFC_IRQ_GPIO, NFC_IRQ_PIN, HAL_GPIO_MODE_ANALOG, HAL_GPIO_PULL_NONE);
+    // return true;
 #endif
 }
 

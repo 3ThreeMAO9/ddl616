@@ -85,19 +85,19 @@ typedef enum
 #define NFC_NRST_PIN                    (HAL_GPIO_PIN10)
 #define NFC_IRQ_GPIO                    (HAL_GPIO_PORT1)
 #define NFC_IRQ_PIN                     (HAL_GPIO_PIN3)
-#define NFC_NSS_GPIO                    (HAL_GPIO_PORT3)
-#define NFC_NSS_PIN                     (HAL_GPIO_PIN4)
-#define NFC_CLK_GPIO                    (HAL_GPIO_PORT3)
-#define NFC_CLK_PIN                     (HAL_GPIO_PIN5)
-#define NFC_MOSI_GPIO                   (HAL_GPIO_PORT3)
-#define NFC_MOSI_PIN                    (HAL_GPIO_PIN6)
-#define NFC_MISO_GPIO                   (HAL_GPIO_PORT3)
-#define NFC_MISO_PIN                    (HAL_GPIO_PIN7)
+#define NFC_NSS_GPIO                    (HAL_GPIO_PORT0)
+#define NFC_NSS_PIN                     (HAL_GPIO_PIN8)
+#define NFC_CLK_GPIO                    (HAL_GPIO_PORT2)
+#define NFC_CLK_PIN                     (HAL_GPIO_PIN10)
+#define NFC_MOSI_GPIO                   (HAL_GPIO_PORT0)
+#define NFC_MOSI_PIN                    (HAL_GPIO_PIN4)
+#define NFC_MISO_GPIO                   (HAL_GPIO_PORT0)
+#define NFC_MISO_PIN                    (HAL_GPIO_PIN5)
 
 #define NFC_ADC_CHANNEL                 (ADC_CHANNEL_1)
 
-#define NFC_SPI                         (HAL_SPI0)
-#define NFC_SPI_TYPE                    (HAL_SPI_TYPE_HW)
+// #define NFC_SPI                         (HAL_SPI0)
+// #define NFC_SPI_TYPE                    (HAL_SPI_TYPE_HW)
 
 ///<endNFC
 
@@ -109,40 +109,33 @@ typedef enum
 ///<endBattery
 
 ///< SPI FLASH
-#define FLASH_CS_PORT                    (HAL_GPIO_PORT0)
-#define FLASH_CS_PIN                     (HAL_GPIO_PIN8)
+#define FLASH_CS_PORT                    (OB_GPIO3)
+#define FLASH_CS_PIN                     (GPIO_PIN4)
 
-#define FLASH_CLK_PORT                   (HAL_GPIO_PORT2)
-#define FLASH_CLK_PIN                    (HAL_GPIO_PIN10)
+#define FLASH_CLK_PORT                   (OB_GPIO3)
+#define FLASH_CLK_PIN                    (GPIO_PIN5)
 
-#define FLASH_MOSI_PORT                  (HAL_GPIO_PORT0)
-#define FLASH_MOSI_PIN                   (HAL_GPIO_PIN4)
+#define FLASH_MOSI_PORT                  (OB_GPIO3)
+#define FLASH_MOSI_PIN                   (GPIO_PIN6)
 
-#define FLASH_MISO_PORT                  (HAL_GPIO_PORT0)
-#define FLASH_MISO_PIN                   (HAL_GPIO_PIN5)
+#define FLASH_MISO_PORT                  (OB_GPIO3)
+#define FLASH_MISO_PIN                   (GPIO_PIN7)
 
-#define FLASH_SPI_ID                     (HAL_SPI1)
-#define FLASH_SPI_TYPE                   (HAL_SPI_TYPE_SW)
+// #define FLASH_SPI_ID                     (HAL_SPI0)
+// #define FLASH_SPI_TYPE                   (HAL_SPI_TYPE_HW)
 
-#define FLASH_CS_PIN_SET                 (OB_GPIO0->DATA |= GPIO_PIN8)
-#define FLASH_CS_PIN_CLR                 (OB_GPIO0->DATA &= ~GPIO_PIN8)
-#define FLASH_CLK_PIN_SET                (OB_GPIO2->DATA |= GPIO_PIN10)
-#define FLASH_CLK_PIN_CLR                (OB_GPIO2->DATA &= ~GPIO_PIN10)
-#define FLASH_MOSI_PIN_SET               (OB_GPIO0->DATA |= GPIO_PIN4)
-#define FLASH_MOSI_PIN_CLR               (OB_GPIO0->DATA &= ~GPIO_PIN4)
-#define FLASH_MISO_READ_PIN              (OB_GPIO0->PIN & GPIO_PIN5)
 
-///< SPI  CS IO软件控制
-#define SPI_INIT_DEF                                                                                 \
-    do                                                                                               \
-    {                                                                                                \
-        HAL_GPIO_Init(FLASH_CLK_PORT, FLASH_CLK_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);   \
-        HAL_GPIO_Init(FLASH_MOSI_PORT, FLASH_MOSI_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-        HAL_GPIO_Init(FLASH_MISO_PORT, FLASH_MISO_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE); \
-        HAL_GPIO_Write(FLASH_CLK_PORT, FLASH_CLK_PIN, 0);                                            \
-        HAL_GPIO_Write(FLASH_MOSI_PORT, FLASH_MOSI_PIN, 0);                                          \
-        HAL_GPIO_Write(FLASH_MISO_PORT, FLASH_MISO_PIN, 0);                                          \
-    } while (0)
+#define FLASH_CS_PIN_SET                 (FLASH_CS_PORT->DATA |= FLASH_CS_PIN)
+#define FLASH_CS_PIN_CLR                 (FLASH_CS_PORT->DATA &= ~FLASH_CS_PIN)
+#define FLASH_CLK_PIN_SET                (FLASH_CLK_PORT->DATA |= FLASH_CLK_PIN)
+#define FLASH_CLK_PIN_CLR                (FLASH_CLK_PORT->DATA &= ~FLASH_CLK_PIN)
+#define FLASH_MOSI_PIN_SET               (FLASH_MOSI_PORT->DATA |= FLASH_MOSI_PIN)
+#define FLASH_MOSI_PIN_CLR               (FLASH_MOSI_PORT->DATA &= ~FLASH_MOSI_PIN)
+#define FLASH_MISO_PIN_SET               (FLASH_MISO_PORT->DATA |= FLASH_MISO_PIN)
+#define FLASH_MISO_PIN_CLR               (FLASH_MISO_PORT->DATA &= ~FLASH_MISO_PIN)
+
+#define FLASH_MISO_READ_PIN              (FLASH_MISO_PORT->PIN & FLASH_MISO_PIN)
+
 
 ///< End SPI FLASH
 

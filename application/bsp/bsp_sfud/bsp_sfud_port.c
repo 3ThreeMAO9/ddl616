@@ -28,35 +28,16 @@
 
 #include <sfud.h>
 #include <stdarg.h>
-#include "hal_spi.h"
+
 #include "config.h"
 #include "module_spi_flash.h"
+#include "spi.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "sfud"
 
 void sfud_log_debug(const char *file, const long line, const char *format, ...);
-
-static inline uint8_t spi_byte(uint8_t data)
-{
-    uint8_t byte_rx = 0;
-    FLASH_CLK_PIN_CLR;
-    for (uint8_t i = 0; i < 8; i++)
-    {
-        if (data & (0x80 >> i))
-            FLASH_MOSI_PIN_SET;
-        else
-            FLASH_MOSI_PIN_CLR;
-        FLASH_CLK_PIN_SET;
-        if (FLASH_MISO_READ_PIN)
-        {
-            byte_rx |= (0x80 >> i);
-        }
-        FLASH_CLK_PIN_CLR;
-    }
-    return byte_rx;
-}
 
 /**
  * SPI write data then read data
@@ -66,20 +47,9 @@ static sfud_err spi_write_read(const sfud_spi *spi, const uint8_t *write_buf, si
     sfud_err result = SFUD_SUCCESS;
     FLASH_CS_PIN_CLR;
     if (write_size > 0)
-    {
-        for (uint32_t i = 0; i < write_size; i++)
-        {
-            spi_byte(write_buf[i]);
-        }
-    }
-
+        SPI_WriteFIFO(OB_SPI, write_buf, write_size);
     if (read_size > 0)
-    {
-        for (uint32_t i = 0; i < read_size; i++)
-        {
-            read_buf[i] = spi_byte(0x00);
-        }
-    }
+        SPI_ReadWithClock(OB_SPI, read_buf, read_size);
     FLASH_CS_PIN_SET;
     return result;
 }
@@ -131,20 +101,7 @@ sfud_err sfud_spi_port_init(sfud_flash *flash) {
      *    flash->retry.delay = null;
      *    flash->retry.times = 10000; //Required
      */
-    const hal_spi_config_t config = {
-        .spi     = FLASH_SPI_ID,
-        .type    = FLASH_SPI_TYPE,
-        .ss_port = FLASH_CS_PORT,
-        .ss_pin  = FLASH_CS_PIN,
-
-        .miso_port = FLASH_MISO_PORT,
-        .miso_pin  = FLASH_MISO_PIN,
-        .mosi_port = FLASH_MOSI_PORT,
-        .mosi_pin  = FLASH_MOSI_PIN,
-        .sck_port = FLASH_CLK_PORT,
-        .sck_pin  = FLASH_CLK_PIN,
-    };
-    hal_spi_init(&config);
+    spi_init();
 
     flash->spi.wr      = spi_write_read;
     flash->spi.lock    = spi_lock;
