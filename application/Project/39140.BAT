@@ -1,4 +1,4 @@
-SET PATH=C:\Keil_v5\ARM\ARMCC\Bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Users\86158\AppData\Local\Microsoft\WindowsApps;E:\Microsoft VS Code\bin;C:\Program Files\Graphviz\bin;
+SET PATH=C:\Keil_v5\ARM\ARMCC\Bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Users\86158\AppData\Local\Microsoft\WindowsApps;E:\Microsoft VS Code\bin;C:\Program Files\Graphviz\bin;E:\CodeBuddy CN\bin
 SET CPU_TYPE=OB90A64M1B
 SET CPU_VENDOR=On-Bright
 SET UV2_TARGET=39140
@@ -156,6 +156,7 @@ SET CPU_CLOCK=0x02FAF080
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\item_config._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\delay._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\lvr._2i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ob_log._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ob_log_port._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\hal_fmc._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\hal_gpio._2i"
@@ -177,6 +178,7 @@ SET CPU_CLOCK=0x02FAF080
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_system_time._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_uart._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_sfud_port._2i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_player._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_hmi._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_motor._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_battery._2i"
@@ -284,6 +286,7 @@ SET CPU_CLOCK=0x02FAF080
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\item_config._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\delay._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\lvr._2i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ob_log._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ob_log_port._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\hal_fmc._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\hal_gpio._2i"
@@ -305,6 +308,7 @@ SET CPU_CLOCK=0x02FAF080
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_system_time._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_uart._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_sfud_port._2i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_player._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_hmi._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_motor._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\bsp_battery._2i"

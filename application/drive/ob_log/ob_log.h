@@ -65,12 +65,18 @@ const char *ob_log_get_timestamp(void);
     color "(" tag ") " fmt OB_LOG_ENDFLAG
 #endif // OB_LOG_WITH_TIMESTAMP
 
-#define OB_LOG_PRINTF(lvl, fmt, ...)                  \
-    do                                                \
-    {                                                 \
-        extern uint32_t g_ob_log_level;               \
-        if (g_ob_log_level >= lvl)                    \
-            OB_LOG_PRINTF_IMPORT(fmt, ##__VA_ARGS__); \
+// #define OB_LOG_PRINTF(lvl, fmt, ...)                  \
+//     do                                                \
+//     {                                                 \
+//         extern uint32_t g_ob_log_level;               \
+//         if (g_ob_log_level >= lvl)                    \
+//             OB_LOG_PRINTF_IMPORT(fmt, ##__VA_ARGS__); \
+//     } while (0)
+
+#define OB_LOG_PRINTF(lvl, fmt, ...)              \
+    do                                            \
+    {                                             \
+        OB_LOG_PRINTF_IMPORT(fmt, ##__VA_ARGS__); \
     } while (0)
 
 #define _OB_LOG_OUTPUT(lvl, tag, fmt, ...)                      \

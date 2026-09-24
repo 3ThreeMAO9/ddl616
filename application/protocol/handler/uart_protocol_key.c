@@ -12,7 +12,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "uart_protocol_key"
+#define TAG "up_key"
 
 static void on_reset_key(uint8_t report)
 {

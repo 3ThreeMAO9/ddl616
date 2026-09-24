@@ -26,8 +26,8 @@ static void ob_log_output_char(char c)
 void ob_log_dump_buffer(uint32_t level,
     const void *buffer, uint32_t size)
 {
-    if (level > g_ob_log_level)
-        return;
+    // if (level > g_ob_log_level)
+    //     return;
 
 #if (OB_LOG_WITH_COLOR != 0)
     const char *color = OB_LOG_COLOR_NONE;

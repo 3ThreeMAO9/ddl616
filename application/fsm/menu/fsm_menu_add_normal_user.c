@@ -12,7 +12,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "fsm_menu_add_normal_user"
+#define TAG "fsm_add_normal_user"
 
 /***************Variable***************/
 

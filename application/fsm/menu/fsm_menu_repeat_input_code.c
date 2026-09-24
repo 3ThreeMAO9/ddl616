@@ -12,7 +12,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "fsm_menu_repeat_input_code"
+#define TAG "fsm_repeat_input_code"
 
 /***************Variable***************/
 

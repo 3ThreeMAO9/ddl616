@@ -11,7 +11,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "fsm_menu_admin"
+#define TAG "fsm_admin"
 
 /***************Variable***************/
 

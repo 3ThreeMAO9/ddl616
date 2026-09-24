@@ -12,6 +12,22 @@
 
 #include "type_def.h"
 #include "base_attribute.h"
+
+/*****************************************************************************/
+#define OB_LOG_ENABLE                               (Enabled)   // log开关
+#define UART_PRINTF_ENABLE                          (Enabled)   // 串口打印开关
+
+
+#ifndef OB_LOG_ENABLE
+#define OB_LOG_ENABLE                               (Disabled)   // log开关
+#endif
+
+#ifndef UART_PRINTF_ENABLE
+#define UART_PRINTF_ENABLE                          (Disabled)   // 串口打印开关
+#endif
+
+/*****************************************************************************/
+
 /***********Macro***********/
 #define NFC_ENABLE                                  (Enabled)
 

@@ -12,7 +12,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "uart_protocol_blue_version"
+#define TAG "up_blue_version"
 
 HANDLER_DEFINE(UP_CMD_BLUE_VERSION_ACK)
 {

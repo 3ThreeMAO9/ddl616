@@ -11,7 +11,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "fsm_menu_join_linked_unlock"
+#define TAG "fsm_join_linked_unlock"
 
 /***************Variable***************/
 QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e)

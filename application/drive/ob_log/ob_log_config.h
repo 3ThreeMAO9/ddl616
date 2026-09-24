@@ -14,9 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-// #define OB_LOG_ENABLE 1
-#define OB_LOG_ENABLE 1
+#include "item_config.h"
 
 /**
  * @brief Log output function,

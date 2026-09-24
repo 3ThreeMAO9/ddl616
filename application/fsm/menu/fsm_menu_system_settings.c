@@ -11,7 +11,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "fsm_menu_system_settings"
+#define TAG "fsm_system_settings"
 
 /***************Variable***************/
 

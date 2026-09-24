@@ -18,7 +18,7 @@
 #define PATCH_VERSION               2
 
 
-#define PRINTF_FUN                  Enabled
+#define PRINTF_FUN                  UART_PRINTF_ENABLE
 
 #define PRINTF_USER                 PRINTF_FUN
 #define PRINTF_FLASH                Disabled

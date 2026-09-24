@@ -12,7 +12,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "uart_protocol_blue_mac"
+#define TAG "up_blue_mac"
 
 /***************Variable***************/
 static uint8_t s_blue_mac[BLUE_MAC_LEN_MAX] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};

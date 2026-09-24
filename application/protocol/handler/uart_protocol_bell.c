@@ -12,7 +12,7 @@
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "uart_protocol_bell"
+#define TAG "up_bell"
 
 HANDLER_DEFINE(UP_CMD_BELL_ACK)
 {
