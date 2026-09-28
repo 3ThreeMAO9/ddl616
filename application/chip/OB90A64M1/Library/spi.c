@@ -32,7 +32,7 @@ uint32_t SPI_MasterOpen(OB_SPI_Type *pSPI, uint32_t nSPICapability, uint32_t nBu
     // 设置 SCR = 0，即把 CR0 的第 8~15 位清零
     pSPI->CR0 &= 0xFFFF00FF; 
     // 设置 CPSDVSR = 2 (符合手册要求的最小偶数)
-    pSPI->CPSR = 2;                       
+    pSPI->CPSR = 2;
 
     // 3. 基础控制配置
     pSPI->CR1_b.MS   = 0; // Master Mode
@@ -102,33 +102,51 @@ uint8_t SPI_ClearTxFIFO(OB_SPI_Type *pSPI)
 //     return nClock;
 // }
 
+#define SPI_TIMEOUT_LOOPS  100000U   /* ≈50~85ms @24MHz */
+
+void spi_wait_idle(OB_SPI_Type *pSPI)
+{
+    uint32_t timeout = SPI_TIMEOUT_LOOPS;
+    while (!(pSPI->SR & SPI_SR_TFE))
+    {
+        if (--timeout == 0U) return;
+    }
+    timeout = SPI_TIMEOUT_LOOPS;
+    while (pSPI->SR & SPI_SR_BSY)
+    {
+        if (--timeout == 0U) return;
+    }
+}
+
+
 // 向SPI发送FIFO写入数据
 uint32_t SPI_WriteFIFO(OB_SPI_Type *pSPI, const uint8_t *pBuf, uint32_t len)
 {
-    // 增加SPI外设指针的空指针校验，避免非法访问
     if (pSPI == NULL || pBuf == NULL || len == 0)
     {
         return 0;
     }
-    
+
     uint32_t write_cnt = 0;
-    volatile uint32_t sr_reg;  // 缓存状态寄存器值，volatile防止编译器优化
-    
-    // 循环写入FIFO，直到数据写完或FIFO满
+    uint32_t timeout   = SPI_TIMEOUT_LOOPS;   /* 防死循环保险，按主频酌情调整 */
+
     while (write_cnt < len)
     {
-        // 读取状态寄存器，检查发送FIFO是否未满
-        sr_reg = pSPI->SR;
-        if ((sr_reg & SPI_SR_TNF) == 0)
+        if (pSPI->SR & SPI_SR_TNF)
         {
-            break;  // 发送FIFO已满，退出写入
+            pSPI->DR = (uint32_t)pBuf[write_cnt];
+            write_cnt++;
+            timeout = SPI_TIMEOUT_LOOPS;      /* 有进展就重置超时 */
         }
-        
-        // 写入数据寄存器，显式转换数据类型（若DR位宽大于8位，确保类型匹配）
-        pSPI->DR = (uint32_t)pBuf[write_cnt];
-        write_cnt++;
+        else
+        {
+            if (--timeout == 0U)
+            {
+                break;              /* 只在真正异常时退出，正常流不会到这 */
+            }
+        }
     }
-    return write_cnt;
+    return write_cnt;               /* 正常情况恒等于 len */
 }
 
 uint32_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len)
@@ -138,27 +156,28 @@ uint32_t SPI_ReadWithClock(OB_SPI_Type *pSPI, uint8_t *pBuf, uint32_t len)
 
     SPI_ClearRxFIFO(pSPI);
     uint32_t total_read = 0;
-    const uint8_t dummy = 0x00;
+    uint32_t timeout;
 
     while (total_read < len)
     {
-        pSPI->DR = (uint32_t)dummy;
-
-        // uint32_t timeout_rx = 10000;
-        // while (timeout_rx--)
-        // {
-        //     if (pSPI->SR & SPI_SR_RNE)
-        //         break;
-        // }
-        // pBuf[total_read++] = (uint8_t)pSPI->DR;
-
-
-        if (pSPI->SR & SPI_SR_RNE)
+        /* 1. 等 TX FIFO 有空位再推 dummy（防写满丢失） */
+        timeout = SPI_TIMEOUT_LOOPS;
+        while (!(pSPI->SR & SPI_SR_TNF))
         {
-            pBuf[total_read++] = (uint8_t)pSPI->DR;
+            if (--timeout == 0U)
+                return total_read;
         }
-    }
+        pSPI->DR = (uint32_t)0x00;
 
+        /* 2. 等 RX 收到对应字节（恢复超时保护！） */
+        timeout = SPI_TIMEOUT_LOOPS;
+        while (!(pSPI->SR & SPI_SR_RNE))
+        {
+            if (--timeout == 0U)
+                return total_read;
+        }
+        pBuf[total_read++] = (uint8_t)pSPI->DR;
+    }
     return total_read;
 }
 

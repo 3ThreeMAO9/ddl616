@@ -50,6 +50,7 @@ static sfud_err spi_write_read(const sfud_spi *spi, const uint8_t *write_buf, si
         SPI_WriteFIFO(OB_SPI, write_buf, write_size);
     if (read_size > 0)
         SPI_ReadWithClock(OB_SPI, read_buf, read_size);
+    spi_wait_idle(OB_SPI);           /* ③ CS 拉高前总线干净 */
     FLASH_CS_PIN_SET;
     return result;
 }
