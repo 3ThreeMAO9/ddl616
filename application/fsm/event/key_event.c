@@ -59,8 +59,8 @@ static uint8_t keyEventCombineFunctionHandle(void)
     // else if (114 == value)
     // {
     //     produce_info_t* info = (produce_info_t*)get_produce_info();
-    //     OB_LOGW(TAG, "debug: flag=%u, locked=%u, activated=%u",
-    //             info->activecode.flag, is_device_locked(), is_activated());
+    //     OB_LOGW(TAG, "debug: state=%u, locked=%u, activated=%u",
+    //             info->activeCodeState, is_device_locked(), is_activated());
     //     return true;
     // }
 

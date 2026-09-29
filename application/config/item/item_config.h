@@ -14,8 +14,8 @@
 #include "base_attribute.h"
 
 /*****************************************************************************/
-// #define OB_LOG_ENABLE                               (Enabled)   // log开关
-// #define UART_PRINTF_ENABLE                          (Enabled)   // 串口打印开关
+#define OB_LOG_ENABLE                               (Enabled)   // log开关
+#define UART_PRINTF_ENABLE                          (Enabled)   // 串口打印开关
 
 
 #ifndef OB_LOG_ENABLE
