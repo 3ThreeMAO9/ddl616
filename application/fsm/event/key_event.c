@@ -452,15 +452,18 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
                         }
                         // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn);    //添加普通密码
                         // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn,get_last_log_timestamp());
-                        result = EVENT_RESULT_SUCCESS;
+                        CLEAR_KEY_EVENT();
+                        handleEventPush(EVENT_RESULT_SUCCESS, handle_code);
+                        return;
                     }
                     break;
                 case CODE_HANDLE_CHANGE_MASTER:
                     modifyUserMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
                     // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE);      //修改管理员密码
                     // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE,get_last_log_timestamp());
-                    result = EVENT_RESULT_SUCCESS;
-                    break;
+                    CLEAR_KEY_EVENT();
+                    handleEventPush(EVENT_RESULT_SUCCESS, handle_code);
+                    return;
                 default:
                     break;
                 }
@@ -488,7 +491,9 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
             {
                 if (delUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn))
                 {
-                    result = EVENT_RESULT_SUCCESS;
+                    CLEAR_KEY_EVENT();
+                    handleEventPush(EVENT_RESULT_SUCCESS, handle_code);
+                    return;
                 }
                 else
                 {
@@ -499,8 +504,9 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
         }
         else if ((CODE_HANDLE_ADD == handle_code) || (CODE_HANDLE_CHANGE_MASTER == handle_code))
         {
-            result = EVENT_RESULT_SUCCESS;
             COPY_KEY_EVENT_INPUT();
+            handleEventPush(EVENT_RESULT_SUCCESS, handle_code);
+            return;
         }
         else if (CODE_HANDLE_DEL == handle_code)
         {

@@ -29,13 +29,17 @@ QState lock_fsm_low_power_system_lock(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_admin(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t code_handle);
-QState lock_fsm_menu_user_settings(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_system_settings(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_linked_unlock(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_language_settings(LockFsm *me, QEvent const *e);
-QState lock_fsm_menu_add_normal_user(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_add_normal_pw(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_create_linked_unlock(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_add_normal_user_settings(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_add_normal_pw(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_add_normal_nfc(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_add_normal_finger(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e);
 
 
 QState lock_fsm_aging_test(LockFsm *me, QEvent const *e);

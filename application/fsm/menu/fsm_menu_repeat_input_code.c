@@ -50,18 +50,31 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             else if (EVENT_RESULT_SUCCESS == e->dynamic_[0])
             {
-                if (me->admin_flag == false)
-                    me->branch = (QStateHandler)(lock_fsm_menu_admin);
-                else
-                    me->branch = (QStateHandler)(lock_fsm_menu_user_settings);
+                if (CODE_HANDLE_ADD == e->dynamic_[1])
+                {
+                    me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user_settings);
+                }
+                else if (CODE_HANDLE_CHANGE_MASTER == e->dynamic_[1])
+                {
+                    if (me->admin_flag == false)
+                        me->branch = (QStateHandler)(lock_fsm_menu_admin);
+                    else
+                        me->branch = (QStateHandler)(lock_fsm_menu_modify_admin_user_settings);
+                }
+                else if (CODE_HANDLE_DEL == e->dynamic_[1])
+                {
 
+                }
                 state = Q_TRAN(lockFsmHandleAddSuccess);
             }
             else if ((EVENT_RESULT_FAIL_DIFFERENT == e->dynamic_[0])
                     || (EVENT_RESULT_FAIL_INPUT == e->dynamic_[0])
                     ||  (EVENT_RESULT_FAIL_TOO_SIMPLE == e->dynamic_[0]))
             {
-                hmiTaskSetState(HMI_STATE_PIN_DIFFERENT);
+                if (EVENT_RESULT_FAIL_INPUT == e->dynamic_[0])
+                    hmiTaskSetState(HMI_STATE_INPUT_ERROR_AGAIN);
+                else
+                    hmiTaskSetState(HMI_STATE_PIN_DIFFERENT);
                 if (code_handle == CODE_HANDLE_CHANGE_MASTER)
                 {
                     if (isEmptyUser(false))
@@ -70,7 +83,7 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
                         state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin); // 修改管理用户
                 }
                 else if (code_handle == CODE_HANDLE_ADD)
-                    state = Q_TRAN(lock_fsm_menu_add_normal_user); // 添加普通用户
+                    state = Q_TRAN(lock_fsm_menu_add_normal_pw); // 添加普通用户
             }
             break;
         case Q_USER_HANDLE_SIG:

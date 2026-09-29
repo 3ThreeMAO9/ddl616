@@ -6,76 +6,63 @@
 #include "task_key.h"
 #include "task_nfc.h"
 
+#include "user.h"
 #include "event.h"
 #include "key_event.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
-#define TAG "fsm_admin"
+#define TAG "fsm_modify_admin_user_settings"
 
 /***************Variable***************/
 
 
 /***************Function***************/
-
-
-// ------------------------------------------
 static QState menu_event_handle(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED(); //  没有对应事件就返回Q_IGNORED()
 
 #if (Enabled == PRINTF_FSM)
-    OB_LOGD(TAG, "--Now State[adminMenu], Event[%d, %d]--", e->sig, e->dynamic_[0]);
+    OB_LOGD(TAG, "--Now State[user_setting], Event[%d, %d]--", e->sig, e->dynamic_[0]);
 #endif
     switch (e->dynamic_[0])
     {
     case KEY_NUM_1:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-        state = Q_TRAN(lock_fsm_menu_add_normal_user_settings);     // 添加普通用户
+        state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
         break;
     case KEY_NUM_2:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-        state = Q_TRAN(lock_fsm_menu_modify_admin_user_settings);   // 修改管理员
-        break;
-    case KEY_NUM_3:
-        hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-        // state = Q_TRAN(lock_fsm_menu_add_normal_user_settings);        // 删除普通用户
-        break;
-    case KEY_NUM_5:
-        hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-        state = Q_TRAN(lock_fsm_menu_system_settings);      // 更多设置
+
         break;
     case KEY_CAN:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-        state = Q_TRAN(lock_fsm_sleep);
+        state = Q_TRAN(lock_fsm_menu_admin);
         break;
     default:
         break;
     }
     return state;
 }
-
-QState lock_fsm_menu_admin(LockFsm *me, QEvent const *e)
+// ------------------------------------------
+QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "menu_admin", e->sig, e->dynamic_[0]);
+    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "modify_admin_user_settings", e->sig, e->dynamic_[0]);
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            me->admin_flag = true;
-            
+            get_user_id();
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-            hmiTaskSetState(HMI_STATE_ADMIN);
+            hmiTaskSetState(HMI_STATE_MODIFY_ADMIN_USER_SETTINGS);
 #if (Enabled == PRINTF_FSM)
-            OB_LOGI(TAG, "case KEY_NUM_1:    //添加普通用户请按1");
-            OB_LOGI(TAG, "case KEY_NUM_2:    //修改管理员请按2");
-            OB_LOGI(TAG, "case KEY_NUM_3:    //删除普通用户请按3");
-            OB_LOGI(TAG, "case KEY_NUM_5:    //更多设置请按5");
+            OB_LOGI(TAG, "case KEY_NUM_1:    //修改管理密码请按1");
+            OB_LOGI(TAG, "case KEY_NUM_2:    //修改管理指纹请按2");
 #endif
             break;
         case Q_EXIT_SIG:

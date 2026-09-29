@@ -84,8 +84,12 @@ typedef enum{
     HMI_STATE_ADMIN,                    //管理员菜单
     HMI_STATE_USER_SETTINGS,            //用户设置
     HMI_STATE_SYSTEM_SETTINGS,          //系统设置
+    HMI_STATE_ADD_NORMAL_PW,            //添加密码，请输入6~12位密码，以#号键结束，返回上级菜单请按*号键
+    HMI_STATE_ADD_NORMAL_FINGER,        //添加指纹，请按手指，返回上级菜单请按*号键
+    HMI_STATE_ADD_NORMAL_NFC,           //添加卡片，请刷卡，返回上级菜单请按*号键
     HMI_STATE_ADD_NORMAL_USER,          //添加普通用户--用户编号XXX
     HMI_STATE_REPEAT_INPUT_CODE,        //请再输入一次，以#号键结束
+    HMI_STATE_MODIFY_ADMIN_USER_SETTINGS,//修改管理员密码请按，修改管理指纹请按
     HMI_STATE_LANGAGESETTING,           //语言设置菜单
     HMI_STATE_LINKED_UNLOCK,            //联动解锁
     HMI_STATE_CREATE_LINKED_UNLOCK,     //创建联动开锁

@@ -45,23 +45,9 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            if (KEY_CAN == e->dynamic_[0])
-            {
-                hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-                if (isEmptyUser(false))   // 初始化状态
-                {
-                    state = Q_TRAN(lock_fsm_sleep);
-                }
-                else
-                    state = Q_TRAN(lock_fsm_menu_user_settings);
-                
-            }
-            else
-            {
-                hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-                keyEventHandleCode((e->dynamic_[0]), CODE_HANDLE_CHANGE_MASTER, 0);
-            }
+            hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            keyEventHandleCode((e->dynamic_[0]), CODE_HANDLE_CHANGE_MASTER, 0);
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
@@ -82,7 +68,13 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
-                OB_LOGD(TAG,"EVENT_RESULT_FAIL");
+                hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+                if (isEmptyUser(false))   // 初始化状态
+                {
+                    state = Q_TRAN(lock_fsm_sleep);
+                }
+                else
+                    state = Q_TRAN(lock_fsm_menu_modify_admin_user_settings);
             }
             else if (EVENT_RESULT_FAIL_TOO_SIMPLE == e->dynamic_[0])
             {

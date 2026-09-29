@@ -194,7 +194,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_ADMIN:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            PLAYER_LIST_CLEAR_ADD(VOICE_For_user_settings_press, VOICE_One, VOICE_For_system_settings_press, VOICE_Two);
+            PLAYER_LIST_CLEAR_ADD(VOICE_To_add_a_user_please_press, VOICE_One, VOICE_Two, VOICE_Three, VOICE_More_settings_please_press, VOICE_Five);
             break;
         
         case HMI_STATE_CHANGE_MASTER_CODE:
@@ -221,8 +221,25 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_ADD(VOICE_Zero + user_id / 100);
             PLAYER_LIST_ADD(VOICE_Zero + (user_id / 10) % 10);
             PLAYER_LIST_ADD(VOICE_Zero + user_id % 10);
+            PLAYER_LIST_ADD(VOICE_One, VOICE_Two, VOICE_Three);
             break;
         }
+
+        case HMI_STATE_MODIFY_ADMIN_USER_SETTINGS:
+            PLAYER_LIST_ADD(VOICE_To_change_the_master_PIN_code_please_press, VOICE_One, VOICE_Two);
+            break;
+
+        case HMI_STATE_ADD_NORMAL_PW:
+            PLAYER_LIST_ADD(VOICE_Please_enter_a_new_6_to_12_digit_PIN_code, VOICE_End_with_pound_key, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            break;
+        
+        case HMI_STATE_ADD_NORMAL_FINGER:
+            PLAYER_LIST_ADD(VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            break;
+
+        case HMI_STATE_ADD_NORMAL_NFC:
+            PLAYER_LIST_ADD(VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            break;
 
         case HMI_STATE_SYSTEM_SETTINGS:
             PLAYER_LIST_CLEAR_ADD(VOICE_For_language_settings_press, VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
