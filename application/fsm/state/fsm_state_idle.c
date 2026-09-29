@@ -155,6 +155,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                     state = Q_TRAN(lockFsmHandleFail);
                 }
                 else {
+                    hmiTaskSetState(HMI_STATE_JOIN_NET_START);
                     hmi_task_join_net_time(JOIN_NET_TIMEOUT);
                     state = Q_TRAN(lock_fsm_sleep);
                 }

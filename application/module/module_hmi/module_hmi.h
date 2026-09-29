@@ -80,6 +80,7 @@ typedef enum{
     // HMI_STATE_ENTER_USER_PIN_CODE,      //请输入用户密码         Enter user PIN code
     // HMI_STATE_PLACE_FINGER_ON_READER,   //请按指纹              Place_your_finger_on_the_reader
     HMI_STATE_JOIN_NET,                 //配网模式
+    HMI_STATE_JOIN_NET_START,           //已进入配网状态
     HMI_STATE_ENROLLMENT_FAIL,          //添加失败              
     HMI_STATE_ADMIN,                    //管理员菜单
     HMI_STATE_USER_SETTINGS,            //用户设置

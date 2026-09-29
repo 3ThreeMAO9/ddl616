@@ -118,6 +118,10 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_JOIN_NET:
             hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 2);
             break;
+        
+        case HMI_STATE_JOIN_NET_START:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Entered_network_pairing);
+            break;
 
         case HMI_STATE_KEY_BOARD_LED_ON:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);

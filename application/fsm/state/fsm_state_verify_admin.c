@@ -73,6 +73,22 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
             {
                 state = Q_TRAN(lock_fsm_idle); // 输入密码空的时候,再按*键
             }
+            else if (EVENT_RESULT_RESET == e->dynamic_[0])
+            {
+                state = Q_TRAN(lock_fsm_reset);
+            }
+            else if (EVENT_RESULT_ENTER_NET_CONFIG == e->dynamic_[0])
+            {
+                if (is_device_locked()) {
+                    me->branch = (QStateHandler)(lock_fsm_sleep);
+                    state = Q_TRAN(lockFsmHandleFail);
+                }
+                else {
+                    hmiTaskSetState(HMI_STATE_JOIN_NET_START);
+                    hmi_task_join_net_time(JOIN_NET_TIMEOUT);
+                    state = Q_TRAN(lock_fsm_sleep);
+                }
+            }
             break;
         case Q_USER_HANDLE_SIG:
             // me->branch = (QStateHandler)(lock_fsm_verify_admin);
