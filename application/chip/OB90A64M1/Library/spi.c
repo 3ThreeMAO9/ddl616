@@ -31,7 +31,8 @@ uint32_t SPI_MasterOpen(OB_SPI_Type *pSPI, uint32_t nSPICapability, uint32_t nBu
     // 2. 硬编码 6MHz (基于 PCLK = 24MHz)
     // 设置 SCR = 0，即把 CR0 的第 8~15 位清零
     pSPI->CR0 &= 0xFFFF00FF; 
-    // 设置 CPSDVSR = 2 (符合手册要求的最小偶数)
+    /* 手册 9.4.1：SCK = PCLK / [(CPSDVSR + 2) x (SCR + 1)]
+     * CPSDVSR = 2 -> 24MHz / ((2+2) x 1) = 6MHz */
     pSPI->CPSR = 2;
 
     // 3. 基础控制配置

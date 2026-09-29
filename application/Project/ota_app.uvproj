@@ -502,6 +502,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\common\Library\fmc.c</FilePath>
             </File>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\chip\OB90A64M1\Library\dma.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -692,6 +697,11 @@
               <FileType>1</FileType>
               <FilePath>..\bsp\bsp_produce_test\bsp_produce_test.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_sfud_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\bsp\bsp_sfud\bsp_sfud_dma.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -793,11 +803,6 @@
               <FilePath>..\fsm\menu\fsm_menu_modfiy_admin_pin.c</FilePath>
             </File>
             <File>
-              <FileName>fsm_menu_add_normal_user.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\fsm\menu\fsm_menu_add_normal_user.c</FilePath>
-            </File>
-            <File>
               <FileName>fsm_menu_language_settings.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_language_settings.c</FilePath>
@@ -806,11 +811,6 @@
               <FileName>fsm_menu_linked_unlock.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_linked_unlock.c</FilePath>
-            </File>
-            <File>
-              <FileName>fsm_menu_user_settings.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\fsm\menu\fsm_menu_user_settings.c</FilePath>
             </File>
             <File>
               <FileName>fsm_menu_system_settings.c</FileName>
@@ -831,6 +831,31 @@
               <FileName>fsm_menu_join_linked_unlock.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_join_linked_unlock.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_add_normal_finger.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_add_normal_finger.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_add_normal_nfc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_add_normal_nfc.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_add_normal_pw.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_add_normal_pw.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_add_normal_user_settings.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_add_normal_user_settings.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_modify_admin_user_settings.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_modify_admin_user_settings.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1191,6 +1216,11 @@
               <FileName>user_profile_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\test\test_file\user_profile_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>flash_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\test\test_file\flash_test.c</FilePath>
             </File>
           </Files>
         </Group>

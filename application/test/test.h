@@ -16,7 +16,7 @@
 #ifdef TEST_ENABLE
     // #define TEST_ACTIVECODE_ENABLE   // 测试激活码功能
     // #define TEST_USER_PROFILE_ENABLE // 测试用户管理
-
+    // #define TEST_FLASH_ENABLE        // 测试FLASH性能
 
 
 #endif
@@ -42,6 +42,10 @@ void test_activecode_all(void);
 
 #ifdef TEST_USER_PROFILE_ENABLE
 void test_user_profile_all(void);
+#endif
+
+#ifdef TEST_FLASH_ENABLE
+void test_flash_all(void);
 #endif
 
 #endif // TEST_ENABLE

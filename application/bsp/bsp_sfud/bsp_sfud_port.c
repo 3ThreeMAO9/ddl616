@@ -33,6 +33,23 @@
 #include "module_spi_flash.h"
 #include "spi.h"
 
+/* PDMA 加速：开启后读 payload 走 DMA，命令+地址仍走 CPU 轮询。
+ * 实测结论（PY25Q32HB + 本芯片，SCK 6MHz）：
+ *   读 1024B  4350us -> 2150us（235 -> 476 KB/s，约 2x），readback verify [OK]
+ *   写 1KB    无收益（~1.7ms 是闪存页编程物理等待，省不掉），故写仍走 CPU
+ *   擦 4KB    无收益（纯闪存物理时间）
+ * 注意：DMA 路径的 DATAWIDTH 必须用 DMA_WIDTH_BYTE，用 WORD 会导致数据按步长 4 错位。 */
+#define SFUD_SPI_DMA_ENABLE
+
+#ifdef SFUD_SPI_DMA_ENABLE
+#include "bsp_sfud_dma.h"
+
+/* 小于该长度仍走 CPU 轮询（DMA 配置本身有 20~40us 固定开销） */
+#ifndef SFUD_DMA_MIN_LEN
+#define SFUD_DMA_MIN_LEN        32
+#endif
+#endif
+
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "sfud"
@@ -46,10 +63,28 @@ static sfud_err spi_write_read(const sfud_spi *spi, const uint8_t *write_buf, si
 {
     sfud_err result = SFUD_SUCCESS;
     FLASH_CS_PIN_CLR;
+
+    /* 命令 + 地址字节始终走 CPU（长度小，DMA 不划算） */
     if (write_size > 0)
         SPI_WriteFIFO(OB_SPI, write_buf, write_size);
+
     if (read_size > 0)
-        SPI_ReadWithClock(OB_SPI, read_buf, read_size);
+    {
+#ifdef SFUD_SPI_DMA_ENABLE
+        if (read_size >= SFUD_DMA_MIN_LEN)
+        {
+            if (bsp_sfud_dma_read(read_buf, read_size) != read_size)
+            {
+                result = SFUD_ERR_READ;
+            }
+        }
+        else
+#endif
+        {
+            SPI_ReadWithClock(OB_SPI, read_buf, read_size);
+        }
+    }
+
     spi_wait_idle(OB_SPI);           /* ③ CS 拉高前总线干净 */
     FLASH_CS_PIN_SET;
     return result;

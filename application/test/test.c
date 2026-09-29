@@ -28,6 +28,10 @@ void test_run(void)
     test_user_profile_all();
 #endif
 
+#ifdef TEST_FLASH_ENABLE
+    OB_LOGW(TAG, "--- [flash] ---");
+    test_flash_all();
+#endif
 
     OB_LOGW(TAG, "========== TEST RUN END ==========");
 }
