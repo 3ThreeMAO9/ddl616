@@ -155,33 +155,27 @@ uint8_t setUserParameter(uint8_t index, uint32_t value)
     return false;
 }
 
-/* ============================================================
- * 产测信息：统一落盘（擦整页 + 整体回写）
- * ============================================================ */
-static void produceInfoSave(void)
-{
-    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
-    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
-}
-
 void produceInfoInit(void)
 {
     user_flash_read(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produce_info_t));
-
-    /* 首字节全 FF（空片）或关键标志越界 → 视为无效，整体清零 */
-    if (0xFF == produceInfo.triplet.flag || 0xFF == produceInfo.serialFlag
-        || produceInfo.allow_motor_test > 0x01)
+    if (0xFFFFFFFF == produceInfo.deviceTest.flag || produceInfo.allow_motor_test > 0x01)
     {
+        // produceInfo.deviceTest.flag = 0;
         memset(&produceInfo, 0, sizeof(produceInfo));
+        produceInfo.bat_cali = 0;
     }
 
-    OB_LOGI(TAG, "produceInfo.serialFlag      %u", produceInfo.serialFlag);
-    OB_LOGI(TAG, "produceInfo.triplet.flag    %u", produceInfo.triplet.flag);
-    OB_LOGI(TAG, "produceInfo.reboot_flag     %u", produceInfo.reboot_flag);
-    OB_LOGI(TAG, "produceInfo.blockkey_flag   %u", produceInfo.blockkey_flag);
-    OB_LOGI(TAG, "produceInfo.allow_motor_test %u", produceInfo.allow_motor_test);
-    OB_LOGI(TAG, "produceInfo.activeCodeState %u", produceInfo.activeCodeState);
-    OB_LOGI(TAG, "produceInfo.workMode        %u", produceInfo.runtime.workMode);
+    OB_LOGI(TAG, "produceInfo.deviceTest.result     %u", produceInfo.deviceTest.result);
+    OB_LOGI(TAG, "produceInfo.deviceTest.flag       %u", produceInfo.deviceTest.flag);
+    OB_LOGI(TAG, "produceInfo.reboot_flag           %u", produceInfo.reboot_flag);
+    OB_LOGI(TAG, "produceInfo.blockkey_flag         %u", produceInfo.blockkey_flag);
+    OB_LOGI(TAG, "produceInfo.model");
+    OB_LOGI_DUMP(produceInfo.model, KDS_MODEL_LEN_MAX);
+    OB_LOGI(TAG, "produceInfo.pid");
+    OB_LOGI_DUMP(produceInfo.pid, KDS_PID_LEN_MAX);
+    OB_LOGI(TAG, "produceInfo.bat_cali              %ld", produceInfo.bat_cali);
+    OB_LOGI(TAG, "produceInfo.allow_motor_test      %u", produceInfo.allow_motor_test);
+    OB_LOGI(TAG, "produceInfo.activecode            %u", produceInfo.activecode.flag);
 }
 
 uint8_t isProduceReboot(void)
@@ -192,283 +186,81 @@ uint8_t isProduceReboot(void)
 void setProduceReboot(uint8_t flag)
 {
     produceInfo.reboot_flag = flag;
+    // user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR,FLASH_ERASE_SIZE);
+    // user_flash_write(PRODUCE_DATA_PAGE_START_ADDR,(uint8_t*)(&produceInfo),sizeof(produceInfo));
+    // produceInfo.reboot_flag = true;/*下次重启之前都有效*/
 }
 
-/* ============================================================
- * 0x02 三元组
- * ============================================================ */
-uint8_t write_pt_triplet(uint8_t *pid, uint8_t *deviceName, uint8_t *secretKey)
+uint8_t writeProduceSn(uint8_t sn_id, uint8_t *sn, uint8_t len)
 {
-    if (pid == NULL || deviceName == NULL || secretKey == NULL) {
-        OB_LOGE(TAG, "write_pt_triplet param error");
-        return 0;
+    if (len > DEVICE_SN_LEN_MAX)
+    {
+        OB_LOGE(TAG, "fail: sn len[%u] is out", len);
+        return false;
     }
-    memcpy(produceInfo.pid, pid, PT_PID_LEN);
-    memcpy(produceInfo.triplet.deviceName, deviceName, PT_DEVNAME_LEN);
-    memcpy(produceInfo.triplet.secretKey, secretKey, PT_SECRETKEY_LEN);
-    produceInfo.triplet.flag = 1;
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_triplet(uint8_t *pid, pt_triplet_t *out)
-{
-    if (pid == NULL || out == NULL)
-        return 0;
-    memcpy(pid, produceInfo.pid, PT_PID_LEN);
-    memcpy(out, &produceInfo.triplet, sizeof(pt_triplet_t));
-    return (produceInfo.triplet.flag == 1) ? 1 : 0;
-}
-
-/* ============================================================
- * 0x03 条形码SN
- * ============================================================ */
-uint8_t write_pt_serialcode(uint8_t *code, uint8_t len)
-{
-    if (code == NULL || len > PT_SERIALCODE_LEN) {
-        OB_LOGE(TAG, "write_pt_serialcode len[%u] out", len);
-        return 0;
+    else if (sn_id >= DEVICE_SN_CNT)
+    {
+        OB_LOGE(TAG, "fail: sn id[%u] is out", sn_id);
+        return false;
     }
-    memset(produceInfo.serialCode, 0, PT_SERIALCODE_LEN);   /* 不足补 '\0' */
-    memcpy(produceInfo.serialCode, code, len);
-    produceInfo.serialFlag = 1;
-    produceInfoSave();
-    return 1;
+
+    memcpy((uint8_t *)(&produceInfo.sn[sn_id].info), sn, len);
+    produceInfo.sn[sn_id].len = len;
+    produceInfo.sn[sn_id].flag = true;
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
+    // hal_fmc_erase(FMC_SLEF_DEFINE_AREA);
+    // hal_fmc_write(FMC_SLEF_DEFINE_AREA, (uint8_t*)(&produceInfo), sizeof(produce_info_t));
+    return true;
 }
 
-uint8_t read_pt_serialcode(uint8_t *out, uint8_t *len)
+uint8_t readProduceSn(uint8_t sn_id, uint8_t *sn, uint8_t *len)
 {
-    if (out == NULL || len == NULL)
-        return 0;
-    memcpy(out, produceInfo.serialCode, PT_SERIALCODE_LEN);
-    *len = PT_SERIALCODE_LEN;
-    return (produceInfo.serialFlag == 1) ? 1 : 0;
-}
-
-/* ============================================================
- * 0x04 加密激活码（32B 哈希）
- * ============================================================ */
-uint8_t write_pt_activecode(uint8_t *code, uint8_t len)
-{
-    if (code == NULL || len != ACTIVECODE_HASH_LEN) {
-        OB_LOGE(TAG, "write_pt_activecode len[%u] error", len);
-        return 0;
+    *len = 0;
+    if (sn_id >= DEVICE_SN_CNT)
+    {
+        OB_LOGE(TAG, "fail: sn id[%u] is out", sn_id);
+        return false;
     }
-    memcpy(produceInfo.activeCode, code, ACTIVECODE_HASH_LEN);
-    produceInfo.activeCodeState = ACTIVECODE_FLAG_PENDING;   /* 待激活 */
-    produceInfoSave();
-    return 1;
-}
+    // hal_fmc_read(FMC_SLEF_DEFINE_AREA, (uint8_t*)(&produceInfo), sizeof(produce_info_t));
+    user_flash_read(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produce_info_t));
 
-uint8_t read_pt_activecode_flag(void)
-{
-    /* 只返回 存在/不存在（协议要求：读取时不返回激活码内容） */
-    return (produceInfo.activeCodeState != ACTIVECODE_FLAG_NONE) ? 1 : 0;
-}
-
-uint8_t clear_pt_activecode(void)
-{
-    memset(produceInfo.activeCode, 0, ACTIVECODE_HASH_LEN);
-    produceInfo.activeCodeState = ACTIVECODE_FLAG_NONE;
-    produceInfoSave();
-    return 1;
-}
-
-/* ============================================================
- * 0x05 蓝牙MAC
- * ============================================================ */
-uint8_t write_pt_mac(uint8_t src, uint8_t *mac)
-{
-    if (src >= PT_MAC_SRC_CNT || mac == NULL) {
-        OB_LOGE(TAG, "write_pt_mac src[%u] error", src);
-        return 0;
+    if ((true == produceInfo.sn[sn_id].flag) && (produceInfo.sn[sn_id].len <= DEVICE_SN_LEN_MAX))
+    {
+        memcpy(sn, (uint8_t *)(&produceInfo.sn[sn_id].info), produceInfo.sn[sn_id].len);
+        *len = produceInfo.sn[sn_id].len;
+        return true;
     }
-    memcpy(produceInfo.bleMac[src].mac, mac, PT_MAC_LEN);
-    produceInfo.bleMac[src].flag = 1;
-    produceInfoSave();
-    return 1;
+
+    return false;
 }
 
-uint8_t read_pt_mac(uint8_t src, uint8_t *out)
+void setDeviceTestFlagBit(uint8_t id)
 {
-    if (src >= PT_MAC_SRC_CNT || out == NULL)
-        return 0;
-    memcpy(out, produceInfo.bleMac[src].mac, PT_MAC_LEN);
-    return (produceInfo.bleMac[src].flag == 1) ? 1 : 0;
+    produceInfo.deviceTest.flag |= (0x00000001 << id);
+    OB_LOGW(TAG,"Set device Test Flag[%08X]", produceInfo.deviceTest.flag);
 }
 
-/* ============================================================
- * 0x07 MQTT 配置
- * ============================================================ */
-uint8_t write_pt_mqtt(uint8_t *port, uint8_t *domain, uint8_t *countryCode, uint8_t p2pCode)
+void clearDeviceTestFlagBit(uint8_t id)
 {
-    if (port == NULL || domain == NULL || countryCode == NULL) {
-        OB_LOGE(TAG, "write_pt_mqtt param error");
-        return 0;
-    }
-    produceInfo.mqtt.port = (uint16_t)(port[0] | (port[1] << 8));
-    memcpy(produceInfo.mqtt.domain, domain, PT_DOMAIN_LEN);
-    produceInfo.mqtt.countryCode = (uint16_t)(countryCode[0] | (countryCode[1] << 8));
-    produceInfo.mqtt.p2pCode = p2pCode;
-    produceInfo.mqtt.flag = 1;
-    produceInfoSave();
-    return 1;
+    produceInfo.deviceTest.flag &= (~(0x00000001 << id));
+    OB_LOGW(TAG,"Clear device Test Flag[%08X]", produceInfo.deviceTest.flag);
 }
 
-uint8_t read_pt_mqtt(pt_mqtt_t *out)
+void clearDeviceTestFlagAllBit(void)
 {
-    if (out == NULL)
-        return 0;
-    memcpy(out, &produceInfo.mqtt, sizeof(pt_mqtt_t));
-    return (produceInfo.mqtt.flag == 1) ? 1 : 0;
+    produceInfo.deviceTest.flag = 0;
+    OB_LOGW(TAG,"Clear device Test All Flag[%08X]", produceInfo.deviceTest.flag);
 }
 
-/* ============================================================
- * 0x0D 产测结果（20 项三态）
- * ============================================================ */
-uint8_t write_pt_test_item(uint8_t idx, uint8_t result)
-{
-    if (idx >= PT_TEST_ITEM_CNT) {
-        OB_LOGE(TAG, "write_pt_test_item idx[%u] out", idx);
-        return 0;
-    }
-    produceInfo.testResult.item[idx] = result;
-    produceInfo.testResult.flag = 1;
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_test_item(uint8_t idx)
-{
-    if (idx >= PT_TEST_ITEM_CNT)
-        return PT_ITEM_FAIL;
-    return produceInfo.testResult.item[idx];
-}
-
-void reset_pt_test_result(void)
-{
-    memset(&produceInfo.testResult, 0, sizeof(produceInfo.testResult));
-    produceInfoSave();
-}
-
-/* ============================================================
- * 0x0E 六类组数（密码/卡片/指纹/人脸/指静脉/掌静脉）
- * ============================================================ */
-uint8_t write_pt_group_cnt(uint8_t *cnt6)
-{
-    if (cnt6 == NULL)
-        return 0;
-    memcpy(produceInfo.groupCnt, cnt6, PT_GROUP_CNT);
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_group_cnt(uint8_t *out6)
-{
-    if (out6 == NULL)
-        return 0;
-    memcpy(out6, produceInfo.groupCnt, PT_GROUP_CNT);
-    return 1;
-}
-
-/* ============================================================
- * 0x0F 品牌信息
- * ============================================================ */
-uint8_t write_pt_brand(uint8_t logoCode, uint8_t angle, uint8_t infraredLamp, uint8_t wanderingSensor)
-{
-    produceInfo.brand.logoCode        = logoCode;
-    produceInfo.brand.angle           = angle;
-    produceInfo.brand.infraredLamp    = infraredLamp;
-    produceInfo.brand.wanderingSensor = wanderingSensor;
-    produceInfo.brand.flag            = 1;
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_brand(pt_brand_t *out)
-{
-    if (out == NULL)
-        return 0;
-    memcpy(out, &produceInfo.brand, sizeof(pt_brand_t));
-    return (produceInfo.brand.flag == 1) ? 1 : 0;
-}
-
-/* ============================================================
- * 0x11 电池曲线
- * ============================================================ */
-uint8_t write_pt_battery(uint8_t type, uint8_t *curve, uint8_t len)
-{
-    if (type >= PT_BATTERY_CNT || curve == NULL || len != PT_BATTERY_CURVE_LEN) {
-        OB_LOGE(TAG, "write_pt_battery type[%u] len[%u] error", type, len);
-        return 0;
-    }
-    memcpy(produceInfo.battery[type].curve, curve, PT_BATTERY_CURVE_LEN);
-    produceInfo.battery[type].flag = 1;
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_battery(uint8_t type, uint8_t *out)
-{
-    if (type >= PT_BATTERY_CNT || out == NULL)
-        return 0;
-    memcpy(out, produceInfo.battery[type].curve, PT_BATTERY_CURVE_LEN);
-    return (produceInfo.battery[type].flag == 1) ? 1 : 0;
-}
-
-/* ============================================================
- * 0x14 人脸/掌静脉密钥类型
- * ============================================================ */
-uint8_t write_pt_facevein_type(uint8_t type)
-{
-    produceInfo.faceVeinKeyType = type;
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_facevein_type(void)
-{
-    return produceInfo.faceVeinKeyType;
-}
-
-/* ============================================================
- * 0x09 模式 / 0x1F 日志通道
- * ============================================================ */
-uint8_t write_pt_work_mode(uint8_t mode)
-{
-    produceInfo.runtime.workMode = mode;
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_work_mode(void)
-{
-    return produceInfo.runtime.workMode;
-}
-
-uint8_t write_pt_log_channel(uint8_t ch, uint8_t type)
-{
-    produceInfo.runtime.logChannel     = ch;
-    produceInfo.runtime.logChannelType = type;
-    produceInfoSave();
-    return 1;
-}
-
-uint8_t read_pt_log_channel(uint8_t *type)
-{
-    if (type != NULL)
-        *type = produceInfo.runtime.logChannelType;
-    return produceInfo.runtime.logChannel;
-}
-
-/* ============================================================
- * 系统级标志
- * ============================================================ */
 void writeDeviceTestResult(uint8_t result)
 {
-    produceInfo.testResult.flag = result;
-    OB_LOGW(TAG, "write device Test result[%u]", result);
-    produceInfoSave();
+    produceInfo.deviceTest.result = result;
+
+    OB_LOGW(TAG,"write device Test result[%u]", result);
+    
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
 }
 
 void resetDeviceTestResult(void)
@@ -476,50 +268,96 @@ void resetDeviceTestResult(void)
     writeDeviceTestResult(0xff);
 }
 
+void setDeviceTestResult(uint8_t result)
+{
+    produceInfo.deviceTest.result = result;
+}
+
+uint8_t readDeviceTestResult(void)
+{
+    return produceInfo.deviceTest.result;
+}
+
+uint32_t readDeviceTestFlag(void)
+{
+    return produceInfo.deviceTest.flag;
+}
+
+uint8_t isPassDeviceTestItem(uint8_t id)
+{
+    if (produceInfo.deviceTest.flag & (0x00000001 << id))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 void block_hotkey(uint8_t flag)
 {
     produceInfo.blockkey_flag = flag;
-    produceInfoSave();
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
+}
+
+uint8_t is_block_hotkey(void)
+{
+    return produceInfo.blockkey_flag;
+}
+
+uint8_t writeProductionModel(uint8_t *data)
+{
+    // uint8_t temp;
+    memcpy((uint8_t *)(&produceInfo.model), data, KDS_MODEL_LEN_MAX);
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
+    produceInfoInit();
+    if (memcmp(data, produceInfo.model, KDS_MODEL_LEN_MAX) == 0)
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
+void readProductionModel(uint8_t *data)
+{
+    memcpy(data, (uint8_t *)(&produceInfo.model), KDS_MODEL_LEN_MAX);
+}
+
+uint8_t writeProductionPID(uint8_t *data)
+{
+    memcpy((uint8_t *)(&produceInfo.pid), data, KDS_PID_LEN_MAX);
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
+    produceInfoInit();
+    if (memcmp(data, produceInfo.pid, KDS_PID_LEN_MAX) == 0)
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
+void readProductionPID(uint8_t *data)
+{
+    memcpy(data, (uint8_t *)(&produceInfo.pid), KDS_PID_LEN_MAX);
+}
+
+uint8_t isallowMotorTest(void)
+{
+    return produceInfo.allow_motor_test;
 }
 
 void setallowMotorTest(uint8_t flag)
 {
     produceInfo.allow_motor_test = flag;
-    produceInfoSave();
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
 }
-
 // ============================================================
-// 激活码（统一使用 activeCode[32] + activeCodeState）
+// 激活码
 // ============================================================
-
-/**
- * @brief 计算激活码哈希（输出 32 字节）
- * @param code 激活码明文
- * @param len  明文长度
- * @param out32 输出缓冲，长度 ACTIVECODE_HASH_LEN(32)
- *
- * ★★ 算法待定 ★★
- *   当前为占位实现：用 FNV1a-32 填充前 4 字节，其余补 0。
- *   后续替换为 SHA-256 时，只需改动本函数内部，调用方无需变更。
- */
-static void activecode_calc_hash(uint8_t* code, uint8_t len, uint8_t* out32)
-{
-    if (out32 == NULL) {
-        return;
-    }
-    memset(out32, 0, ACTIVECODE_HASH_LEN);
-
-    if (code == NULL || len == 0) {
-        return;
-    }
-
-    /* TODO: 替换为真正的 32 字节哈希（如 SHA-256） */
-    uint32_t h = utils_hash_fnv1a_32(code, len);
-    out32[0] = (uint8_t)(h & 0xFF);
-    out32[1] = (uint8_t)((h >> 8) & 0xFF);
-    out32[2] = (uint8_t)((h >> 16) & 0xFF);
-    out32[3] = (uint8_t)((h >> 24) & 0xFF);
-}
 
 /**
  * @brief 生产工具：写入激活码哈希（出厂用）
@@ -535,17 +373,20 @@ uint8_t write_activecode_hash(uint8_t* code, uint8_t len)
         return 0;
     }
 
-    // 1. 计算 32 字节哈希
-    activecode_calc_hash(code, len, produceInfo.activeCode);
+    // 1. 计算哈希
+    uint32_t hash = utils_hash_fnv1a_32(code, len);
 
-    // 2. 进入待激活状态
-    produceInfo.activeCodeState = ACTIVECODE_FLAG_PENDING;
+    // 2. 更新 RAM 缓存 → 待激活状态
+    produceInfo.activecode.flag = ACTIVECODE_FLAG_PENDING;
+    memcpy(produceInfo.activecode.hash, &hash, ACTIVECODE_HASH_LEN);
 
-    // 3. 落盘
-    produceInfoSave();
+    // 3. 擦除 + 写入 Flash
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR,
+                     (uint8_t*)(&produceInfo), sizeof(produceInfo));
 
 #if (Enabled == PRINTF_FLASH)
-    OB_LOGI(TAG, "write_activecode_hash: state=PENDING");
+    OB_LOGI(TAG, "write_activecode_hash: hash=0x%08X, state=PENDING", hash);
 #endif
     return 1;
 }
@@ -564,27 +405,32 @@ uint8_t verify_activecode(uint8_t* code, uint8_t len)
     }
 
     // 1. 只有"待激活"状态才需要验证
-    if (produceInfo.activeCodeState != ACTIVECODE_FLAG_PENDING) {
-        OB_LOGW(TAG, "device not in PENDING state (state=%u)",
-                produceInfo.activeCodeState);
+    if (produceInfo.activecode.flag != ACTIVECODE_FLAG_PENDING) {
+        OB_LOGW(TAG, "device not in PENDING state (flag=%u)",
+                produceInfo.activecode.flag);
         return 0;
     }
 
     // 2. 计算输入哈希
-    uint8_t hash[ACTIVECODE_HASH_LEN];
-    activecode_calc_hash(code, len, hash);
+    uint32_t hash = utils_hash_fnv1a_32(code, len);
 
     // 3. 与存储的哈希对比
-    if (memcmp(hash, produceInfo.activeCode, ACTIVECODE_HASH_LEN) != 0) {
+    uint32_t stored;
+    memcpy(&stored, produceInfo.activecode.hash, ACTIVECODE_HASH_LEN);
+
+    if (hash != stored) {
 #if (Enabled == PRINTF_FLASH)
-        OB_LOGW(TAG, "activecode verify FAIL");
+        OB_LOGW(TAG, "activecode verify FAIL: 0x%08X != 0x%08X", hash, stored);
 #endif
         return 0;
     }
 
     // 4. 验证成功 → 进入已激活状态
-    produceInfo.activeCodeState = ACTIVECODE_FLAG_VALID;
-    produceInfoSave();
+    produceInfo.activecode.flag = ACTIVECODE_FLAG_VALID;
+
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR,
+                     (uint8_t*)(&produceInfo), sizeof(produceInfo));
 
 #if (Enabled == PRINTF_FLASH)
     OB_LOGI(TAG, "activecode verify OK, state=VALID");
@@ -599,7 +445,7 @@ uint8_t verify_activecode(uint8_t* code, uint8_t len)
  */
 uint8_t is_device_locked(void)
 {
-    return (produceInfo.activeCodeState == ACTIVECODE_FLAG_PENDING) ? 1 : 0;
+    return (produceInfo.activecode.flag == ACTIVECODE_FLAG_PENDING) ? 1 : 0;
 }
 
 /**
@@ -608,7 +454,7 @@ uint8_t is_device_locked(void)
  */
 uint8_t is_activated(void)
 {
-    return (produceInfo.activeCodeState == ACTIVECODE_FLAG_VALID) ? 1 : 0;
+    return (produceInfo.activecode.flag == ACTIVECODE_FLAG_VALID) ? 1 : 0;
 }
 
 /**
@@ -617,9 +463,12 @@ uint8_t is_activated(void)
  */
 void clear_activecode(void)
 {
-    produceInfo.activeCodeState = ACTIVECODE_FLAG_NONE;
-    memset(produceInfo.activeCode, 0, ACTIVECODE_HASH_LEN);
-    produceInfoSave();
+    produceInfo.activecode.flag = ACTIVECODE_FLAG_NONE;
+    memset(produceInfo.activecode.hash, 0, ACTIVECODE_HASH_LEN);
+
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR,
+                     (uint8_t*)(&produceInfo), sizeof(produceInfo));
 
 #if (Enabled == PRINTF_FLASH)
     OB_LOGW(TAG, "clear_activecode: state=NONE");

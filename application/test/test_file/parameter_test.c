@@ -35,13 +35,13 @@ static void test_activecode_states(void)
 
     // 1. 初始：NONE → 不受限
     clear_activecode();
-    OB_LOGI(TAG, "1. NONE: state=%u, locked=%u (expect 0), activated=%u (expect 0)",
-            info->activeCodeState, is_device_locked(), is_activated());
+    OB_LOGI(TAG, "1. NONE: flag=%u, locked=%u (expect 0), activated=%u (expect 0)",
+            info->activecode.flag, is_device_locked(), is_activated());
 
     // 2. 生产工具写哈希 → PENDING
     write_activecode_hash(code, ACTIVECODE_LEN_MAX);
-    OB_LOGI(TAG, "2. PENDING: state=%u, locked=%u (expect 1), activated=%u (expect 0)",
-            info->activeCodeState, is_device_locked(), is_activated());
+    OB_LOGI(TAG, "2. PENDING: flag=%u, locked=%u (expect 1), activated=%u (expect 0)",
+            info->activecode.flag, is_device_locked(), is_activated());
 
     // 3. 用户输入正确激活码 → VALID
     if (verify_activecode(code, ACTIVECODE_LEN_MAX)) {
@@ -49,13 +49,13 @@ static void test_activecode_states(void)
     } else {
         OB_LOGE(TAG, "3. Verify FAIL");
     }
-    OB_LOGI(TAG, "4. VALID: state=%u, locked=%u (expect 0), activated=%u (expect 1)",
-            info->activeCodeState, is_device_locked(), is_activated());
+    OB_LOGI(TAG, "4. VALID: flag=%u, locked=%u (expect 0), activated=%u (expect 1)",
+            info->activecode.flag, is_device_locked(), is_activated());
 
     // 4. 清除 → NONE
     clear_activecode();
-    OB_LOGI(TAG, "5. After clear: state=%u, locked=%u (expect 0)",
-            info->activeCodeState, is_device_locked());
+    OB_LOGI(TAG, "5. After clear: flag=%u, locked=%u (expect 0)",
+            info->activecode.flag, is_device_locked());
 
     OB_LOGI(TAG, "========== Test Complete ==========");
 }
@@ -182,11 +182,11 @@ static void test_activecode_hash_unique(void)
     uint8_t code5[ACTIVECODE_LEN_MAX] = {0, 0, 0, 0, 0, 0};
     uint8_t code6[ACTIVECODE_LEN_MAX] = {9, 9, 9, 9, 9, 9};
 
-    if (!verify_activecode(code2, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code2 rejected");
-    if (!verify_activecode(code3, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code3 rejected");
-    if (!verify_activecode(code4, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code4 rejected");
-    if (!verify_activecode(code5, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code5 rejected");
-    if (!verify_activecode(code6, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code6 rejected");
+    if (!verify_activecode(code2, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code2 rejected ✅");
+    if (!verify_activecode(code3, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code3 rejected ✅");
+    if (!verify_activecode(code4, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code4 rejected ✅");
+    if (!verify_activecode(code5, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code5 rejected ✅");
+    if (!verify_activecode(code6, ACTIVECODE_LEN_MAX)) OB_LOGI(TAG, "code6 rejected ✅");
 
     OB_LOGI(TAG, "========== Test Complete ==========");
 }
@@ -207,13 +207,12 @@ static void test_activecode_persistence(void)
                     (uint8_t*)info, sizeof(produce_info_t));
 
     OB_LOGI(TAG, "2. After read from Flash:");
-    OB_LOGI(TAG, "   state = %u (expect 1)", info->activeCodeState);
-    OB_LOGI(TAG, "   hash = %02X%02X%02X%02X...(%u bytes)",
-            info->activeCode[0],
-            info->activeCode[1],
-            info->activeCode[2],
-            info->activeCode[3],
-            ACTIVECODE_HASH_LEN);
+    OB_LOGI(TAG, "   flag = %u (expect 1)", info->activecode.flag);
+    OB_LOGI(TAG, "   hash = 0x%02X%02X%02X%02X",
+            info->activecode.hash[3],
+            info->activecode.hash[2],
+            info->activecode.hash[1],
+            info->activecode.hash[0]);
     OB_LOGI(TAG, "   locked=%u (expect 1)", is_device_locked());
 
     // 3. 验证应该能通过（并转为 VALID）
