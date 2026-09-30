@@ -9,6 +9,7 @@
 #include "event.h"
 #include "key_event.h"
 #include "user.h"
+#include "parameter.h"
 #include "msg_protocol.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
@@ -86,6 +87,7 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
                 else {
                     hmiTaskSetState(HMI_STATE_JOIN_NET_START);
                     hmi_task_join_net_time(JOIN_NET_TIMEOUT);
+                    uart_msg_join_net();
                     state = Q_TRAN(lock_fsm_sleep);
                 }
             }

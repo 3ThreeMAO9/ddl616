@@ -1107,6 +1107,11 @@
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_blue_version.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_protocol_join_net.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_join_net.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

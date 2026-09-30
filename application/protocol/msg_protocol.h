@@ -60,7 +60,11 @@ typedef struct {
     uint32_t timeout;       // 间隔多久  单位：1ms
 } frame_bell_def_t;
 
-
+typedef struct {
+    uint8_t pid[10];
+    uint8_t device_name[14];
+    uint8_t secret_key[24];
+} frame_join_net_def_t;
 
 /**************************************************/
 
@@ -72,6 +76,7 @@ typedef struct {
 void uart_msg_bell(uint8_t cnt, uint32_t timeout);
 void uart_msg_blue_mac(void);
 void uart_msg_blue_version(void);
+void uart_msg_join_net(void);
 
 void uart_msg_ack(uint8_t cmd, uint8_t status);
 

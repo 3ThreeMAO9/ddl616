@@ -122,8 +122,6 @@ static uint32_t dma_run(uint32_t dst, uint32_t dst_inc, uint32_t cyc)
  * 成功返回 len，失败返回 0（buf 内容不可信）。 */
 uint32_t bsp_sfud_dma_read(uint8_t *buf, uint32_t len)
 {
-    uint32_t off;
-
     /* 先等命令/地址移位完成再清 RX FIFO，否则残留字节会成为数据前缀 */
     spi_wait_idle(OB_SPI);
     SPI_ClearRxFIFO(OB_SPI);
@@ -131,7 +129,7 @@ uint32_t bsp_sfud_dma_read(uint8_t *buf, uint32_t len)
 #if FLASH_DMA_WORD
     /* WORD 模式：1 cycle 耗 4 个 SPI 帧、只产出 1 个有效字节，且必须落在步长 4 的位置。
      * 故按 FLASH_DMA_CHUNK 分块：每块先散写到 s_raw[]，再压缩回 buf。 */
-    for (off = 0U; off < len; off += FLASH_DMA_CHUNK) {
+    for (uint32_t off = 0U; off < len; off += FLASH_DMA_CHUNK) {
         uint32_t n = len - off;
         uint32_t i;
 

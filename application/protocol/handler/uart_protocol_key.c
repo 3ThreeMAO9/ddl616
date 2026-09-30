@@ -36,11 +36,11 @@ static void on_setting_key(uint8_t report)
         baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_ADD_ADMIN);
         break;
     case EVENT_KEY_REPORT_DOUBLE:
-        OB_LOGI(TAG, "[RESET] DOUBLE 进入本地菜单");
+        OB_LOGI(TAG, "[SETTING] DOUBLE 进入本地菜单");
         baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_ENTER_LOCAL_MENU);
         break;
     case EVENT_KEY_REPORT_LONG:
-        OB_LOGI(TAG, "[RESET] LONG  进入配网状态");
+        OB_LOGI(TAG, "[SETTING] LONG  进入配网状态");
         baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_ENTER_NET_CONFIG);
         break;
     }

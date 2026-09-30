@@ -78,6 +78,18 @@ void uart_msg_blue_version(void)
     uart_msg_common_send(UP_CMD_BLUE_VERSION, NULL, 0);
 }
 
+void uart_msg_join_net(void)
+{
+    // A5 01 A7 0F 02 00 62 00 82 0E 30 00 36 31 36 61 6A 37 38 6C 77 33 6D 62 7A 31 6C 61 36 70 75 69 79 79 79 31 37 35 33 37 34 62 64 31 38 38 37 33 31 34 34 63 62 62 39 30 30 64 64 32
+    frame_join_net_def_t data = {
+        .pid = "616aj78lw3",
+        .device_name = "mbz1la6puiyyy1",
+        .secret_key = "75374bd18873144cbb900dd2",
+    };
+
+    uart_msg_common_send(UP_CMD_JOIN_NET, (uint8_t *)&data, sizeof(frame_join_net_def_t));
+}
+
 void uart_msg_ack(uint8_t cmd, uint8_t status)
 {
     frame_ack_def_t ack = {.status = status};

@@ -89,7 +89,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_KEY)              // (0x60)   // 按键事件
 
 
-
+        HANDLER_IMPORT(UP_CMD_JOIN_NET_ACK)     // (0x8F)   // 入网命令---ack
         HANDLER_IMPORT(UP_CMD_BELL_ACK)         // (0x61)   // 门铃事件---ack
 
     default:
