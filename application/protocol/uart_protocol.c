@@ -87,6 +87,10 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
     {
         HANDLER_IMPORT(UP_CMD_ACK_HEART)        // (0xAA)   // 心跳应答
         HANDLER_IMPORT(UP_CMD_KEY)              // (0x60)   // 按键事件
+        HANDLER_IMPORT(UP_CMD_ADD_USER)         // (0x05)   // 添加用户
+        HANDLER_IMPORT(UP_CMD_DELETE_USER)      // (0x06)   // 删除用户
+        HANDLER_IMPORT(UP_CMD_SET_LANGUAGE)     // (0x19)   // 设置语言
+        HANDLER_IMPORT(UP_CMD_SET_VOLUME)       // (0x22)   // 设置音量
 
 
         HANDLER_IMPORT(UP_CMD_JOIN_NET_ACK)     // (0x8F)   // 入网命令---ack

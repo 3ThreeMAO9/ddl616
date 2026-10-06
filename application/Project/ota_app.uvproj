@@ -1112,6 +1112,26 @@
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_join_net.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_protocol_add_user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_add_user.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_delete_user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_delete_user.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_set_language.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_set_language.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_set_volume.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_set_volume.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
