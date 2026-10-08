@@ -195,6 +195,12 @@ static void uart_poll_tx(void)
         //     s_uart_tx.send_timestamp = system_ms_get(); // 记录发送时间
         // }
     }
+    else
+    {
+        // 数据不足（队列被截断/已错位）：清空该队列恢复，避免后续读到的 ctrl/data 全错位
+        OB_LOGE(TAG, "[%s] tx frame incomplete: want=%u, clear queue", __func__, data_len);
+        uart_queue_clear(cur_pri);
+    }
 }
 
 void module_uart_sleep(void)
@@ -243,7 +249,16 @@ void module_uart_queue_put(uint8_t *data, uint16_t tsn, uint8_t cmd, uint16_t le
     tx_ctrl_info.cmd = cmd;
     tx_ctrl_info.len = len;
 
-    // uart_space_len(UART_PRI_HIGH);
+    // 整帧必须能一次性入队：否则只会写进 ctrl 头、数据被截断，
+    // 队列随即错位（后续读到的 ctrl/data 全乱），发送端却不会报错
+    uint16_t need = (uint16_t)(sizeof(UartTxCtrlInfo) + len);
+    if (uart_space_len(UART_PRI_HIGH) < need)
+    {
+        OB_LOGE(TAG, "[%s] tx queue no space: need=%u, free=%u, cmd=0x%02X",
+                __func__, need, (uint16_t)uart_space_len(UART_PRI_HIGH), cmd);
+        return;
+    }
+
     //把串口数据存进队列，在主循环中提取发送
     uart_queue_put(UART_PRI_HIGH, (const uint8_t*)&tx_ctrl_info, sizeof(UartTxCtrlInfo));
     uart_queue_put(UART_PRI_HIGH, data, len);

@@ -13,9 +13,11 @@
 #include <stdint.h>
 #include <string.h>
 /***********Macro***********/
-// 统一缓冲区大小（高/普通优先级队列均为128字节）
+// 统一缓冲区大小（高/普通优先级发送队列 + 接收队列共用）
+// 单帧最长 = 帧头 12 + payload 200（0x88/0x89 的数组/记录 raw）= 212 字节，
+// 发送队列还要加上 UartTxCtrlInfo(6) 共 218；原值 128 会截断大帧（曾导致 0x88 发不出去）
 #ifndef UART_QUEUE_SIZE
-#define UART_QUEUE_SIZE (128)
+#define UART_QUEUE_SIZE (256)
 #endif
 
 

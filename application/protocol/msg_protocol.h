@@ -48,7 +48,13 @@ typedef struct
     uint8_t MAC[6];
 } frame_ble_mac_t;
 
-
+typedef struct
+{
+    uint32_t p_timestamp; //时间戳
+    uint8_t p_record_event_type; //门锁记录事件类型（枚举值）： kiot_tm_p_record_event_type_enum_t
+    uint8_t p_record_cursor_count; //每次获取历史记录的数量
+    uint8_t p_record_cursor_direction; //获取历史记录数据的方向（枚举值）： kiot_tm_p_record_cursor_direction_enum_t
+} kiot_tm_action_in_a_get_records_data_stu_t;       // 0x09
 
 /*********************发送处理的结构体********************/
 typedef struct {
@@ -79,6 +85,13 @@ void uart_msg_blue_version(void);
 void uart_msg_join_net(void);
 
 void uart_msg_ack(uint8_t cmd, uint8_t status);
+
+/* 无 payload 应答（数据长度 0），用于暂时没有数据可回的应答，如 0x89 */
+void uart_msg_empty_ack(uint8_t cmd);
+
+/* 用户列表时间戳应答（0x88）：payload = uint32 数组（按用户ID升序），每项 4 字节小端，
+ * count = 项数（0 时等同于无 payload） */
+void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count);
 
 /*****************************/
 

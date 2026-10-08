@@ -37,6 +37,9 @@
 /* WiFi 模块下发指令：命令字与 ob_lock.h 的 CMD_SERVER_* 保持一致 */
 #define UP_CMD_ADD_USER                     (0x05)  // 添加用户（WiFi模块 -> 门锁）
 #define UP_CMD_DELETE_USER                  (0x06)  // 删除用户（WiFi模块 -> 门锁）
+#define UP_CMD_SET_USER                     (0x07)  // 设置用户（WiFi模块 -> 门锁）
+#define UP_CMD_GET_USERLIST_TIMESTAMP       (0x08)  // 获取用户列表时间戳（WiFi模块 -> 门锁）
+#define UP_CMD_GET_RECORD_LOG               (0x09)  // 获取开锁记录（WiFi模块 -> 门锁）
 
 /* WiFi 模块下发指令：参数设置，命令字与 ob_lock.h 的 PROP_CMD_* 保持一致 */
 #define UP_CMD_SET_LANGUAGE                 (0x19)  // 设置语言（对齐 PROP_CMD_LANGUAGE）
@@ -57,6 +60,9 @@
 #define UP_CMD_BLUE_VERSION_ACK             SET_UART_ACK_CMD(UP_CMD_BLUE_VERSION)
 #define UP_CMD_ADD_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_ADD_USER)      // 0x85
 #define UP_CMD_DELETE_USER_ACK              SET_UART_ACK_CMD(UP_CMD_DELETE_USER)   // 0x86
+#define UP_CMD_SET_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_SET_USER)      // 0x87
+#define UP_CMD_GET_USERLIST_TIMESTAMP_ACK   SET_UART_ACK_CMD(UP_CMD_GET_USERLIST_TIMESTAMP) // 0x88
+#define UP_CMD_GET_RECORD_LOG_ACK           SET_UART_ACK_CMD(UP_CMD_GET_RECORD_LOG) // 0x89
 #define UP_CMD_SET_LANGUAGE_ACK             SET_UART_ACK_CMD(UP_CMD_SET_LANGUAGE)  // 0x99
 #define UP_CMD_SET_VOLUME_ACK               SET_UART_ACK_CMD(UP_CMD_SET_VOLUME)    // 0xA2
 /***********Enum***********/

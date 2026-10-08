@@ -223,6 +223,8 @@ uint8_t  user_get_name(uint16_t user_id, char* buf, uint8_t len);
 uint8_t  user_get_profile(uint16_t user_id, user_profile_t* profile);
 uint8_t  user_is_valid_period(uint16_t user_id);
 uint8_t  user_get_total_cnt(void);
+// 读取用户表时间戳数组：ts[user_id] = 该用户最后修改时间，0 表示用户不存在（0x08 应答用）
+void     user_get_list_timestamp(uint32_t* ts, uint8_t count);
 
 /**************************************/
 

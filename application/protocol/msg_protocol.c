@@ -80,6 +80,27 @@ void uart_msg_blue_version(void)
 
 void uart_msg_join_net(void)
 {
+// 2026-10-08 15:06:29.088 https://p-sg1.juziwulian.com/iot Mac:9F01C000516D productID:616aj78lw3  deviceName:3sz1lceg7kyyy1  deviceSecret:178d4f8eb17a462ecb9f0ba0
+
+// 2026-10-08 16:07:01.299 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:gbz1lcejp4yyy1  deviceSecret:0f44433ebc7651374bddea0c
+
+// 2026-10-08 16:07:02.631 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:nmz1lcejp5yyy1  deviceSecret:cda54005b32edcf84489510c
+
+// 2026-10-08 16:07:03.863 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:gez1lcejp7yyy1  deviceSecret:eb714e60b71a9405eb4d7d2e
+
+// 2026-10-08 16:07:05.064 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:vkz1lcejp8yyy1  deviceSecret:bb9f4b9ca2a46d8be3e0ddc9
+
+// 2026-10-08 16:07:06.108 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:ohz1lcejp9yyy1  deviceSecret:1a7348e998acc3239eec37b2
+
+// 2026-10-08 16:07:07.097 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:onz1lcejpayyy1  deviceSecret:7aec47abb53864f308d7115c
+
+// 2026-10-08 16:07:08.202 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:oez1lcejpbyyy1  deviceSecret:89f34384a5ffab720233b35a
+
+// 2026-10-08 16:07:09.903 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:anz1lcejpdyyy1  deviceSecret:93754ce1b0a8fb41d86f1c97
+
+// 2026-10-08 16:07:11.278 https://p-sg1.juziwulian.com/iot Mac:9F01C000316C productID:616aj78lw3  deviceName:mlz1lcejpeyyy1  deviceSecret:16c946f68e549faf7733eaee
+
+
     // A5 01 A7 0F 02 00 62 00 82 0E 30 00 36 31 36 61 6A 37 38 6C 77 33 6D 62 7A 31 6C 61 36 70 75 69 79 79 79 31 37 35 33 37 34 62 64 31 38 38 37 33 31 34 34 63 62 62 39 30 30 64 64 32
     frame_join_net_def_t data = {
         .pid = "616aj78lw3",
@@ -94,4 +115,17 @@ void uart_msg_ack(uint8_t cmd, uint8_t status)
 {
     frame_ack_def_t ack = {.status = status};
     uart_msg_common_send(cmd, (uint8_t *)&ack, sizeof(frame_ack_def_t));
+}
+
+/* 无 payload 应答：length = 0，checksum2 = 0 */
+void uart_msg_empty_ack(uint8_t cmd)
+{
+    uart_msg_common_send(cmd, NULL, 0);
+}
+
+/* 用户列表时间戳应答（0x88）：payload = uint32 数组（按用户ID升序），每项 4 字节小端 */
+void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count)
+{
+    uart_msg_common_send(UP_CMD_GET_USERLIST_TIMESTAMP_ACK,
+                         (uint8_t *)timestamp, count * sizeof(uint32_t));
 }

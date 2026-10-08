@@ -1229,3 +1229,30 @@ uint8_t user_get_total_cnt(void)
 {
     return get_profile_cnt();
 }
+
+/**
+ * @brief 读取用户表时间戳数组（0x08 应答用）
+ * @param ts    输出数组，元素个数 >= count，ts[user_id] = 该用户最后修改时间
+ * @param count 数组长度（= 用户ID上限 + 1）
+ * @note 不存在的用户填 0；user_id 超出自数组范围的忽略
+ */
+void user_get_list_timestamp(uint32_t* ts, uint8_t count)
+{
+    user_profile_t profile;
+
+    if (ts == NULL || count == 0) {
+        return;
+    }
+
+    memset(ts, 0, sizeof(uint32_t) * count);
+
+    for (uint8_t i = 0; i < PROFILE_COUNT; i++) {
+        read_profile(i, &profile);
+        if (profile.user_id == 0xFF) {      // 空槽位
+            continue;
+        }
+        if (profile.user_id < count) {
+            ts[profile.user_id] = profile.timestamp;
+        }
+    }
+}
