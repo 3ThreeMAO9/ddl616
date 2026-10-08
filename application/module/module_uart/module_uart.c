@@ -141,27 +141,18 @@ static void uart_poll_tx(void)
         return;
     }
 
-    uart_pri_t cur_pri;
     uint16_t data_len;
     UartTxCtrlInfo tx_ctrl_info = {0};
     uint8_t tx_buf[UART0_BUF_LEN]; // 栈缓冲区
-    // 优先处理高优先级队列，再处理普通优先级
-    if (uart_queue_get_len(UART_PRI_HIGH) >= sizeof(UartTxCtrlInfo))
-    {
-        // OB_LOGD(TAG,"UART_PRI_HIGH get_len %d",uart_queue_get_len(UART_PRI_HIGH));
-        cur_pri = UART_PRI_HIGH;
 
-    }
-    else if (uart_queue_get_len(UART_PRI_NORMAL) >= sizeof(UartTxCtrlInfo))
+    // 队列里至少要有 ctrl 头
+    if (uart_queue_get_len() < sizeof(UartTxCtrlInfo))
     {
-        // OB_LOGD(TAG,"UART_PRI_NORMAL get_len %d",uart_queue_get_len(UART_PRI_NORMAL));
-        cur_pri = UART_PRI_NORMAL;
-    }
-    else
         return;// 无数据
+    }
 
-    uart_queue_get_bulk(cur_pri, (uint8_t*)&tx_ctrl_info, sizeof(UartTxCtrlInfo));
-    data_len = tx_ctrl_info.len; // 按大端解析16位长度
+    uart_queue_get_bulk((uint8_t*)&tx_ctrl_info, sizeof(UartTxCtrlInfo));
+    data_len = tx_ctrl_info.len;
 
     // OB_LOGD(TAG,"data_len %d",data_len);
     // 校验长度（避免越界）
@@ -170,7 +161,7 @@ static void uart_poll_tx(void)
     }
 
     // 读取对应长度的数据并发送
-    if (uart_queue_get_bulk(cur_pri, tx_buf, data_len) == data_len){
+    if (uart_queue_get_bulk(tx_buf, data_len) == data_len){
         OB_LOGW(TAG, "[%s] data_len=%d", __func__, data_len);
         OB_LOGW_DUMP(tx_buf, data_len);
         hal_uartSendBuff(BACK_UART_SEL, tx_buf, data_len); // 串口硬件发送
@@ -197,9 +188,9 @@ static void uart_poll_tx(void)
     }
     else
     {
-        // 数据不足（队列被截断/已错位）：清空该队列恢复，避免后续读到的 ctrl/data 全错位
+        // 数据不足（队列被截断/已错位）：清空队列恢复，避免后续读到的 ctrl/data 全错位
         OB_LOGE(TAG, "[%s] tx frame incomplete: want=%u, clear queue", __func__, data_len);
-        uart_queue_clear(cur_pri);
+        uart_queue_clear();
     }
 }
 
@@ -252,16 +243,21 @@ void module_uart_queue_put(uint8_t *data, uint16_t tsn, uint8_t cmd, uint16_t le
     // 整帧必须能一次性入队：否则只会写进 ctrl 头、数据被截断，
     // 队列随即错位（后续读到的 ctrl/data 全乱），发送端却不会报错
     uint16_t need = (uint16_t)(sizeof(UartTxCtrlInfo) + len);
-    if (uart_space_len(UART_PRI_HIGH) < need)
+    if (uart_space_len() < need)
     {
         OB_LOGE(TAG, "[%s] tx queue no space: need=%u, free=%u, cmd=0x%02X",
-                __func__, need, (uint16_t)uart_space_len(UART_PRI_HIGH), cmd);
+                __func__, need, (uint16_t)uart_space_len(), cmd);
         return;
     }
 
     //把串口数据存进队列，在主循环中提取发送
-    uart_queue_put(UART_PRI_HIGH, (const uint8_t*)&tx_ctrl_info, sizeof(UartTxCtrlInfo));
-    uart_queue_put(UART_PRI_HIGH, data, len);
+    if (uart_queue_put((const uint8_t*)&tx_ctrl_info, sizeof(UartTxCtrlInfo)) != sizeof(UartTxCtrlInfo)
+        || uart_queue_put(data, len) != len)
+    {
+        OB_LOGE(TAG, "[%s] tx queue put failed, clear queue, cmd=0x%02X", __func__, cmd);
+        uart_queue_clear();     // 丢弃半包，避免队列错位
+        return;
+    }
 }
 
 uint8_t module_uart_retry_clean(uint8_t cmd, uint16_t tsn)
@@ -277,7 +273,6 @@ uint8_t module_uart_retry_clean(uint8_t cmd, uint16_t tsn)
         s_uart_tx.retry_cnt = 0;                           // 重传次数重置
         s_uart_tx.send_timestamp = 0;                      // 时间戳重置
         s_uart_tx.tx_state = UART_TX_STATE_IDLE;           // 状态置为空闲
-        s_uart_tx.pri = UART_PRI_NORMAL;                   // 优先级重置为默认（可选）
 
         // 触发ACK接收回调（上层感知）
         uartEvent_callback(UART_TYPE_1, UART_EVENT_TX_ACK, 0, 0);

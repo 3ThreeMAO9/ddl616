@@ -15,6 +15,7 @@
 #include "uart_packet.h"
 #include "encrypt.h"
 #include "config.h"
+#include "tm_data.h"
 /***********Macro***********/
 
 /***********Enum***********/
@@ -47,14 +48,6 @@ typedef struct
     uint8_t status;
     uint8_t MAC[6];
 } frame_ble_mac_t;
-
-typedef struct
-{
-    uint32_t p_timestamp; //时间戳
-    uint8_t p_record_event_type; //门锁记录事件类型（枚举值）： kiot_tm_p_record_event_type_enum_t
-    uint8_t p_record_cursor_count; //每次获取历史记录的数量
-    uint8_t p_record_cursor_direction; //获取历史记录数据的方向（枚举值）： kiot_tm_p_record_cursor_direction_enum_t
-} kiot_tm_action_in_a_get_records_data_stu_t;       // 0x09
 
 /*********************发送处理的结构体********************/
 typedef struct {

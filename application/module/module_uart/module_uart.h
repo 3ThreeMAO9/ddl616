@@ -53,7 +53,6 @@ typedef struct {
 typedef struct {
     UartTxCtrlInfo ctrl;
     uint8_t data[UART0_BUF_LEN];        // 待重传数据
-    uart_pri_t pri;                    // 数据优先级
     uint8_t retry_cnt;                 // 已重传次数
     uint32_t send_timestamp;           // 上次发送时间戳（毫秒）
     UartTxState tx_state;              // 当前发送状态
