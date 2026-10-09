@@ -57,7 +57,9 @@ QState lock_fsm_menu_add_normal_user_settings(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            alloc_user_id();        // 分配即将创建的用户档案ID（1~49）：HMI 播报"用户编号N" + 本次录入的钥匙都归它
+            // 档案ID 在"添加普通用户"菜单入口（lock_fsm_menu_admin 的 KEY_NUM_1）已经分配好，
+            // 这里不能再分配：从密码/指纹/卡片子菜单加完返回本菜单会重入 ENTRY，
+            // 再分一次会让同一个用户的第二把钥匙落到下一个档案ID 上
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);

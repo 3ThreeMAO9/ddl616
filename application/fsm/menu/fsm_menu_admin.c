@@ -8,6 +8,7 @@
 
 #include "event.h"
 #include "key_event.h"
+#include "user.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -31,6 +32,7 @@ static QState menu_event_handle(LockFsm *me, QEvent const *e)
     {
     case KEY_NUM_1:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        alloc_user_id();        // 新的一次"添加普通用户"：分配本次要建的档案ID（子菜单加完返回时不再重分）
         state = Q_TRAN(lock_fsm_menu_add_normal_user_settings);     // 添加普通用户
         break;
     case KEY_NUM_2:

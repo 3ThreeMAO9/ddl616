@@ -115,6 +115,15 @@ void clean_user_id(void)
     g_pending_user_id = 0;
 }
 
+// 某用户的第一把钥匙录入成功后，把这个用户的档案建出来
+// （user_profile_add 自带"已存在就直接返回 0"，所以同一个用户的第二把钥匙不会重复建档、也不会重复记"添加用户"日志）
+static void ensure_user_profile(uint8_t user_id)
+{
+    if ((user_id > 0) && (user_id < PROFILE_COUNT)) {
+        user_profile_add(user_id, NULL);    // 名字传 NULL -> 默认 "User<id>"
+    }
+}
+
 // 获取一条密钥记录（从Flash读取，带缓存）
 static user_info_t* get_key_data(uint16_t user_sn)
 {
@@ -618,6 +627,8 @@ uint8_t addKeyCode(uint8_t *input, uint8_t len, uint8_t userType, user_time_t *p
     save_user_key(userType, user_sn - area->base, &user_info);
     cache_and_update(user_sn, &user_info);
 
+    ensure_user_profile((uint8_t)user_info.parameter.user_id);      // 该用户的第一把钥匙：顺手建档
+
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG,"add key code: len[%u], sn[%u], key_id[%u]", len, user_sn, user_info.key_id);
     OB_LOGD_DUMP(user_info.info.password.buffer, len);
@@ -726,6 +737,8 @@ static uint8_t add_key_record(uint8_t type, const void* key, uint8_t* key_id)
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
     save_user_key(type, user_sn - area->base, &user_info);
     cache_and_update(user_sn, &user_info);
+
+    ensure_user_profile((uint8_t)user_info.parameter.user_id);      // 该用户的第一把钥匙：顺手建档
 
     return true;
 }
