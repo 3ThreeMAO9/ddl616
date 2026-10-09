@@ -60,10 +60,6 @@ QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e)
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_MODIFY_ADMIN_USER_SETTINGS);
-#if (Enabled == PRINTF_FSM)
-            OB_LOGI(TAG, "case KEY_NUM_1:    //修改管理密码请按1");
-            OB_LOGI(TAG, "case KEY_NUM_2:    //修改管理指纹请按2");
-#endif
             break;
         case Q_EXIT_SIG:
             break;

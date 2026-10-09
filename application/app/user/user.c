@@ -4,6 +4,7 @@
 #include "timestamp.h"
 #include "system_timer.h"
 #include "lock_log.h"
+#include "task_fingerprint.h"       // 删除指纹密钥时同步删模块里的模板
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -1133,4 +1134,168 @@ void user_get_list_timestamp(uint32_t* ts, uint8_t count)
             ts[profile.user_id] = profile.timestamp;
         }
     }
+}
+
+// ========== 删除普通用户 ==========
+
+// 该用户是否还有钥匙（按归属档案ID 查）
+static uint8_t user_has_key(uint16_t user_id)
+{
+    user_info_t temp;
+    uint8_t t, i;
+
+    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++)
+    {
+        for (i = 0; i < key_area[t].count; i++)
+        {
+            if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag
+                    && (temp.parameter.user_id == user_id))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// 是否还有任何"非管理员"的钥匙（归属档案ID != 0）
+static uint8_t user_has_any_normal_key(void)
+{
+    user_info_t temp;
+    uint8_t t, i;
+
+    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++)
+    {
+        for (i = 0; i < key_area[t].count; i++)
+        {
+            if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag
+                    && (0 != temp.parameter.user_id))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// 删一条钥匙记录；指纹顺带删掉模块里的模板（模板号存在指纹区）
+static void user_delete_one_key(uint16_t sn, user_info_t* key)
+{
+#if (FP_ENABLE_DELETE)
+    if (USER_TYPE_PERMANENT_FINGERPRINTS == key->key_type)
+    {
+        const fp_delete_params_t fp_del = {
+            .page_id = key->info.finger.id,
+            .count   = 1,
+        };
+        fp_task_delete_fp(fp_del);
+    }
+#else
+    (void)key;
+#endif
+    delKeyInfo(sn);
+}
+
+// 删钥匙：user_id == 0xFFFF 时删全部"非管理员"的钥匙，否则只删该用户的
+static void user_delete_keys(uint16_t user_id)
+{
+    user_info_t temp;
+    uint16_t sn;
+    uint8_t t, i;
+
+    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++)
+    {
+        for (i = 0; i < key_area[t].count; i++)
+        {
+            sn = key_area[t].base + i;
+            if (!read_user_data_with_check(sn, &temp) || !temp.flag)
+            {
+                continue;
+            }
+
+            if ((0xFFFF == user_id) ? (0 != temp.parameter.user_id)
+                                    : (user_id == temp.parameter.user_id))
+            {
+                user_delete_one_key(sn, &temp);
+            }
+        }
+    }
+}
+
+// 删单个普通用户：档案 + 它的全部钥匙（管理员不可删、不存在要能区分出来）
+user_del_result_t user_delete_normal(uint16_t user_id)
+{
+    if (0 == user_id)
+    {
+        return USER_DEL_FAIL_ADMIN;     // 管理员档案固定 0
+    }
+
+    if (user_id >= PROFILE_COUNT)
+    {
+        return USER_DEL_FAIL_NOT_EXIST; // 超出档案ID 范围
+    }
+
+    if ((find_profile_idx_by_user_id((uint8_t)user_id) == 0xFF) && !user_has_key(user_id))
+    {
+        return USER_DEL_FAIL_NOT_EXIST;
+    }
+
+    user_delete_keys(user_id);
+    user_profile_delete(user_id);
+
+    lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                        KIOT_TM_P_RECORD_OPERATION_TYPE_SHAN_CHU_YONG_HU,
+                        0, user_id);        // 删除用户
+
+    OB_LOGI(TAG, "user_delete_normal: id[%u]", user_id);
+    return USER_DEL_OK;
+}
+
+// 删全部普通用户（管理员档案 0 保留）
+user_del_result_t user_delete_all_normal(void)
+{
+    user_profile_t profile;
+    uint8_t i;
+    uint8_t has_user = false;
+
+    if (user_has_any_normal_key())
+    {
+        has_user = true;
+    }
+    else
+    {
+        for (i = 0; i < PROFILE_COUNT; i++)
+        {
+            read_profile(i, &profile);
+            if ((profile.user_id > 0) && (profile.user_id < PROFILE_COUNT))
+            {
+                has_user = true;
+                break;
+            }
+        }
+    }
+
+    if (!has_user)
+    {
+        return USER_DEL_FAIL_EMPTY;
+    }
+
+    user_delete_keys(0xFFFF);       // 全部非管理员的钥匙
+
+    for (i = 1; i < PROFILE_COUNT; i++)
+    {
+        if (find_profile_idx_by_user_id((uint8_t)i) != 0xFF)
+        {
+            user_profile_delete(i);
+        }
+    }
+
+    lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                        KIOT_TM_P_RECORD_OPERATION_TYPE_SHAN_CHU_QUAN_BU_PU_TONG_YONG_HU,
+                        0, 0);          // 删除全部普通用户
+
+    OB_LOGI(TAG, "user_delete_all_normal: done");
+    return USER_DEL_OK;
 }

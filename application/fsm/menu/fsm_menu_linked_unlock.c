@@ -58,11 +58,6 @@ QState lock_fsm_menu_linked_unlock(LockFsm *me, QEvent const *e)
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_LINKED_UNLOCK);
-#if (Enabled == PRINTF_FSM)
-            OB_LOGI(TAG, "case KEY_NUM_1:    //创建联动开锁请按1");
-            OB_LOGI(TAG, "case KEY_NUM_2:    //加入联动开锁请按2");
-            OB_LOGI(TAG, "case KEY_NUM_3:    //退出联动开锁请按3");
-#endif
             break;
         case Q_EXIT_SIG:
             break;

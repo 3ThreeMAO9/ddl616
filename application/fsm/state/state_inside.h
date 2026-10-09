@@ -40,6 +40,9 @@ QState lock_fsm_menu_add_normal_pw(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_add_normal_nfc(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_add_normal_finger(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e);
 
 
 QState lock_fsm_aging_test(LockFsm *me, QEvent const *e);

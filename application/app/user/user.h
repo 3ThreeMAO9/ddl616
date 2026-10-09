@@ -233,6 +233,18 @@ uint8_t  user_get_total_cnt(void);
 // 读取用户表时间戳数组：ts[user_id] = 该用户最后修改时间，0 表示用户不存在（0x08 应答用）
 void     user_get_list_timestamp(uint32_t* ts, uint8_t count);
 
+// ========== 删除普通用户（档案 + 其全部钥匙）==========
+typedef enum
+{
+    USER_DEL_OK = 0,            // 删除成功
+    USER_DEL_FAIL_ADMIN,        // 管理员（档案ID 0）不可删除
+    USER_DEL_FAIL_NOT_EXIST,    // 该用户不存在
+    USER_DEL_FAIL_EMPTY,        // 没有普通用户（删全部时用）
+} user_del_result_t;
+
+user_del_result_t user_delete_normal(uint16_t user_id);     // 删单个普通用户
+user_del_result_t user_delete_all_normal(void);             // 删全部普通用户（管理员保留）
+
 /**************************************/
 
 #endif

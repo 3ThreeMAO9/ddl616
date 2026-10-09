@@ -843,6 +843,11 @@
               <FilePath>..\fsm\menu\fsm_menu_add_normal_nfc.c</FilePath>
             </File>
             <File>
+              <FileName>fsm_menu_delete_normal_user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_delete_normal_user.c</FilePath>
+            </File>
+            <File>
               <FileName>fsm_menu_add_normal_pw.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_add_normal_pw.c</FilePath>
@@ -2101,6 +2106,11 @@
               <FileName>fsm_menu_add_normal_nfc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_add_normal_nfc.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_delete_normal_user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_delete_normal_user.c</FilePath>
             </File>
             <File>
               <FileName>fsm_menu_add_normal_pw.c</FileName>

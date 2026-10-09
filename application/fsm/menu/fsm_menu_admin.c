@@ -41,7 +41,7 @@ static QState menu_event_handle(LockFsm *me, QEvent const *e)
         break;
     case KEY_NUM_3:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-        // state = Q_TRAN(lock_fsm_menu_add_normal_user_settings);        // 删除普通用户
+        state = Q_TRAN(lock_fsm_menu_delete_normal_user);       // 删除普通用户
         break;
     case KEY_NUM_5:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
@@ -73,12 +73,6 @@ QState lock_fsm_menu_admin(LockFsm *me, QEvent const *e)
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_ADMIN);
-#if (Enabled == PRINTF_FSM)
-            OB_LOGI(TAG, "case KEY_NUM_1:    //添加普通用户请按1");
-            OB_LOGI(TAG, "case KEY_NUM_2:    //修改管理员请按2");
-            OB_LOGI(TAG, "case KEY_NUM_3:    //删除普通用户请按3");
-            OB_LOGI(TAG, "case KEY_NUM_5:    //更多设置请按5");
-#endif
             break;
         case Q_EXIT_SIG:
             break;
