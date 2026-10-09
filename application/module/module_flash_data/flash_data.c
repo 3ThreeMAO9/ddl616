@@ -376,6 +376,33 @@ static void flash_user_data_init(void)
     updateKeyCnt();
 }
 
+// 打印全部用户档案（上电调试用）：只打非空槽位
+#if (Enabled == PRINTF_USER)
+static void flash_profile_info_print(void)
+{
+    user_profile_t profile;
+    uint8_t i;
+    uint8_t cnt = 0;
+
+    for (i = 0; i < PROFILE_COUNT; i++)
+    {
+        read_profile(i, &profile);
+        if (profile.user_id == 0xFF)     // 空槽位
+        {
+            continue;
+        }
+
+        cnt++;
+        OB_LOGW(TAG, "profile[%u]: id[%u] name[%.16s] policy[%u] valid_day[%02X] ts[%08X] eff[%08X@%08X] exp[%08X@%08X]",
+                i, profile.user_id, profile.user_name, profile.policy, profile.valid_day,
+                profile.timestamp, profile.effective_date, profile.effective_time,
+                profile.expire_date, profile.expire_time);
+    }
+
+    OB_LOGW(TAG, "profile total: %u / %u", cnt, PROFILE_COUNT);
+}
+#endif
+
 static void flash_parameter_data_init(void)
 {
     uint8_t* pt = readUserParameterAddr();
@@ -398,7 +425,9 @@ void flash_data_init(void)
 
     //user data init
     flash_user_data_init();
-
+#if (Enabled == PRINTF_USER)
+    flash_profile_info_print();     // 用户档案（真正的"用户"）信息
+#endif
     //parameter data init
     flash_parameter_data_init();
 #if (Enabled == PRINTF_FLASH)
