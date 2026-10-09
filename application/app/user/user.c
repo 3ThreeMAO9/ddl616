@@ -925,6 +925,8 @@ void modifyUserMasterCode(uint8_t* input, uint8_t len)
     
     save_code_user(0, &user_info);  // 管理员在slot 0
 
+    user_profile_add(0, "Admin");      // 管理员用户档案，已存在则不会重复创建
+
     if (current_user_sn == 1) {
         memcpy(&current_user, &user_info, sizeof(user_info_t));
     }
