@@ -9,19 +9,18 @@
 
 /*****************Macro****************/
 
-
 /*****************Enum*****************/
-
 
 /****************Struct****************/
 
-
 /***************Variable***************/
 
-
 /***************Function***************/
+// 状态切换的调试打印已统一到引擎一处：见 qp_frame/qp_port.c 的 FSM_DISPATCH_LOG
+// （各状态/菜单处理函数里不再写打印）
 QState lock_fsm_sleep(LockFsm *me, QEvent const *e);
 QState lock_fsm_idle(LockFsm *me, QEvent const *e);
+QState lock_fsm_power_on(LockFsm *me, QEvent const *e);
 QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e);
 QState lock_fsm_reset(LockFsm *me, QEvent const *e);
 QState lock_fsm_low_power_system_lock(LockFsm *me, QEvent const *e);
@@ -44,12 +43,9 @@ QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e);
 
-
 QState lock_fsm_aging_test(LockFsm *me, QEvent const *e);
 QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e);
-QState lockFsmWake(LockFsm *me, QEvent const *e);
 QState lock_fsm_system_lock(LockFsm *me, QEvent const *e);
-QState lockFsmLowEnergySystemLock(LockFsm *me, QEvent const *e);
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserSuccess(LockFsm *me, QEvent const *e);
@@ -57,34 +53,14 @@ QState lockFsmDeleteUserFailAdmin(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailNotExist(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailEmpty(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailTimeOut(LockFsm *me, QEvent const *e);
-QState lockFsmVerifyAdminSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e);
-QState lockFsmUnlockSuccess(LockFsm *me, QEvent const *e);
-QState lockFsmLockSuccess(LockFsm *me, QEvent const *e);
-QState lockFsmHandleFailKeepRed(LockFsm *me, QEvent const *e);
 QState lockFsmHandleFail(LockFsm *me, QEvent const *e);
 QState lockFsmHandleCardRepeat(LockFsm *me, QEvent const *e);
 QState lockFsmHandleAddFail(LockFsm *me, QEvent const *e);
 QState lockFsmVerifyFail(LockFsm *me, QEvent const *e);
-QState lockFsmTimeOut(LockFsm *me, QEvent const *e);
-QState lockFsmAdminMenu(LockFsm *me, QEvent const *e);
-QState lockFsmVacationMode(LockFsm *me, QEvent const *e);
-QState lockFsmSetAutoLockTimeDelay(LockFsm *me, QEvent const *e);
-QState lockFsmAutoLock(LockFsm *me, QEvent const *e);
-QState lockFsmSilentMode(LockFsm *me, QEvent const *e);
-QState lockFsmChangeMasterCode(LockFsm *me, QEvent const *e);
-QState lockFsmAddUserCode(LockFsm *me, QEvent const *e);
-QState lockFsmDeleteUserCode(LockFsm *me, QEvent const *e);
-QState lockFsmAddUserFingers(LockFsm *me, QEvent const *e);
-QState lockFsmDeleteUserFingers(LockFsm *me, QEvent const *e);
-QState lockFsmAddOneTimeCode(LockFsm *me, QEvent const *e);
-QState lockFsmProduceTest(LockFsm *me, QEvent const *e);
-QState lockFsmAgingTest(LockFsm *me, QEvent const *e);
-QState lockFsmDeviceTest(LockFsm *me, QEvent const *e);
 QState lockFsmInputError(LockFsm *me, QEvent const *e);
 /**************************************/
-
 
 /*****************Macro****************/
 

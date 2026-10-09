@@ -22,9 +22,6 @@ static QState menu_event_handle(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED(); //  没有对应事件就返回Q_IGNORED()
 
-#if (Enabled == PRINTF_FSM)
-    OB_LOGD(TAG, "--Now State[user_setting], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     switch (e->dynamic_[0])
     {
     case KEY_NUM_1:
@@ -49,7 +46,6 @@ QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "modify_admin_user_settings", e->sig, e->dynamic_[0]);
 
     switch (e->sig){
         case Q_ENTRY_SIG:

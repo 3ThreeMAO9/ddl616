@@ -25,7 +25,6 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
 {
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "repeat_input_code", e->sig, e->dynamic_[0]);
 
     switch (e->sig){
         case Q_ENTRY_SIG:

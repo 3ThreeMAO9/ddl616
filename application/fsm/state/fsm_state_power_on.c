@@ -23,11 +23,11 @@
 
 // ------------------------------------------
 
-static QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
+// 非 static：它是 Q_TRAN 的目标状态，引擎的名字表里要引用（见 qp_port.c）
+QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "power_on", e->sig, e->dynamic_[0]);
 
     switch (e->sig){
         case Q_ENTRY_SIG:
@@ -81,7 +81,6 @@ QState lock_fsm_init(LockFsm *me, QEvent const *e)
 {
     (void)e;
     
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "init", e->sig, e->dynamic_[0]);
 
     return Q_TRAN(lock_fsm_power_on);
 }

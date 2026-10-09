@@ -16,11 +16,12 @@
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "fsm_result"
+
+// 状态切换的调试打印统一在引擎里（qp_frame/qp_port.c 的 FSM_DISPATCH_LOG），本文件不再各写一行
+
 /***************Variable***************/
 
-
 /***************Function***************/
-
 
 // ------------------------------------------
 
@@ -162,9 +163,6 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
 
 QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[handle add success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_ADD_SUCCESS);
 }
 
@@ -176,62 +174,41 @@ QState lockFsmDeleteUserSuccess(LockFsm *me, QEvent const *e)
 
 QState lockFsmDeleteUserFailAdmin(LockFsm *me, QEvent const *e)
 {
-    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_ADMIN);
+    return lockFsmFailDeal(me, e, HMI_STATE_DELETE_FAIL_ADMIN, false);
 }
 
 QState lockFsmDeleteUserFailNotExist(LockFsm *me, QEvent const *e)
 {
-    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_NOT_EXIST);
+    return lockFsmFailDeal(me, e, HMI_STATE_DELETE_FAIL_NOT_EXIST, false);
 }
 
 QState lockFsmDeleteUserFailEmpty(LockFsm *me, QEvent const *e)
 {
-    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_EMPTY);
+    return lockFsmFailDeal(me, e, HMI_STATE_DELETE_FAIL_EMPTY, false);
 }
 
 QState lockFsmDeleteUserFailTimeOut(LockFsm *me, QEvent const *e)
 {
-    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_TIME_OUT);
+    return lockFsmFailDeal(me, e, HMI_STATE_DELETE_FAIL_TIME_OUT, false);
 }
 
 QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[wake up success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmSuccessDeal(me, e, HMI_STATE_KEY_BOARD_WAKE_UP);
 }
 
-
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[voice], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_VOICE_SUCCESS);
 }
 
 QState lockFsmHandleSuccess(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[handle success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_SUCCESS);
-}
-
-QState lockFsmVerifyAdminSuccess(LockFsm *me, QEvent const *e)
-{
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[verify admin success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
-    return lockFsmSuccessDeal(me, e, HMI_STATE_VERIFY_ADMIN_SUCCESS);
 }
 
 QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[verify user success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     uint8_t state = HMI_STATE_VERIFY_SUCCESS;   // 正常验证成功
 
     if (isEmptyKey(false))
@@ -243,67 +220,28 @@ QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e)
     return lockFsmSuccessDeal(me, e, state);
 }
 
-QState lockFsmUnlockSuccess(LockFsm *me, QEvent const *e)
-{
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[unlock success], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
-    return lockFsmSuccessDeal(me, e, HMI_STATE_UNLOCK_SUCCESS);
-}
-
 QState lockFsmHandleFail(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[handle fail], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmFailDeal(me, e, HMI_STATE_HANDLE_FAIL, false);
 }
 
 QState lockFsmHandleCardRepeat(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[card repeat], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmFailDeal(me, e, HMI_STATE_CARD_REPEAT, false);
 }
 
 QState lockFsmHandleAddFail(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[add fail], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmFailDeal(me, e, HMI_STATE_ENROLLMENT_FAIL, false);
-}
-QState lockFsmHandleFailKeepRed(LockFsm *me, QEvent const *e)
-{
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[handle fail keep red], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
-    return lockFsmFailDeal(me, e, HMI_STATE_HANDLE_FAIL_KEEP_RED, false);
-}
-
-QState lockFsmTimeOut(LockFsm *me, QEvent const *e)
-{
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[Time out], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
-    return lockFsmFailDeal(me, e, HMI_STATE_TIME_OUT, false);
 }
 
 QState lockFsmVerifyFail(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[Verify fail], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmFailDeal(me, e, HMI_STATE_VERIFY_FAIL, true);
 }
 
 QState lockFsmInputError(LockFsm *me, QEvent const *e)
 {
-#if (Enabled==PRINTF_FSM)
-    OB_LOGD(TAG, "Now State[input error], Event[%d, %d]--", e->sig, e->dynamic_[0]);
-#endif
     return lockFsmFailDeal(me, e, HMI_STATE_INPUT_ERROR, false);
 }
-
 

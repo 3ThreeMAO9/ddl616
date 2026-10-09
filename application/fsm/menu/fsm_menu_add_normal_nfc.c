@@ -22,7 +22,6 @@ QState lock_fsm_menu_add_normal_nfc(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "add_normal_nfc", e->sig, e->dynamic_[0]);
 
     switch (e->sig){
         case Q_ENTRY_SIG:

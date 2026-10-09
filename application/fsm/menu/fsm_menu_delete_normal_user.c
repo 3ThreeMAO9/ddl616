@@ -73,7 +73,6 @@ QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "delete_normal_user", e->sig, e->dynamic_[0]);
 
     switch (e->sig){
         case Q_ENTRY_SIG:
@@ -124,7 +123,6 @@ QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e)
     QState  state = Q_IGNORED();
     uint8_t key = (uint8_t)e->dynamic_[0];
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "delete_normal_user_input_id", e->sig, key);
 
     switch (e->sig){
         case Q_ENTRY_SIG:
@@ -180,7 +178,6 @@ QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e)
     QState  state = Q_IGNORED();
     uint8_t key = (uint8_t)e->dynamic_[0];
 
-    OB_LOGD(TAG, "Fsm_state[%s], Event[%u, %u]", "delete_all_normal_user", e->sig, key);
 
     switch (e->sig){
         case Q_ENTRY_SIG:
