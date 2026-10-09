@@ -7,6 +7,8 @@ CompileFlags:
     - "-DCLIENT_ITEM_SN=39140"
     - "-DPROJECT_NUMBER=140"
     - "-DCONFIG_SEL=39"
+    - "-DOB_LOG_ENABLE=1"
+    - "-DUART_PRINTF_ENABLE=1"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/common/Device"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/chip/OB90A64M1/Library"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/config"
