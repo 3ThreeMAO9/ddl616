@@ -188,7 +188,7 @@ static void uart_poll_tx(void)
     }
     else
     {
-        // 数据不足（队列被截断/已错位）：清空队列恢复，避免后续读到的 ctrl/data 全错位
+        // 数据不足，清队列恢复
         OB_LOGE(TAG, "[%s] tx frame incomplete: want=%u, clear queue", __func__, data_len);
         uart_queue_clear();
     }
@@ -240,8 +240,7 @@ void module_uart_queue_put(uint8_t *data, uint16_t tsn, uint8_t cmd, uint16_t le
     tx_ctrl_info.cmd = cmd;
     tx_ctrl_info.len = len;
 
-    // 整帧必须能一次性入队：否则只会写进 ctrl 头、数据被截断，
-    // 队列随即错位（后续读到的 ctrl/data 全乱），发送端却不会报错
+    // 整帧一次性入队，避免半包导致队列错位
     uint16_t need = (uint16_t)(sizeof(UartTxCtrlInfo) + len);
     if (uart_space_len() < need)
     {

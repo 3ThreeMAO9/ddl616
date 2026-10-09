@@ -79,11 +79,10 @@ void uart_msg_join_net(void);
 
 void uart_msg_ack(uint8_t cmd, uint8_t status);
 
-/* 无 payload 应答（数据长度 0），用于暂时没有数据可回的应答，如 0x89 */
+// 无 payload 应答（如 0x89）
 void uart_msg_empty_ack(uint8_t cmd);
 
-/* 用户列表时间戳应答（0x88）：payload = uint32 数组（按用户ID升序），每项 4 字节小端，
- * count = 项数（0 时等同于无 payload） */
+// 用户列表时间戳应答（0x88）：payload = uint32 数组，count = 项数
 void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count);
 
 /*****************************/

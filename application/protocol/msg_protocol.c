@@ -117,13 +117,11 @@ void uart_msg_ack(uint8_t cmd, uint8_t status)
     uart_msg_common_send(cmd, (uint8_t *)&ack, sizeof(frame_ack_def_t));
 }
 
-/* 无 payload 应答：length = 0，checksum2 = 0 */
 void uart_msg_empty_ack(uint8_t cmd)
 {
     uart_msg_common_send(cmd, NULL, 0);
 }
 
-/* 用户列表时间戳应答（0x88）：payload = uint32 数组（按用户ID升序），每项 4 字节小端 */
 void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count)
 {
     uart_msg_common_send(UP_CMD_GET_USERLIST_TIMESTAMP_ACK,

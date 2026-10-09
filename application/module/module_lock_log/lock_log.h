@@ -5,9 +5,8 @@
 #include "lock_log_flash.h"
 
 
-void lock_log_user_operation_add(uint8_t event_source, uint8_t event_code, uint8_t code_id);
-void lock_log_user_program_add(uint8_t event_source, uint8_t event_code, uint8_t code_id);
-void lock_log_user_alarm_add(uint32_t alarm_code, uint8_t reserved);
+// 写一条历史记录 raw（字段含义见 lock_log_def.h）
+void lock_log_add_record(uint8_t record_event_type, uint8_t type, uint8_t param1, uint8_t param2);
 
 uint32_t lock_log_get_last_timestamp(void);
 #endif // _LOCK_LOG_H

@@ -268,7 +268,7 @@ void lock_log_init(void)
                 {
                     if (item.write_seq > lock_log_handle.write_seq)
                     {
-                        lock_log_handle.log_timestamp = item.timestamp;
+                        lock_log_handle.log_timestamp = item.record.p_timestamp;
                         lock_log_handle.write_seq = item.write_seq;
                         lock_log_handle.sector_index = index;
                         lock_log_handle.write_index = write_index;
@@ -365,7 +365,7 @@ void lock_log_flash_test(uint32_t num, uint8_t type, uint8_t data)
     uint16_t i;
     for (i = 0; i < num; i++)
     {
-        lock_log_user_operation_add(type, data, i);
+        lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU, type, data, (uint8_t)i);
     }
 }
 
@@ -378,51 +378,27 @@ void open_log_pr(void)
     {
         if (lock_log_get_by_seq(i, &item))
         {
-            if(item.data.type == 0)
+            switch (item.record.p_record_event_type)
             {
-                switch (item.data.operation.event_code)
-                {
-                case 1:
-                    OB_LOGD(TAG, "LOCK");
-                    break;
-                case 2:
-                    OB_LOGD(TAG, "UNLOCK");
-                    break;
-                case 3:
-                    OB_LOGD(TAG, "ONE_TOUCH_LOCK");
-                    break;
-                case 4:
-                    OB_LOGD(TAG, "机械钥匙关锁KEY_LOCK");
-                    break;
-                case 5:
-                    OB_LOGD(TAG, "机械钥匙开锁KEY_UNLOCK");
-                    break;
-                case 6:
-                    OB_LOGD(TAG, "AUTO_LOCK");
-                    break;
-                case 7:
-                    OB_LOGD(TAG, "MANUAL_LOCK");
-                    break;
-                case 8:
-                    OB_LOGD(TAG, "MANUAL_UNLOCK");
-                    break;
-                default:
-                    OB_LOGD(TAG, "其他");
-                    break;
-                }
+            case KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU:     //操作记录
+                OB_LOGD(TAG, "操作记录 operation_type:%u  unlock_type:%u  key_id:%u",
+                        item.record.event_type.p_record_operation_type,
+                        item.record.param1.p_record_unlock_type,
+                        item.record.p_key_id);
+                break;
+            case KIOT_TM_P_RECORD_EVENT_TYPE_BAO_JING_JI_LU:    //报警记录
+                OB_LOGD(TAG, "报警记录 alarm_type:%u  battery_index:%u",
+                        item.record.event_type.p_record_alarm_type,
+                        item.record.param1.p_battery_index);
+                break;
+            case KIOT_TM_P_RECORD_EVENT_TYPE_FANG_KE_JI_LU:     //访客记录
+                OB_LOGD(TAG, "访客记录 vistor_type:%u", item.record.event_type.p_record_vistor_type);
+                break;
+            default:
+                OB_LOGD(TAG, "unknown event_type:%u", item.record.p_record_event_type);
+                break;
             }
-            // else if(item.data.type == EVENT_TYPE_PROGRAM)
-            // {
-
-            // }
-            // else if(item.data.type == EVENT_TYPE_ALARM)
-            // {
-                
-            // }
-            OB_LOGD_DUMP(&item,sizeof(lock_log_item_t));
-            // OB_LOGD(TAG, "seq: %u    timestamp: %u    type: %X", item.write_seq, item.timestamp, item.data.type);
-            // timestamp_to_data_time(item.timestamp);
-            // OB_LOGW_DUMP(&item.data, 8);
+            OB_LOGD_DUMP(&item, sizeof(lock_log_item_t));
         }
         else
         {
@@ -437,10 +413,10 @@ time_t lock_log_get_timestamp(uint32_t seq)
     time_t timestamp = 0;
     if (lock_log_get_by_seq(seq, &item))
     {
-        OB_LOGD(TAG, "seq: %u    timestamp: %u    type: %X", item.write_seq, item.timestamp, item.data.type);
-        timestamp_to_data_time(item.timestamp);
-        OB_LOGW_DUMP(&item.data, 8);
-        timestamp = item.timestamp;
+        OB_LOGD(TAG, "seq: %u    timestamp: %u    event_type: %u", item.write_seq, item.record.p_timestamp, item.record.p_record_event_type);
+        timestamp_to_data_time(item.record.p_timestamp);
+        OB_LOGW_DUMP(&item.record, sizeof(lock_log_record_t));
+        timestamp = item.record.p_timestamp;
     }
     return timestamp;
 }

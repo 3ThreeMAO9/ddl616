@@ -38,45 +38,18 @@ uint32_t lock_log_get_last_timestamp(void)
     return log_timestamp;
 }
 
-void lock_log_user_operation_add(uint8_t event_source, uint8_t event_code, uint8_t code_id)
-{
-    lock_log_item_t item;
-    memset(&item, 0xFF, sizeof(lock_log_item_t));
-
-    item.data.type = 0;
-    item.data.operation.event_source = event_source;
-    item.data.operation.event_code = event_code;
-    item.data.operation.code_id = code_id;
-    item.timestamp = timestamp_check(hal_get_rtc_utc_time());   //日志存储UTC时间戳
-
-    lock_log_flash_save((uint8_t *)&item);
-}
-
-
-void lock_log_user_program_add(uint8_t event_source, uint8_t event_code, uint8_t code_id)
-{
-    lock_log_item_t item;
-    memset(&item, 0xFF, sizeof(lock_log_item_t));
-
-    item.data.type = 1;
-    item.data.progarm.event_source = event_source;
-    item.data.progarm.event_code = event_code;
-    item.data.progarm.code_id = code_id;
-    item.timestamp = timestamp_check(hal_get_rtc_utc_time());   //日志存储UTC时间戳
-
-    lock_log_flash_save((uint8_t *)&item);
-}
-
-
-void lock_log_user_alarm_add(uint32_t alarm_code, uint8_t reserved)
+// 写一条历史记录（字段含义见 lock_log_def.h）
+void lock_log_add_record(uint8_t record_event_type, uint8_t type, uint8_t param1, uint8_t param2)
 {
     lock_log_item_t item;
 
     memset(&item, 0xFF, sizeof(lock_log_item_t));
-    item.data.type = 2;
-    item.data.alarm.alarm_code = *((uint32_t*)&alarm_code);
-    item.data.alarm.reserved = reserved;
-    item.timestamp = timestamp_check(hal_get_rtc_utc_time());   //日志存储UTC时间戳
+
+    item.record.p_timestamp = timestamp_check(hal_get_rtc_utc_time());  //日志存储UTC时间戳
+    item.record.p_record_event_type = record_event_type;
+    item.record.event_type.p_record_operation_type = type;
+    item.record.param1.p_record_unlock_type = param1;
+    item.record.p_key_id = param2;
 
     lock_log_flash_save((uint8_t *)&item);
 }

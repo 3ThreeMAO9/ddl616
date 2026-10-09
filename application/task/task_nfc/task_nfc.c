@@ -23,6 +23,7 @@ static void nfc_task_callback(nfc_event_t *event)
         case NFC_STATE_VERIFY:
             OB_LOGI(TAG, "verify success");
             if (isValidUserCard(&(event->para) ,event->card_id)){
+                
                 userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, event->para);
             }
             else{
