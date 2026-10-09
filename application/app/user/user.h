@@ -178,10 +178,10 @@ uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, ui
 uint8_t isCheckDefaultMasterCode(uint8_t *input, uint8_t input_len);
 
 // ========== 指纹校验 ==========
-uint8_t isValidUserFingerprint(uint16_t* user_id);
+uint8_t isValidUserFingerprint(uint16_t* user_id, uint8_t* key_id);
 
 // ========== 卡片校验 ==========
-uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id);
+uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id, uint8_t* key_id);
 
 // ========== 人脸校验 ==========
 uint8_t isValidUserFace(uint16_t* user_sn);

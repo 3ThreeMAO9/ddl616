@@ -3,6 +3,7 @@
 #include "hal_rtc.h"
 #include "timestamp.h"
 #include "system_timer.h"
+#include "lock_log.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -474,7 +475,7 @@ uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, ui
     return false;
 }
 
-uint8_t isValidUserFingerprint(uint16_t* user_id)
+uint8_t isValidUserFingerprint(uint16_t* user_id, uint8_t* key_id)
 {
     uint16_t i;
     uint16_t finger_id = *user_id;
@@ -485,6 +486,7 @@ uint8_t isValidUserFingerprint(uint16_t* user_id)
         OB_LOGD(TAG,"EmptyUser");
 #endif
         *user_id = 0;
+        if (key_id) *key_id = 0;
         return true;
     }
     else
@@ -499,6 +501,7 @@ uint8_t isValidUserFingerprint(uint16_t* user_id)
             if(user->info.finger.id == finger_id)
             {
                 *user_id = user->key_user_id;
+                if (key_id) *key_id = user->key_id;
 #if (Enabled == PRINTF_USER)
                 OB_LOGD(TAG,"isValidUserFingerprint[%u]", *user_id);
 #endif
@@ -513,13 +516,14 @@ uint8_t isValidUserFingerprint(uint16_t* user_id)
     return false;
 }
 
-uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id)
+uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id, uint8_t* key_id)
 {
     uint16_t i;
 
     if(isEmptyUser(false))
     {
         *user_id = 0;
+        if (key_id) *key_id = 0;
         return true;
     }
     else
@@ -534,6 +538,7 @@ uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id)
             if (0 == memcmp(card_id, user->info.card.id, 4))
             {
                 *user_id = user->key_user_id;
+                if (key_id) *key_id = user->key_id;
 #if (Enabled == PRINTF_USER)
                 OB_LOGD(TAG,"isValidUserCard[%u]", *user_id);
 #endif
@@ -1084,6 +1089,10 @@ uint8_t user_profile_add(uint16_t user_id, const char* name)
 
     // 4. 保存
     save_profile(idx, &profile);
+
+    lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                        KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_YONG_HU,
+                        0, user_id);      // 添加用户
 
 #if (Enabled == PRINTF_USER)
     OB_LOGI(TAG, "user_profile_add: id=%u, idx=%u, name=%s",

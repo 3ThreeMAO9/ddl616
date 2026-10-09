@@ -11,6 +11,7 @@
 #include "user.h"
 #include "parameter.h"
 #include "flash_data.h"
+#include "lock_log.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -71,6 +72,9 @@ QState lock_fsm_system_lock(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])
             {
+                lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_BAO_JING_JI_LU,
+                                    KIOT_TM_P_RECORD_ALARM_TYPE_QIAO_SUO_BAO_JING_SUO_BEI_QIAO_KAI,
+                                    0, 0);
                 keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);
                 hmi_task_tamper_warn_time(TAMPER_WARN_KEEP_TIME);
             }

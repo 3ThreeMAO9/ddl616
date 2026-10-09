@@ -11,6 +11,7 @@
 
 #include "parameter.h"
 #include "user.h"
+#include "lock_log.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -134,6 +135,9 @@ static QState lockFsmFailDeal(LockFsm *me, QEvent const *e, uint8_t hmiState, ui
             {
                 if ((me->verify_fail_cnt) >= VERIFY_FAIL_CNT_FOR_SYSTEM_LOCK)
                 {
+                    lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_BAO_JING_JI_LU,
+                                        KIOT_TM_P_RECORD_ALARM_TYPE_SUO_DING_BAO_JING_SHU_RU_CUO_WU_MI_MA_HUO_ZHI_WEN_HUO_KA_PIAN_CHAO_GUO_5_CI_JIU_HUI_XI_TONG_SUO_DING_BAO_JING,
+                                        0, 0);      // 系统锁定报警
                     state = Q_TRAN(lock_fsm_system_lock);
                 }
                 else

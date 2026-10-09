@@ -6,6 +6,7 @@
 #include "parameter.h"
 #include "user.h"
 #include "msg_protocol.h"
+#include "lock_log.h"
 
 #include "task_sleep.h"
 #include "task_system_time.h"
@@ -104,6 +105,9 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])
             {
+                lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_BAO_JING_JI_LU,
+                                    KIOT_TM_P_RECORD_ALARM_TYPE_QIAO_SUO_BAO_JING_SUO_BEI_QIAO_KAI,
+                                    0, 0);
                 keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);
                 hmi_task_tamper_warn_time(TAMPER_WARN_KEEP_TIME);
             }

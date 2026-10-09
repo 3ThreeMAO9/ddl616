@@ -29,6 +29,16 @@ static key_board_event_t keyBoardEvent;
     }
 
 // ------------------------------------------
+static void password_unlock_log_add(uint16_t user_sn)
+{
+    uint16_t key_id = 0;
+
+    getUserFlag(&key_id, USER_TYPE_PERMANENT_CODE, user_sn - 1);
+    lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                        KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
+                        KIOT_TM_P_RECORD_UNLOCK_TYPE_MI_MA_KAI_SUO, (uint8_t)key_id);
+}
+
 void keyEventInit(void)
 {
     CLEAR_KEY_EVENT();
@@ -347,6 +357,7 @@ void keyEventVerifyUser(uint8_t key_value)
                     if (user_sn <= MASTER_USER_CODE_CNT)
                     {
                         setUserParameter(USER_PARA_VACATION_MODE_ID, Disabled);
+                        password_unlock_log_add(user_sn);
                         userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
                     }
                     else
@@ -356,6 +367,7 @@ void keyEventVerifyUser(uint8_t key_value)
                 }
                 else
                 {
+                    password_unlock_log_add(user_sn);
                     userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
                 }
             }
@@ -449,9 +461,11 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
                         if (true == getUserFlag(&user_ble_sn, USER_TYPE_PERMANENT_CODE, user_sn - 1))
                         {
                             OB_LOGW(TAG, "user_sn  %0ld user_ble_sn %0ld", user_sn, user_ble_sn);
+                            lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                                KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
+                                                0, (uint8_t)user_ble_sn);   // 添加普通密码
                         }
-                        // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn);    //添加普通密码
-                        // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_PIN_CODE_ADDED,user_ble_sn,get_last_log_timestamp());
+
                         CLEAR_KEY_EVENT();
                         handleEventPush(EVENT_RESULT_SUCCESS, handle_code);
                         return;
@@ -459,8 +473,11 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
                     break;
                 case CODE_HANDLE_CHANGE_MASTER:
                     modifyUserMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
-                    // lock_log_user_program_add(EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE);      //修改管理员密码
-                    // kds_lockOpera_confirm_05(get_send_ten(),EVENT_TYPE_PROGRAM,EVENT_SOURCE_KEYPAD,PROGRAM_EVENT_MASTER_CODE_CHANGED,0xFE,get_last_log_timestamp());
+                    // 管理员密码固定 slot 0，钥匙ID 为 0
+                    lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                        KIOT_TM_P_RECORD_OPERATION_TYPE_XIU_GAI_SHU_ZI_YAO_SHI,
+                                        0, 0);      // 修改管理员密码
+
                     CLEAR_KEY_EVENT();
                     handleEventPush(EVENT_RESULT_SUCCESS, handle_code);
                     return;

@@ -3,6 +3,7 @@
 #include "protocol_func_card.h"
 #include "user.h"
 #include "event.h"
+#include "lock_log.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -14,6 +15,8 @@ static nfc_task_driver_t nfc_task_driver;
 // ------------------------------------------
 static void nfc_task_callback(nfc_event_t *event)
 {
+    uint8_t key_id = 0;
+
     OB_LOGD(TAG, "event: size[%u]", event->size);
     OB_LOGD_DUMP(event->card_id, event->size);
     if (event->valid)
@@ -22,8 +25,11 @@ static void nfc_task_callback(nfc_event_t *event)
         {
         case NFC_STATE_VERIFY:
             OB_LOGI(TAG, "verify success");
-            if (isValidUserCard(&(event->para) ,event->card_id)){
+            if (isValidUserCard(&(event->para), event->card_id, &key_id)) {
                 
+                lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                    KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
+                                    KIOT_TM_P_RECORD_UNLOCK_TYPE_KA_PIAN_KAI_SUO, key_id);
                 userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, event->para);
             }
             else{
@@ -32,12 +38,15 @@ static void nfc_task_callback(nfc_event_t *event)
             break;
         case NFC_STATE_REGISTER:
             OB_LOGI(TAG, "register success");
-            if (!isValidUserCard(&(event->para), event->card_id))
+            if (!isValidUserCard(&(event->para), event->card_id, NULL))
             {
                 uint16_t uu_id = 0;
                 if (addUserCard(event->card_id, (&(uu_id))))
                 {
                     OB_LOGI(TAG, "->uu_id [%ld]", uu_id);
+                    lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                        KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
+                                        0, 0);      // 添加数字钥匙（卡片）
                     userHandleEventPush(EVENT_RESULT_SUCCESS_ADD, event->para);
                 }
                 else

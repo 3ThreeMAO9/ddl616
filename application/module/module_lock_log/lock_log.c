@@ -4,6 +4,7 @@
 #include "system_timer.h"
 #include "config.h"
 #include "hal_rtc.h"
+#include "user.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -42,6 +43,17 @@ uint32_t lock_log_get_last_timestamp(void)
 void lock_log_add_record(uint8_t record_event_type, uint8_t type, uint8_t param1, uint8_t param2)
 {
     lock_log_item_t item;
+
+    // 无管理员（空锁）时只挡开锁/报警记录，用户、钥匙等操作记录照常保存
+    if (((KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU == record_event_type)
+            && (KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU == type))
+        || (KIOT_TM_P_RECORD_EVENT_TYPE_BAO_JING_JI_LU == record_event_type))
+    {
+        if (isEmptyUser(false))
+        {
+            return;
+        }
+    }
 
     memset(&item, 0xFF, sizeof(lock_log_item_t));
 
