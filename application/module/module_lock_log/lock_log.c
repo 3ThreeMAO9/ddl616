@@ -49,7 +49,7 @@ void lock_log_add_record(uint8_t record_event_type, uint8_t type, uint8_t param1
             && (KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU == type))
         || (KIOT_TM_P_RECORD_EVENT_TYPE_BAO_JING_JI_LU == record_event_type))
     {
-        if (isEmptyUser(false))
+        if (isEmptyKey(false))
         {
             return;
         }

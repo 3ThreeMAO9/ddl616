@@ -4,6 +4,14 @@
 #include "config.h"
 #include "bsp_rom_config.h"
 
+// ===== 术语：密钥(key) 与 用户(user) 是两回事 =====
+// 密钥 key ：密码 / 指纹 / 卡片 / 人脸。一条密钥 = user_info_t 里的一条记录，由
+//            "类型(user_type_t) + 本类型内编号(key_id)" 定位：密码 0~19（0 = 管理员密码）、
+//            指纹 0~49、卡片 0~99、人脸 0~49。
+// 用户 user：用户档案 user_profile_t，量级是"人"，由档案ID 区分（0~49），一个用户可以有多把密钥。
+//            本文件里 user_info_t / user_sn / USER_* 等是"密钥"侧的既有命名，
+//            真正表示"用户"的只有 user_profile_* 那一组接口。
+
 /*****************Macro****************/
 
 
@@ -83,7 +91,7 @@ typedef struct{
     uint8_t flag;
     uint8_t key_type;
     uint16_t key_sn;
-    uint16_t key_user_id;   // 用户ID，连续累计
+    uint16_t key_user_id;   // 归属用户ID（钥匙->用户的绑定；连续累计，与档案ID 无关）
     union{
         user_code_t password;
         user_fingers_t finger;
@@ -95,7 +103,7 @@ typedef struct{
     uint8_t key_id;         //指纹密码卡片单独排序的ID，相当于是第几个指纹用户，第几个密码用户的ID
     user_time_t parameter;
 
-}user_info_t;           // sizeof(user_info_t) must < 32
+}user_info_t;           // 一条"密钥"记录（密码/指纹/卡片/人脸），不是用户；sizeof 必须 < 32
 
 typedef struct{
     uint8_t  permanentCode;     // 密码数量
@@ -103,7 +111,7 @@ typedef struct{
     uint8_t  permanentCard;     // 卡片数量
     uint8_t  permanentFace;     // 人脸数量
     uint16_t permanentKey;      // 总钥匙数量
-    uint16_t permanentUser;     // 用户数量
+    uint16_t permanentUser;     // 未使用（预留）；密钥总数看 permanentKey
 }user_key_cnt_t;
 // Flash 地址布局：
 // ┌─────────────────────────────────────────────────────────────┐
@@ -143,7 +151,7 @@ typedef struct
     uint8_t valid_day;                    // 1  周有效位
     uint32_t effective_time;              // 4  当天生效时间
     uint32_t expire_time;                 // 4  当天失效时间
-} user_profile_t;                         // 64 字节
+} user_profile_t;                         // 用户档案：这才是"用户"（人），可拥有多把密钥；64 字节
 
 // PROFILE_PAGE_START_ADDR = 0x10000 (主区, 4KB)
 // ┌─────────────────────────────────────────┐
@@ -164,58 +172,58 @@ typedef struct
 
 /***************Function***************/
 
-// ========== 用户/密钥统计 ==========
-void     user_info_num(void);
-void     updateUserCnt(void);
-void     updateUserTable(uint16_t index, user_info_t* user_info);
-uint16_t readUserKeyCnt(uint8_t type);
+// ========== 密钥统计 ==========
+void     key_info_num(void);
+void     updateKeyCnt(void);
+void     updateKeyTable(uint16_t index, user_info_t* user_info);
+uint16_t readKeyCnt(uint8_t type);
 
-// ========== 密码校验 ==========
+// ========== 密钥校验：密码（key_id 0~19，0 = 管理员密码） ==========
 uint8_t isTooSimpleCode(uint8_t* input, uint8_t len);
-uint8_t isEmptyUser(uint8_t commonUserFlag);
-uint8_t isFullUser(uint8_t type);
-uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag);
+uint8_t isEmptyKey(uint8_t commonKeyFlag);      // commonKeyFlag: true=只看普通密钥, false=看全部密钥
+uint8_t isFullKey(uint8_t type);
+uint8_t isValidKeyCode(uint8_t* input, uint8_t input_len, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag, uint8_t* key_id);
 uint8_t isCheckDefaultMasterCode(uint8_t *input, uint8_t input_len);
 
-// ========== 指纹校验 ==========
-uint8_t isValidUserFingerprint(uint16_t* user_id, uint8_t* key_id);
+// ========== 密钥校验：指纹（key_id 0~49） ==========
+uint8_t isValidKeyFingerprint(uint16_t finger_id, uint8_t* key_id);
 
-// ========== 卡片校验 ==========
-uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id, uint8_t* key_id);
+// ========== 密钥校验：卡片（key_id 0~99） ==========
+uint8_t isValidKeyCard(const uint8_t* card_id, uint8_t* key_id);
 
-// ========== 人脸校验 ==========
-uint8_t isValidUserFace(uint16_t* user_sn);
+// ========== 密钥校验：人脸（key_id 0~49） ==========
+uint8_t isValidKeyFace(uint16_t* user_sn);
 
 // ========== 密钥 ID 校验 ==========
-uint8_t isValiydUserKeyId(uint16_t *user_sn, uint8_t code_id, uint8_t key_type);
+uint8_t isValidKeyId(uint16_t *user_sn, uint8_t code_id, uint8_t key_type);
 
-// ========== 修改用户 ==========
-void    modifyUserMasterCode(uint8_t* input, uint8_t len);
-void    modifyUserCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* para);
-void    moidfyUserParameter(uint8_t user_sn, user_time_t* para);
-void    modifyUserAttribute(uint8_t user_sn, uint8_t attribute);
+// ========== 修改密钥 ==========
+void    modifyMasterKeyCode(uint8_t* input, uint8_t len);
+void    modifyKeyCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* para);
+void    modifyKeyParameter(uint8_t user_sn, user_time_t* para);
+void    modifyKeyAttribute(uint8_t user_sn, uint8_t attribute);
 
-// ========== 新增用户 ==========
-uint8_t addUserCode(uint8_t *input, uint8_t len, uint8_t userType, uint16_t *user_sn, user_time_t *para);
-uint8_t addUserFinger(uint16_t id, uint16_t* userSn);
-uint8_t addUserCard(uint8_t* card_id, uint16_t* userSn);
+// ========== 新增密钥 ==========
+uint8_t addKeyCode(uint8_t *input, uint8_t len, uint8_t userType, user_time_t *para, uint8_t* key_id);
+uint8_t addKeyFinger(uint16_t id, uint8_t* key_id);
+uint8_t addKeyCard(uint8_t* card_id, uint8_t* key_id);
 
-// ========== 删除用户 ==========
-void    delUserInfo(uint16_t user_sn);
-uint8_t delUserCode(uint8_t* input, uint8_t len, uint16_t* user_id);
-uint8_t delUserOneTimeCode(uint8_t* input, uint8_t len, uint16_t* user_sn);
+// ========== 删除密钥 ==========
+void    delKeyInfo(uint16_t user_sn);
+uint8_t delKeyCode(uint8_t* input, uint8_t len);
+uint8_t delKeyOneTimeCode(uint8_t* input, uint8_t len, uint16_t* user_sn);
 
-// ========== 查询用户 ==========
-uint8_t getUserPasswordCode(uint16_t user_sn, uint8_t* pData);
-uint8_t getUserFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id);
-uint8_t getUserFingerID(uint16_t *user_sn, uint16_t id);
+// ========== 查询密钥 ==========
+uint8_t getKeyPasswordCode(uint16_t user_sn, uint8_t* pData);
+uint8_t getKeyFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id);
+uint8_t getKeyFingerID(uint16_t *user_sn, uint16_t id);
 
-// ========== 用户 ID 分配 ==========
+// ========== 密钥归属的用户ID 分配（key_user_id） ==========
 uint16_t get_user_id(void);
 uint16_t read_user_id(void);
 void     clean_user_id(void);
 
-// ========== 用户档案业务层（新增）==========
+// ========== 用户档案（真正的"用户"，0~49）==========
 uint8_t  user_profile_add(uint16_t user_id, const char* name);
 uint8_t  user_profile_update(uint16_t user_id, user_profile_t* profile);
 void     user_profile_delete(uint16_t user_id);

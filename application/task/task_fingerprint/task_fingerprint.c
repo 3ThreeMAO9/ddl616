@@ -50,17 +50,16 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
     case FP_EVENT_SUCCESS_HANDLE:
     {
         uint16_t finger_id = *(uint16_t*)params;
-        uint16_t user_id = finger_id;   // 用于输入输出
         uint8_t key_id = 0;
         
         OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE finger_id %u", finger_id);
         
-        if (isValidUserFingerprint(&user_id, &key_id)) {
-            OB_LOGI(TAG, "matched user_id = %u", user_id);
+        if (isValidKeyFingerprint(finger_id, &key_id)) {
+            OB_LOGI(TAG, "matched key_id = %u", key_id);
             lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                 KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
                                 KIOT_TM_P_RECORD_UNLOCK_TYPE_ZHI_WEN_KAI_SUO, key_id);
-            userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_id);
+            userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id);
         }
         else {
             userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
@@ -69,7 +68,7 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
     }
     case FP_EVENT_INVALID_FP:
         OB_LOGI(TAG, "FP_EVENT_VERIFY_FAIL");
-        if(isEmptyUser(false)){
+        if(isEmptyKey(false)){
             userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, 0);
         }
         else{
@@ -105,14 +104,14 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
     case FP_EVENT_SUCCESS_HANDLE:
     {
         uint16_t finger_id = *(uint16_t*)params;
-        uint16_t uu_id = 0;
+        uint8_t key_id = 0;
 
         OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE finger_id %u", finger_id);
-        if (addUserFinger(finger_id, (&(uu_id)))){
-            OB_LOGI(TAG, "->uu_id [%ld]", uu_id);
+        if (addKeyFinger(finger_id, &key_id)){
+            OB_LOGI(TAG, "->key_id [%ld]", key_id);
             lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                 KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
-                                0, 0);      // 添加数字钥匙（指纹）
+                                0, key_id);     // 添加密钥：指纹（key_id 0~49）
             userHandleEventPush(EVENT_RESULT_SUCCESS_ADD, finger_id);
         }
         else{

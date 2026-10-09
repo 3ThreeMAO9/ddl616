@@ -77,7 +77,7 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
                     hmiTaskSetState(HMI_STATE_PIN_DIFFERENT);
                 if (code_handle == CODE_HANDLE_CHANGE_MASTER)
                 {
-                    if (isEmptyUser(false))
+                    if (isEmptyKey(false))
                         state = Q_TRAN(lock_fsm_idle);
                     else
                         state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin); // 修改管理用户

@@ -131,7 +131,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                     state = Q_TRAN(lockFsmHandleFail);
                 }
                 else {
-                    if (isEmptyUser(false))   // 初始化状态
+                    if (isEmptyKey(false))   // 初始化状态
                         state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
                 }
             }
@@ -143,7 +143,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 }
                 else {
                     // 初始化状态下，单击和双击SET都进入修改管理员密码
-                    if (isEmptyUser(false)){
+                    if (isEmptyKey(false)){
                         state = Q_TRAN(lock_fsm_menu_modfiy_admin_pin);
                     }
                     else{

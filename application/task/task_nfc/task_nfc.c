@@ -25,12 +25,12 @@ static void nfc_task_callback(nfc_event_t *event)
         {
         case NFC_STATE_VERIFY:
             OB_LOGI(TAG, "verify success");
-            if (isValidUserCard(&(event->para), event->card_id, &key_id)) {
+            if (isValidKeyCard(event->card_id, &key_id)) {
                 
                 lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                     KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
                                     KIOT_TM_P_RECORD_UNLOCK_TYPE_KA_PIAN_KAI_SUO, key_id);
-                userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, event->para);
+                userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id);
             }
             else{
                 userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
@@ -38,15 +38,14 @@ static void nfc_task_callback(nfc_event_t *event)
             break;
         case NFC_STATE_REGISTER:
             OB_LOGI(TAG, "register success");
-            if (!isValidUserCard(&(event->para), event->card_id, NULL))
+            if (!isValidKeyCard(event->card_id, NULL))
             {
-                uint16_t uu_id = 0;
-                if (addUserCard(event->card_id, (&(uu_id))))
+                if (addKeyCard(event->card_id, &key_id))
                 {
-                    OB_LOGI(TAG, "->uu_id [%ld]", uu_id);
+                    OB_LOGI(TAG, "->key_id [%ld]", key_id);
                     lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                         KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
-                                        0, 0);      // 添加数字钥匙（卡片）
+                                        0, key_id);     // 添加密钥：卡片（key_id 0~99）
                     userHandleEventPush(EVENT_RESULT_SUCCESS_ADD, event->para);
                 }
                 else

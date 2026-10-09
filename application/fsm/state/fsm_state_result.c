@@ -208,7 +208,7 @@ QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e)
 #endif
     uint8_t state = HMI_STATE_VERIFY_SUCCESS;   // 正常验证成功
 
-    if (isEmptyUser(false))
+    if (isEmptyKey(false))
         state = HMI_STATE_DEMO_VERIFY_SUCCESS;  // 体验模式验证成功
 
     if (isBatteryLow())

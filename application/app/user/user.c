@@ -10,10 +10,10 @@
 #define TAG "user"
 
 /***************Variable***************/
-// 只缓存用户计数（6字节），不再缓存全部用户数据
+// 只缓存密钥数量（6字节），不再缓存全部密钥记录
 static user_key_cnt_t user_cnt = {0};
 
-// 单用户数据缓存（仅缓存当前操作的用户，30字节）
+// 单条密钥记录缓存（仅缓存当前操作的那把密钥）
 static user_info_t current_user = {0};
 static uint16_t current_user_sn = 0;
 
@@ -34,7 +34,7 @@ static const user_area_t key_area[4] =
     { BLOCK_INDEX_FACE_START,   USER_FACE_CNT          },
 };
 
-// 该类型钥匙区计数（对应 user_cnt 各字段），供 readUserKeyCnt / isFullUser 查表
+// 该类型钥匙区计数（对应 user_cnt 各字段），供 readKeyCnt / isFullKey 查表
 static const uint8_t *const key_cnt_tbl[4] =
 {
     &user_cnt.permanentCode,
@@ -53,7 +53,7 @@ static const user_area_t* key_area_of(uint8_t type)
     return &key_area[type];
 }
 
-// 用户 ID 位图（每个 bit 表示一个 user_key_id 是否已用）
+// 密钥归属的用户ID 位图（每个 bit 表示一个 key_user_id 是否已用）
 #define USER_ID_BITMAP_SIZE     ((USER_CNT + 7) / 8)   // 28 字节
 
 static uint16_t get_next_user_id(void)
@@ -63,7 +63,7 @@ static uint16_t get_next_user_id(void)
     uint8_t i, t;
     uint16_t id;
 
-    // ---- 遍历所有类型，标记已使用的 user_key_id ----
+    // ---- 遍历所有类型，标记已使用的 key_user_id ----
     for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++) {
         for (i = 0; i < key_area[t].count; i++) {
             if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag) {
@@ -74,7 +74,7 @@ static uint16_t get_next_user_id(void)
         }
     }
 
-    // ---- 找最小未使用的 user_key_id ----
+    // ---- 找最小未使用的 key_user_id ----
     for (id = 1; id <= USER_CNT; id++) {
         if ((used_bitmap[id / 8] & (1 << (id % 8))) == 0) {
             return id;
@@ -103,8 +103,8 @@ void clean_user_id(void)
     g_pending_user_id = 0;
 }
 
-// 获取用户数据（从Flash读取，带缓存）
-static user_info_t* get_user_data(uint16_t user_sn)
+// 获取一条密钥记录（从Flash读取，带缓存）
+static user_info_t* get_key_data(uint16_t user_sn)
 {
     if (user_sn == 0 || user_sn > USER_CNT) {
         return NULL;
@@ -124,7 +124,7 @@ static user_info_t* get_user_data(uint16_t user_sn)
     return NULL;
 }
 
-void user_info_num(void)
+void key_info_num(void)
 {
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG, "user_cnt       %ld", USER_CNT);
@@ -136,7 +136,7 @@ void user_info_num(void)
 }
 
 // ------------------------------------------
-void updateUserTable(uint16_t index, user_info_t* user_info)
+void updateKeyTable(uint16_t index, user_info_t* user_info)
 {
     uint16_t sum;
 
@@ -190,7 +190,7 @@ void updateUserTable(uint16_t index, user_info_t* user_info)
     }
 }
 
-void updateUserCnt(void)
+void updateKeyCnt(void)
 {
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG, "%s", __func__);
@@ -206,19 +206,19 @@ void updateUserCnt(void)
 }
 
 /**
- * @brief 比较用户密码
+ * @brief 比较密码密钥（密码区第 index 把）
  * @param input       输入密码
  * @param input_len   密码长度
  * @param index       密码区索引（0~19）
  * @param dummy_flag  是否匹配虚位
- * @param user_id     输出：匹配成功时返回对外的 user_id
+ * @param key_id      输出：该密码在本类型内的编号（0~19），可为 NULL
  * @return true=匹配成功
  */
-static uint8_t compareUserCode(uint8_t* input, uint8_t input_len, uint16_t index, 
-                                uint8_t dummy_flag, uint16_t* user_id)
+static uint8_t compareKeyCode(uint8_t* input, uint8_t input_len, uint16_t index, 
+                                uint8_t dummy_flag, uint8_t* key_id)
 {
     uint8_t i;
-    user_info_t* user = get_user_data(index + 1);   // 内部 SN = index + 1
+    user_info_t* user = get_key_data(index + 1);   // 内部 SN = index + 1
     
     if (!user || !user->flag || user->key_type != USER_TYPE_PERMANENT_CODE) {
         return false;
@@ -227,7 +227,7 @@ static uint8_t compareUserCode(uint8_t* input, uint8_t input_len, uint16_t index
     // 精确匹配
     if (input_len == user->info.password.len) {
         if (compare_arrays(input, user->info.password.buffer, user->info.password.len)) {
-            *user_id = user->key_user_id;
+            if (key_id) *key_id = user->key_id;
             return true;
         }
     }
@@ -235,7 +235,7 @@ static uint8_t compareUserCode(uint8_t* input, uint8_t input_len, uint16_t index
     else if (dummy_flag && (input_len > user->info.password.len)) {
         for (i = 0; i < (input_len - user->info.password.len + 1); i++) {
             if (compare_arrays(&input[i], user->info.password.buffer, user->info.password.len)) {
-                *user_id = user->key_user_id;
+                if (key_id) *key_id = user->key_id;
                 return true;
             }
         }
@@ -244,10 +244,10 @@ static uint8_t compareUserCode(uint8_t* input, uint8_t input_len, uint16_t index
     return false;
 }
 
-uint8_t isEmptyUser(uint8_t commonUserFlag)
+uint8_t isEmptyKey(uint8_t commonKeyFlag)
 {
-    if ((commonUserFlag && ((user_cnt.permanentKey) > MASTER_USER_CODE_CNT))
-    || ((false == commonUserFlag) && (user_cnt.permanentKey)))
+    if ((commonKeyFlag && ((user_cnt.permanentKey) > MASTER_USER_CODE_CNT))
+    || ((false == commonKeyFlag) && (user_cnt.permanentKey)))
     {
         return false;
     }
@@ -255,7 +255,7 @@ uint8_t isEmptyUser(uint8_t commonUserFlag)
     return true;
 }
 
-uint16_t readUserKeyCnt(uint8_t type)
+uint16_t readKeyCnt(uint8_t type)
 {
     if (NULL == key_area_of(type))
     {
@@ -268,11 +268,11 @@ uint16_t readUserKeyCnt(uint8_t type)
     return *(key_cnt_tbl[type]);
 }
 
-uint8_t isFullUser(uint8_t type)
+uint8_t isFullKey(uint8_t type)
 {
     const user_area_t* area = key_area_of(type);
 
-    return ((NULL != area) && (readUserKeyCnt(type) >= area->count));
+    return ((NULL != area) && (readKeyCnt(type) >= area->count));
 }
 
 uint8_t isTooSimpleCode(uint8_t* input, uint8_t len)
@@ -295,7 +295,7 @@ static uint8_t isDefaultMasterCode(uint8_t *input, uint8_t input_len, uint8_t du
     uint8_t i;
     const uint8_t admin_password[] = ADMIN_PASSWORD_DEFAULT;
 
-    if (isEmptyUser(false))
+    if (isEmptyKey(false))
     {
         if ((input_len == sizeof(admin_password)) && (0 == memcmp(admin_password, input, input_len)))
         {
@@ -357,7 +357,7 @@ uint8_t is_allowed_time(uint32_t timestamp, uint32_t start_seconds, uint32_t end
 uint8_t compareUserParameter(uint16_t index)
 {
     uint8_t result = false;
-    user_info_t* user = get_user_data(index + 1);
+    user_info_t* user = get_key_data(index + 1);
     
     if (!user || !user->flag) {
         return false;
@@ -407,28 +407,26 @@ uint8_t compareUserParameter(uint16_t index)
     return result;
 }
 
-uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag)
+uint8_t isValidKeyCode(uint8_t* input, uint8_t input_len, uint8_t mode, uint8_t dummy_flag, uint8_t time_flag, uint8_t* key_id)
 {
     uint16_t i;
 
     if ((mode == false) && isDefaultMasterCode(input, input_len, dummy_flag))
     {
-        *user_id = 0;
+        if (key_id) *key_id = 0;        // 管理员密码固定 key_id 0
         return true;
     }
-    else if ((mode == true) && isEmptyUser(false))
+    else if ((mode == true) && isEmptyKey(false))
     {
-        *user_id = 0;
+        if (key_id) *key_id = 0;        // 空锁：无真实钥匙
         return true;
     }
     else
     {
         for (i = 0; i < PERMANENT_USER_CODE_CNT; i++)
         {
-           uint16_t matched_id = 0;
-            if (compareUserCode(input, input_len, i, dummy_flag, &matched_id))
+            if (compareKeyCode(input, input_len, i, dummy_flag, key_id))
             {
-                *user_id = matched_id;
                 return true;
             }
         }
@@ -441,7 +439,7 @@ uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, ui
 }
 
 // 指纹/卡片校验：按类型遍历该钥匙区，key 为指纹模板ID 或 卡片UID
-static uint8_t isValidUserKey(uint8_t type, const uint8_t* key, uint16_t* user_id, uint8_t* key_id)
+static uint8_t isValidKey(uint8_t type, const uint8_t* key, uint8_t* key_id)
 {
     const user_area_t* area = key_area_of(type);
     uint16_t i;
@@ -453,7 +451,7 @@ static uint8_t isValidUserKey(uint8_t type, const uint8_t* key, uint16_t* user_i
 
     for (i = 0; i < area->count; i++)
     {
-        user_info_t* user = get_user_data(area->base + i);
+        user_info_t* user = get_key_data(area->base + i);
         uint8_t matched;
 
         if (!user || !user->flag || user->key_type != type) {
@@ -468,7 +466,6 @@ static uint8_t isValidUserKey(uint8_t type, const uint8_t* key, uint16_t* user_i
 
         if (matched)
         {
-            *user_id = user->key_user_id;
             if (key_id) *key_id = user->key_id;
             return true;
         }
@@ -477,36 +474,32 @@ static uint8_t isValidUserKey(uint8_t type, const uint8_t* key, uint16_t* user_i
     return false;
 }
 
-uint8_t isValidUserFingerprint(uint16_t* user_id, uint8_t* key_id)
+uint8_t isValidKeyFingerprint(uint16_t finger_id, uint8_t* key_id)
 {
-    uint16_t finger_id = *user_id;
-
-    if(isEmptyUser(false))
+    if(isEmptyKey(false))
     {
 #if (Enabled == PRINTF_USER)
         OB_LOGD(TAG,"EmptyUser");
 #endif
-        *user_id = 0;
         if (key_id) *key_id = 0;
         return true;
     }
 
-    return isValidUserKey(USER_TYPE_PERMANENT_FINGERPRINTS, (const uint8_t*)&finger_id, user_id, key_id);
+    return isValidKey(USER_TYPE_PERMANENT_FINGERPRINTS, (const uint8_t*)&finger_id, key_id);
 }
 
-uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id, uint8_t* key_id)
+uint8_t isValidKeyCard(const uint8_t* card_id, uint8_t* key_id)
 {
-    if(isEmptyUser(false))
+    if(isEmptyKey(false))
     {
-        *user_id = 0;
         if (key_id) *key_id = 0;
         return true;
     }
 
-    return isValidUserKey(USER_TYPE_PERMANENT_CARD, card_id, user_id, key_id);
+    return isValidKey(USER_TYPE_PERMANENT_CARD, card_id, key_id);
 }
 
-static uint8_t readEmptyUserId(uint16_t* user_sn, uint8_t userType)
+static uint8_t read_empty_key_sn(uint16_t* user_sn, uint8_t userType)
 {
     const user_area_t* area = key_area_of(userType);
     user_info_t temp_user;
@@ -580,16 +573,16 @@ static void cache_and_update(uint16_t user_sn, user_info_t* info)
     if (current_user_sn == user_sn) {
         memcpy(&current_user, info, sizeof(user_info_t));
     }
-    updateUserCnt();
+    updateKeyCnt();
 }
 
-uint8_t addUserCode(uint8_t *input, uint8_t len, uint8_t userType, uint16_t *user_id, user_time_t *para)
+uint8_t addKeyCode(uint8_t *input, uint8_t len, uint8_t userType, user_time_t *para, uint8_t* key_id)
 {
     uint16_t user_sn;
     user_info_t user_info;
     const user_area_t* area = key_area_of(userType);
 
-    if ((NULL == area) || !readEmptyUserId(&user_sn, userType))
+    if ((NULL == area) || !read_empty_key_sn(&user_sn, userType))
     {
         return false;
     }
@@ -599,14 +592,13 @@ uint8_t addUserCode(uint8_t *input, uint8_t len, uint8_t userType, uint16_t *use
     user_info.key_user_id = g_pending_user_id;
     user_info.key_type = userType;
     user_info.info.password.len = len;
-    user_info.key_id = read_empty_min_key_id(userType);
+    user_info.key_id = read_empty_min_key_id(userType);     // 本类型内编号 0~19
+    if (key_id) *key_id = user_info.key_id;
 
     user_info.parameter.user_id = para->user_id;
     user_info.parameter.user_policy = para->user_policy;
     user_info.parameter.key_urgent = para->key_urgent;
     user_info.parameter.timestamp = para->timestamp;
-
-    *user_id = user_info.key_user_id;
 
     memcpy(user_info.info.password.buffer, input, len);
 
@@ -616,16 +608,16 @@ uint8_t addUserCode(uint8_t *input, uint8_t len, uint8_t userType, uint16_t *use
     cache_and_update(user_sn, &user_info);
 
 #if (Enabled == PRINTF_USER)
-    OB_LOGD(TAG,"add user code: len[%u], user_sn[%u], key_id[%u]", len, user_sn, user_info.key_id);
+    OB_LOGD(TAG,"add key code: len[%u], sn[%u], key_id[%u]", len, user_sn, user_info.key_id);
     OB_LOGD_DUMP(user_info.info.password.buffer, len);
 #endif
     return true;
 }
 
-void modifyUserCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* para)
+void modifyKeyCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* para)
 {
     user_info_t user_info;
-    user_info_t* old_user = get_user_data(user_sn);
+    user_info_t* old_user = get_key_data(user_sn);
     
     if (!old_user) return;
     
@@ -655,9 +647,9 @@ void modifyUserCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* p
 #endif
 }
 
-void moidfyUserParameter(uint8_t user_sn, user_time_t* para)
+void modifyKeyParameter(uint8_t user_sn, user_time_t* para)
 {
-    user_info_t* old_user = get_user_data(user_sn);
+    user_info_t* old_user = get_key_data(user_sn);
     if (!old_user) return;
     
     user_info_t user_info = *old_user;
@@ -671,13 +663,13 @@ void moidfyUserParameter(uint8_t user_sn, user_time_t* para)
     cache_and_update(user_sn, &user_info);
 
 #if (Enabled == PRINTF_USER)
-    OB_LOGD(TAG, "moidfyUserParameter: user_sn[%u]", user_sn);
+    OB_LOGD(TAG, "modifyKeyParameter: user_sn[%u]", user_sn);
 #endif
 }
 
-void modifyUserAttribute(uint8_t user_sn, uint8_t attribute)
+void modifyKeyAttribute(uint8_t user_sn, uint8_t attribute)
 {
-    user_info_t* old_user = get_user_data(user_sn);
+    user_info_t* old_user = get_key_data(user_sn);
     if (!old_user) return;
     
     user_info_t user_info = *old_user;
@@ -688,18 +680,18 @@ void modifyUserAttribute(uint8_t user_sn, uint8_t attribute)
     cache_and_update(user_sn, &user_info);
 
 #if (Enabled == PRINTF_USER)
-    OB_LOGD(TAG, "modifyUserAttribute: user_sn[%u], attribute[%02X]", user_sn, attribute);
+    OB_LOGD(TAG, "modifyKeyAttribute: user_sn[%u], attribute[%02X]", user_sn, attribute);
 #endif
 }
 
 // 指纹/卡片新增的公共实现（key 为指纹模板ID 或 卡片UID）
-static uint8_t add_user_key(uint8_t type, const void* key, uint16_t* userSn)
+static uint8_t add_key_record(uint8_t type, const void* key, uint8_t* key_id)
 {
     user_info_t user_info;
     uint16_t user_sn;
     const user_area_t* area = key_area_of(type);
 
-    if ((NULL == area) || !readEmptyUserId(&user_sn, type))
+    if ((NULL == area) || !read_empty_key_sn(&user_sn, type))
     {
         return false;
     }
@@ -708,7 +700,8 @@ static uint8_t add_user_key(uint8_t type, const void* key, uint16_t* userSn)
     user_info.key_sn = user_sn;
     user_info.key_user_id = g_pending_user_id;
     user_info.key_type = type;
-    user_info.key_id = read_empty_min_key_id(type);
+    user_info.key_id = read_empty_min_key_id(type);     // 本类型内编号：指纹 0~49 / 卡片 0~99
+    if (key_id) *key_id = user_info.key_id;
 
     user_info.parameter.user_id = 0x00;
     user_info.parameter.user_policy = USER_POLICY_PERMANENT;
@@ -725,22 +718,20 @@ static uint8_t add_user_key(uint8_t type, const void* key, uint16_t* userSn)
     save_user_key(type, user_sn - area->base, &user_info);
     cache_and_update(user_sn, &user_info);
 
-    *userSn = user_info.key_user_id;
-
     return true;
 }
 
-uint8_t addUserFinger(uint16_t id, uint16_t* userSn)
+uint8_t addKeyFinger(uint16_t id, uint8_t* key_id)
 {
-    return add_user_key(USER_TYPE_PERMANENT_FINGERPRINTS, (const void*)&id, userSn);
+    return add_key_record(USER_TYPE_PERMANENT_FINGERPRINTS, (const void*)&id, key_id);
 }
 
-uint8_t addUserCard(uint8_t* card_id, uint16_t* userSn)
+uint8_t addKeyCard(uint8_t* card_id, uint8_t* key_id)
 {
-    return add_user_key(USER_TYPE_PERMANENT_CARD, (const void*)card_id, userSn);
+    return add_key_record(USER_TYPE_PERMANENT_CARD, (const void*)card_id, key_id);
 }
 
-void modifyUserMasterCode(uint8_t* input, uint8_t len)
+void modifyMasterKeyCode(uint8_t* input, uint8_t len)
 {
     user_info_t user_info;
     
@@ -771,7 +762,7 @@ void modifyUserMasterCode(uint8_t* input, uint8_t len)
 #endif
 }
 
-void delUserInfo(uint16_t user_sn)
+void delKeyInfo(uint16_t user_sn)
 {
     user_info_t user_info;
     memset(&user_info, 0xFF, sizeof(user_info_t));
@@ -796,24 +787,22 @@ void delUserInfo(uint16_t user_sn)
         current_user_sn = 0;
     }
 
-    updateUserCnt();
+    updateKeyCnt();
 
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG,"delete user[%u]", user_sn);
 #endif
 }
 
-uint8_t delUserCode(uint8_t* input, uint8_t len, uint16_t* user_id)
+uint8_t delKeyCode(uint8_t* input, uint8_t len)
 {
     uint16_t i;
 
     for (i = 1; i < PERMANENT_USER_CODE_CNT; i++)
     {
-        uint16_t matched_id = 0;
-        if (compareUserCode(input, len, i, false, &matched_id))
+        if (compareKeyCode(input, len, i, false, NULL))
         {
-            *user_id = matched_id;
-            delUserInfo(*user_id);
+            delKeyInfo(i + 1);     // 内部 SN = 密码区索引 + 1
             return true;
         }
     }
@@ -821,16 +810,16 @@ uint8_t delUserCode(uint8_t* input, uint8_t len, uint16_t* user_id)
     return false;
 }
 
-uint8_t delUserOneTimeCode(uint8_t* input, uint8_t len, uint16_t* user_sn)
+uint8_t delKeyOneTimeCode(uint8_t* input, uint8_t len, uint16_t* user_sn)
 {
     // 一次性密码功能，暂不实现
     // 如果需要，可遍历特定区域
     return false;
 }
 
-uint8_t getUserPasswordCode(uint16_t user_sn, uint8_t* pData)
+uint8_t getKeyPasswordCode(uint16_t user_sn, uint8_t* pData)
 {
-    user_info_t* user = get_user_data(user_sn);
+    user_info_t* user = get_key_data(user_sn);
     if (!user) {
         return false;
     }
@@ -839,9 +828,9 @@ uint8_t getUserPasswordCode(uint16_t user_sn, uint8_t* pData)
 }
 
 //获取用户标志
-uint8_t getUserFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id)
+uint8_t getKeyFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id)
 {
-    user_info_t* user = get_user_data(id + 1);
+    user_info_t* user = get_key_data(id + 1);
     if (!user || !user->flag) {
         return false;
     }
@@ -854,16 +843,16 @@ uint8_t getUserFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id)
 }
 
 //获取指纹ID
-uint8_t getUserFingerID(uint16_t *user_sn, uint16_t id)
+uint8_t getKeyFingerID(uint16_t *user_sn, uint16_t id)
 {
-    user_info_t* user = get_user_data(id + 1);
+    user_info_t* user = get_key_data(id + 1);
     if (!user || !user->flag) {
         return false;
     }
     
     if (USER_TYPE_PERMANENT_FINGERPRINTS == user->key_type) {
         *user_sn = user->info.finger.id;
-        OB_LOGI(TAG, "getUserFingerID: id[%u], finger[%u]", id, *user_sn);
+        OB_LOGI(TAG, "getKeyFingerID: id[%u], finger[%u]", id, *user_sn);
         return true;
     }
     return false;
@@ -899,7 +888,7 @@ static void user_name_default(char* name, uint16_t user_id)
 
 /**
  * @brief 创建用户档案
- * @param user_id 对外 ID（g_pending_user_id）
+ * @param user_id 用户档案ID（用户维度，与密钥归属的用户ID 不同）
  * @param name    用户名，可为 NULL（默认 "User"）
  * @return 1=成功，0=失败（已存在/已满）
  */

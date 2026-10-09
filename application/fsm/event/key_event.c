@@ -29,14 +29,11 @@ static key_board_event_t keyBoardEvent;
     }
 
 // ------------------------------------------
-static void password_unlock_log_add(uint16_t user_sn)
+static void password_unlock_log_add(uint8_t key_id)
 {
-    uint16_t key_id = 0;
-
-    getUserFlag(&key_id, USER_TYPE_PERMANENT_CODE, user_sn - 1);
     lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                         KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
-                        KIOT_TM_P_RECORD_UNLOCK_TYPE_MI_MA_KAI_SUO, (uint8_t)key_id);
+                        KIOT_TM_P_RECORD_UNLOCK_TYPE_MI_MA_KAI_SUO, key_id);
 }
 
 void keyEventInit(void)
@@ -131,7 +128,7 @@ static uint8_t keyEventCombineFunctionHandle(void)
     }
 #endif
 
-    if (isEmptyUser(false))
+    if (isEmptyKey(false))
     {
         if (COMBINE_KEY_BOARD_AGING_TEST == value)
         {
@@ -206,7 +203,7 @@ static uint8_t keyEventCombineFunctionHandle(void)
 
 void keyEventVerifyAdmin(uint8_t key_value)
 {
-    uint16_t user_sn;
+    uint8_t key_id = 0;
 
     if (KEY_CAN == key_value)
     {
@@ -245,12 +242,12 @@ void keyEventVerifyAdmin(uint8_t key_value)
         }
         else
         {
-            if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, false, true, false) && (user_sn <= MASTER_USER_CODE_CNT))
+            if (isValidKeyCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, false, true, false, &key_id) && (0 == key_id))
             {
 #if (Enabled == PRINTF_PASSWORD)
-                OB_LOGD(TAG, "Verify success: password admin user[%u]", user_sn);
+                OB_LOGD(TAG, "Verify success: password admin key_id[%u]", key_id);
 #endif
-                userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_ADMIN, user_sn);
+                userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_ADMIN, key_id);
                 CLEAR_KEY_EVENT();
                 return;
             }
@@ -292,7 +289,7 @@ void keyEventVerifyAdmin(uint8_t key_value)
 
 void keyEventVerifyUser(uint8_t key_value)
 {
-    uint16_t user_sn;
+    uint8_t key_id = 0;
 
     if (KEY_CAN == key_value)
     {
@@ -334,7 +331,7 @@ void keyEventVerifyUser(uint8_t key_value)
         }
         else
         {
-            if (isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, true, true))
+            if (isValidKeyCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, true, true, true, &key_id))
             {
                 // 判断是否处于待激活
                 if (is_device_locked() && (keyBoardEvent.input[0].len == ACTIVECODE_LEN_MAX))
@@ -350,15 +347,15 @@ void keyEventVerifyUser(uint8_t key_value)
 
 
 #if (Enabled == PRINTF_PASSWORD)
-                OB_LOGI(TAG, "verify success: password user[%u]", user_sn);
+                OB_LOGI(TAG, "verify success: password key_id[%u]", key_id);
 #endif
                 if (Enabled == readUserParameter(USER_PARA_VACATION_MODE_ID))
                 {
-                    if (user_sn <= MASTER_USER_CODE_CNT)
+                    if (0 == key_id)        // 管理员密码（第0把）
                     {
                         setUserParameter(USER_PARA_VACATION_MODE_ID, Disabled);
-                        password_unlock_log_add(user_sn);
-                        userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
+                        password_unlock_log_add(key_id);
+                        userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id);
                     }
                     else
                     {
@@ -367,8 +364,8 @@ void keyEventVerifyUser(uint8_t key_value)
                 }
                 else
                 {
-                    password_unlock_log_add(user_sn);
-                    userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, user_sn);
+                    password_unlock_log_add(key_id);
+                    userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id);
                 }
             }
             else
@@ -423,11 +420,10 @@ static uint8_t isSameInputCode(void)
 static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
 {
     uint8_t result = EVENT_RESULT_FAIL;
-    uint16_t user_sn;
-    uint16_t user_ble_sn;
+    uint8_t key_id = 0;
     user_time_t parameter;
 
-    // 本地密码录入 user_id = 0xff;为空
+    // 本地录入的密钥参数：user_id = 0xff 表示非云端下发
     parameter.user_id = 0xff;
     parameter.user_policy = USER_POLICY_PERMANENT;
     parameter.key_urgent = KEY_URGENT_NORMAL;
@@ -440,10 +436,10 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
     {
         if (isSameInputCode())
         {
-            if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, false, false)) && (0 != user_sn))
+            if (!isEmptyKey(false) && isValidKeyCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, true, false, false, NULL))
             {
 #if (Enabled == PRINTF_PASSWORD)
-                OB_LOGD(TAG, "user sn[%u]: len[%u]", user_sn, keyBoardEvent.input[0].len);
+                OB_LOGD(TAG, "code len[%u]", keyBoardEvent.input[0].len);
 #endif
                 if ((CODE_HANDLE_ADD == handle_code) || (CODE_HANDLE_CHANGE_MASTER == handle_code))
                 {
@@ -456,15 +452,12 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
                 switch (handle_code)
                 {
                 case CODE_HANDLE_ADD:
-                    if (true == addUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, USER_TYPE_PERMANENT_CODE, &user_sn, &parameter))
+                    if (true == addKeyCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, USER_TYPE_PERMANENT_CODE, &parameter, &key_id))
                     {
-                        if (true == getUserFlag(&user_ble_sn, USER_TYPE_PERMANENT_CODE, user_sn - 1))
-                        {
-                            OB_LOGW(TAG, "user_sn  %0ld user_ble_sn %0ld", user_sn, user_ble_sn);
-                            lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
-                                                KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
-                                                0, (uint8_t)user_ble_sn);   // 添加普通密码
-                        }
+                        OB_LOGW(TAG, "key_id %0ld", key_id);
+                        lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                            KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
+                                            0, key_id);     // 添加普通密码（key_id 0~19）
 
                         CLEAR_KEY_EVENT();
                         handleEventPush(EVENT_RESULT_SUCCESS, handle_code);
@@ -472,7 +465,7 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
                     }
                     break;
                 case CODE_HANDLE_CHANGE_MASTER:
-                    modifyUserMasterCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
+                    modifyMasterKeyCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len);
                     // 管理员密码固定 slot 0，钥匙ID 为 0
                     lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                         KIOT_TM_P_RECORD_OPERATION_TYPE_XIU_GAI_SHU_ZI_YAO_SHI,
@@ -495,10 +488,10 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
     }
     else
     {
-        if ((isValidUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn, true, false, false)) && (0 != user_sn))
+        if (!isEmptyKey(false) && isValidKeyCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, true, false, false, NULL))
         {
 #if (Enabled == PRINTF_PASSWORD)
-            OB_LOGD(TAG, "user sn[%u]: len[%u]", user_sn, keyBoardEvent.input[0].len);
+            OB_LOGD(TAG, "code len[%u]", keyBoardEvent.input[0].len);
 #endif
             if ((CODE_HANDLE_ADD == handle_code) || (CODE_HANDLE_CHANGE_MASTER == handle_code))
             {
@@ -506,7 +499,7 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
             }
             else if (CODE_HANDLE_DEL == handle_code)
             {
-                if (delUserCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len, &user_sn))
+                if (delKeyCode(keyBoardEvent.input[0].buffer, keyBoardEvent.input[0].len))
                 {
                     CLEAR_KEY_EVENT();
                     handleEventPush(EVENT_RESULT_SUCCESS, handle_code);

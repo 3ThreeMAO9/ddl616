@@ -37,7 +37,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
-            if (isEmptyUser(false))   // 初始化状态
+            if (isEmptyKey(false))   // 初始化状态
                 hmiTaskSetState(HMI_STATE_CHANGE_MASTER_CODE); // 添加管理用戶，请输入六至十二位管理密码，以井号键结束，取消请按星号键
             else
                 hmiTaskSetState(HMI_STATE_MENU_CHANGE_MASTER_CODE); // 请输入6-12位密码，以井号键结束，返回上级菜单请按星号键
@@ -58,7 +58,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL_INPUT == e->dynamic_[0])
             {
-                if (isEmptyUser(false)) {
+                if (isEmptyKey(false)) {
                     state = Q_TRAN(lock_fsm_idle);
                 }
                 else {
@@ -69,7 +69,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-                if (isEmptyUser(false))   // 初始化状态
+                if (isEmptyKey(false))   // 初始化状态
                 {
                     state = Q_TRAN(lock_fsm_sleep);
                 }
@@ -78,7 +78,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL_TOO_SIMPLE == e->dynamic_[0])
             {
-                if (isEmptyUser(false)) {
+                if (isEmptyKey(false)) {
                     state = Q_TRAN(lock_fsm_idle);
                 }
                 else {
@@ -88,7 +88,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_FAIL_REPEAT == e->dynamic_[0])
             {
-                if (isEmptyUser(false)) {
+                if (isEmptyKey(false)) {
                     state = Q_TRAN(lock_fsm_idle);
                 }
                 else {

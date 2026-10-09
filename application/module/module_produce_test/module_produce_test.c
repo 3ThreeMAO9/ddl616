@@ -50,7 +50,7 @@ void produceTestEventRegister_callback(produce_test_callback_t callback)
 
 // void produceTestHwConfig(uint8_t initFlag)
 // {
-//     if (isEmptyUser(false))
+//     if (isEmptyKey(false))
 //     {
 //         produceTestUartInit(initFlag);
 //         test_enable = initFlag;
@@ -70,7 +70,7 @@ void produceTestInit(void)
     memcpy((uint8_t *)(produceTestHandle.keyBoard.tab), keyBoardTab, KEY_CNT);
     produceInfoInit();
     // setProduceReboot(0);
-    // if (isEmptyUser(false))
+    // if (isEmptyKey(false))
     //     dev_init_resp(); // 没用户，默认上电会发送数据给产测工具
     produceTestHandleEvent_callback(EVENT_RESULT_PRODUCE_INIT, 0);
 }
@@ -132,7 +132,7 @@ void produceTestLoop(void)
 // #if (UART_PRINTF_ENABLE)
 //     return;
 // #endif
-//     if (!isEmptyUser(false) || !test_enable)
+//     if (!isEmptyKey(false) || !test_enable)
 //     {
 //         if (test_enable)
 //         {

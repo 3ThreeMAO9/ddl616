@@ -370,10 +370,10 @@ static void flash_user_data_init(void)
         user_flash_read(USER_PAGE_START_ADDR + ((i + 1) * USER_BLOCK_SIZE), dataBlock, USER_BLOCK_SIZE);
         // OB_LOGW(TAG,"Adrr %08X",USER_PAGE_START_ADDR + ((i + 1) * USER_BLOCK_SIZE));
         // OB_LOGI_DUMP(dataBlock, USER_BLOCK_SIZE);
-        updateUserTable(i, (user_info_t *)(dataBlock));
+        updateKeyTable(i, (user_info_t *)(dataBlock));
     }
 #endif
-    updateUserCnt();
+    updateKeyCnt();
 }
 
 static void flash_parameter_data_init(void)
@@ -402,7 +402,7 @@ void flash_data_init(void)
     //parameter data init
     flash_parameter_data_init();
 #if (Enabled == PRINTF_FLASH)
-    user_info_num();
+    key_info_num();
     OB_LOGD(TAG, "/************************************************************/");
 #endif
 }
