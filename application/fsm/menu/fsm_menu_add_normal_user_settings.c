@@ -66,11 +66,6 @@ QState lock_fsm_menu_add_normal_user_settings(LockFsm *me, QEvent const *e)
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_ADD_NORMAL_USER);
-#if (Enabled == PRINTF_FSM)
-            OB_LOGI(TAG, "case KEY_NUM_1:    //添加密码请按1");
-            OB_LOGI(TAG, "case KEY_NUM_2:    //添加指纹请按2");
-            OB_LOGI(TAG, "case KEY_NUM_3:    //添加卡片请按3");
-#endif
             break;
         case Q_EXIT_SIG:
             break;

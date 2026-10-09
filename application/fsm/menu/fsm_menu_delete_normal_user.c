@@ -14,9 +14,12 @@
 #include "ob_log.h"
 #define TAG "fsm_delete_normal_user"
 
-// 说明：本流程的语音/HMI 提示按约定暂不动，这里只实现状态机 + 删除动作。
-//       后续补语音时，在 module_hmi 里加对应 HMI_STATE（删除成功/管理用户不可删除/
-//       用户不存在/用户为空/操作超时），再在下面各 return 前加一句 hmiTaskSetState(...) 即可。
+// 流程（对应语音表）：
+//   删除用户菜单    : 删除单个用户请按1，删除全部用户请按2，返回上级菜单请按星号键
+//   输入用户编号    : 请输入要删除的用户编号，以#号键结束，返回上级菜单请按星号键
+//   确认删除全部    : 删除全部普通用户，以#号键结束，返回上级菜单请按星号键
+//   结果            : 删除成功 / 删除失败+管理用户不可删除 / 删除失败+用户不存在 /
+//                     删除失败（用户为空）/ 删除失败+操作超时   —— 播完回到删除用户菜单
 
 /***************Variable***************/
 #define DELETE_ID_INPUT_MAX     (4)         // 用户档案ID 最大 49，4 位够用
@@ -44,6 +47,26 @@ static uint16_t delete_id_input_value(void)
     return value;
 }
 
+// 删除结果 -> 对应结果语音；语音播完由 lockFsmSuccessDeal 回到 me->branch（删除用户菜单）
+static QState delete_result_deal(LockFsm *me, uint8_t result)
+{
+    me->branch = (QStateHandler)(lock_fsm_menu_delete_normal_user);
+
+    switch (result)
+    {
+    case USER_DEL_OK:
+        return Q_TRAN(lockFsmDeleteUserSuccess);
+    case USER_DEL_FAIL_ADMIN:
+        return Q_TRAN(lockFsmDeleteUserFailAdmin);
+    case USER_DEL_FAIL_NOT_EXIST:
+        return Q_TRAN(lockFsmDeleteUserFailNotExist);
+    case USER_DEL_FAIL_EMPTY:
+        return Q_TRAN(lockFsmDeleteUserFailEmpty);
+    default:                            // 超时未输入
+        return Q_TRAN(lockFsmDeleteUserFailTimeOut);
+    }
+}
+
 // ------------------------------------------
 // 删除普通用户菜单：1=删除单个，2=删除全部，星号键返回管理员菜单
 QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e)
@@ -60,6 +83,7 @@ QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e)
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            hmiTaskSetState(HMI_STATE_DELETE_NORMAL_USER);
             break;
         case Q_EXIT_SIG:
             break;
@@ -109,6 +133,7 @@ QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e)
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            hmiTaskSetState(HMI_STATE_DELETE_NORMAL_USER_INPUT_ID);
             break;
         case Q_EXIT_SIG:
             break;
@@ -129,11 +154,9 @@ QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e)
             }
             else if (KEY_OK == key)                             // 井号键：按输入的编号删除
             {
-                if (delete_id_len)
-                {
-                    user_delete_normal(delete_id_input_value());
-                }
-                state = Q_TRAN(lock_fsm_menu_delete_normal_user);   // 结果语音补上后在这里提示
+                state = delete_result_deal(me, (0 == delete_id_len)
+                                                ? USER_DEL_FAIL_NOT_EXIST
+                                                : user_delete_normal(delete_id_input_value()));
             }
             break;
         case Q_HANDLE_SIG:
@@ -141,7 +164,7 @@ QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e)
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             break;
         case Q_WORK_TIME_OUT_SIG:                               // 超时未输入
-            state = Q_TRAN(lock_fsm_menu_delete_normal_user);   // 结果语音补上后在这里提示
+            state = delete_result_deal(me, 0xFF);
             break;
         default:
             break;
@@ -166,6 +189,7 @@ QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e)
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            hmiTaskSetState(HMI_STATE_DELETE_ALL_NORMAL_USER_CONFIRM);
             break;
         case Q_EXIT_SIG:
             break;
@@ -178,8 +202,7 @@ QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e)
             }
             else if (KEY_OK == key)                             // 井号键：确认删除全部普通用户
             {
-                user_delete_all_normal();
-                state = Q_TRAN(lock_fsm_menu_delete_normal_user);   // 结果语音补上后在这里提示
+                state = delete_result_deal(me, user_delete_all_normal());
             }
             else
             {
@@ -191,7 +214,7 @@ QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e)
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             break;
         case Q_WORK_TIME_OUT_SIG:                               // 超时未输入
-            state = Q_TRAN(lock_fsm_menu_delete_normal_user);   // 结果语音补上后在这里提示
+            state = delete_result_deal(me, 0xFF);
             break;
         default:
             break;

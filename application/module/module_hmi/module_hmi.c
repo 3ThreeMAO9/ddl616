@@ -198,7 +198,10 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_ADMIN:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            PLAYER_LIST_CLEAR_ADD(VOICE_To_add_a_user_please_press, VOICE_One, VOICE_Two, VOICE_Three, VOICE_More_settings_please_press, VOICE_Five);
+            PLAYER_LIST_CLEAR_ADD(VOICE_To_add_a_user_please_press, VOICE_One,
+                                  VOICE_To_change_the_master_PIN_code_please_press, VOICE_Two,
+                                  VOICE_To_delete_a_general_user_please_press, VOICE_Three,
+                                  VOICE_More_settings_please_press, VOICE_Five);
             break;
         
         case HMI_STATE_CHANGE_MASTER_CODE:
@@ -231,12 +234,52 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
         }
 
+        case HMI_STATE_DELETE_NORMAL_USER:
+            // 删除用户菜单：1=删除单个 2=删除全部，星号键返回上级
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_To_delete_a_user_please_press, VOICE_One,
+                                  VOICE_Delete_all_users_please_press, VOICE_Two,
+                                  VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            break;
+
+        case HMI_STATE_DELETE_NORMAL_USER_INPUT_ID:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Please_enter_the_user_number_to_delete, VOICE_End_with_pound_key,
+                                  VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            break;
+
+        case HMI_STATE_DELETE_ALL_NORMAL_USER_CONFIRM:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_To_delete_all_general_users, VOICE_End_with_pound_key,
+                                  VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            break;
+
+        case HMI_STATE_DELETE_SUCCESS:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_successful);
+            break;
+
+        case HMI_STATE_DELETE_FAIL_ADMIN:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed, VOICE_Master_users_cannot_be_deleted);
+            break;
+
+        case HMI_STATE_DELETE_FAIL_NOT_EXIST:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed, VOICE_User_does_not_exist);
+            break;
+
+        case HMI_STATE_DELETE_FAIL_EMPTY:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed);       // 新语音表里没有"用户为空"，只报删除失败
+            break;
+
+        case HMI_STATE_DELETE_FAIL_TIME_OUT:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed, VOICE_Operation_timed_out);
+            break;
+
         case HMI_STATE_MODIFY_ADMIN_USER_SETTINGS:
             PLAYER_LIST_ADD(VOICE_To_change_the_master_PIN_code_please_press, VOICE_One, VOICE_Two);
             break;
 
         case HMI_STATE_ADD_NORMAL_PW:
-            PLAYER_LIST_ADD(VOICE_Please_enter_a_new_6_to_12_digit_PIN_code, VOICE_End_with_pound_key, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_PIN_code, VOICE_End_with_pound_key, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
         
         case HMI_STATE_ADD_NORMAL_FINGER:
@@ -248,7 +291,8 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_SYSTEM_SETTINGS:
-            PLAYER_LIST_CLEAR_ADD(VOICE_For_language_settings_press, VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
+            // 新语音表里没有"语言设置请按"，用"中文请按"代替（按1进入语言菜单，那里再报中文/英文）
+            PLAYER_LIST_CLEAR_ADD(VOICE_For_Chinese_press, VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
             break;
         
         case HMI_STATE_LINKED_UNLOCK:
@@ -268,11 +312,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_PIN_REPEAT:
-            PLAYER_LIST_CLEAR_ADD(VOICE_PIN_code_already_exists,VOICE_Please_re_enter);
+            PLAYER_LIST_CLEAR_ADD(VOICE_PIN_code, VOICE_Already_exists, VOICE_Please_re_enter);     // 密码已存在
             break;
 
         case HMI_STATE_CARD_REPEAT:
-            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed, VOICE_Key_tag_already_exists);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed, VOICE_Key_tag, VOICE_Already_exists);      // 卡片已存在
             keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
@@ -355,13 +399,13 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_AGING_TEST_OPEN:
             hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
-            PLAYER_LIST_ADD(VOICE_Door_opened);
+            // 新语音表里没有"门已打开"，老化测试不再播报语音
             break;
 
         case HMI_STATE_AGING_TEST_CLOSE:
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
             hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
-            PLAYER_LIST_ADD(VOICE_Door_closed);
+            // 新语音表里没有"门已关好"，老化测试不再播报语音
             break;
         default:
             return keepTime;

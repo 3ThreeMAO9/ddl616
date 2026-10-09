@@ -168,6 +168,32 @@ QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e)
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_ADD_SUCCESS);
 }
 
+// ---- 删除普通用户的几种结果语音（播完回 me->branch，调用方指向删除用户菜单）----
+QState lockFsmDeleteUserSuccess(LockFsm *me, QEvent const *e)
+{
+    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_SUCCESS);
+}
+
+QState lockFsmDeleteUserFailAdmin(LockFsm *me, QEvent const *e)
+{
+    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_ADMIN);
+}
+
+QState lockFsmDeleteUserFailNotExist(LockFsm *me, QEvent const *e)
+{
+    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_NOT_EXIST);
+}
+
+QState lockFsmDeleteUserFailEmpty(LockFsm *me, QEvent const *e)
+{
+    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_EMPTY);
+}
+
+QState lockFsmDeleteUserFailTimeOut(LockFsm *me, QEvent const *e)
+{
+    return lockFsmSuccessDeal(me, e, HMI_STATE_DELETE_FAIL_TIME_OUT);
+}
+
 QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e)
 {
 #if (Enabled==PRINTF_FSM)

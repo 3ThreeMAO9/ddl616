@@ -89,6 +89,14 @@ typedef enum{
     HMI_STATE_ADD_NORMAL_FINGER,        //添加指纹，请按手指，返回上级菜单请按*号键
     HMI_STATE_ADD_NORMAL_NFC,           //添加卡片，请刷卡，返回上级菜单请按*号键
     HMI_STATE_ADD_NORMAL_USER,          //添加普通用户--用户编号XXX
+    HMI_STATE_DELETE_NORMAL_USER,       //删除普通用户菜单：删除单个请按1，删除全部请按2，返回上级请按星号键
+    HMI_STATE_DELETE_NORMAL_USER_INPUT_ID,   //请输入要删除的用户编号，以#号键结束，返回上级菜单请按星号键
+    HMI_STATE_DELETE_ALL_NORMAL_USER_CONFIRM,//删除全部普通用户，请按#号键确认，返回上级菜单请按星号键
+    HMI_STATE_DELETE_SUCCESS,           //删除成功
+    HMI_STATE_DELETE_FAIL_ADMIN,        //删除失败，管理用户不可删除
+    HMI_STATE_DELETE_FAIL_NOT_EXIST,    //删除失败，用户不存在
+    HMI_STATE_DELETE_FAIL_EMPTY,        //删除失败，用户为空
+    HMI_STATE_DELETE_FAIL_TIME_OUT,     //删除失败，操作超时
     HMI_STATE_REPEAT_INPUT_CODE,        //请再输入一次，以#号键结束
     HMI_STATE_MODIFY_ADMIN_USER_SETTINGS,//修改管理员密码请按，修改管理指纹请按
     HMI_STATE_LANGAGESETTING,           //语言设置菜单
