@@ -423,8 +423,8 @@ static void codeHandle(uint8_t handle_code, uint8_t input_cnt)
     uint8_t key_id = 0;
     user_time_t parameter;
 
-    // 本地录入的密钥参数：user_id = 0xff 表示非云端下发
-    parameter.user_id = 0xff;
+    // 本地录入的密钥参数：归属用户 = "添加普通用户"菜单里分配的那个档案ID
+    parameter.user_id = (uint8_t)read_user_id();
     parameter.user_policy = USER_POLICY_PERMANENT;
     parameter.key_urgent = KEY_URGENT_NORMAL;
     parameter.timestamp = hal_get_rtc_time();

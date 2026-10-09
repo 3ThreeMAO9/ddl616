@@ -17,7 +17,7 @@ static user_key_cnt_t user_cnt = {0};
 static user_info_t current_user = {0};
 static uint16_t current_user_sn = 0;
 
-static uint16_t g_pending_user_id = 0;
+static uint16_t g_pending_user_id = 0;  // 即将创建的用户档案ID（1~49；写进新钥匙的 parameter.user_id；管理员固定 0）
 /***************Function Implementation***************/
 // 各类型钥匙区：起始内部 SN（=Flash 起始块号）、容量
 typedef struct
@@ -53,45 +53,57 @@ static const user_area_t* key_area_of(uint8_t type)
     return &key_area[type];
 }
 
-// 密钥归属的用户ID 位图（每个 bit 表示一个 key_user_id 是否已用）
-#define USER_ID_BITMAP_SIZE     ((USER_CNT + 7) / 8)   // 28 字节
+// "用户档案ID"位图：每个 bit 表示该档案ID 是否已被占用（ID 范围 0~PROFILE_COUNT-1，0 是管理员）
+#define PROFILE_ID_BITMAP_SIZE  ((PROFILE_COUNT + 7) / 8)   // 7 字节
 
-static uint16_t get_next_user_id(void)
+// 找最小未用的"用户档案ID"（1~PROFILE_COUNT-1，0 留给管理员）
+// 占用来源：① 档案表里已存在的档案；② 钥匙记录上的 parameter.user_id
+//（本地录入的用户还没建档，先把号占住，免得下一批用户拿到同一个号）
+static uint16_t find_free_profile_id(void)
 {
-    uint8_t used_bitmap[USER_ID_BITMAP_SIZE] = {0};
+    user_profile_t profile;
     user_info_t temp;
+    uint8_t used_bitmap[PROFILE_ID_BITMAP_SIZE] = {0};
     uint8_t i, t;
     uint16_t id;
 
-    // ---- 遍历所有类型，标记已使用的 key_user_id ----
+    // ---- 档案表：已存在的档案ID ----
+    for (i = 0; i < PROFILE_COUNT; i++) {
+        if (read_profile(i, &profile) && (profile.user_id < PROFILE_COUNT)) {
+            used_bitmap[profile.user_id / 8] |= (1 << (profile.user_id % 8));
+        }
+    }
+
+    // ---- 钥匙记录：已归属的用户档案ID ----
     for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++) {
         for (i = 0; i < key_area[t].count; i++) {
-            if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag) {
-                id = temp.key_user_id;
-                if (id > 0 && id <= USER_CNT)
-                    used_bitmap[id / 8] |= (1 << (id % 8));
+            if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag
+                    && (temp.parameter.user_id > 0) && (temp.parameter.user_id < PROFILE_COUNT)) {
+                used_bitmap[temp.parameter.user_id / 8] |= (1 << (temp.parameter.user_id % 8));
             }
         }
     }
 
-    // ---- 找最小未使用的 key_user_id ----
-    for (id = 1; id <= USER_CNT; id++) {
+    // ---- 最小未用（1~49） ----
+    for (id = 1; id < PROFILE_COUNT; id++) {
         if ((used_bitmap[id / 8] & (1 << (id % 8))) == 0) {
             return id;
         }
     }
 
-    return 0;   // 用户表已满
+    return 0;   // 用户档案已满
 }
 
-uint16_t get_user_id(void)
+// 分配"即将创建的普通用户档案ID"（1~49）：本次录入的密码/指纹/卡片都写进 parameter.user_id 归它
+uint16_t alloc_user_id(void)
 {
     OB_LOGI(TAG, "%s", __func__);
-    g_pending_user_id = get_next_user_id();
+    g_pending_user_id = find_free_profile_id();
     OB_LOGI(TAG, "user_id [%u]", g_pending_user_id);
     return g_pending_user_id;
 }
 
+// 只读缓存：不重新分配。HMI 靠它播报"用户编号N"（就是即将创建的那个用户档案ID）
 uint16_t read_user_id(void)
 {
     OB_LOGI(TAG, "user_id [%u]", g_pending_user_id);
@@ -157,26 +169,26 @@ void updateKeyTable(uint16_t index, user_info_t* user_info)
             if (user_info->key_type == USER_TYPE_PERMANENT_CODE)
             {
                 OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] password len[%d]", 
-                        user_info->key_sn, user_info->key_user_id ,user_info->key_type, user_info->key_id, 
+                        user_info->key_sn, user_info->parameter.user_id ,user_info->key_type, user_info->key_id, 
                         user_info->info.password.len);
                 OB_LOGI_DUMP(&user_info->info.password.buffer, user_info->info.password.len);
             }
             else if (user_info->key_type == USER_TYPE_PERMANENT_FINGERPRINTS)
             {
                 OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] finger id %04X", 
-                        user_info->key_sn, user_info->key_user_id, user_info->key_type, user_info->key_id, 
+                        user_info->key_sn, user_info->parameter.user_id, user_info->key_type, user_info->key_id, 
                         user_info->info.finger.id);
             }
             else if (user_info->key_type == USER_TYPE_PERMANENT_CARD)
             {
                 OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] nfc id", 
-                        user_info->key_sn, user_info->key_user_id, user_info->key_type, user_info->key_id);
+                        user_info->key_sn, user_info->parameter.user_id, user_info->key_type, user_info->key_id);
                 OB_LOGI_DUMP(&user_info->info.card.id, 4);
             }
             else if (user_info->key_type == USER_TYPE_PERMANENT_FACE)
             {
                 OB_LOGI(TAG, "key sn[%u], id[%u] type[%u] key id[%u] face id %04X", 
-                        user_info->key_sn, user_info->key_user_id, user_info->key_type, user_info->key_id, 
+                        user_info->key_sn, user_info->parameter.user_id, user_info->key_type, user_info->key_id, 
                         user_info->info.face.id);
             }
         }
@@ -589,7 +601,6 @@ uint8_t addKeyCode(uint8_t *input, uint8_t len, uint8_t userType, user_time_t *p
 
     user_info.flag = true;
     user_info.key_sn = user_sn;
-    user_info.key_user_id = g_pending_user_id;
     user_info.key_type = userType;
     user_info.info.password.len = len;
     user_info.key_id = read_empty_min_key_id(userType);     // 本类型内编号 0~19
@@ -625,12 +636,11 @@ void modifyKeyCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* pa
     
     user_info.flag = true;
     user_info.key_sn = user_sn;
-    user_info.key_user_id = old_user->key_user_id;
     user_info.key_type = USER_TYPE_PERMANENT_CODE;
     user_info.info.password.len = len;
     user_info.key_id = old_user->key_id;
 
-    user_info.parameter.user_id = 0x00;
+    user_info.parameter.user_id = old_user->parameter.user_id;      // 归属用户不变
     user_info.parameter.user_policy = USER_POLICY_PERMANENT;
     user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
     user_info.parameter.timestamp = hal_get_rtc_time();
@@ -698,12 +708,11 @@ static uint8_t add_key_record(uint8_t type, const void* key, uint8_t* key_id)
 
     user_info.flag = true;
     user_info.key_sn = user_sn;
-    user_info.key_user_id = g_pending_user_id;
     user_info.key_type = type;
     user_info.key_id = read_empty_min_key_id(type);     // 本类型内编号：指纹 0~49 / 卡片 0~99
     if (key_id) *key_id = user_info.key_id;
 
-    user_info.parameter.user_id = 0x00;
+    user_info.parameter.user_id = (uint8_t)g_pending_user_id;   // 归属用户：菜单里分配的档案ID
     user_info.parameter.user_policy = USER_POLICY_PERMANENT;
     user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
     user_info.parameter.timestamp = hal_get_rtc_time();
@@ -737,7 +746,6 @@ void modifyMasterKeyCode(uint8_t* input, uint8_t len)
     
     user_info.flag = true;
     user_info.key_sn = 1;
-    user_info.key_user_id = 0;
     user_info.key_type = USER_TYPE_PERMANENT_CODE;
     user_info.info.password.len = len;
     user_info.key_id = 0;

@@ -220,11 +220,13 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_ADD_NORMAL_USER:
         {
+            // 即将创建的这个普通用户的"用户档案ID"（1~49；进入本菜单时由 alloc_user_id() 分配，
+            // 本次录入的密码/指纹/卡片都归它）
             uint16_t user_id = read_user_id();
-            PLAYER_LIST_CLEAR_ADD(VOICE_User_number);
-            PLAYER_LIST_ADD(VOICE_Zero + user_id / 100);
-            PLAYER_LIST_ADD(VOICE_Zero + (user_id / 10) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + user_id % 10);
+            PLAYER_LIST_CLEAR_ADD(VOICE_User_number);          // "用户编号"
+            PLAYER_LIST_ADD(VOICE_Zero + user_id / 100);       // 百位
+            PLAYER_LIST_ADD(VOICE_Zero + (user_id / 10) % 10); // 十位
+            PLAYER_LIST_ADD(VOICE_Zero + user_id % 10);        // 个位
             PLAYER_LIST_ADD(VOICE_One, VOICE_Two, VOICE_Three);
             break;
         }

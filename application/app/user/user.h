@@ -77,7 +77,7 @@ typedef struct{
 }user_face_t;
 
 typedef struct{
-    uint8_t user_id;     // 用户ID
+    uint8_t user_id;     // 归属用户档案ID（1~49；0=管理员；0xFF=未设置）：这把钥匙属于哪个用户
     uint8_t user_policy; // 用户策略 0=永久 1=自定义
     uint8_t key_urgent;  // 数字钥匙 胁迫标记（紧急标记）
     uint32_t timestamp;  // 数字钥匙添加时间
@@ -91,7 +91,6 @@ typedef struct{
     uint8_t flag;
     uint8_t key_type;
     uint16_t key_sn;
-    uint16_t key_user_id;   // 归属用户ID（钥匙->用户的绑定；连续累计，与档案ID 无关）
     union{
         user_code_t password;
         user_fingers_t finger;
@@ -218,10 +217,10 @@ uint8_t getKeyPasswordCode(uint16_t user_sn, uint8_t* pData);
 uint8_t getKeyFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id);
 uint8_t getKeyFingerID(uint16_t *user_sn, uint16_t id);
 
-// ========== 密钥归属的用户ID 分配（key_user_id） ==========
-uint16_t get_user_id(void);
-uint16_t read_user_id(void);
-void     clean_user_id(void);
+// ========== 即将创建的用户档案ID 分配（HMI 播报"用户编号N"） ==========
+uint16_t alloc_user_id(void);       // 分配"即将创建的普通用户档案ID"（1~49；0=管理员），新钥匙的 parameter.user_id 写它
+uint16_t read_user_id(void);        // 读缓存值：HMI 播报"用户编号N"用它（档案ID，不是 key_id）
+void     clean_user_id(void);       // 清空缓存（当前工程内无调用）
 
 // ========== 用户档案（真正的"用户"，0~49）==========
 uint8_t  user_profile_add(uint16_t user_id, const char* name);

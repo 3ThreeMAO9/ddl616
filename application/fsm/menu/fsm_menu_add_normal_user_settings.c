@@ -57,7 +57,7 @@ QState lock_fsm_menu_add_normal_user_settings(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            get_user_id();
+            alloc_user_id();        // 分配即将创建的用户档案ID（1~49）：HMI 播报"用户编号N" + 本次录入的钥匙都归它
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);

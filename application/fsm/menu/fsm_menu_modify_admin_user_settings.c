@@ -53,7 +53,7 @@ QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
-            get_user_id();
+            alloc_user_id();        // 管理员档案固定 0（见 modifyMasterKeyCode），这里分配的值实际未被使用
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
