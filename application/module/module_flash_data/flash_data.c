@@ -189,153 +189,112 @@ static void flash_data_block_modify_multi(uint32_t pageAddr, uint32_t backupAddr
     flash_data_block_renew(pageAddr, backupAddr, pageCnt, startIdx, blockNum, pData, blockSize);
 }
 
-// -------- 密码用户 (块1~20) --------
-uint8_t read_code_user(uint8_t index, user_info_t* pData)
+// 各类型钥匙区：第0块地址/备份区第0块地址/容量（表驱动，替代 4 套重复读写实现）
+typedef struct
 {
-    if (index >= PERMANENT_USER_CODE_CNT || pData == NULL) {
+    uint32_t addr;
+    uint32_t backup;
+    uint8_t  count;
+} key_flash_area_t;
+
+static const key_flash_area_t key_flash_area[4] =
+{
+    { USER_PAGE_START_ADDR + BLOCK_INDEX_CODE_START   * USER_BLOCK_SIZE,
+      USER_PAGE_BACKUP_ADDR + BLOCK_INDEX_CODE_START   * USER_BLOCK_SIZE, PERMANENT_USER_CODE_CNT },
+    { USER_PAGE_START_ADDR + BLOCK_INDEX_FINGER_START * USER_BLOCK_SIZE,
+      USER_PAGE_BACKUP_ADDR + BLOCK_INDEX_FINGER_START * USER_BLOCK_SIZE, USER_FINGERPRINTS_CNT },
+    { USER_PAGE_START_ADDR + BLOCK_INDEX_CARD_START   * USER_BLOCK_SIZE,
+      USER_PAGE_BACKUP_ADDR + BLOCK_INDEX_CARD_START   * USER_BLOCK_SIZE, USER_CARD_CNT },
+    { USER_PAGE_START_ADDR + BLOCK_INDEX_FACE_START   * USER_BLOCK_SIZE,
+      USER_PAGE_BACKUP_ADDR + BLOCK_INDEX_FACE_START   * USER_BLOCK_SIZE, USER_FACE_CNT },
+};
+
+static uint8_t read_user_key(uint8_t type, uint8_t index, user_info_t* pData)
+{
+    const key_flash_area_t* area = &key_flash_area[type];
+    uint16_t sum;
+
+    if (index >= area->count || pData == NULL) {
         return 0;
     }
-    uint32_t addr = USER_ADDR_CODE(index);
-    user_flash_read(addr, (uint8_t*)pData, sizeof(user_info_t));
 
-    uint16_t sum = check_sum((uint8_t*)(&pData->flag), sizeof(user_info_t) - sizeof(pData->sum));
+    user_flash_read(area->addr + (uint32_t)index * USER_BLOCK_SIZE, (uint8_t*)pData, sizeof(user_info_t));
+
+    sum = check_sum((uint8_t*)(&pData->flag), sizeof(user_info_t) - sizeof(pData->sum));
     if (sum != pData->sum && pData->flag) {
-        // OB_LOGE(TAG, "Code user[%d] checksum error", index);
         pData->flag = 0;
         return 0;
     }
     return pData->flag;
 }
 
-void save_code_user(uint8_t index, user_info_t* pData)
+static void save_user_key_flash(uint8_t type, uint8_t index, user_info_t* pData)
 {
-    if (index >= PERMANENT_USER_CODE_CNT || pData == NULL) {
+    const key_flash_area_t* area = &key_flash_area[type];
+    uint8_t temp[USER_BLOCK_SIZE];
+    uint32_t addr;
+    uint32_t backupAddr;
+    uint32_t pageStartAddr;
+    uint32_t backupPageStartAddr;
+    uint32_t blockInPage;
+
+    if (index >= area->count || pData == NULL) {
         return;
     }
-    uint8_t temp[USER_BLOCK_SIZE];
+
     memset(temp, 0xFF, USER_BLOCK_SIZE);
     memcpy(temp, pData, sizeof(user_info_t));
-    
-    uint32_t addr = USER_ADDR_CODE(index);
-    uint32_t backupAddr = USER_ADDR_CODE_BACKUP(index);
 
-    uint32_t pageStartAddr = (addr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t backupPageStartAddr = (backupAddr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t blockInPage = (addr - pageStartAddr) / USER_BLOCK_SIZE;
-    
+    addr = area->addr + (uint32_t)index * USER_BLOCK_SIZE;
+    backupAddr = area->backup + (uint32_t)index * USER_BLOCK_SIZE;
+
+    pageStartAddr = (addr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
+    backupPageStartAddr = (backupAddr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
+    blockInPage = (addr - pageStartAddr) / USER_BLOCK_SIZE;
+
     flash_data_block_modify(pageStartAddr, backupPageStartAddr, 1, blockInPage, temp, USER_BLOCK_SIZE);
+}
+
+// -------- 密码用户 (块1~20) --------
+uint8_t read_code_user(uint8_t index, user_info_t* pData)
+{
+    return read_user_key(USER_TYPE_PERMANENT_CODE, index, pData);
+}
+
+void save_code_user(uint8_t index, user_info_t* pData)
+{
+    save_user_key_flash(USER_TYPE_PERMANENT_CODE, index, pData);
 }
 
 // -------- 指纹用户 (块21~70) --------
 uint8_t read_finger_user(uint8_t index, user_info_t* pData)
 {
-    if (index >= USER_FINGERPRINTS_CNT || pData == NULL) {
-        return 0;
-    }
-    uint32_t addr = USER_ADDR_FINGER(index);
-    user_flash_read(addr, (uint8_t*)pData, sizeof(user_info_t));
-    
-    uint16_t sum = check_sum((uint8_t*)(&pData->flag), sizeof(user_info_t) - sizeof(pData->sum));
-    if (sum != pData->sum && pData->flag) {
-        // OB_LOGE(TAG, "Finger user[%d] checksum error", index);
-        pData->flag = 0;
-        return 0;
-    }
-    return pData->flag;
+    return read_user_key(USER_TYPE_PERMANENT_FINGERPRINTS, index, pData);
 }
 
 void save_finger_user(uint8_t index, user_info_t* pData)
 {
-    if (index >= USER_FINGERPRINTS_CNT || pData == NULL) {
-        return;
-    }
-    uint8_t temp[USER_BLOCK_SIZE];
-    memset(temp, 0xFF, USER_BLOCK_SIZE);
-    memcpy(temp, pData, sizeof(user_info_t));
-    
-    uint32_t addr = USER_ADDR_FINGER(index);
-    uint32_t backupAddr = USER_ADDR_FINGER_BACKUP(index);
-    
-    uint32_t pageStartAddr = (addr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t backupPageStartAddr = (backupAddr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t blockInPage = (addr - pageStartAddr) / USER_BLOCK_SIZE;
-    
-    flash_data_block_modify(pageStartAddr, backupPageStartAddr, 1, 
-                            blockInPage, temp, USER_BLOCK_SIZE);
+    save_user_key_flash(USER_TYPE_PERMANENT_FINGERPRINTS, index, pData);
 }
 // -------- 卡片用户 (块71~170) --------
 uint8_t read_card_user(uint8_t index, user_info_t* pData)
 {
-    if (index >= USER_CARD_CNT || pData == NULL) {
-        return 0;
-    }
-    uint32_t addr = USER_ADDR_CARD(index);
-    user_flash_read(addr, (uint8_t*)pData, sizeof(user_info_t));
-    
-    uint16_t sum = check_sum((uint8_t*)(&pData->flag), sizeof(user_info_t) - sizeof(pData->sum));
-    if (sum != pData->sum && pData->flag) {
-        // OB_LOGE(TAG, "Card user[%d] checksum error", index);
-        pData->flag = 0;
-        return 0;
-    }
-    return pData->flag;
+    return read_user_key(USER_TYPE_PERMANENT_CARD, index, pData);
 }
 
 void save_card_user(uint8_t index, user_info_t* pData)
 {
-    if (index >= USER_CARD_CNT || pData == NULL) {
-        return;
-    }
-    uint8_t temp[USER_BLOCK_SIZE];
-    memset(temp, 0xFF, USER_BLOCK_SIZE);
-    memcpy(temp, pData, sizeof(user_info_t));
-    
-    uint32_t addr = USER_ADDR_CARD(index);
-    uint32_t backupAddr = USER_ADDR_CARD_BACKUP(index);
-    
-    uint32_t pageStartAddr = (addr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t backupPageStartAddr = (backupAddr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t blockInPage = (addr - pageStartAddr) / USER_BLOCK_SIZE;
-    
-    flash_data_block_modify(pageStartAddr, backupPageStartAddr, 1, 
-                            blockInPage, temp, USER_BLOCK_SIZE);
+    save_user_key_flash(USER_TYPE_PERMANENT_CARD, index, pData);
 }
 // -------- 人脸用户 (块171~220) --------
 uint8_t read_face_user(uint8_t index, user_info_t* pData)
 {
-    if (index >= USER_FACE_CNT || pData == NULL) {
-        return 0;
-    }
-    uint32_t addr = USER_ADDR_FACE(index);
-    user_flash_read(addr, (uint8_t*)pData, sizeof(user_info_t));
-    
-    uint16_t sum = check_sum((uint8_t*)(&pData->flag), sizeof(user_info_t) - sizeof(pData->sum));
-    if (sum != pData->sum && pData->flag) {
-        // OB_LOGE(TAG, "Face user[%d] checksum error", index);
-        pData->flag = 0;
-        return 0;
-    }
-    return pData->flag;
+    return read_user_key(USER_TYPE_PERMANENT_FACE, index, pData);
 }
 
 void save_face_user(uint8_t index, user_info_t* pData)
 {
-    if (index >= USER_FACE_CNT || pData == NULL) {
-        return;
-    }
-    uint8_t temp[USER_BLOCK_SIZE];
-    memset(temp, 0xFF, USER_BLOCK_SIZE);
-    memcpy(temp, pData, sizeof(user_info_t));
-    
-    uint32_t addr = USER_ADDR_FACE(index);
-    uint32_t backupAddr = USER_ADDR_FACE_BACKUP(index);
-    
-    uint32_t pageStartAddr = (addr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t backupPageStartAddr = (backupAddr / FLASH_ERASE_SIZE) * FLASH_ERASE_SIZE;
-    uint32_t blockInPage = (addr - pageStartAddr) / USER_BLOCK_SIZE;
-    
-    flash_data_block_modify(pageStartAddr, backupPageStartAddr, 1, 
-                            blockInPage, temp, USER_BLOCK_SIZE);
+    save_user_key_flash(USER_TYPE_PERMANENT_FACE, index, pData);
 }
 
 uint8_t read_user_data_with_check(uint16_t user_sn, user_info_t* pData)
@@ -363,6 +322,7 @@ uint8_t read_user_data_with_check(uint16_t user_sn, user_info_t* pData)
 void flash_update_user_cnt(user_key_cnt_t* cnt)
 {
     uint16_t i;
+    uint8_t t;
     user_info_t temp_user;
     
     if (cnt == NULL) {
@@ -371,27 +331,20 @@ void flash_update_user_cnt(user_key_cnt_t* cnt)
     
     memset(cnt, 0, sizeof(user_key_cnt_t));
 
-    for (i = 0; i < PERMANENT_USER_CODE_CNT; i++) {
-        if (read_code_user(i, &temp_user) && temp_user.flag) {
-            cnt->permanentCode++;
-        }
-    }
-    
-    for (i = 0; i < USER_FINGERPRINTS_CNT; i++) {
-        if (read_finger_user(i, &temp_user) && temp_user.flag) {
-            cnt->permanentFingers++;
-        }
-    }
-    
-    for (i = 0; i < USER_CARD_CNT; i++) {
-        if (read_card_user(i, &temp_user) && temp_user.flag) {
-            cnt->permanentCard++;
-        }
-    }
-    
-    for (i = 0; i < USER_FACE_CNT; i++) {
-        if (read_face_user(i, &temp_user) && temp_user.flag) {
-            cnt->permanentFace++;
+    for (t = 0; t < 4; t++) {
+        for (i = 0; i < key_flash_area[t].count; i++) {
+            if (read_user_key(t, i, &temp_user) && temp_user.flag) {
+                switch (t) {
+                    case USER_TYPE_PERMANENT_CODE:          cnt->permanentCode++;
+                        break;
+                    case USER_TYPE_PERMANENT_FINGERPRINTS:  cnt->permanentFingers++;
+                        break;
+                    case USER_TYPE_PERMANENT_CARD:          cnt->permanentCard++;
+                        break;
+                    default:                                cnt->permanentFace++;
+                        break;
+                }
+            }
         }
     }
     

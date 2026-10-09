@@ -19,6 +19,40 @@ static uint16_t current_user_sn = 0;
 
 static uint16_t g_pending_user_id = 0;
 /***************Function Implementation***************/
+// 各类型钥匙区：起始内部 SN（=Flash 起始块号）、容量
+typedef struct
+{
+    uint16_t base;
+    uint8_t  count;
+} user_area_t;
+
+static const user_area_t key_area[4] =
+{
+    { BLOCK_INDEX_CODE_START,   PERMANENT_USER_CODE_CNT },
+    { BLOCK_INDEX_FINGER_START, USER_FINGERPRINTS_CNT  },
+    { BLOCK_INDEX_CARD_START,   USER_CARD_CNT          },
+    { BLOCK_INDEX_FACE_START,   USER_FACE_CNT          },
+};
+
+// 该类型钥匙区计数（对应 user_cnt 各字段），供 readUserKeyCnt / isFullUser 查表
+static const uint8_t *const key_cnt_tbl[4] =
+{
+    &user_cnt.permanentCode,
+    &user_cnt.permanentFingers,
+    &user_cnt.permanentCard,
+    &user_cnt.permanentFace,
+};
+
+static const user_area_t* key_area_of(uint8_t type)
+{
+    if (type > USER_TYPE_PERMANENT_FACE)
+    {
+        return NULL;
+    }
+
+    return &key_area[type];
+}
+
 // 用户 ID 位图（每个 bit 表示一个 user_key_id 是否已用）
 #define USER_ID_BITMAP_SIZE     ((USER_CNT + 7) / 8)   // 28 字节
 
@@ -26,36 +60,17 @@ static uint16_t get_next_user_id(void)
 {
     uint8_t used_bitmap[USER_ID_BITMAP_SIZE] = {0};
     user_info_t temp;
-    uint8_t i;
+    uint8_t i, t;
     uint16_t id;
 
     // ---- 遍历所有类型，标记已使用的 user_key_id ----
-    for (i = 0; i < PERMANENT_USER_CODE_CNT; i++) {
-        if (read_code_user(i, &temp) && temp.flag) {
-            id = temp.key_user_id;
-            if (id > 0 && id <= USER_CNT)
-                used_bitmap[id / 8] |= (1 << (id % 8));
-        }
-    }
-    for (i = 0; i < USER_FINGERPRINTS_CNT; i++) {
-        if (read_finger_user(i, &temp) && temp.flag) {
-            id = temp.key_user_id;
-            if (id > 0 && id <= USER_CNT)
-                used_bitmap[id / 8] |= (1 << (id % 8));
-        }
-    }
-    for (i = 0; i < USER_CARD_CNT; i++) {
-        if (read_card_user(i, &temp) && temp.flag) {
-            id = temp.key_user_id;
-            if (id > 0 && id <= USER_CNT)
-                used_bitmap[id / 8] |= (1 << (id % 8));
-        }
-    }
-    for (i = 0; i < USER_FACE_CNT; i++) {
-        if (read_face_user(i, &temp) && temp.flag) {
-            id = temp.key_user_id;
-            if (id > 0 && id <= USER_CNT)
-                used_bitmap[id / 8] |= (1 << (id % 8));
+    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++) {
+        for (i = 0; i < key_area[t].count; i++) {
+            if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag) {
+                id = temp.key_user_id;
+                if (id > 0 && id <= USER_CNT)
+                    used_bitmap[id / 8] |= (1 << (id % 8));
+            }
         }
     }
 
@@ -242,64 +257,22 @@ uint8_t isEmptyUser(uint8_t commonUserFlag)
 
 uint16_t readUserKeyCnt(uint8_t type)
 {
-    switch (type)
+    if (NULL == key_area_of(type))
     {
-        case USER_TYPE_PERMANENT_CODE:
-            return user_cnt.permanentCode;
-
-        case USER_TYPE_PERMANENT_FINGERPRINTS:
-            return user_cnt.permanentFingers;
-
-        case USER_TYPE_PERMANENT_CARD:
-            return user_cnt.permanentCard;
-
-        case USER_TYPE_PERMANENT_FACE:
-            return user_cnt.permanentFace;
-        default:
-            break;
+#if (Enabled == PRINTF_ERR)
+        OB_LOGD(TAG,"Err: key type[%u] is out", type);
+#endif
+        return 0x00;
     }
 
-#if (Enabled == PRINTF_ERR)
-    OB_LOGD(TAG,"Err: key type[%u] is out", type);
-#endif
-    return 0x00;
+    return *(key_cnt_tbl[type]);
 }
 
 uint8_t isFullUser(uint8_t type)
 {
-    uint8_t result = false;
+    const user_area_t* area = key_area_of(type);
 
-    switch (type)
-    {
-        case USER_TYPE_PERMANENT_CODE:
-            if(user_cnt.permanentCode >= PERMANENT_USER_CODE_CNT)
-            {
-                result = true;
-            }
-            break;
-        case USER_TYPE_PERMANENT_FINGERPRINTS:
-            if(user_cnt.permanentFingers >= USER_FINGERPRINTS_CNT)
-            {
-                result = true;
-            }
-            break;
-        case USER_TYPE_PERMANENT_CARD:
-            if(user_cnt.permanentCard >= USER_CARD_CNT)
-            {
-                result = true;
-            }
-            break;
-        case USER_TYPE_PERMANENT_FACE:
-            if(user_cnt.permanentFace >= USER_FACE_CNT)
-            {
-                result = true;
-            }
-            break;
-        default:
-            break;
-    }
-
-    return result;
+    return ((NULL != area) && (readUserKeyCnt(type) >= area->count));
 }
 
 uint8_t isTooSimpleCode(uint8_t* input, uint8_t len)
@@ -455,16 +428,8 @@ uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, ui
            uint16_t matched_id = 0;
             if (compareUserCode(input, input_len, i, dummy_flag, &matched_id))
             {
-                if(time_flag == true)
-                {
-                    *user_id = matched_id;
-                    return true;
-                }
-                else
-                {
-                    *user_id = matched_id; 
-                    return true;
-                }
+                *user_id = matched_id;
+                return true;
             }
         }
     }
@@ -475,9 +440,45 @@ uint8_t isValidUserCode(uint8_t* input, uint8_t input_len, uint16_t* user_id, ui
     return false;
 }
 
+// 指纹/卡片校验：按类型遍历该钥匙区，key 为指纹模板ID 或 卡片UID
+static uint8_t isValidUserKey(uint8_t type, const uint8_t* key, uint16_t* user_id, uint8_t* key_id)
+{
+    const user_area_t* area = key_area_of(type);
+    uint16_t i;
+
+    if (NULL == area)
+    {
+        return false;
+    }
+
+    for (i = 0; i < area->count; i++)
+    {
+        user_info_t* user = get_user_data(area->base + i);
+        uint8_t matched;
+
+        if (!user || !user->flag || user->key_type != type) {
+            continue;
+        }
+
+        if (USER_TYPE_PERMANENT_FINGERPRINTS == type) {
+            matched = (user->info.finger.id == *(const uint16_t*)key);
+        } else {
+            matched = (0 == memcmp(key, user->info.card.id, 4));
+        }
+
+        if (matched)
+        {
+            *user_id = user->key_user_id;
+            if (key_id) *key_id = user->key_id;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 uint8_t isValidUserFingerprint(uint16_t* user_id, uint8_t* key_id)
 {
-    uint16_t i;
     uint16_t finger_id = *user_id;
 
     if(isEmptyUser(false))
@@ -489,125 +490,38 @@ uint8_t isValidUserFingerprint(uint16_t* user_id, uint8_t* key_id)
         if (key_id) *key_id = 0;
         return true;
     }
-    else
-    {
-        for (i = 0; i < USER_FINGERPRINTS_CNT; i++)
-        {
-            user_info_t* user = get_user_data(PERMANENT_USER_CODE_CNT + i + 1);
-            if (!user || !user->flag || user->key_type != USER_TYPE_PERMANENT_FINGERPRINTS) {
-                continue;
-            }
-            
-            if(user->info.finger.id == finger_id)
-            {
-                *user_id = user->key_user_id;
-                if (key_id) *key_id = user->key_id;
-#if (Enabled == PRINTF_USER)
-                OB_LOGD(TAG,"isValidUserFingerprint[%u]", *user_id);
-#endif
-                return true;
-            }
-        }
-    }
 
-#if (Enabled == PRINTF_USER)
-    OB_LOGD(TAG,"fingerprint is invalid");
-#endif
-    return false;
+    return isValidUserKey(USER_TYPE_PERMANENT_FINGERPRINTS, (const uint8_t*)&finger_id, user_id, key_id);
 }
 
 uint8_t isValidUserCard(uint16_t* user_id, uint8_t* card_id, uint8_t* key_id)
 {
-    uint16_t i;
-
     if(isEmptyUser(false))
     {
         *user_id = 0;
         if (key_id) *key_id = 0;
         return true;
     }
-    else
-    {
-        for (i = 0; i < USER_CARD_CNT; i++)
-        {
-            user_info_t* user = get_user_data(PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + i + 1);
-            if (!user || !user->flag || user->key_type != USER_TYPE_PERMANENT_CARD) {
-                continue;
-            }
-            
-            if (0 == memcmp(card_id, user->info.card.id, 4))
-            {
-                *user_id = user->key_user_id;
-                if (key_id) *key_id = user->key_id;
-#if (Enabled == PRINTF_USER)
-                OB_LOGD(TAG,"isValidUserCard[%u]", *user_id);
-#endif
-                return true;
-            }
-        }
-    }
 
-#if (Enabled == PRINTF_USER)
-    OB_LOGD(TAG,"card is invalid");
-#endif
-    return false;
+    return isValidUserKey(USER_TYPE_PERMANENT_CARD, card_id, user_id, key_id);
 }
 
 static uint8_t readEmptyUserId(uint16_t* user_sn, uint8_t userType)
 {
+    const user_area_t* area = key_area_of(userType);
     user_info_t temp_user;
     uint8_t i;
-    uint16_t base_sn = 0;
-    uint8_t count = 0;
 
-    switch (userType)
+    if (NULL == area)
     {
-        case USER_TYPE_PERMANENT_CODE:
-            base_sn = 1;
-            count = PERMANENT_USER_CODE_CNT;
-            for (i = 0; i < count; i++) {
-                if (!read_code_user(i, &temp_user) || !temp_user.flag) {
-                    *user_sn = base_sn + i;
-                    return true;
-                }
-            }
-            break;
-            
-        case USER_TYPE_PERMANENT_FINGERPRINTS:
-            base_sn = PERMANENT_USER_CODE_CNT + 1;
-            count = USER_FINGERPRINTS_CNT;
-            for (i = 0; i < count; i++) {
-                if (!read_finger_user(i, &temp_user) || !temp_user.flag) {
-                    *user_sn = base_sn + i;
-                    return true;
-                }
-            }
-            break;
-            
-        case USER_TYPE_PERMANENT_CARD:
-            base_sn = PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + 1;
-            count = USER_CARD_CNT;
-            for (i = 0; i < count; i++) {
-                if (!read_card_user(i, &temp_user) || !temp_user.flag) {
-                    *user_sn = base_sn + i;
-                    return true;
-                }
-            }
-            break;
-            
-        case USER_TYPE_PERMANENT_FACE:
-            base_sn = PERMANENT_USER_CODE_CNT + USER_FINGERPRINTS_CNT + USER_CARD_CNT + 1;
-            count = USER_FACE_CNT;
-            for (i = 0; i < count; i++) {
-                if (!read_face_user(i, &temp_user) || !temp_user.flag) {
-                    *user_sn = base_sn + i;
-                    return true;
-                }
-            }
-            break;
-            
-        default:
-            break;
+        return false;
+    }
+
+    for (i = 0; i < area->count; i++) {
+        if (!read_user_data_with_check(area->base + i, &temp_user) || !temp_user.flag) {
+            *user_sn = area->base + i;
+            return true;
+        }
     }
 
     return false;
@@ -615,54 +529,23 @@ static uint8_t readEmptyUserId(uint16_t* user_sn, uint8_t userType)
 
 static uint8_t read_empty_min_key_id(uint8_t userType)
 {
+    const user_area_t* area = key_area_of(userType);
     uint8_t i;
     uint8_t key_flag[256] = {0};
     user_info_t temp_user;
-    uint8_t count = 0;
 
-    switch (userType)
+    if (NULL == area)
     {
-        case USER_TYPE_PERMANENT_CODE:
-            count = PERMANENT_USER_CODE_CNT;
-            for (i = 0; i < count; i++) {
-                if (read_code_user(i, &temp_user) && temp_user.flag) {
-                    key_flag[temp_user.key_id] = true;
-                }
-            }
-            break;
-            
-        case USER_TYPE_PERMANENT_FINGERPRINTS:
-            count = USER_FINGERPRINTS_CNT;
-            for (i = 0; i < count; i++) {
-                if (read_finger_user(i, &temp_user) && temp_user.flag) {
-                    key_flag[temp_user.key_id] = true;
-                }
-            }
-            break;
-            
-        case USER_TYPE_PERMANENT_CARD:
-            count = USER_CARD_CNT;
-            for (i = 0; i < count; i++) {
-                if (read_card_user(i, &temp_user) && temp_user.flag) {
-                    key_flag[temp_user.key_id] = true;
-                }
-            }
-            break;
-            
-        case USER_TYPE_PERMANENT_FACE:
-            count = USER_FACE_CNT;
-            for (i = 0; i < count; i++) {
-                if (read_face_user(i, &temp_user) && temp_user.flag) {
-                    key_flag[temp_user.key_id] = true;
-                }
-            }
-            break;
-            
-        default:
-            break;
+        return 0xFF;
     }
 
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < area->count; i++) {
+        if (read_user_data_with_check(area->base + i, &temp_user) && temp_user.flag) {
+            key_flag[temp_user.key_id] = true;
+        }
+    }
+
+    for (i = 0; i < area->count; i++) {
         if (!key_flag[i]) {
             return i;
         }
@@ -671,73 +554,72 @@ static uint8_t read_empty_min_key_id(uint8_t userType)
     return 0xFF;
 }
 
+// 按类型保存钥匙数据（slot 为该区内的索引）
+static void save_user_key(uint8_t type, uint8_t slot, user_info_t* info)
+{
+    switch (type)
+    {
+        case USER_TYPE_PERMANENT_CODE:
+            save_code_user(slot, info);
+            break;
+        case USER_TYPE_PERMANENT_FINGERPRINTS:
+            save_finger_user(slot, info);
+            break;
+        case USER_TYPE_PERMANENT_CARD:
+            save_card_user(slot, info);
+            break;
+        default:
+            save_face_user(slot, info);
+            break;
+    }
+}
+
+// 保存后同步单用户缓存与钥匙计数
+static void cache_and_update(uint16_t user_sn, user_info_t* info)
+{
+    if (current_user_sn == user_sn) {
+        memcpy(&current_user, info, sizeof(user_info_t));
+    }
+    updateUserCnt();
+}
+
 uint8_t addUserCode(uint8_t *input, uint8_t len, uint8_t userType, uint16_t *user_id, user_time_t *para)
 {
     uint16_t user_sn;
     user_info_t user_info;
+    const user_area_t* area = key_area_of(userType);
 
-    if(readEmptyUserId(&user_sn, userType))
+    if ((NULL == area) || !readEmptyUserId(&user_sn, userType))
     {
-        uint8_t slot = user_sn - 1;  // 密码从块1开始
-        if (userType == USER_TYPE_PERMANENT_CODE) {
-            slot = user_sn - 1;
-        } else if (userType == USER_TYPE_PERMANENT_FINGERPRINTS) {
-            slot = user_sn - PERMANENT_USER_CODE_CNT - 1;
-        } else if (userType == USER_TYPE_PERMANENT_CARD) {
-            slot = user_sn - PERMANENT_USER_CODE_CNT - USER_FINGERPRINTS_CNT - 1;
-        } else {
-            slot = user_sn - PERMANENT_USER_CODE_CNT - USER_FINGERPRINTS_CNT - USER_CARD_CNT - 1;
-        }
-        
-        user_info.flag = true;
-        user_info.key_sn = user_sn;
-        user_info.key_user_id = g_pending_user_id;
-        user_info.key_type = userType;
-        user_info.info.password.len = len;
-        user_info.key_id = read_empty_min_key_id(userType);
+        return false;
+    }
 
-        user_info.parameter.user_id = para->user_id;
-        user_info.parameter.user_policy = para->user_policy;
-        user_info.parameter.key_urgent = para->key_urgent;
-        user_info.parameter.timestamp = para->timestamp;
+    user_info.flag = true;
+    user_info.key_sn = user_sn;
+    user_info.key_user_id = g_pending_user_id;
+    user_info.key_type = userType;
+    user_info.info.password.len = len;
+    user_info.key_id = read_empty_min_key_id(userType);
 
-        *user_id = user_info.key_user_id;
-        
-        memcpy(user_info.info.password.buffer, input, len);
-        
-        user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
-        
-        // 根据类型调用对应的保存函数
-        switch (userType)
-        {
-            case USER_TYPE_PERMANENT_CODE:
-                save_code_user(slot, &user_info);
-                break;
-            case USER_TYPE_PERMANENT_FINGERPRINTS:
-                save_finger_user(slot, &user_info);
-                break;
-            case USER_TYPE_PERMANENT_CARD:
-                save_card_user(slot, &user_info);
-                break;
-            case USER_TYPE_PERMANENT_FACE:
-                save_face_user(slot, &user_info);
-                break;
-            default:
-                return false;
-        }
+    user_info.parameter.user_id = para->user_id;
+    user_info.parameter.user_policy = para->user_policy;
+    user_info.parameter.key_urgent = para->key_urgent;
+    user_info.parameter.timestamp = para->timestamp;
 
-        if (current_user_sn == user_sn) {
-            memcpy(&current_user, &user_info, sizeof(user_info_t));
-        }
-        updateUserCnt();
+    *user_id = user_info.key_user_id;
+
+    memcpy(user_info.info.password.buffer, input, len);
+
+    user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
+
+    save_user_key(userType, user_sn - area->base, &user_info);
+    cache_and_update(user_sn, &user_info);
 
 #if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG,"add user code: len[%u], user_sn[%u], key_id[%u]", len, user_sn, user_info.key_id);
-        OB_LOGD_DUMP(user_info.info.password.buffer, len);
+    OB_LOGD(TAG,"add user code: len[%u], user_sn[%u], key_id[%u]", len, user_sn, user_info.key_id);
+    OB_LOGD_DUMP(user_info.info.password.buffer, len);
 #endif
-        return true;
-    }
-    return false;
+    return true;
 }
 
 void modifyUserCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* para)
@@ -765,11 +647,7 @@ void modifyUserCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* p
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
     
     save_code_user(slot, &user_info);
-
-    if (current_user_sn == user_sn) {
-        memcpy(&current_user, &user_info, sizeof(user_info_t));
-    }
-    updateUserCnt();
+    cache_and_update(user_sn, &user_info);
 
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG,"modify user code: len[%u], user_sn[%u]", len, user_sn);
@@ -790,11 +668,7 @@ void moidfyUserParameter(uint8_t user_sn, user_time_t* para)
 
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
     save_user_data(user_sn, (uint8_t*)(&user_info));
-
-    if (current_user_sn == user_sn) {
-        memcpy(&current_user, &user_info, sizeof(user_info_t));
-    }
-    updateUserCnt();
+    cache_and_update(user_sn, &user_info);
 
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG, "moidfyUserParameter: user_sn[%u]", user_sn);
@@ -811,97 +685,59 @@ void modifyUserAttribute(uint8_t user_sn, uint8_t attribute)
 
     user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
     save_user_data(user_sn, (uint8_t*)(&user_info));
-
-    if (current_user_sn == user_sn) {
-        memcpy(&current_user, &user_info, sizeof(user_info_t));
-    }
-    updateUserCnt();
+    cache_and_update(user_sn, &user_info);
 
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG, "modifyUserAttribute: user_sn[%u], attribute[%02X]", user_sn, attribute);
 #endif
 }
 
-uint8_t addUserFinger(uint16_t id, uint16_t* userSn)
+// 指纹/卡片新增的公共实现（key 为指纹模板ID 或 卡片UID）
+static uint8_t add_user_key(uint8_t type, const void* key, uint16_t* userSn)
 {
     user_info_t user_info;
+    uint16_t user_sn;
+    const user_area_t* area = key_area_of(type);
 
-    if(readEmptyUserId(userSn, USER_TYPE_PERMANENT_FINGERPRINTS))
+    if ((NULL == area) || !readEmptyUserId(&user_sn, type))
     {
-        uint8_t slot = *userSn - PERMANENT_USER_CODE_CNT - 1;
-        
-        user_info.flag = true;
-        user_info.key_sn = (*userSn);
-        user_info.key_user_id = g_pending_user_id;
-        user_info.key_type = USER_TYPE_PERMANENT_FINGERPRINTS;
-        user_info.info.finger.id = id;
-        user_info.key_id = read_empty_min_key_id(USER_TYPE_PERMANENT_FINGERPRINTS);
-
-        user_info.parameter.user_id = 0x00;
-        user_info.parameter.user_policy = USER_POLICY_PERMANENT;
-        user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
-        user_info.parameter.timestamp = hal_get_rtc_time();
-
-        user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
-        save_finger_user(slot, &user_info);
-
-        if (current_user_sn == user_info.key_sn) {
-            memcpy(&current_user, &user_info, sizeof(user_info_t));
-        }
-        updateUserCnt();
-
-        *userSn = user_info.key_user_id;
-
-#if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG,"add user finger: sn[%u], user_key_id[%u], finger[%u], key_id[%u]", 
-                user_info.key_sn, user_info.key_user_id, id, user_info.key_id);
-#endif
-        return true;
+        return false;
     }
 
-    return false;
+    user_info.flag = true;
+    user_info.key_sn = user_sn;
+    user_info.key_user_id = g_pending_user_id;
+    user_info.key_type = type;
+    user_info.key_id = read_empty_min_key_id(type);
+
+    user_info.parameter.user_id = 0x00;
+    user_info.parameter.user_policy = USER_POLICY_PERMANENT;
+    user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
+    user_info.parameter.timestamp = hal_get_rtc_time();
+
+    if (USER_TYPE_PERMANENT_FINGERPRINTS == type) {
+        user_info.info.finger.id = *(const uint16_t*)key;
+    } else {
+        memcpy(user_info.info.card.id, key, 4);
+    }
+
+    user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
+    save_user_key(type, user_sn - area->base, &user_info);
+    cache_and_update(user_sn, &user_info);
+
+    *userSn = user_info.key_user_id;
+
+    return true;
+}
+
+uint8_t addUserFinger(uint16_t id, uint16_t* userSn)
+{
+    return add_user_key(USER_TYPE_PERMANENT_FINGERPRINTS, (const void*)&id, userSn);
 }
 
 uint8_t addUserCard(uint8_t* card_id, uint16_t* userSn)
 {
-    user_info_t user_info;
-
-    if(readEmptyUserId(userSn, USER_TYPE_PERMANENT_CARD))
-    {
-        uint8_t slot = *userSn - PERMANENT_USER_CODE_CNT - USER_FINGERPRINTS_CNT - 1;
-        
-        user_info.flag = true;
-        user_info.key_sn = (*userSn);
-        user_info.key_user_id = g_pending_user_id;
-        user_info.key_type = USER_TYPE_PERMANENT_CARD;
-        user_info.key_id = read_empty_min_key_id(USER_TYPE_PERMANENT_CARD);
-
-        user_info.parameter.user_id = 0x00;
-        user_info.parameter.user_policy = USER_POLICY_PERMANENT;
-        user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
-        user_info.parameter.timestamp = hal_get_rtc_time();
-
-        memcpy(user_info.info.card.id, card_id, 4);
-        
-        user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
-        save_card_user(slot, &user_info);
-
-        if (current_user_sn == user_info.key_sn) {        // ← 用内部 SN 判断缓存
-            memcpy(&current_user, &user_info, sizeof(user_info_t));
-        }
-        updateUserCnt();
-
-        *userSn = user_info.key_user_id;
-
-#if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG,"add user card: sn[%u], user_key_id[%u], key_id[%u], card[%02X %02X %02X %02X]", 
-                user_info.key_sn, user_info.key_user_id, user_info.key_id, 
-                card_id[0], card_id[1], card_id[2], card_id[3]);
-#endif
-        return true;
-    }
-
-    return false;
+    return add_user_key(USER_TYPE_PERMANENT_CARD, (const void*)card_id, userSn);
 }
 
 void modifyUserMasterCode(uint8_t* input, uint8_t len)
@@ -927,10 +763,7 @@ void modifyUserMasterCode(uint8_t* input, uint8_t len)
 
     user_profile_add(0, "Admin");      // 管理员用户档案，已存在则不会重复创建
 
-    if (current_user_sn == 1) {
-        memcpy(&current_user, &user_info, sizeof(user_info_t));
-    }
-    updateUserCnt();
+    cache_and_update(1, &user_info);
 
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG,"modify master code: len[%u]", len);
@@ -1040,6 +873,30 @@ uint8_t getUserFingerID(uint16_t *user_sn, uint16_t id)
 // 用户档案业务层
 // ============================================================
 
+// 默认用户名 "User<id>"（避免引入 snprintf）
+static void user_name_default(char* name, uint16_t user_id)
+{
+    char digits[5];
+    uint8_t n = 0;
+    uint8_t i = 4;
+
+    do
+    {
+        digits[n++] = (char)('0' + (user_id % 10));
+        user_id /= 10;
+    } while (user_id);
+
+    name[0] = 'U';
+    name[1] = 's';
+    name[2] = 'e';
+    name[3] = 'r';
+    while (n)
+    {
+        name[i++] = digits[--n];
+    }
+    name[i] = '\0';
+}
+
 /**
  * @brief 创建用户档案
  * @param user_id 对外 ID（g_pending_user_id）
@@ -1086,7 +943,7 @@ uint8_t user_profile_add(uint16_t user_id, const char* name)
         strncpy(profile.user_name, name, PROFILE_NAME_LEN - 1);
         profile.user_name[PROFILE_NAME_LEN - 1] = '\0';
     } else {
-        snprintf(profile.user_name, PROFILE_NAME_LEN, "User%d", user_id);
+        user_name_default(profile.user_name, user_id);
     }
 
     // 4. 保存
