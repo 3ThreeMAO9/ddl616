@@ -57,7 +57,7 @@
 #define VERIFY_FAIL_CNT_TIMEOUT                     (5 * 60)        // unit:s
 
 //time out
-#define JOIN_NET_TIMEOUT                            (60 * 1000)     // unit:ms
+#define JOIN_NET_TIMEOUT                            (5 * 60 * 1000)     // unit:ms
 #define JOIN_NET_PERIOD_TIME                        (1 * 1000)      //unit: ms
 #define SYSTEM_LOCK_TIME                            (100 * 1000)    // unit:ms
 #define SYSTEM_LOCK_TIMEOUT                         (10 * 1000)     // unit:ms
