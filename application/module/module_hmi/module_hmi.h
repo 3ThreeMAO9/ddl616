@@ -195,14 +195,14 @@ typedef struct{
 
 typedef struct{
     uint8_t busy;
-    uint8_t cnt;
+    uint16_t cnt;
     uint32_t timeOut;
 
 }break_warn_handle_t;
 
 typedef struct{
     uint8_t busy;
-    uint8_t cnt;
+    uint16_t cnt;
     uint32_t timeOut;
 
 }join_net_handle_t;
