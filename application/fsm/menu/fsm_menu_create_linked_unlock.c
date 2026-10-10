@@ -43,7 +43,7 @@ QState lock_fsm_menu_create_linked_unlock(LockFsm *me, QEvent const *e)
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
-                state = Q_TRAN(lock_fsm_menu_linked_unlock); // 输入密码空的时候,再按*键
+                state = Q_TRAN(lock_fsm_menu_system_settings); // 输入密码空的时候,再按*键,回系统设置菜单
             }
             break;
         case Q_USER_HANDLE_SIG:

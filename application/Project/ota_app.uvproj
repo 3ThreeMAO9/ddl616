@@ -803,16 +803,6 @@
               <FilePath>..\fsm\menu\fsm_menu_modfiy_admin_pin.c</FilePath>
             </File>
             <File>
-              <FileName>fsm_menu_language_settings.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\fsm\menu\fsm_menu_language_settings.c</FilePath>
-            </File>
-            <File>
-              <FileName>fsm_menu_linked_unlock.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\fsm\menu\fsm_menu_linked_unlock.c</FilePath>
-            </File>
-            <File>
               <FileName>fsm_menu_system_settings.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_system_settings.c</FilePath>
@@ -2071,16 +2061,6 @@
               <FileName>fsm_menu_modfiy_admin_pin.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_modfiy_admin_pin.c</FilePath>
-            </File>
-            <File>
-              <FileName>fsm_menu_language_settings.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\fsm\menu\fsm_menu_language_settings.c</FilePath>
-            </File>
-            <File>
-              <FileName>fsm_menu_linked_unlock.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\fsm\menu\fsm_menu_linked_unlock.c</FilePath>
             </File>
             <File>
               <FileName>fsm_menu_system_settings.c</FileName>

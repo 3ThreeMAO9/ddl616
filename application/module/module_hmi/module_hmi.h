@@ -99,8 +99,6 @@ typedef enum{
     HMI_STATE_DELETE_FAIL_TIME_OUT,     //删除失败，操作超时
     HMI_STATE_REPEAT_INPUT_CODE,        //请再输入一次，以#号键结束
     HMI_STATE_MODIFY_ADMIN_USER_SETTINGS,//修改管理员密码请按，修改管理指纹请按
-    HMI_STATE_LANGAGESETTING,           //语言设置菜单
-    HMI_STATE_LINKED_UNLOCK,            //联动解锁
     HMI_STATE_CREATE_LINKED_UNLOCK,     //创建联动开锁
     HMI_STATE_JOIN_LINKED_UNLOCK,       //加入联动开锁
     HMI_STATE_AUTO_LOCK,                //自动上锁菜单

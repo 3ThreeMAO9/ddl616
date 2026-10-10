@@ -10,7 +10,7 @@
  *       服务器下发的报文结构尚未确定，因此不定义 payload 结构体、不解析、不应答。
  *       命令字 0x19 / 应答码 0x99 与 ob_lock.h 的 PROP_CMD_LANGUAGE（当前语言）一致。
  *
- * 接入参考（门锁侧已有实现，见 fsm/menu/fsm_menu_language_settings.c:30-37）：
+ * 接入参考（本地"语言设置"菜单已删除，但下面两个接口仍在）：
  *   取值 language_set_t：0=中文 1=英文 2=西班牙语 3=法语
  *   setUserParameter(USER_PARA_LANGUAGE_MODE_ID, <值>);   // 写 Flash 持久化
  *   player_task_language_set(OB_LOCK_LANGUAGE_XX);        // 切换语音包

@@ -41,8 +41,6 @@ static const struct
     FSM_STATE_NAME(lock_fsm_menu_admin),
     FSM_STATE_NAME(lock_fsm_menu_modfiy_admin_pin),
     FSM_STATE_NAME(lock_fsm_menu_system_settings),
-    FSM_STATE_NAME(lock_fsm_menu_linked_unlock),
-    FSM_STATE_NAME(lock_fsm_menu_language_settings),
     FSM_STATE_NAME(lock_fsm_menu_create_linked_unlock),
     FSM_STATE_NAME(lock_fsm_menu_join_linked_unlock),
     FSM_STATE_NAME(lock_fsm_menu_add_normal_user_settings),

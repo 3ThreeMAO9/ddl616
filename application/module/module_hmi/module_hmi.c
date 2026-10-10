@@ -230,7 +230,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_ADD(VOICE_Zero + user_id / 100);       // 百位
             PLAYER_LIST_ADD(VOICE_Zero + (user_id / 10) % 10); // 十位
             PLAYER_LIST_ADD(VOICE_Zero + user_id % 10);        // 个位
-            PLAYER_LIST_ADD(VOICE_One, VOICE_Two, VOICE_Three);
+            PLAYER_LIST_ADD(VOICE_To_add_a_PIN_code_please_press, VOICE_One, VOICE_To_add_a_fingerprint_please_press, VOICE_Two, VOICE_To_add_a_key_tag_please_press, VOICE_Three);
             break;
         }
 
@@ -275,7 +275,12 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_MODIFY_ADMIN_USER_SETTINGS:
-            PLAYER_LIST_ADD(VOICE_To_change_the_master_PIN_code_please_press, VOICE_One, VOICE_Two);
+            PLAYER_LIST_ADD(VOICE_To_change_the_master_PIN_code_please_press, VOICE_One);
+            if (1)            // 无管理指纹
+              PLAYER_LIST_ADD(VOICE_To_add_the_master_fingerprint_please_press);
+            else
+              PLAYER_LIST_ADD(VOICE_To_modify_the_master_fingerprint_please_press);
+            PLAYER_LIST_ADD(VOICE_Two);
             break;
 
         case HMI_STATE_ADD_NORMAL_PW:
@@ -283,24 +288,15 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
         
         case HMI_STATE_ADD_NORMAL_FINGER:
-            PLAYER_LIST_ADD(VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            PLAYER_LIST_ADD(VOICE_Please_touch_the_fingerprint_sensor, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
         case HMI_STATE_ADD_NORMAL_NFC:
-            PLAYER_LIST_ADD(VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            PLAYER_LIST_ADD(VOICE_Please_swipe_the_key_tag, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
         case HMI_STATE_SYSTEM_SETTINGS:
-            // 新语音表里没有"语言设置请按"，用"中文请按"代替（按1进入语言菜单，那里再报中文/英文）
-            PLAYER_LIST_CLEAR_ADD(VOICE_For_Chinese_press, VOICE_One,VOICE_Create_linked_unlocking_please_press,VOICE_Two);
-            break;
-        
-        case HMI_STATE_LINKED_UNLOCK:
             PLAYER_LIST_CLEAR_ADD(VOICE_Create_linked_unlocking_please_press, VOICE_One, VOICE_Join_linked_unlocking_please_press, VOICE_Two, VOICE_Exit_linked_unlocking_please_press, VOICE_Three);
-            break;
-
-        case HMI_STATE_LANGAGESETTING:
-            PLAYER_LIST_CLEAR_ADD(VOICE_For_Chinese_press, VOICE_One, VOICE_For_English_press, VOICE_Two);
             break;
 
         case HMI_STATE_REPEAT_INPUT_CODE:
