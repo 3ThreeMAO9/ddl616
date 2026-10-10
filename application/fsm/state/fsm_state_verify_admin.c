@@ -94,7 +94,11 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
         case Q_USER_HANDLE_SIG:
             // me->branch = (QStateHandler)(lock_fsm_verify_admin);
 
-            if (EVENT_RESULT_SUCCESS_VERIFY_ADMIN == (e->dynamic_[0]))
+            // 管理员验证通过 = 管理密码(SUCCESS_VERIFY_ADMIN)
+            //                或 管理钥匙(SUCCESS_VERIFY_USER 且 id == 0；0 号永远是管理员，id 在 dynamic_[1..2])
+            if ((EVENT_RESULT_SUCCESS_VERIFY_ADMIN == (e->dynamic_[0]))
+                || ((EVENT_RESULT_SUCCESS_VERIFY_USER == (e->dynamic_[0]))
+                    && (0 == (((uint16_t)e->dynamic_[1] << 8) | e->dynamic_[2]))))
             {
                 if (isEmptyKey(false))   // 初始化状态
                 {

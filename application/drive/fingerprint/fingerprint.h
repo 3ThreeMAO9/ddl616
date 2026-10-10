@@ -106,6 +106,7 @@ typedef enum {
     FP_MODE_DELETE,             // 按编号删除
     FP_MODE_VERIFY_DELETE,      // 验证删除
     FP_MODE_RESET_ALL,         // 恢复出厂
+    FP_MODE_REGISTER_MASTER,    // 注册管理指纹（固定存模块 0 号模板）
 }fp_mode_e;
 
 typedef enum {

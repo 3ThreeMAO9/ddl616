@@ -624,7 +624,8 @@ static uint8_t read_empty_min_key_id(uint8_t userType)
         }
     }
 
-    for (i = 0; i < area->count; i++) {
+    // 0 号永远是管理员（密码=管理密码、指纹=管理指纹、卡片/人脸=预留），普通钥匙一律从 1 开始编号
+    for (i = 1; i < area->count; i++) {
         if (!key_flag[i]) {
             return i;
         }
@@ -847,6 +848,85 @@ void modifyMasterKeyCode(uint8_t* input, uint8_t len)
     OB_LOGD_DUMP(user_info.info.password.buffer, len);
 #endif
 }
+
+// 找"管理指纹"那条记录（指纹区里 key_id 0 的那条 —— 0 号就是管理员），找到返回它的内部 SN
+static uint8_t find_master_finger_sn(uint16_t* user_sn)
+{
+    const user_area_t* area = key_area_of(USER_TYPE_PERMANENT_FINGERPRINTS);
+    user_info_t temp_user;
+    uint8_t i;
+
+    if (NULL == area)
+    {
+        return false;
+    }
+
+    for (i = 0; i < area->count; i++)
+    {
+        if (read_user_data_with_check(area->base + i, &temp_user) && temp_user.flag
+            && (0 == temp_user.key_id))
+        {
+            if (user_sn) *user_sn = area->base + i;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// 是否已录入管理指纹
+uint8_t isExistMasterFinger(void)
+{
+    return find_master_finger_sn(NULL);
+}
+
+// 添加/修改管理指纹：管理指纹固定 key_id 0、归属管理员档案 0（和 modifyMasterKeyCode 同一套规则）
+// 已有管理指纹就覆盖原来那条记录，没有就取空槽位（指纹库满则放弃）；模块里的 0 号模板由注册模式覆盖，这里不用管
+void modifyMasterKeyFinger(uint16_t finger_id)
+{
+    const user_area_t* area = key_area_of(USER_TYPE_PERMANENT_FINGERPRINTS);
+    user_info_t user_info;
+    uint16_t user_sn = 0;
+
+    if (NULL == area)
+    {
+        return;
+    }
+
+    if (!find_master_finger_sn(&user_sn)
+        && !read_empty_key_sn(&user_sn, USER_TYPE_PERMANENT_FINGERPRINTS))
+    {
+#if (Enabled == PRINTF_USER)
+        OB_LOGD(TAG, "master finger: no free slot");
+#endif
+        return;
+    }
+
+    user_info.flag = true;
+    user_info.key_sn = user_sn;
+    user_info.key_type = USER_TYPE_PERMANENT_FINGERPRINTS;
+    user_info.key_id = 0;                           // 管理指纹默认 0
+    user_info.info.finger.id = finger_id;
+
+    user_info.parameter.user_id = 0x00;             // 归属管理员档案
+    user_info.parameter.user_policy = USER_POLICY_PERMANENT;
+    user_info.parameter.key_urgent = KEY_URGENT_NORMAL;
+    user_info.parameter.timestamp = hal_get_rtc_time();
+
+    user_info.sum = check_sum((uint8_t*)(&user_info.flag), (sizeof(user_info_t) - sizeof(user_info.sum)));
+
+    save_user_key(USER_TYPE_PERMANENT_FINGERPRINTS, (uint8_t)(user_sn - area->base), &user_info);
+    user_profile_add(0, "Admin");                   // 管理员档案，已存在则不会重复创建
+    cache_and_update(user_sn, &user_info);
+
+    // 管理指纹固定 key_id 0、归属管理员档案 0；模块 0 号模板由注册模式那边覆盖，这里只管写记录
+#if (Enabled == PRINTF_USER)
+    OB_LOGD(TAG, "master finger: finger_id[%u], sn[%u], key_id[0]", finger_id, user_sn);
+#endif
+}
+
+// （修改/覆盖管理指纹不需要先删旧模板：注册模式固定存模块 0 号，合并模板后直接覆盖 0 号区域；
+//   录入回调靠 finger_id == 0 分辨管理指纹，不需要额外的标志位）
 
 void delKeyInfo(uint16_t user_sn)
 {

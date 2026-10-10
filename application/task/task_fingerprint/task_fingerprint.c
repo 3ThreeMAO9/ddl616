@@ -107,7 +107,15 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
         uint8_t key_id = 0;
 
         OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE finger_id %u", finger_id);
-        if (addKeyFinger(finger_id, &key_id)){
+        if (0 == finger_id)             // 模块 0 号 = 管理指纹（普通注册不会占 0 号，见 read_empty_fp_index）
+        {
+            modifyMasterKeyFinger(finger_id);
+            lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
+                                0, 0);      // 添加密钥：管理指纹（key_id 0）
+            userHandleEventPush(EVENT_RESULT_SUCCESS_ADD, finger_id);
+        }
+        else if (addKeyFinger(finger_id, &key_id)){
             OB_LOGI(TAG, "->key_id [%ld]", key_id);
             lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                 KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
@@ -249,6 +257,7 @@ void fp_task_set_mode(uint8_t mode) {
             fp_task_driver.io->set_mode(mode, fp_verify_event_callback, NULL, 0);
             break;
         case FP_MODE_REGISTER:  // 注册模式
+        case FP_MODE_REGISTER_MASTER:   // 注册管理指纹（固定模块 0 号模板），回调/流程同注册
             fp_task_driver.io->set_mode(mode, fp_register_event_callback, NULL, 0);
             break;
         case FP_MODE_SLEEP:     // 休眠

@@ -177,6 +177,7 @@ uint8_t fp_set_mode_API(uint8_t mode, fingerprint_api_callback_t callback, void*
         case FP_MODE_IDLE:
         case FP_MODE_VERIFY:
         case FP_MODE_REGISTER:
+        case FP_MODE_REGISTER_MASTER:
 #if (FP_ENABLE_DELETE)
         case FP_MODE_DELETE:
         case FP_MODE_RESET_ALL:

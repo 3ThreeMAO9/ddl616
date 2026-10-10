@@ -199,6 +199,9 @@ uint8_t isValidKeyId(uint16_t *user_sn, uint8_t code_id, uint8_t key_type);
 
 // ========== 修改密钥 ==========
 void    modifyMasterKeyCode(uint8_t* input, uint8_t len);
+void    modifyMasterKeyFinger(uint16_t finger_id);  // 添加/修改管理指纹（key_id 固定 0、归属管理员档案 0）
+uint8_t isExistMasterFinger(void);                  // 是否已录入管理指纹（指纹区 key_id 0 那条）
+
 void    modifyKeyCode(uint8_t *input, uint8_t len, uint8_t user_sn, user_time_t* para);
 void    modifyKeyParameter(uint8_t user_sn, user_time_t* para);
 void    modifyKeyAttribute(uint8_t user_sn, uint8_t attribute);

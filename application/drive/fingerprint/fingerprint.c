@@ -28,10 +28,16 @@ static inline void fp_set_timeout(fp_context_t *ctx, uint16_t timeout_ms) {
 }
 
 static uint16_t read_empty_fp_index(fp_context_t *ctx) {
+    // 0 号固定留给管理指纹（FP_MODE_REGISTER_MASTER），普通指纹从 1 号开始
     for (uint8_t i = 0; i < (FINGERPRINT_COUNT_MAX + 7) / 8; i++) {
         for (uint8_t j = 0; j < 8; j++) {
+            uint8_t index = 8 * i + j;
+
+            if (0 == index) {
+                continue;
+            }
             if (!(ctx->mdl_attr.index_table[i] & (0x01<<j))) {
-                return (8 * i + j);
+                return index;
             }
         }
     }
@@ -344,7 +350,12 @@ static void fingerprint_process_register(fp_context_t *ctx) {
                 memcpy(ctx->func_attr.chip_sn, ctx->ack_packet.buffer, 14);
                 fingerprint_event_callback(ctx, FP_EVENT_CHIP_SN, ctx->ack_packet.buffer, 14);
 
-                ctx->params.reg.page_id = read_empty_fp_index(ctx); 
+                if (FP_MODE_REGISTER_MASTER == ctx->mode) {
+                    ctx->params.reg.page_id = 0;            // 管理指纹固定存模块 0 号模板
+                }
+                else {
+                    ctx->params.reg.page_id = read_empty_fp_index(ctx);
+                }
                 if (ctx->params.reg.page_id >= ctx->mdl_attr.count_max) {
                     fingerprint_event_callback(ctx, FP_EVENT_FAIL_FULL, NULL, 0);
                     fingerprint_reset_context(ctx);
@@ -625,6 +636,7 @@ static void fp_process_mode(fp_context_t *ctx) {
             fingerprint_process_verify(ctx);
             break;
         case FP_MODE_REGISTER:
+        case FP_MODE_REGISTER_MASTER:   // 注册管理指纹：流程同注册，只是固定存 0 号模板
             fingerprint_process_register(ctx);
             break;
 #if (FP_ENABLE_DELETE)
@@ -678,7 +690,7 @@ static void fp_process_step(fp_context_t *ctx) {
                 if (ctx->config->ops.is_wake()) {
                     ctx->config->ops.uart_init(1);
                     fingerprint_event_callback(ctx, FP_EVENT_POWER_ON, NULL, 0);
-                    if (ctx->mode == FP_MODE_REGISTER)
+                    if ((ctx->mode == FP_MODE_REGISTER) || (ctx->mode == FP_MODE_REGISTER_MASTER))
                     {
                         OB_LOGI(TAG, "FP_MODE_REGISTER reg.count: %u", ctx->params.reg.count);
                         ctx->tick = system_inc_time_cnt(0);

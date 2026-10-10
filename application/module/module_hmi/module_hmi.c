@@ -276,7 +276,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_MODIFY_ADMIN_USER_SETTINGS:
             PLAYER_LIST_ADD(VOICE_To_change_the_master_PIN_code_please_press, VOICE_One);
-            if (1)            // 无管理指纹
+            if (!isExistMasterFinger())     // 无管理指纹 -> 提示添加；已录入 -> 提示修改
               PLAYER_LIST_ADD(VOICE_To_add_the_master_fingerprint_please_press);
             else
               PLAYER_LIST_ADD(VOICE_To_modify_the_master_fingerprint_please_press);
