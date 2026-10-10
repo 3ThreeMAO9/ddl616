@@ -286,6 +286,18 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_ADD_NORMAL_PW:
             PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_PIN_code, VOICE_End_with_pound_key, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
+
+        case HMI_STATE_PIN_CODE_FULL:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed, VOICE_PIN_code, VOICE_Database_is_full);    // 添加失败，密码库已满
+            break;
+
+        case HMI_STATE_FINGER_FULL:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed, VOICE_Fingerprint, VOICE_Database_is_full); // 添加失败，指纹库已满
+            break;
+
+        case HMI_STATE_CARD_FULL:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed, VOICE_Key_tag, VOICE_Database_is_full);     // 添加失败，卡片库已满
+            break;
         
         case HMI_STATE_ADD_NORMAL_FINGER:
             PLAYER_LIST_ADD(VOICE_Please_touch_the_fingerprint_sensor, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);

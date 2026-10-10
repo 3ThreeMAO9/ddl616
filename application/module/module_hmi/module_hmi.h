@@ -72,6 +72,9 @@ typedef enum{
     // HMI_STATE_PIN_CODE_FULL,            //密码库已满            PIN code database is full 
     // HMI_STATE_FINGER_EMPTY,             //指纹库为空            Fingerprint database is empty 
     // HMI_STATE_FINGER_FULL,              //指纹库已满            Fingerprint database is full
+    HMI_STATE_PIN_CODE_FULL,            //添加失败，密码库已满（该用户组普通密码已达上限）
+    HMI_STATE_FINGER_FULL,              //添加失败，指纹库已满（该用户组普通指纹已达上限）
+    HMI_STATE_CARD_FULL,                //添加失败，卡片库已满（该用户组卡片已达上限）
     HMI_STATE_VACATION_MODE_FAIL,       //离家模式              away mode
     HMI_STATE_TAMPER_WARN,              //防撬报警
     HMI_STATE_CHANGE_MASTER_CODE,       // 添加管理用戶，请输入六至十二位管理密码，以井号键结束，取消请按星号键

@@ -25,14 +25,32 @@ static QState menu_event_handle(LockFsm *me, QEvent const *e)
     switch (e->dynamic_[0])
     {
     case KEY_NUM_1:
+        // 该用户组普通密码已满
+        if (!user_can_add_key((uint8_t)read_user_id(), USER_TYPE_PERMANENT_CODE, KEY_URGENT_NORMAL))
+        {
+            hmiTaskSetState(HMI_STATE_PIN_CODE_FULL);
+            break;
+        }
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
         state = Q_TRAN(lock_fsm_menu_add_normal_pw);
         break;
     case KEY_NUM_2:
+        // 该用户组普通指纹已满
+        if (!user_can_add_key((uint8_t)read_user_id(), USER_TYPE_PERMANENT_FINGERPRINTS, KEY_URGENT_NORMAL))
+        {
+            hmiTaskSetState(HMI_STATE_FINGER_FULL);
+            break;
+        }
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
         state = Q_TRAN(lock_fsm_menu_add_normal_finger);
         break;
     case KEY_NUM_3:
+        // 该用户组卡片已满
+        if (!user_can_add_key((uint8_t)read_user_id(), USER_TYPE_PERMANENT_CARD, KEY_URGENT_NORMAL))
+        {
+            hmiTaskSetState(HMI_STATE_CARD_FULL);
+            break;
+        }
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
         state = Q_TRAN(lock_fsm_menu_add_normal_nfc);
         break;

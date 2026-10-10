@@ -34,7 +34,14 @@
 // user config
 #define KEY_CNT_MAX                                 (300)
 #define USER_CNT_MAX                                (KEY_CNT_MAX)   // user cnt
-#define KEY_CNT_EVERY_USER                          (1)
+
+// 用户组内钥匙数量上限（按"用户组"管理，普通/胁迫分开算；0x01 上报单组钥匙数上限是 13）
+#define USER_CODE_CNT_NORMAL_MAX                    (1)     // 普通密码
+#define USER_CODE_CNT_COERCION_MAX                  (1)     // 胁迫密码
+#define USER_FINGER_CNT_NORMAL_MAX                  (5)     // 普通指纹
+#define USER_FINGER_CNT_COERCION_MAX                (1)     // 胁迫指纹
+#define USER_CARD_CNT_MAX                           (2)     // 卡片（不分胁迫）
+#define USER_FACE_CNT_MAX                           (1)     // 人脸
 
 #define USER_CODE_LEN_MIN                           (6)
 #define USER_CODE_LEN_MAX                           (12)

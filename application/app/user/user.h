@@ -246,6 +246,7 @@ typedef struct{
 } user_key_info_t;
 
 uint8_t user_get_key_cnt(uint8_t user_id);                                        // 该用户名下的钥匙把数
+uint8_t user_can_add_key(uint8_t user_id, uint8_t type, uint8_t urgent_flag);
 uint8_t user_get_key_info(uint8_t user_id, uint8_t index, user_key_info_t* info);  // 1=有第 index 把，0=没有了
 
 // ========== 删除普通用户（档案 + 其全部钥匙）==========

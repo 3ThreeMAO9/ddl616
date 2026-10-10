@@ -84,6 +84,64 @@ uint8_t user_get_key_cnt(uint8_t user_id)
     return cnt;
 }
 
+// 该用户组下某类型钥匙的条数；urgent_flag 传 0xFF 表示不分胁迫（只给 user_can_add_key 用）
+static uint8_t user_get_key_cnt_by_type(uint8_t user_id, uint8_t type, uint8_t urgent_flag)
+{
+    const user_area_t* area = key_area_of(type);
+    user_info_t temp;
+    uint8_t i;
+    uint8_t cnt = 0;
+
+    if (NULL == area)
+    {
+        return 0;
+    }
+
+    for (i = 0; i < area->count; i++)
+    {
+        if (read_user_data_with_check(area->base + i, &temp) && temp.flag
+            && (temp.parameter.user_id == user_id)
+            && ((0xFF == urgent_flag) || (temp.parameter.key_urgent == urgent_flag)))
+        {
+            cnt++;
+        }
+    }
+
+    return cnt;
+}
+
+// 该用户组还能不能再加一把（上限见 item_config.h）：
+uint8_t user_can_add_key(uint8_t user_id, uint8_t type, uint8_t urgent_flag)
+{
+    switch (type)
+    {
+    case USER_TYPE_PERMANENT_CODE:
+        if (KEY_URGENT_COERCION == urgent_flag)
+        {
+            return (user_get_key_cnt_by_type(user_id, type, KEY_URGENT_COERCION) < USER_CODE_CNT_COERCION_MAX);
+        }
+        return (user_get_key_cnt_by_type(user_id, type, KEY_URGENT_NORMAL) < USER_CODE_CNT_NORMAL_MAX);
+
+    case USER_TYPE_PERMANENT_FINGERPRINTS:
+        if (KEY_URGENT_COERCION == urgent_flag)
+        {
+            return (user_get_key_cnt_by_type(user_id, type, KEY_URGENT_COERCION) < USER_FINGER_CNT_COERCION_MAX);
+        }
+        return (user_get_key_cnt_by_type(user_id, type, KEY_URGENT_NORMAL) < USER_FINGER_CNT_NORMAL_MAX);
+
+    case USER_TYPE_PERMANENT_CARD:
+        return (user_get_key_cnt_by_type(user_id, type, 0xFF) < USER_CARD_CNT_MAX);
+
+    case USER_TYPE_PERMANENT_FACE:
+        return (user_get_key_cnt_by_type(user_id, type, 0xFF) < USER_FACE_CNT_MAX);
+
+    default:
+        break;
+    }
+
+    return false;
+}
+
 // 按顺序取该用户的第 index 把钥匙（index 从 0 开始）
 uint8_t user_get_key_info(uint8_t user_id, uint8_t index, user_key_info_t* info)
 {
