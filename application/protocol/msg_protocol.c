@@ -133,3 +133,9 @@ void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count)
     uart_msg_common_send(UP_CMD_GET_USERLIST_TIMESTAMP_ACK,
                          (uint8_t *)timestamp, count * sizeof(uint32_t));
 }
+
+// 历史记录应答（0x89）：直接回一段 N 条记录 raw
+void uart_msg_records_raw(uint8_t *data, uint16_t len)
+{
+    uart_msg_common_send(UP_CMD_GET_RECORD_LOG_ACK, data, len);
+}

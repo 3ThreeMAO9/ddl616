@@ -15,24 +15,24 @@
  *   uint8_t  p_record_cursor_count     // 本次要获取的记录条数
  *   uint8_t  p_record_cursor_direction // 方向：0=基于该时刻取过去的数据 1=取未来的数据
  *
- * 应答 payload：历史记录原始数据（尚未确定，本地记录存储未实现，见下方 TODO）
+ * 应答 payload（0x89）：N 条历史记录 raw，单条 8 字节（结构见 lock_log_def.h），按时间正序：
+ *   p_record_event_type(1) + 事件类型(1) + p_timestamp(4) + 参数1(1) + p_key_id(1)
+ *   事件类型/参数1 是 union，随 p_record_event_type 取操作/报警/访客类型
+ *   长度上限 200 字节（instance: p_records_data_raw maxLength=200 -> 25 条）
+ *   没有记录时回空 payload 的 0x89。
  */
 
 #include "uart_protocol.h"
+#include "lock_log.h"       // lock_log_get_records_raw()、lock_log_record_t
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "up_get_rec_log"
 
-/* 记录事件类型，对应 p_record_event_type */
-#define RECORD_EVENT_TYPE_ALL       (0)     // 全部
-#define RECORD_EVENT_TYPE_OPERATION (1)     // 操作记录
-#define RECORD_EVENT_TYPE_ALARM     (2)     // 报警记录
-#define RECORD_EVENT_TYPE_GUEST     (3)     // 访客记录
-
-/* 查询方向，对应 p_record_cursor_direction */
-#define RECORD_CURSOR_DIR_PAST      (0)     // 基于某时刻获取过去的数据
-#define RECORD_CURSOR_DIR_FUTURE    (1)     // 基于某时刻获取未来的数据
+/* 0x89 应答 raw 上限：单条 8 字节 × 20 条 = 160（instance 里 p_records_data_raw maxLength=200，
+ * p_record_cursor_count 上限 20，所以 160 够用） */
+#define RECORD_RAW_MAX_CNT      (20)
+#define RECORD_RAW_MAX_LEN      (RECORD_RAW_MAX_CNT * 8)
 
 // [13744] (uart_protocol) [uart rx] cmd=0x09, sn=2, len=7, addr=3, enc=0
 // [13749] A5 03 38 02 02 00 09 00 91 01 07 00 08 43 C7 6A 00 14 01
@@ -45,18 +45,29 @@
 // ============================================================
 HANDLER_DEFINE(UP_CMD_GET_RECORD_LOG)
 {
-    kiot_tm_action_in_a_get_records_data_stu_t *req =
-        (kiot_tm_action_in_a_get_records_data_stu_t *)packet->payload;
+    const kiot_tm_action_in_a_get_records_data_stu_t *req;
+    uint8_t buf[RECORD_RAW_MAX_LEN];
+    uint16_t len;
 
-    OB_LOGI(TAG, "req: timestamp=%u, event_type=%u, count=%u, direction=%u",
+    if (packet->length < sizeof(kiot_tm_action_in_a_get_records_data_stu_t))
+    {
+        OB_LOGW(TAG, "len=%u too short, cmd=0x%02X", packet->length, packet->cmd);
+        uart_msg_empty_ack(UP_CMD_GET_RECORD_LOG_ACK);
+        return 0;
+    }
+
+    req = (const kiot_tm_action_in_a_get_records_data_stu_t *)packet->payload;
+
+    len = lock_log_get_records_raw(req->p_record_event_type, req->p_timestamp,
+                                   req->p_record_cursor_count, req->p_record_cursor_direction,
+                                   buf, sizeof(buf));
+
+    OB_LOGI(TAG, "req: timestamp=%u, event_type=%u, count=%u, direction=%u -> %u record(s)",
             req->p_timestamp, req->p_record_event_type,
-            req->p_record_cursor_count, req->p_record_cursor_direction);
+            req->p_record_cursor_count, req->p_record_cursor_direction,
+            len / sizeof(lock_log_record_t));
 
-    // TODO: 本地历史记录存储尚未接入，先回空应答占位（0x89）。
-    //       待记录存储（操作/报警/访客记录）就绪后补：
-    //       按 event_type + timestamp + count + direction 查询记录
-    //       -> 用 UP_CMD_GET_RECORD_LOG_ACK（0x89）回送记录原始数据。
-    uart_msg_empty_ack(UP_CMD_GET_RECORD_LOG_ACK);
+    uart_msg_records_raw(buf, len);     // len==0 时回空 payload 的 0x89
 
     return 0;
 }

@@ -157,6 +157,33 @@ uint32_t lock_log_get_by_seq(uint32_t seq, lock_log_item_t *item)
     return 0;
 }
 
+// 线性读下一条有效记录：整个日志区按槽位顺序只走一遍
+// （lock_log_get_by_seq 每次都要全扫，逐条按序号查会非常慢，查询历史记录用这个）
+uint8_t lock_log_flash_read_next(uint32_t *index, lock_log_item_t *item)
+{
+    while (*index < LOCK_LOG_TOTAL)
+    {
+        uint32_t addr = lock_log_handle.begin_addr
+                      + HAL_FLASH_SECTOR_SIZE * (*index / SECTOR_LOG_NUM)
+                      + LOCK_LOG_FLASH_SIZE * (*index % SECTOR_LOG_NUM);
+
+        memset(item, 0, sizeof(lock_log_item_t));
+#if(LOG_FLASH_SEL == LOG_SPI_FLASH)
+        hal_flash_read(addr, item, LOCK_LOG_FLASH_SIZE);
+#elif(LOG_FLASH_SEL == LOG_CHIP_FLASH)
+        hal_chip_flash_read(addr, item, LOCK_LOG_FLASH_SIZE);
+#endif
+        (*index)++;
+
+        if ((item->write_seq != 0) && (item->write_seq != UINT32_MAX))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 uint32_t lock_log_delete_by_seq(uint32_t seq)
 {
     lock_log_item_t item_temp;
@@ -292,17 +319,17 @@ void lock_log_init(void)
     }
     log_range_min_seq_update();
 
-    uint32_t thistime = lock_log_handle.log_timestamp;
-    char *time = ctime(&thistime);
-    OB_LOGD(TAG, "%s", time);
-    OB_LOGD(TAG, "begin_addr        开始地址      %08X", lock_log_handle.begin_addr);
-    OB_LOGD(TAG, "log_num           日志条数      %ld", lock_log_handle.log_num);
-    OB_LOGD(TAG, "log_timestamp     日志时间戳    %08X", lock_log_handle.log_timestamp);
-    OB_LOGD(TAG, "sector_index      扇区索引      %ld", lock_log_handle.sector_index);
-    OB_LOGD(TAG, "write_index       当前索引      %ld", lock_log_handle.write_index);
-    OB_LOGD(TAG, "write_seq         当前序号      %ld", lock_log_handle.write_seq);
-    OB_LOGD(TAG, "range_min_seq     范围最小      %ld", lock_log_handle.range_min_seq);
-    OB_LOGD(TAG, "storage_min_seq   存储最小      %ld", lock_log_handle.storage_min_seq);
+    // uint32_t thistime = lock_log_handle.log_timestamp;
+    // char *time = ctime(&thistime);
+    // OB_LOGD(TAG, "%s", time);
+    // OB_LOGD(TAG, "begin_addr        开始地址      %08X", lock_log_handle.begin_addr);
+    // OB_LOGD(TAG, "log_num           日志条数      %ld", lock_log_handle.log_num);
+    // OB_LOGD(TAG, "log_timestamp     日志时间戳    %08X", lock_log_handle.log_timestamp);
+    // OB_LOGD(TAG, "sector_index      扇区索引      %ld", lock_log_handle.sector_index);
+    // OB_LOGD(TAG, "write_index       当前索引      %ld", lock_log_handle.write_index);
+    // OB_LOGD(TAG, "write_seq         当前序号      %ld", lock_log_handle.write_seq);
+    // OB_LOGD(TAG, "range_min_seq     范围最小      %ld", lock_log_handle.range_min_seq);
+    // OB_LOGD(TAG, "storage_min_seq   存储最小      %ld", lock_log_handle.storage_min_seq);
     
     // OB_LOGD(TAG,"LOCK_LOG_FLASH_SIZE    %ld",LOCK_LOG_FLASH_SIZE);
     // OB_LOGD(TAG,"SECTOR_LOG_NUM         %ld",(HAL_FLASH_SECTOR_SIZE / LOCK_LOG_FLASH_SIZE));

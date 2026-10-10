@@ -87,6 +87,9 @@ void uart_msg_empty_ack(uint8_t cmd);
 // 用户列表时间戳应答（0x88）：payload = uint32 数组，count = 项数
 void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count);
 
+// 历史记录应答（0x89）：payload = N 条记录 raw（单条 8 字节，见 lock_log_def.h）
+void uart_msg_records_raw(uint8_t *data, uint16_t len);
+
 /*****************************/
 
 #endif // MSG_PROTOCOL_HH
