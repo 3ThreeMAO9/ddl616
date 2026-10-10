@@ -27,7 +27,7 @@ typedef struct
     uint8_t  count;
 } user_area_t;
 
-static const user_area_t key_area[4] =
+static const user_area_t key_area[USER_TYPE_PERMANENT_MAX] =
 {
     { BLOCK_INDEX_CODE_START,   PERMANENT_USER_CODE_CNT },
     { BLOCK_INDEX_FINGER_START, USER_FINGERPRINTS_CNT  },
@@ -36,7 +36,7 @@ static const user_area_t key_area[4] =
 };
 
 // 该类型钥匙区计数（对应 user_cnt 各字段），供 readKeyCnt / isFullKey 查表
-static const uint8_t *const key_cnt_tbl[4] =
+static const uint8_t *const key_cnt_tbl[USER_TYPE_PERMANENT_MAX] =
 {
     &user_cnt.permanentCode,
     &user_cnt.permanentFingers,
@@ -46,12 +46,76 @@ static const uint8_t *const key_cnt_tbl[4] =
 
 static const user_area_t* key_area_of(uint8_t type)
 {
-    if (type > USER_TYPE_PERMANENT_FACE)
+    if (type >= USER_TYPE_PERMANENT_MAX)
     {
         return NULL;
     }
 
     return &key_area[type];
+}
+
+// ========== 用户数据 raw 打包：列出某用户名下的钥匙（0x01 应答用）==========
+// 内部 key_type（USER_TYPE_*）-> 对外类型值（物模型 p_key_type）：1=指纹 2=密码 3=卡片 4=人脸
+static uint8_t key_type_export(uint8_t type)
+{
+    static const uint8_t tbl[USER_TYPE_PERMANENT_MAX] = { 2, 1, 3, 4 };
+
+    return (type < USER_TYPE_PERMANENT_MAX) ? tbl[type] : 0xFF;
+}
+
+// 该用户（档案ID）名下有多少把钥匙
+uint8_t user_get_key_cnt(uint8_t user_id)
+{
+    uint8_t t, i, cnt = 0;
+    user_info_t temp;
+
+    for (t = 0; t < USER_TYPE_PERMANENT_MAX; t++)
+    {
+        for (i = 0; i < key_area[t].count; i++)
+        {
+            if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag
+                && (temp.parameter.user_id == user_id))
+            {
+                cnt++;
+            }
+        }
+    }
+
+    return cnt;
+}
+
+// 按顺序取该用户的第 index 把钥匙（index 从 0 开始）
+uint8_t user_get_key_info(uint8_t user_id, uint8_t index, user_key_info_t* info)
+{
+    uint8_t t, i, n = 0;
+    user_info_t temp;
+
+    if (info == NULL)
+    {
+        return 0;
+    }
+
+    for (t = 0; t < USER_TYPE_PERMANENT_MAX; t++)
+    {
+        for (i = 0; i < key_area[t].count; i++)
+        {
+            if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag
+                && (temp.parameter.user_id == user_id))
+            {
+                if (n == index)
+                {
+                    info->key_type   = key_type_export(t);
+                    info->key_id     = temp.key_id;
+                    info->key_urgent = temp.parameter.key_urgent;
+                    info->timestamp  = temp.parameter.timestamp;
+                    return 1;
+                }
+                n++;
+            }
+        }
+    }
+
+    return 0;
 }
 
 // "用户档案ID"位图：每个 bit 表示该档案ID 是否已被占用（ID 范围 0~PROFILE_COUNT-1，0 是管理员）
@@ -76,7 +140,7 @@ static uint16_t find_free_profile_id(void)
     }
 
     // ---- 钥匙记录：已归属的用户档案ID ----
-    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++) {
+    for (t = 0; t < USER_TYPE_PERMANENT_MAX; t++) {
         for (i = 0; i < key_area[t].count; i++) {
             if (read_user_data_with_check(key_area[t].base + i, &temp) && temp.flag
                     && (temp.parameter.user_id > 0) && (temp.parameter.user_id < PROFILE_COUNT)) {
@@ -1144,7 +1208,7 @@ static uint8_t user_has_key(uint16_t user_id)
     user_info_t temp;
     uint8_t t, i;
 
-    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++)
+    for (t = 0; t < USER_TYPE_PERMANENT_MAX; t++)
     {
         for (i = 0; i < key_area[t].count; i++)
         {
@@ -1165,7 +1229,7 @@ static uint8_t user_has_any_normal_key(void)
     user_info_t temp;
     uint8_t t, i;
 
-    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++)
+    for (t = 0; t < USER_TYPE_PERMANENT_MAX; t++)
     {
         for (i = 0; i < key_area[t].count; i++)
         {
@@ -1205,7 +1269,7 @@ static void user_delete_keys(uint16_t user_id)
     uint16_t sn;
     uint8_t t, i;
 
-    for (t = 0; t <= USER_TYPE_PERMANENT_FACE; t++)
+    for (t = 0; t < USER_TYPE_PERMANENT_MAX; t++)
     {
         for (i = 0; i < key_area[t].count; i++)
         {

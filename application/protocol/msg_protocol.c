@@ -122,6 +122,12 @@ void uart_msg_empty_ack(uint8_t cmd)
     uart_msg_common_send(cmd, NULL, 0);
 }
 
+// 原始用户数据应答（0x81）：直接回一段 raw 数据
+void uart_msg_userdata_raw(uint8_t *data, uint16_t len)
+{
+    uart_msg_common_send(UP_CMD_GET_USERDATA_RAW_ACK, data, len);
+}
+
 void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count)
 {
     uart_msg_common_send(UP_CMD_GET_USERLIST_TIMESTAMP_ACK,

@@ -21,6 +21,7 @@ typedef enum{
     USER_TYPE_PERMANENT_FINGERPRINTS,
     USER_TYPE_PERMANENT_CARD,
     USER_TYPE_PERMANENT_FACE,
+    USER_TYPE_PERMANENT_MAX,
 }user_type_t;
 
 typedef enum
@@ -232,6 +233,17 @@ uint8_t  user_is_valid_period(uint16_t user_id);
 uint8_t  user_get_total_cnt(void);
 // 读取用户表时间戳数组：ts[user_id] = 该用户最后修改时间，0 表示用户不存在（0x08 应答用）
 void     user_get_list_timestamp(uint32_t* ts, uint8_t count);
+
+// ========== 用户数据 raw 打包（0x01 获取原始用户数据应答用）==========
+typedef struct{
+    uint8_t  key_type;      // 对外类型值（与物模型 p_key_type 一致）：1=指纹 2=密码 3=卡片 4=人脸
+    uint8_t  key_id;        // 该类型内的钥匙ID
+    uint8_t  key_urgent;    // 0=普通 1=胁迫
+    uint32_t timestamp;     // 数字钥匙添加时间
+} user_key_info_t;
+
+uint8_t user_get_key_cnt(uint8_t user_id);                                        // 该用户名下的钥匙把数
+uint8_t user_get_key_info(uint8_t user_id, uint8_t index, user_key_info_t* info);  // 1=有第 index 把，0=没有了
 
 // ========== 删除普通用户（档案 + 其全部钥匙）==========
 typedef enum

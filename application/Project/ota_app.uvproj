@@ -1123,6 +1123,11 @@
               <FilePath>..\protocol\handler\uart_protocol_add_user.c</FilePath>
             </File>
             <File>
+              <FileName>uart_protocol_get_userdata_raw.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_get_userdata_raw.c</FilePath>
+            </File>
+            <File>
               <FileName>uart_protocol_delete_user.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_delete_user.c</FilePath>
@@ -2386,6 +2391,11 @@
               <FileName>uart_protocol_add_user.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_add_user.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_get_userdata_raw.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_get_userdata_raw.c</FilePath>
             </File>
             <File>
               <FileName>uart_protocol_delete_user.c</FileName>
