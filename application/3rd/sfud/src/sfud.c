@@ -38,8 +38,7 @@
 
 /* user configured flash device information table */
 static sfud_flash flash_table[] = SFUD_FLASH_DEVICE_TABLE;
-/* supported manufacturer information table */
-static const sfud_mf mf_table[] = SFUD_MF_TABLE;
+/* mf_table 厂商名表已删除（只给 SFUD_INFO 用） */
 
 #ifdef SFUD_USING_FLASH_INFO_TABLE
 /* supported flash chip information table */
@@ -66,12 +65,10 @@ static sfud_err software_init(const sfud_flash *flash);
 static sfud_err hardware_init(sfud_flash *flash);
 static sfud_err page256_or_1_byte_write(const sfud_flash *flash, uint32_t addr, size_t size, uint16_t write_gran,
         const uint8_t *data);
-static sfud_err aai_write(const sfud_flash *flash, uint32_t addr, size_t size, const uint8_t *data);
 static sfud_err wait_busy(const sfud_flash *flash);
 static sfud_err reset(const sfud_flash *flash);
 static sfud_err read_jedec_id(sfud_flash *flash);
 static sfud_err set_write_enabled(const sfud_flash *flash, bool enabled);
-static sfud_err set_4_byte_address_mode(sfud_flash *flash, bool enabled);
 static void make_address_byte_array(const sfud_flash *flash, uint32_t addr, uint8_t *array);
 
 /* ../port/sfup_port.c */
@@ -253,7 +250,6 @@ static sfud_err hardware_init(sfud_flash *flash) {
     extern sfud_err sfud_spi_port_init(sfud_flash * flash);
 
     sfud_err result = SFUD_SUCCESS;
-    size_t i;
 
     SFUD_ASSERT(flash);
 
@@ -326,54 +322,17 @@ static sfud_err hardware_init(sfud_flash *flash) {
 
     if (flash->chip.capacity == 0 || flash->chip.write_mode == 0 || flash->chip.erase_gran == 0
             || flash->chip.erase_gran_cmd == 0) {
-        SFUD_INFO("Warning: This flash device is not found or not supported.");
         return SFUD_ERR_NOT_FOUND;
-    } else {
-        const char *flash_mf_name = NULL;
-        /* find the manufacturer information */
-        for (i = 0; i < sizeof(mf_table) / sizeof(sfud_mf); i++) {
-            if (mf_table[i].id == flash->chip.mf_id) {
-                flash_mf_name = mf_table[i].name;
-                break;
-            }
-        }
-        /* print manufacturer and flash chip name */
-        if (flash_mf_name && flash->chip.name) {
-            SFUD_INFO("Found a %s %s flash chip. Size is %ld bytes.", flash_mf_name, flash->chip.name,
-                    flash->chip.capacity);
-        } else if (flash_mf_name) {
-            SFUD_INFO("Found a %s flash chip. Size is %ld bytes.", flash_mf_name, flash->chip.capacity);
-        } else {
-            SFUD_INFO("Found a flash chip. Size is %ld bytes.", flash->chip.capacity);
-        }
     }
 
     /* reset flash device */
     result = reset(flash);
-    SFUD_INFO("result1 [%d]",result);
     if (result != SFUD_SUCCESS) {
         return result;
     }
-    SFUD_INFO("result2 [%d]",result);
-    /* The flash all blocks is protected,so need change the flash status to unprotected before write and erase operate. */
-    if (flash->chip.write_mode & SFUD_WM_AAI) {
-        result = sfud_write_status(flash, true, 0x00);
-    } else {
-        /* MX25L3206E */
-        if ((0xC2 == flash->chip.mf_id) && (0x20 == flash->chip.type_id) && (0x16 == flash->chip.capacity_id)) {
-            result = sfud_write_status(flash, false, 0x00);
-        }
-    }
-    if (result != SFUD_SUCCESS) {
-        return result;
-    }
-    SFUD_INFO("result3 [%d]",result);
-    /* if the flash is large than 16MB (256Mb) then enter in 4-Byte addressing mode */
-    if (flash->chip.capacity > (1L << 24)) {
-        result = set_4_byte_address_mode(flash, true);
-    } else {
-        flash->addr_in_4_byte = false;
-    }
+
+    /* 本芯片固定 PAGE_256B / ≤16MB：AAI 写保护与 4 字节地址分支已删除 */
+    flash->addr_in_4_byte = false;
 
     return result;
 }
@@ -433,7 +392,7 @@ sfud_err sfud_read(const sfud_flash *flash, uint32_t addr, size_t size, uint8_t 
         {
             cmd_data[0] = SFUD_CMD_READ_DATA;
             make_address_byte_array(flash, addr, &cmd_data[1]);
-            cmd_size = flash->addr_in_4_byte ? 5 : 4;
+            cmd_size = 4;   /* 固定 1 字节命令 + 3 字节地址 */
             result = spi->wr(spi, cmd_data, cmd_size, data, size);
         }
     }
@@ -445,58 +404,7 @@ sfud_err sfud_read(const sfud_flash *flash, uint32_t addr, size_t size, uint8_t 
     return result;
 }
 
-/**
- * erase all flash data
- *
- * @param flash flash device
- *
- * @return result
- */
-sfud_err sfud_chip_erase(const sfud_flash *flash) {
-    sfud_err result = SFUD_SUCCESS;
-    const sfud_spi *spi = &flash->spi;
-    uint8_t cmd_data[4];
-
-    SFUD_ASSERT(flash);
-    /* must be call this function after initialize OK */
-    SFUD_ASSERT(flash->init_ok);
-    /* lock SPI */
-    if (spi->lock) {
-        spi->lock(spi);
-    }
-
-    /* set the flash write enable */
-    result = set_write_enabled(flash, true);
-    if (result != SFUD_SUCCESS) {
-        goto __exit;
-    }
-
-    cmd_data[0] = SFUD_CMD_ERASE_CHIP;
-    /* dual-buffer write, like AT45DB series flash chip erase operate is different for other flash */
-    if (flash->chip.write_mode & SFUD_WM_DUAL_BUFFER) {
-        cmd_data[1] = 0x94;
-        cmd_data[2] = 0x80;
-        cmd_data[3] = 0x9A;
-        result = spi->wr(spi, cmd_data, 4, NULL, 0);
-    } else {
-        result = spi->wr(spi, cmd_data, 1, NULL, 0);
-    }
-    if (result != SFUD_SUCCESS) {
-        SFUD_INFO("Error: Flash chip erase SPI communicate error.");
-        goto __exit;
-    }
-    result = wait_busy(flash);
-
-__exit:
-    /* set the flash write disable */
-    set_write_enabled(flash, false);
-    /* unlock SPI */
-    if (spi->unlock) {
-        spi->unlock(spi);
-    }
-
-    return result;
-}
+/* sfud_chip_erase() 已删除：整片擦除改由下面的扇区循环完成 */
 
 /**
  * erase flash data
@@ -526,9 +434,7 @@ sfud_err sfud_erase(const sfud_flash *flash, uint32_t addr, size_t size) {
         return SFUD_ERR_ADDR_OUT_OF_BOUND;
     }
 
-    if (addr == 0 && size == flash->chip.capacity) {
-        return sfud_chip_erase(flash);
-    }
+    /* 整片擦除分支已删除，走下面的扇区循环 */
 
     /* lock SPI */
     if (spi->lock) {
@@ -560,7 +466,7 @@ sfud_err sfud_erase(const sfud_flash *flash, uint32_t addr, size_t size) {
 
         cmd_data[0] = cur_erase_cmd;
         make_address_byte_array(flash, addr, &cmd_data[1]);
-        cmd_size = flash->addr_in_4_byte ? 5 : 4;
+        cmd_size = 4;   /* 固定 1 字节命令 + 3 字节地址 */
         result = spi->wr(spi, cmd_data, cmd_size, NULL, 0);
         if (result != SFUD_SUCCESS) {
             SFUD_INFO("Error: Flash erase SPI communicate error.");
@@ -642,7 +548,7 @@ static sfud_err page256_or_1_byte_write(const sfud_flash *flash, uint32_t addr, 
         }
         cmd_data[0] = SFUD_CMD_PAGE_PROGRAM;
         make_address_byte_array(flash, addr, &cmd_data[1]);
-        cmd_size = flash->addr_in_4_byte ? 5 : 4;
+        cmd_size = 4;   /* 固定 1 字节命令 + 3 字节地址 */
 
         /* make write align and calculate next write address */
         if (addr % write_gran != 0) {
@@ -686,97 +592,7 @@ __exit:
     return result;
 }
 
-/**
- * write flash data (no erase operate) for auto address increment mode
- *
- * If the address is odd number, it will place one 0xFF before the start of data for protect the old data.
- * If the latest remain size is 1, it will append one 0xFF at the end of data for protect the old data.
- *
- * @param flash flash device
- * @param addr start address
- * @param size write size
- * @param data write data
- *
- * @return result
- */
-static sfud_err aai_write(const sfud_flash *flash, uint32_t addr, size_t size, const uint8_t *data) {
-    sfud_err result = SFUD_SUCCESS;
-    const sfud_spi *spi = &flash->spi;
-    uint8_t cmd_data[8], cmd_size;
-    bool first_write = true;
-
-    SFUD_ASSERT(flash);
-    SFUD_ASSERT(flash->init_ok);
-    /* check the flash address bound */
-    if (addr + size > flash->chip.capacity) {
-        SFUD_INFO("Error: Flash address is out of bound.");
-        return SFUD_ERR_ADDR_OUT_OF_BOUND;
-    }
-    /* lock SPI */
-    if (spi->lock) {
-        spi->lock(spi);
-    }
-    /* The address must be even for AAI write mode. So it must write one byte first when address is odd. */
-    if (addr % 2 != 0) {
-        result = page256_or_1_byte_write(flash, addr++, 1, 1, data++);
-        if (result != SFUD_SUCCESS) {
-            goto __exit;
-        }
-        size--;
-    }
-    /* set the flash write enable */
-    result = set_write_enabled(flash, true);
-    if (result != SFUD_SUCCESS) {
-        goto __exit;
-    }
-    /* loop write operate. */
-    cmd_data[0] = SFUD_CMD_AAI_WORD_PROGRAM;
-    while (size >= 2) {
-        if (first_write) {
-            make_address_byte_array(flash, addr, &cmd_data[1]);
-            cmd_size = flash->addr_in_4_byte ? 5 : 4;
-            cmd_data[cmd_size] = *data;
-            cmd_data[cmd_size + 1] = *(data + 1);
-            first_write = false;
-        } else {
-            cmd_size = 1;
-            cmd_data[1] = *data;
-            cmd_data[2] = *(data + 1);
-        }
-
-        result = spi->wr(spi, cmd_data, cmd_size + 2, NULL, 0);
-        if (result != SFUD_SUCCESS) {
-            SFUD_INFO("Error: Flash write SPI communicate error.");
-            goto __exit;
-        }
-
-        result = wait_busy(flash);
-        if (result != SFUD_SUCCESS) {
-            goto __exit;
-        }
-
-        size -= 2;
-        addr += 2;
-        data += 2;
-    }
-    /* set the flash write disable for exit AAI mode */
-    result = set_write_enabled(flash, false);
-    /* write last one byte data when origin write size is odd */
-    if (result == SFUD_SUCCESS && size == 1) {
-        result = page256_or_1_byte_write(flash, addr, 1, 1, data);
-    }
-
-__exit:
-    if (result != SFUD_SUCCESS) {
-        set_write_enabled(flash, false);
-    }
-    /* unlock SPI */
-    if (spi->unlock) {
-        spi->unlock(spi);
-    }
-
-    return result;
-}
+/* aai_write() 已删除（本芯片只用 PAGE_256B） */
 
 /**
  * write flash data (no erase operate)
@@ -791,12 +607,9 @@ __exit:
 sfud_err sfud_write(const sfud_flash *flash, uint32_t addr, size_t size, const uint8_t *data) {
     sfud_err result = SFUD_SUCCESS;
 
+    /* AAI / 双缓冲写入分支已删除 */
     if (flash->chip.write_mode & SFUD_WM_PAGE_256B) {
         result = page256_or_1_byte_write(flash, addr, size, 256, data);
-    } else if (flash->chip.write_mode & SFUD_WM_AAI) {
-        result = aai_write(flash, addr, size, data);
-    } else if (flash->chip.write_mode & SFUD_WM_DUAL_BUFFER) {
-        //TODO dual-buffer write mode
     }
 
     return result;
@@ -916,45 +729,7 @@ static sfud_err set_write_enabled(const sfud_flash *flash, bool enabled) {
     return result;
 }
 
-/**
- * enable or disable 4-Byte addressing for flash
- *
- * @note The 4-Byte addressing just supported for the flash capacity which is large then 16MB (256Mb).
- *
- * @param flash flash device
- * @param enabled true: enable   false: disable
- *
- * @return result
- */
-static sfud_err set_4_byte_address_mode(sfud_flash *flash, bool enabled) {
-    sfud_err result = SFUD_SUCCESS;
-    uint8_t cmd;
-
-    SFUD_ASSERT(flash);
-
-    /* set the flash write enable */
-    result = set_write_enabled(flash, true);
-    if (result != SFUD_SUCCESS) {
-        return result;
-    }
-
-    if (enabled) {
-        cmd = SFUD_CMD_ENTER_4B_ADDRESS_MODE;
-    } else {
-        cmd = SFUD_CMD_EXIT_4B_ADDRESS_MODE;
-    }
-
-    result = flash->spi.wr(&flash->spi, &cmd, 1, NULL, 0);
-
-    if (result == SFUD_SUCCESS) {
-        flash->addr_in_4_byte = enabled ? true : false;
-        SFUD_DEBUG("%s 4-Byte addressing mode success.", enabled ? "Enter" : "Exit");
-    } else {
-        SFUD_INFO("Error: %s 4-Byte addressing mode failed.", enabled ? "Enter" : "Exit");
-    }
-
-    return result;
-}
+/* set_4_byte_address_mode() 已删除（≤16MB 用不到） */
 
 /**
  * read flash register status
@@ -1002,7 +777,7 @@ static void make_address_byte_array(const sfud_flash *flash, uint32_t addr, uint
     SFUD_ASSERT(flash);
     SFUD_ASSERT(array);
 
-    len = flash->addr_in_4_byte ? 4 : 3;
+    len = 3;    /* 固定 3 字节地址 */
 
     for (i = 0; i < len; i++) {
         array[i] = (addr >> ((len - (i + 1)) * 8)) & 0xFF;

@@ -51,4 +51,7 @@ enum {
     }
 // #define SFUD_USING_QSPI
 
+/* 关闭 SFUD 信息日志（本工程 sfud_log_info 是空实现）；要看日志时注释掉下面这行 */
+#define SFUD_INFO(...)
+
 #endif /* _SFUD_CFG_H_ */
