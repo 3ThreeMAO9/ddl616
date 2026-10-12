@@ -57,6 +57,7 @@ QState lockFsmDeleteUserFailAdmin(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailNotExist(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailEmpty(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailTimeOut(LockFsm *me, QEvent const *e);
+QState lockFsmAddFailTimeOut(LockFsm *me, QEvent const *e);           // 添加类界面操作超时提示，播完回上级菜单
 QState lockFsmHandleSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmVerifyUserSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleFail(LockFsm *me, QEvent const *e);

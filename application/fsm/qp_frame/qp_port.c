@@ -64,6 +64,7 @@ static const struct
     FSM_STATE_NAME(lockFsmDeleteUserFailNotExist),
     FSM_STATE_NAME(lockFsmDeleteUserFailEmpty),
     FSM_STATE_NAME(lockFsmDeleteUserFailTimeOut),
+    FSM_STATE_NAME(lockFsmAddFailTimeOut),      // 添加类界面操作超时提示
     FSM_STATE_NAME(lockFsmHandleWakeUpSuccess),
     FSM_STATE_NAME(lockFsmHandleVoiceModeSuccess),
     FSM_STATE_NAME(lockFsmHandleSuccess),

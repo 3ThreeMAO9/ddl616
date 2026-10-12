@@ -105,10 +105,10 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             {
                 state = Q_TRAN(lock_fsm_exit_admin_mode);
             }
-            else                            // 超时：播"操作超时"后回上级（修改管理员设置）
+            else                            // 超时：播"添加失败，操作超时"后回上级（修改管理员设置）
             {
                 me->branch = (QStateHandler)(lock_fsm_menu_modify_admin_user_settings);
-                state = Q_TRAN(lockFsmMenuTimeOut);
+                state = Q_TRAN(lockFsmAddFailTimeOut);
             }
             break;
         default:

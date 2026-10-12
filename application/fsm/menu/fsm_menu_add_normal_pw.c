@@ -77,9 +77,9 @@ QState lock_fsm_menu_add_normal_pw(LockFsm *me, QEvent const *e)
             break;
         case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:                               // 超时：播"操作超时"后回上级（添加普通用户设置）
+        case Q_FUNCTION_TIME_OUT_SIG:                               // 超时：播"添加失败，操作超时"后回上级（添加普通用户设置）
             me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user_settings);
-            state = Q_TRAN(lockFsmMenuTimeOut);
+            state = Q_TRAN(lockFsmAddFailTimeOut);
             break;
         default:
             break;

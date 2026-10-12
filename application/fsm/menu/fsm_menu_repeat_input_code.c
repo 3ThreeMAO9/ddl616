@@ -89,14 +89,14 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
             break;
         case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:       // 超时：播"操作超时"后回上级菜单（本状态被多处复用，按来源区分）
+        case Q_FUNCTION_TIME_OUT_SIG:       // 超时：播"添加失败，操作超时"后回上级菜单（本状态被多处复用，按来源区分）
             if (CODE_HANDLE_ADD == code_handle)
                 me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user_settings);
             else if (me->admin_flag == false)
                 me->branch = (QStateHandler)(lock_fsm_menu_admin);
             else
                 me->branch = (QStateHandler)(lock_fsm_menu_modify_admin_user_settings);
-            state = Q_TRAN(lockFsmMenuTimeOut);
+            state = Q_TRAN(lockFsmAddFailTimeOut);
             break;
         default:
             break;

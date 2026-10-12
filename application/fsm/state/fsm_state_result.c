@@ -192,9 +192,11 @@ QState lockFsmDeleteUserFailTimeOut(LockFsm *me, QEvent const *e)
     return lockFsmFailDeal(me, e, HMI_STATE_DELETE_FAIL_TIME_OUT, false);
 }
 
-// ---- 退出管理模式提示：播"已退出管理模式"，播完回休眠 ----
-// 由管理流程的出口（管理员菜单星号键/超时、各子菜单超时、管理验证超时等）直接转进来；
-// branch 指向 lock_fsm_sleep：提示播完就回休眠继续走"灭灯 + 250ms → 进休眠"
+QState lockFsmAddFailTimeOut(LockFsm *me, QEvent const *e)
+{
+    return lockFsmFailDeal(me, e, HMI_STATE_ADD_FAIL_TIME_OUT, false);
+}
+
 QState lock_fsm_exit_admin_mode(LockFsm *me, QEvent const *e)
 {
     me->branch = (QStateHandler)(lock_fsm_sleep);

@@ -146,9 +146,9 @@ QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e)
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
                 system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时：播"操作超时"后回上级（管理员菜单）
+        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时：播"删除失败，操作超时"后回上级（管理员菜单）
             me->branch = (QStateHandler)(lock_fsm_menu_admin);
-            state = Q_TRAN(lockFsmMenuTimeOut);
+            state = Q_TRAN(lockFsmDeleteUserFailTimeOut);
             break;
         case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作
             break;
@@ -204,9 +204,9 @@ QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e)
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
                 system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时未输入：播"操作超时"后回上级（删除用户菜单）
+        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时未输入：播"删除失败，操作超时"后回上级（删除用户菜单）
             me->branch = (QStateHandler)(lock_fsm_menu_delete_normal_user);
-            state = Q_TRAN(lockFsmMenuTimeOut);
+            state = Q_TRAN(lockFsmDeleteUserFailTimeOut);
             break;
         case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作
             break;
@@ -256,9 +256,9 @@ QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e)
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
                 system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时未输入：播"操作超时"后回上级（删除用户菜单）
+        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时未输入：播"删除失败，操作超时"后回上级（删除用户菜单）
             me->branch = (QStateHandler)(lock_fsm_menu_delete_normal_user);
-            state = Q_TRAN(lockFsmMenuTimeOut);
+            state = Q_TRAN(lockFsmDeleteUserFailTimeOut);
             break;
         case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作
             break;

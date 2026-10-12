@@ -278,6 +278,12 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_DELETE_FAIL_TIME_OUT:
             PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed, VOICE_Operation_timed_out);
+            keepTime = HMI_STATE_KEEP_TIME_2s;
+            break;
+
+        case HMI_STATE_ADD_FAIL_TIME_OUT:       // 添加类界面停留超时：添加失败 + 操作超时
+            PLAYER_LIST_CLEAR_ADD(VOICE_Addition_failed, VOICE_Operation_timed_out);
+            keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
         case HMI_STATE_MENU_TIME_OUT:           // 子菜单停留超时：只播"操作超时"，播完由 FSM 回上级菜单

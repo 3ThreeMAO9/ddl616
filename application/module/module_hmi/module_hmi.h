@@ -101,6 +101,7 @@ typedef enum{
     HMI_STATE_DELETE_FAIL_NOT_EXIST,    //删除失败，用户不存在
     HMI_STATE_DELETE_FAIL_EMPTY,        //删除失败，用户为空
     HMI_STATE_DELETE_FAIL_TIME_OUT,     //删除失败，操作超时
+    HMI_STATE_ADD_FAIL_TIME_OUT,        //添加失败，操作超时
     HMI_STATE_REPEAT_INPUT_CODE,        //请再输入一次，以#号键结束
     HMI_STATE_MODIFY_ADMIN_USER_SETTINGS,//修改管理员密码请按，修改管理指纹请按
     HMI_STATE_CREATE_LINKED_UNLOCK,     //创建联动开锁
