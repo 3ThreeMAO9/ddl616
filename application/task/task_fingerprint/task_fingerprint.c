@@ -229,12 +229,12 @@ static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t len
 }
 
 static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t lenth) {
-   fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
+//   fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
 
     switch (event)
     {
     case FP_EVENT_SUCCESS_HANDLE:
-        OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE   del_finger_id %d", ptr->page_id);
+        OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE");
         break;
     case FP_EVENT_DELETE_ALL:
         OB_LOGI(TAG, "FP_EVENT_DELETE_ALL");
