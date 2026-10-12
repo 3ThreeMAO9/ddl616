@@ -17,7 +17,7 @@
 #include "parameter.h"
 #include "lock_log.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
+#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "task_fp"
 
@@ -172,8 +172,10 @@ static uint8_t fp_delete_busy   = false;    // 已下发一条，等模块终态
 static uint8_t fp_delete_result = FP_DELETE_NONE;
 static uint8_t fp_task_mode     = FP_MODE_IDLE;  // 任务层最后请求的模式（非 IDLE 时不抢模块）
 static uint8_t fp_delete_notify = false;    // 本批有待删项：全部删完要补发一次完成事件
-static uint8_t fp_delete_range_hint     = false;    // 本批是"删全部"：先试一条范围删除
+static uint8_t fp_delete_range_hint     = false;    // 有待下发的范围删除请求
 static uint8_t fp_delete_range_inflight = false;    // 正在执行的这条是范围删除
+static uint16_t fp_delete_range_page    = 0;        // 范围删除请求：起始模板号
+static uint8_t  fp_delete_range_count   = 0;        // 范围删除请求：连续个数
 
 static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t lenth) {
     // params 指向 ctx->params.del：只在回调里取值，不要等"下发下一条"之后再用
@@ -272,17 +274,39 @@ static uint8_t fp_delete_has_pending(void) {
 }
 
 void fp_task_delete_fp(fp_delete_params_t params) {
-    uint16_t i;
+    uint16_t capacity = 0;
+    uint16_t id;
+    uint8_t  i;
 
     if (NULL == fp_task_driver.io->set_mode) {
         return;
     }
 
-    // 只记账（count 个连续模板）：实际下发由 fp_task_delete_process 按模块空闲情况推进
-    for (i = 0; (i < params.count) && ((uint16_t)(params.page_id + i) < FINGERPRINT_COUNT_MAX); i++) {
-        uint16_t id = params.page_id + i;
+    // 按模块实际容量收敛 count（调用方可传 0xFF 表示"从 page_id 起删到最末"）
+    if (NULL != fp_task_driver.io->get_capacity) {
+        capacity = fp_task_driver.io->get_capacity();
+    }
+    if (0 == capacity) {
+        capacity = FINGERPRINT_COUNT_MAX;
+    }
+    if (params.page_id >= capacity) {
+        return;
+    }
+    if ((uint16_t)(params.page_id + params.count) > capacity) {
+        params.count = (uint8_t)(capacity - params.page_id);
+    }
 
+    // 记账：这些模板号既是"要删的"，也是范围删除失败后的逐条回退清单
+    for (i = 0; i < params.count; i++) {
+        id = params.page_id + i;
         fp_del_pending[id >> 3] |= (1 << (id & 7));
+    }
+
+    if (params.count > 1) {
+        // 连续多个：先按一条范围命令下发（失败时待删表还在，自动退回逐条）
+        fp_delete_range_page  = params.page_id;
+        fp_delete_range_count = params.count;
+        fp_delete_range_hint  = true;
     }
 
     fp_delete_notify = true;        // 本批删完后要报一次完成
@@ -294,10 +318,6 @@ uint8_t fp_task_delete_result(void) {
 
 uint8_t fp_task_delete_is_done(void) {
     return (false == fp_delete_busy) && (false == fp_delete_has_pending());
-}
-
-void fp_task_delete_all_except_master(void) {
-    fp_delete_range_hint = true;
 }
 
 // 模块空闲、且任务层没被别的流程（验证/注册…）占用时，下发下一条待删模板
@@ -323,30 +343,17 @@ static void fp_task_delete_process(void) {
     }
 
     if (fp_delete_range_hint) {
-        // 删全部普通用户：模板号 1 ~ 最末（0 号固定留给管理指纹），一条范围删除即可。
-        // 模块若因中间有空槽而返回失败，下面会自动退回逐条删除（待删表不动）
-        uint8_t capacity = 0;
-
+        // 一条范围删除（page_id/count 已由 fp_task_delete_fp 按模块容量收敛好）。
+        // 模块若因中间有空槽而失败，下面会自动退回逐条删除（待删表不动）
         fp_delete_range_hint = false;
-
-        if (NULL != fp_task_driver.io->get_capacity) {
-            capacity = fp_task_driver.io->get_capacity();     // 模块实际模板容量
-        }
-        if (0 == capacity) {
-            capacity = FINGERPRINT_COUNT_MAX;                 // 还没读到模块参数：按驱动最大模板数兜底
-        }
-        if (capacity < 2) {
-            return;                                           // 容量异常：直接退回逐条
-        }
-
-        params.page_id   = 1;
-        params.count     = (uint8_t)(capacity - 1);
+        params.page_id   = fp_delete_range_page;
+        params.count     = fp_delete_range_count;
         fp_delete_result = FP_DELETE_NONE;
 
-        OB_LOGI(TAG, "del all fp: capacity[%u], range[1~%u]", capacity, params.count);
+        OB_LOGI(TAG, "del range: %u~%u", params.page_id, params.page_id + params.count - 1);
 
         if (false == fp_task_driver.io->set_mode(FP_MODE_DELETE, fp_delete_event_callback, (&params), sizeof(fp_delete_params_t))) {
-            fp_delete_range_hint = true;        // 模块未就绪：提示留着，下一轮再试
+            fp_delete_range_hint = true;        // 模块未就绪：留着下一轮再试
             return;
         }
 

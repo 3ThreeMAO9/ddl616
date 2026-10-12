@@ -1394,8 +1394,13 @@ static void user_delete_keys(uint16_t user_id)
 #if (FP_ENABLE_DELETE)
     if (0xFFFF == user_id)
     {
-        // 删全部普通用户：除 0 号管理指纹模板外全删，先用一条范围删除搞定（失败自动退回逐条）
-        fp_task_delete_all_except_master();
+        fp_delete_params_t fp_all;
+
+        // 删全部普通用户：从 1 号起删到最末（0 号固定留给管理指纹）；
+        // count = 0xFF 表示"到最末"，task 层按模块实际容量收敛（本模块 → 49 个）
+        fp_all.page_id = 1;
+        fp_all.count   = 0xFF;
+        fp_task_delete_fp(fp_all);
     }
 #endif
 
@@ -1418,7 +1423,7 @@ static void user_delete_keys(uint16_t user_id)
                     fp_delete_params_t fp_del;
 
                     fp_del.page_id = temp.info.finger.id;       // 模块里的模板号
-                    fp_del.count   = 1;
+                    fp_del.count   = 1;                         // 单把指纹 = 一个模板号
                     fp_task_delete_fp(fp_del);                  // 入队，不等结果
                 }
 #endif

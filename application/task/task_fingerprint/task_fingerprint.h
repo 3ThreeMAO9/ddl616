@@ -103,23 +103,17 @@ typedef enum {
 } fp_delete_result_e;
 
 /**
- * @brief : 指纹模块任务按index删除
- * @param : params, 结构体fp_delete_params_t（起始index及数量）
+ * @brief : 指纹模块任务按 index 删除（入队）
+ * @param : params, 结构体fp_delete_params_t：从 page_id 起，连续删 count 个模板
  * @return : none
  * @note : 模块是异步状态机，同一时刻只认一条删除命令，且同模式重复下发会被丢弃
- *         （fp_set_mode_API 的同模式早退）。所以这里只把 index 记进待删表，由
- *         fp_task_loop() 在模块空闲时一条一条下发；调用方不必等待、不必重试
+ *         （fp_set_mode_API 的同模式早退）。所以这里只记账，由 fp_task_loop() 在模块空闲时下发：
+ *           count > 1 先按一条范围命令下发（模块不接受跨空槽时自动退回逐条删除）
+ *           count = 1 就是删单个
+ *         count 允许超过模块容量（用 0xFF 表示"从 page_id 起删到最末"），本接口按模块
+ *         实际容量收敛；调用方不必等待、不必重试
  */
 void fp_task_delete_fp(fp_delete_params_t params);      // 按Index删除（入队）
-
-/**
- * @brief : 提示本批删除是"删全部普通用户的指纹"
- * @return : none
- * @note : 普通指纹模板号从 1 开始（0 号固定留给管理指纹，见驱动 read_empty_fp_index），
- *         所以这一批先用一条范围删除（1 ~ 最末模板号）搞定；模块若因中间有空槽而失败，
- *         会自动退回逐条删除（fp_task_delete_fp 的记账不受影响，仍是回退用的工作清单）
- */
-void fp_task_delete_all_except_master(void);
 
 /**
  * @brief : 查询最近一条按index删除命令的结果
