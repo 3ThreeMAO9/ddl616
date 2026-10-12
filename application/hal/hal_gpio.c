@@ -292,37 +292,72 @@ void HAL_GPIO_IRQ_ClrEN(void)
     // clrf_SYS_Reg0x10_int_aon_gpio_en;
 }
 
+// 使能对应端口的 NVIC 中断（原 GPIO_EnableINT 宏不论哪种模式都会做这一步）
+// 注意按"转换后的端口指针"判断，与宏一致（端口非法时转换函数返回 GPIO0，宏也会使能 GPIO0）
+static void gpio_nvic_enable(OB_GPIO_Type *ob_port)
+{
+    if (ob_port == OB_GPIO0)
+    {
+        NVIC_EnableIRQ(GPIO0_IRQn);
+    }
+    else if (ob_port == OB_GPIO1)
+    {
+        NVIC_EnableIRQ(GPIO1_IRQn);
+    }
+    else if (ob_port == OB_GPIO2)
+    {
+        NVIC_EnableIRQ(GPIO2_IRQn);
+    }
+    else if (ob_port == OB_GPIO3)
+    {
+        NVIC_EnableIRQ(GPIO3_IRQn);
+    }
+}
+
+// 写中断模式：IEENS0/IEENS1 每引脚占 4 bit(有效 3 bit)，pin0~7 在 IEENS0、pin8~15 在 IEENS1
+static void gpio_int_mode_set(OB_GPIO_Type *ob_port, uint32_t ob_pin, uint8_t mode)
+{
+    uint8_t  pin_idx = (uint8_t)(31 - __clz(ob_pin));
+    uint32_t shift   = (uint32_t)(pin_idx & 0x7) * 4;
+    volatile uint32_t *reg = (pin_idx < 8) ? &ob_port->IEENS0 : &ob_port->IEENS1;
+
+    *reg = (*reg & ~(0x7u << shift)) | ((uint32_t)mode << shift);
+}
+
 // 启用GPIO中断
 void HAL_GPIO_EnableIRQ(HalGpioPort port, HalGpioPin pin, HalGpioIrqType type)
 {
-    // 根据类型启用GPIO中断
     OB_GPIO_Type *ob_port = hal_convert_ob_gpio_port(port);
     uint32_t ob_pin = hal_convert_ob_gpio_pin(pin);
+    uint8_t mode;
+
     switch (type)
     {
         case HAL_GPIO_IRQ_RISING:
-            GPIO_EnableINT(ob_port,ob_pin,GPIO_INTMODE_RISING_EDGE);
+            mode = GPIO_INTMODE_RISING_EDGE;
             break;
         case HAL_GPIO_IRQ_FALLING:
-            GPIO_EnableINT(ob_port,ob_pin,GPIO_INTMODE_FALLING_EDGE);
+            mode = GPIO_INTMODE_FALLING_EDGE;
             break;
         case HAL_GPIO_IRQ_HIGH_LEVEL:
-            GPIO_EnableINT(ob_port,ob_pin,GPIO_INTMODE_LOW_LEVEL);
-            break;
         case HAL_GPIO_IRQ_LOW_LEVEL:
-            GPIO_EnableINT(ob_port,ob_pin,GPIO_INTMODE_LOW_LEVEL);
+            mode = GPIO_INTMODE_LOW_LEVEL;      // 与原宏一致（HIGH_LEVEL 也用 LOW_LEVEL）
             break;
         default:
-            break;
+            return;                            // 与原宏一致：不使能 NVIC、不写字段
     }
+
+    gpio_nvic_enable(ob_port);
+    gpio_int_mode_set(ob_port, ob_pin, mode);
 }
 
 // 禁用GPIO中断
 void HAL_GPIO_DisableIRQ(HalGpioPort port, HalGpioPin pin)
 {
     OB_GPIO_Type *ob_port = hal_convert_ob_gpio_port(port);
-    uint32_t ob_pin = hal_convert_ob_gpio_pin(pin);
-    GPIO_EnableINT(ob_port,ob_pin,GPIO_INTMODE_DISABLE);
+
+    gpio_nvic_enable(ob_port);                 // 与原宏一致：禁用时 NVIC 仍使能
+    gpio_int_mode_set(ob_port, hal_convert_ob_gpio_pin(pin), GPIO_INTMODE_DISABLE);
 }
 
 void HAL_GPIO_GetIntState(uint32_t port, uint32_t pin)
