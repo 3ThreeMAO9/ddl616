@@ -164,6 +164,108 @@ uint32_t hal_convert_ob_gpio_pin(HalGpioPin pin)
 }
 
 
+/* ---- 复用功能(MF)与模式设置：等价替换厂商 GPIO_SetPinMFType 巨型宏 ----
+ * 原宏 = 每 (port,pin) 一长串 if (nMFType == ...) 分支，末尾再调 GPIO_SetPinMode 写 MODE。
+ * configure_gpio 只可能传入 GPIO_MF_TYPE_GPIO 和 ANALOG 分支里那 6 种功能，
+ * 所以用「兜底表 + ANALOG 映射表」实现（与宏逐位一致，见配套 PC 对照测试）。
+ */
+typedef struct
+{
+    uint8_t port;
+    uint8_t pin;
+    uint8_t mf;
+    uint8_t reg;    /* 0 = MF0, 1 = MF1 */
+    uint8_t val;
+} gpio_mf_analog_t;
+
+/* 兜底：0=清 MF0、1=清 MF1、0xFF=原宏该引脚没有 else 分支（什么都不写） */
+static const uint8_t s_mf_fb_reg[4][16] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0xFF, 0xFF},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+};
+
+/* 原宏还会动系统寄存器：port2 的部分引脚在非 XTAL/SWD 时清 CPUCHIPCTR0 对应位
+ * （XTAL/SWD 分支是置位，但 configure_gpio 不会传这两种功能，故只需清位） */
+static const uint8_t s_syscon_clr[16] = {0, 0, 0x04, 0x04, 0, 0x02, 0x02, 0, 0, 0x08, 0x08, 0, 0, 0, 0, 0};
+
+/* ANALOG 模式下按 (port,pin) 选定的功能（值取自厂商宏） */
+static const gpio_mf_analog_t s_mf_analog[] = {
+    {0, 0, GPIO_MF_ADC, 0, 2},
+    {0, 3, GPIO_MF_UART1_TX, 0, 4},
+    {1, 3, GPIO_MF_ADC, 0, 2},
+    {2, 11, GPIO_MF_UART1_RX, 1, 4},
+    {3, 0, GPIO_MF_UART0_RX, 0, 4},
+    {3, 1, GPIO_MF_UART0_TX, 0, 4},
+};
+
+// 由转换后的端口指针反推端口序号（厂商宏就是按指针分支的）
+// 端口非法时 hal_convert_ob_gpio_port 返回 OB_GPIO0，宏也会按 GPIO0 处理，这里同样归 0
+static uint8_t gpio_port_index(OB_GPIO_Type *ob_port)
+{
+    if (ob_port == OB_GPIO1)
+    {
+        return 1;
+    }
+    if (ob_port == OB_GPIO2)
+    {
+        return 2;
+    }
+    if (ob_port == OB_GPIO3)
+    {
+        return 3;
+    }
+    return 0;
+}
+
+// 写 MF0/MF1：每引脚 4 bit
+static void gpio_mf_write(OB_GPIO_Type *ob_port, uint8_t pin_idx, uint8_t mf)
+{
+    uint8_t port_idx = gpio_port_index(ob_port);
+    uint32_t shift = (uint32_t)pin_idx * 4;
+    uint32_t i;
+
+    if ((2 == port_idx) && (s_syscon_clr[pin_idx] != 0))
+    {
+        OB_SYSCON->CPUCHIPCTR0 &= ~(uint32_t)s_syscon_clr[pin_idx];
+    }
+
+    for (i = 0; i < sizeof(s_mf_analog) / sizeof(s_mf_analog[0]); i++)
+    {
+        if ((s_mf_analog[i].port == port_idx) && (s_mf_analog[i].pin == pin_idx) && (s_mf_analog[i].mf == mf))
+        {
+            if (s_mf_analog[i].reg)
+            {
+                ob_port->MF1 = (ob_port->MF1 & ~(0xFu << shift)) | ((uint32_t)s_mf_analog[i].val << shift);
+            }
+            else
+            {
+                ob_port->MF0 = (ob_port->MF0 & ~(0xFu << shift)) | ((uint32_t)s_mf_analog[i].val << shift);
+            }
+            return;
+        }
+    }
+
+    /* 其余类型走兜底：与原宏的 else 分支一致 */
+    if (0 == s_mf_fb_reg[port_idx][pin_idx])
+    {
+        ob_port->MF0 = (ob_port->MF0 & ~(0xFu << shift));
+    }
+    else if (1 == s_mf_fb_reg[port_idx][pin_idx])
+    {
+        ob_port->MF1 = (ob_port->MF1 & ~(0xFu << shift));
+    }
+}
+
+// 写 MODE：每引脚 2 bit
+static void gpio_mode_write(OB_GPIO_Type *ob_port, uint8_t pin_idx, uint8_t pin_mode)
+{
+    uint32_t shift = (uint32_t)pin_idx * 2;
+
+    ob_port->MODE = (ob_port->MODE & ~(0x3u << shift)) | ((uint32_t)pin_mode << shift);
+}
+
 // 内部函数，用于配置GPIO模式和上拉/下拉
 static void configure_gpio(HalGpioPort port, HalGpioPin pin, HalGpioMode mode, HalGpioPull pull)
 {
@@ -171,6 +273,7 @@ static void configure_gpio(HalGpioPort port, HalGpioPin pin, HalGpioMode mode, H
     uint8_t pin_mode = GPIO_PINMODE_INPUT;
     OB_GPIO_Type* ob_port = OB_GPIO0;
     uint32_t ob_pin = GPIO_PIN0;
+    uint8_t pin_idx;
     // 配置GPIO模式
     switch (mode)
     {
@@ -240,8 +343,10 @@ static void configure_gpio(HalGpioPort port, HalGpioPin pin, HalGpioMode mode, H
     // }
     ob_port = hal_convert_ob_gpio_port(port);
     ob_pin = hal_convert_ob_gpio_pin(pin);
+    pin_idx = (uint8_t)(31 - __clz(ob_pin));
 
-    GPIO_SetPinMFType(ob_port, ob_pin, pin_type, pin_mode);
+    gpio_mf_write(ob_port, pin_idx, pin_type);
+    gpio_mode_write(ob_port, pin_idx, pin_mode);
 }
 
 // 初始化GPIO
