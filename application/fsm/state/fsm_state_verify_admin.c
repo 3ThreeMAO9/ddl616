@@ -87,7 +87,7 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
                     hmiTaskSetState(HMI_STATE_JOIN_NET_START);
                     hmi_task_join_net_time(JOIN_NET_TIMEOUT);
                     uart_msg_join_net();
-                    state = Q_TRAN(lock_fsm_sleep);
+                    state = Q_TRAN(lock_fsm_exit_admin_mode);
                 }
             }
             break;
@@ -117,7 +117,7 @@ QState lock_fsm_verify_admin(LockFsm *me, QEvent const *e)
         case Q_FUNCTION_TIME_OUT_SIG:
             break;
         case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_sleep);
+            state = Q_TRAN(lock_fsm_exit_admin_mode);
             break;
         default:
             break;

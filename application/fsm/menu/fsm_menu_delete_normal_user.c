@@ -147,7 +147,7 @@ QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e)
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             break;
         case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_sleep);
+            state = Q_TRAN(lock_fsm_exit_admin_mode);
             break;
         default:
             break;

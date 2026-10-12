@@ -32,6 +32,7 @@ static const struct
     FSM_STATE_NAME(lock_fsm_power_on),
     FSM_STATE_NAME(lock_fsm_idle),
     FSM_STATE_NAME(lock_fsm_sleep),
+    FSM_STATE_NAME(lock_fsm_exit_admin_mode),
     FSM_STATE_NAME(lock_fsm_verify_admin),
     FSM_STATE_NAME(lock_fsm_reset),
     FSM_STATE_NAME(lock_fsm_system_lock),

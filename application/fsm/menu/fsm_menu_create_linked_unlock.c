@@ -54,7 +54,7 @@ QState lock_fsm_menu_create_linked_unlock(LockFsm *me, QEvent const *e)
         case Q_FUNCTION_TIME_OUT_SIG:
             break;
         case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_sleep);
+            state = Q_TRAN(lock_fsm_exit_admin_mode);
             break;
         default:
             break;

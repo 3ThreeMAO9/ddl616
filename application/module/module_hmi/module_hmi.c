@@ -191,6 +191,12 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(VOICE_Entered_management_mode);
             break;
 
+        case HMI_STATE_EXIT_ADMIN_MODE:             //已退出管理模式：灭灯（随后进入休眠）+ 播报
+            hmi_logo_led_config(LOGO_LED_COLOR_IDLE, LOGO_LED_COLOR_IDLE, 0, 0);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Exited_from_master_mode);
+            break;
+
         case HMI_STATE_VERIFY_ADMIN_CODE:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             PLAYER_LIST_ADD(VOICE_Please_verify_master_access_method, VOICE_To_cancel_please_press_the_asterisk_key);

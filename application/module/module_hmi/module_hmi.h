@@ -59,6 +59,7 @@ typedef enum{
     HMI_STATE_HANDLE_FAIL,              //红灯闪烁，打断当前语音
     HMI_STATE_UNLOCK_FAIL,              //验证失败
     HMI_STATE_ENTER_ADMIN_MODE,         //进入管理模式
+    HMI_STATE_EXIT_ADMIN_MODE,          //已退出管理模式
     HMI_STATE_VERIFY_ADMIN_CODE,        //请验证管理密钥，取消请按星号键
     HMI_STATE_INPUT_ERROR_AGAIN,        //输入错误,请再次输入   Input error Please_enter_again
     HMI_STATE_PIN_REPEAT,               //设置失败，密码已存在  Setup failed PIN code already exists 
