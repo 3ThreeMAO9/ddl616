@@ -172,24 +172,40 @@ static uint8_t fp_delete_busy   = false;    // 已下发一条，等模块终态
 static uint8_t fp_delete_result = FP_DELETE_NONE;
 static uint8_t fp_task_mode     = FP_MODE_IDLE;  // 任务层最后请求的模式（非 IDLE 时不抢模块）
 static uint8_t fp_delete_notify = false;    // 本批有待删项：全部删完要补发一次完成事件
+static uint8_t fp_delete_range_hint     = false;    // 本批是"删全部"：先试一条范围删除
+static uint8_t fp_delete_range_inflight = false;    // 正在执行的这条是范围删除
 
 static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t lenth) {
     // params 指向 ctx->params.del：只在回调里取值，不要等"下发下一条"之后再用
     //（下发会走 fp_is_ready → fingerprint_reset_context → memset ctx->params）
     fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
+    uint8_t is_range = fp_delete_range_inflight;        // 先记下来，下面要清标志
 
     switch (event)
     {
     case FP_EVENT_SUCCESS_HANDLE:
         fp_delete_result = FP_DELETE_OK;
         fp_delete_busy   = false;
+        if (is_range) {
+            fp_delete_range_inflight = false;
+            memset(fp_del_pending, 0, sizeof(fp_del_pending));  // 范围删除成功：整批都删掉了
+        }
         if (NULL != ptr) {
-            OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE   del_finger_id %d", ptr->page_id);
+            if (is_range) {
+                OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE   del_finger_id %u~%u",
+                        ptr->page_id, ptr->page_id + ptr->count - 1);
+            } else {
+                OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE   del_finger_id %u", ptr->page_id);
+            }
         }
         break;
     case FP_EVENT_FAIL_DELETE:
         fp_delete_result = FP_DELETE_FAIL;
         fp_delete_busy   = false;
+        if (is_range) {
+            fp_delete_range_inflight = false;   // 范围删除失败：待删表不动，退回逐条
+            OB_LOGI(TAG, "del range failed, fallback per index");
+        }
         OB_LOGI(TAG, "FP_EVENT_FAIL_DELETE");
         break;
     case FP_EVENT_POWER_ON:
@@ -280,6 +296,10 @@ uint8_t fp_task_delete_is_done(void) {
     return (false == fp_delete_busy) && (false == fp_delete_has_pending());
 }
 
+void fp_task_delete_all_except_master(void) {
+    fp_delete_range_hint = true;
+}
+
 // 模块空闲、且任务层没被别的流程（验证/注册…）占用时，下发下一条待删模板
 static void fp_task_delete_process(void) {
     fp_delete_params_t params;
@@ -290,6 +310,7 @@ static void fp_task_delete_process(void) {
     }
 
     if (false == fp_delete_has_pending()) {
+        fp_delete_range_hint = false;
         if (fp_delete_notify) {     // 本批删完了：补发一次完成事件（调用方据此才报"删除成功"）
             fp_delete_notify = false;
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DELETE_KEYS_DONE);
@@ -299,6 +320,40 @@ static void fp_task_delete_process(void) {
 
     if (FP_MODE_IDLE != fp_task_mode) {
         return;                     // 模块正被验证/注册占用，等它空出来再接着删
+    }
+
+    if (fp_delete_range_hint) {
+        // 删全部普通用户：模板号 1 ~ 最末（0 号固定留给管理指纹），一条范围删除即可。
+        // 模块若因中间有空槽而返回失败，下面会自动退回逐条删除（待删表不动）
+        uint8_t capacity = 0;
+
+        fp_delete_range_hint = false;
+
+        if (NULL != fp_task_driver.io->get_capacity) {
+            capacity = fp_task_driver.io->get_capacity();     // 模块实际模板容量
+        }
+        if (0 == capacity) {
+            capacity = FINGERPRINT_COUNT_MAX;                 // 还没读到模块参数：按驱动最大模板数兜底
+        }
+        if (capacity < 2) {
+            return;                                           // 容量异常：直接退回逐条
+        }
+
+        params.page_id   = 1;
+        params.count     = (uint8_t)(capacity - 1);
+        fp_delete_result = FP_DELETE_NONE;
+
+        OB_LOGI(TAG, "del all fp: capacity[%u], range[1~%u]", capacity, params.count);
+
+        if (false == fp_task_driver.io->set_mode(FP_MODE_DELETE, fp_delete_event_callback, (&params), sizeof(fp_delete_params_t))) {
+            fp_delete_range_hint = true;        // 模块未就绪：提示留着，下一轮再试
+            return;
+        }
+
+        fp_delete_range_inflight = true;
+        fp_delete_busy = true;
+        fp_task_mode   = FP_MODE_DELETE;
+        return;
     }
 
     for (id = 0; id < FINGERPRINT_COUNT_MAX; id++) {

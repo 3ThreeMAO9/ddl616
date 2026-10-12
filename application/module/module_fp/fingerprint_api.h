@@ -52,6 +52,7 @@ uint8_t fp_set_attr_API(void* attr, uint8_t lenth);
 uint8_t fp_control_led_API(uint8_t color);
 uint8_t fp_is_wake_API(void);
 uint8_t fp_is_busy_API(void);
+uint8_t fp_get_capacity_API(void);      // 模块实际模板容量（初始化读到模块参数后有效）
 
 /**************************************/
 

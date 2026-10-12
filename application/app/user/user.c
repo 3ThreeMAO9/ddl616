@@ -1391,6 +1391,14 @@ static void user_delete_keys(uint16_t user_id)
     uint16_t sn;
     uint8_t t, i;
 
+#if (FP_ENABLE_DELETE)
+    if (0xFFFF == user_id)
+    {
+        // 删全部普通用户：除 0 号管理指纹模板外全删，先用一条范围删除搞定（失败自动退回逐条）
+        fp_task_delete_all_except_master();
+    }
+#endif
+
     for (t = 0; t < USER_TYPE_PERMANENT_MAX; t++)
     {
         for (i = 0; i < key_area[t].count; i++)

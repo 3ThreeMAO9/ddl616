@@ -17,6 +17,7 @@ static const bsp_fp_drive_io_t bsp_fp = {
     .set_attr = fp_set_attr_API,
     .is_wake = fp_is_wake_API,
     .is_busy = fp_is_busy_API,
+    .get_capacity = fp_get_capacity_API,
     
 #if (FP_ENABLE_LED_CONTROL)
     .control_led = fp_control_led_API,

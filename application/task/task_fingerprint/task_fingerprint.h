@@ -113,6 +113,15 @@ typedef enum {
 void fp_task_delete_fp(fp_delete_params_t params);      // 按Index删除（入队）
 
 /**
+ * @brief : 提示本批删除是"删全部普通用户的指纹"
+ * @return : none
+ * @note : 普通指纹模板号从 1 开始（0 号固定留给管理指纹，见驱动 read_empty_fp_index），
+ *         所以这一批先用一条范围删除（1 ~ 最末模板号）搞定；模块若因中间有空槽而失败，
+ *         会自动退回逐条删除（fp_task_delete_fp 的记账不受影响，仍是回退用的工作清单）
+ */
+void fp_task_delete_all_except_master(void);
+
+/**
  * @brief : 查询最近一条按index删除命令的结果
  * @return : fp_delete_result_e
  */

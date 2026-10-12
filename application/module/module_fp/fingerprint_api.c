@@ -231,3 +231,8 @@ uint8_t fp_is_wake_API(void)
 uint8_t fp_is_busy_API(void) {
     return fp_handle.ctx.status.power;
 }
+
+// 模块实际模板容量（0 = 还没读到模块参数）
+uint8_t fp_get_capacity_API(void) {
+    return fp_handle.ctx.mdl_attr.count_max;
+}

@@ -28,6 +28,7 @@ typedef struct {
     uint8_t (*set_attr)(void*, uint8_t);
     uint8_t (*is_wake)(void);
     uint8_t (*is_busy)(void);
+    uint8_t (*get_capacity)(void);          // 模块实际模板容量（范围删除用）
 #if (FP_ENABLE_LED_CONTROL)
     uint8_t (*control_led)(uint8_t);
 #endif
