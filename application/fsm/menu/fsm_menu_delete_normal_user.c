@@ -48,6 +48,8 @@ static uint16_t delete_id_input_value(void)
 }
 
 // 删除结果 -> 对应结果语音；语音播完由 lockFsmSuccessDeal 回到 me->branch（删除用户菜单）
+// 注意：USER_DEL_OK 只表示 flash 记录已删（用户已不可见），指纹模板还得等指纹模块异步删完；
+//       所以先转等待状态，收到 EVENT_RESULT_DELETE_KEYS_DONE 后才播报"删除成功"
 static QState delete_result_deal(LockFsm *me, uint8_t result)
 {
     me->branch = (QStateHandler)(lock_fsm_menu_delete_normal_user);
@@ -55,6 +57,12 @@ static QState delete_result_deal(LockFsm *me, uint8_t result)
     switch (result)
     {
     case USER_DEL_OK:
+#if (FP_ENABLE_DELETE)
+        if (false == fp_task_delete_is_done())
+        {
+            return Q_TRAN(lock_fsm_menu_delete_wait_done);
+        }
+#endif
         return Q_TRAN(lockFsmDeleteUserSuccess);
     case USER_DEL_FAIL_ADMIN:
         return Q_TRAN(lockFsmDeleteUserFailAdmin);
@@ -65,6 +73,38 @@ static QState delete_result_deal(LockFsm *me, uint8_t result)
     default:                            // 超时未输入
         return Q_TRAN(lockFsmDeleteUserFailTimeOut);
     }
+}
+
+// ------------------------------------------
+// 等指纹模块把用户名下指纹模板删完（只有指纹需要等；密码/卡片删记录即完成）
+#define DELETE_WAIT_TIME_OUT_MS     (15 * 1000)     // 模块一直没删完的超时保护
+
+QState lock_fsm_menu_delete_wait_done(LockFsm *me, QEvent const *e)
+{
+    QState state = Q_IGNORED();
+
+    switch (e->sig){
+        case Q_ENTRY_SIG:
+            keyTaskHandle(KEY_TYPE_KEY_BOARD, false);           // 等结果，先关键盘
+            fp_task_set_mode(FP_MODE_IDLE);
+            system_time_task_set_work_time(DELETE_WAIT_TIME_OUT_MS);
+            break;
+        case Q_EXIT_SIG:
+            break;
+        case Q_HANDLE_SIG:
+            if (EVENT_RESULT_DELETE_KEYS_DONE == e->dynamic_[0])    // 指纹模板删完：报成功
+            {
+                state = Q_TRAN(lockFsmDeleteUserSuccess);
+            }
+            break;
+        case Q_WORK_TIME_OUT_SIG:                                   // 模块迟迟没删完
+            state = delete_result_deal(me, 0xFF);
+            break;
+        default:
+            break;
+    }
+
+    return state;
 }
 
 // ------------------------------------------

@@ -258,7 +258,7 @@ typedef enum
     USER_DEL_FAIL_EMPTY,        // 没有普通用户（删全部时用）
 } user_del_result_t;
 
-user_del_result_t user_delete_normal(uint16_t user_id);     // 删单个普通用户
+user_del_result_t user_delete_normal(uint16_t user_id);     // 删单个普通用户（含其名下钥匙）
 user_del_result_t user_delete_all_normal(void);             // 删全部普通用户（管理员保留）
 
 /**************************************/

@@ -51,6 +51,7 @@ static const struct
     FSM_STATE_NAME(lock_fsm_menu_delete_normal_user),
     FSM_STATE_NAME(lock_fsm_menu_delete_normal_user_input_id),
     FSM_STATE_NAME(lock_fsm_menu_delete_all_normal_user),
+    FSM_STATE_NAME(lock_fsm_menu_delete_wait_done),
     // 结果状态
     FSM_STATE_NAME(lockFsmHandleAddSuccess),
     FSM_STATE_NAME(lockFsmDeleteUserSuccess),

@@ -164,15 +164,32 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
 }
 
 #if (FP_ENABLE_DELETE)
+// 待删的模块模板表（按模块模板号 page_id 索引；100 个模板 = 13 字节）+ 单条删除的进行状态。
+// 模块同一时刻只认一条删除命令，且同模式重复下发会被丢弃（fp_set_mode_API 同模式早退），
+// 所以 fp_task_delete_fp() 只记账，由 fp_task_loop() 在模块空闲时一条一条下发。
+static uint8_t fp_del_pending[(FINGERPRINT_COUNT_MAX + 7) / 8];
+static uint8_t fp_delete_busy   = false;    // 已下发一条，等模块终态
+static uint8_t fp_delete_result = FP_DELETE_NONE;
+static uint8_t fp_task_mode     = FP_MODE_IDLE;  // 任务层最后请求的模式（非 IDLE 时不抢模块）
+static uint8_t fp_delete_notify = false;    // 本批有待删项：全部删完要补发一次完成事件
+
 static uint8_t fp_delete_event_callback(uint8_t event, void* params, uint8_t lenth) {
+    // params 指向 ctx->params.del：只在回调里取值，不要等"下发下一条"之后再用
+    //（下发会走 fp_is_ready → fingerprint_reset_context → memset ctx->params）
     fp_delete_params_t* ptr = (fp_delete_params_t*)(params);
 
     switch (event)
     {
     case FP_EVENT_SUCCESS_HANDLE:
-        OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE   del_finger_id %d", ptr->page_id);
+        fp_delete_result = FP_DELETE_OK;
+        fp_delete_busy   = false;
+        if (NULL != ptr) {
+            OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE   del_finger_id %d", ptr->page_id);
+        }
         break;
     case FP_EVENT_FAIL_DELETE:
+        fp_delete_result = FP_DELETE_FAIL;
+        fp_delete_busy   = false;
         OB_LOGI(TAG, "FP_EVENT_FAIL_DELETE");
         break;
     case FP_EVENT_POWER_ON:
@@ -226,12 +243,84 @@ static uint8_t fp_reset_all_event_callback(uint8_t event, void* params, uint8_t 
 #endif
 
 #if (FP_ENABLE_DELETE)
+static uint8_t fp_delete_has_pending(void) {
+    uint8_t i;
+
+    for (i = 0; i < sizeof(fp_del_pending); i++) {
+        if (fp_del_pending[i]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void fp_task_delete_fp(fp_delete_params_t params) {
+    uint16_t i;
+
     if (NULL == fp_task_driver.io->set_mode) {
         return;
     }
 
-    fp_task_driver.io->set_mode(FP_MODE_DELETE, fp_delete_event_callback, (&params), sizeof(fp_delete_params_t));
+    // 只记账（count 个连续模板）：实际下发由 fp_task_delete_process 按模块空闲情况推进
+    for (i = 0; (i < params.count) && ((uint16_t)(params.page_id + i) < FINGERPRINT_COUNT_MAX); i++) {
+        uint16_t id = params.page_id + i;
+
+        fp_del_pending[id >> 3] |= (1 << (id & 7));
+    }
+
+    fp_delete_notify = true;        // 本批删完后要报一次完成
+}
+
+uint8_t fp_task_delete_result(void) {
+    return fp_delete_result;
+}
+
+uint8_t fp_task_delete_is_done(void) {
+    return (false == fp_delete_busy) && (false == fp_delete_has_pending());
+}
+
+// 模块空闲、且任务层没被别的流程（验证/注册…）占用时，下发下一条待删模板
+static void fp_task_delete_process(void) {
+    fp_delete_params_t params;
+    uint16_t id;
+
+    if (fp_delete_busy) {
+        return;                     // 等这一条的终态
+    }
+
+    if (false == fp_delete_has_pending()) {
+        if (fp_delete_notify) {     // 本批删完了：补发一次完成事件（调用方据此才报"删除成功"）
+            fp_delete_notify = false;
+            baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DELETE_KEYS_DONE);
+        }
+        return;
+    }
+
+    if (FP_MODE_IDLE != fp_task_mode) {
+        return;                     // 模块正被验证/注册占用，等它空出来再接着删
+    }
+
+    for (id = 0; id < FINGERPRINT_COUNT_MAX; id++) {
+        if (0 == (fp_del_pending[id >> 3] & (1 << (id & 7)))) {
+            continue;
+        }
+
+        fp_del_pending[id >> 3] &= (uint8_t)~(1 << (id & 7));
+
+        params.page_id   = id;
+        params.count     = 1;
+        fp_delete_result = FP_DELETE_NONE;
+
+        if (false == fp_task_driver.io->set_mode(FP_MODE_DELETE, fp_delete_event_callback, (&params), sizeof(fp_delete_params_t))) {
+            fp_del_pending[id >> 3] |= (1 << (id & 7));     // 模块未就绪：放回待删表，下一轮再试
+            return;
+        }
+
+        fp_delete_busy = true;
+        fp_task_mode   = FP_MODE_DELETE;
+        return;
+    }
 }
 
 void fp_task_reset_all_fp(fp_delete_params_t params) {
@@ -247,7 +336,11 @@ void fp_task_set_mode(uint8_t mode) {
     if (NULL == fp_task_driver.io->set_mode) {
         return;
     }
-    
+
+#if (FP_ENABLE_DELETE)
+    fp_task_mode = mode;        // 记录当前模式：待删模板只在 IDLE 时下发，不打断验证/注册
+#endif
+
     switch (mode)
     {
         case FP_MODE_IDLE:      // 空闲状态，不做扫描
@@ -299,6 +392,10 @@ void fp_task_loop(void) {
     if (fp_task_driver.io->loop()) {
         
     }
+
+#if (FP_ENABLE_DELETE)
+    fp_task_delete_process();       // 串行下发待删的指纹模板（一次一条）
+#endif
 }
 
 void fp_task_set_attr(void* attr, uint8_t lenth) {

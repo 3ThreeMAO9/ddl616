@@ -1382,25 +1382,9 @@ static uint8_t user_has_any_normal_key(void)
     return false;
 }
 
-// 删一条钥匙记录；指纹顺带删掉模块里的模板（模板号存在指纹区）
-static void user_delete_one_key(uint16_t sn, user_info_t* key)
-{
-#if (FP_ENABLE_DELETE)
-    if (USER_TYPE_PERMANENT_FINGERPRINTS == key->key_type)
-    {
-        const fp_delete_params_t fp_del = {
-            .page_id = key->info.finger.id,
-            .count   = 1,
-        };
-        fp_task_delete_fp(fp_del);
-    }
-#else
-    (void)key;
-#endif
-    delKeyInfo(sn);
-}
-
 // 删钥匙：user_id == 0xFFFF 时删全部"非管理员"的钥匙，否则只删该用户的
+// flash 记录无条件删；指纹的模块模板只"入队"，由 fp_task_loop() 在模块空闲时一条条串行删
+//（模块是异步状态机、同模式重复下发会被丢弃，这个约束由指纹任务层自己消化，app 层不等）
 static void user_delete_keys(uint16_t user_id)
 {
     user_info_t temp;
@@ -1420,7 +1404,17 @@ static void user_delete_keys(uint16_t user_id)
             if ((0xFFFF == user_id) ? (0 != temp.parameter.user_id)
                                     : (user_id == temp.parameter.user_id))
             {
-                user_delete_one_key(sn, &temp);
+#if (FP_ENABLE_DELETE)
+                if (USER_TYPE_PERMANENT_FINGERPRINTS == temp.key_type)
+                {
+                    fp_delete_params_t fp_del;
+
+                    fp_del.page_id = temp.info.finger.id;       // 模块里的模板号
+                    fp_del.count   = 1;
+                    fp_task_delete_fp(fp_del);                  // 入队，不等结果
+                }
+#endif
+                delKeyInfo(sn);
             }
         }
     }

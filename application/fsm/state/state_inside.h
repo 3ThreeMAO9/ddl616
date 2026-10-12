@@ -46,6 +46,7 @@ QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e);
 QState lock_fsm_system_lock(LockFsm *me, QEvent const *e);
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_delete_wait_done(LockFsm *me, QEvent const *e);   // 等指纹模板删完再报成功
 QState lockFsmDeleteUserSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailAdmin(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailNotExist(LockFsm *me, QEvent const *e);

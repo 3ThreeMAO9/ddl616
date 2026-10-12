@@ -94,13 +94,36 @@ void fp_task_set_mode(uint8_t mode);
 void fp_task_set_attr(void* attr, uint8_t lenth);
 
 #if (FP_ENABLE_DELETE)
+// 单条按index删除的结果（异步：模块回调置终态），可用 fp_task_delete_result 查询
+typedef enum {
+    FP_DELETE_NONE = 0,     // 本条刚下发 / 还没删过
+    FP_DELETE_BUSY,         // 命令在模块里执行中
+    FP_DELETE_OK,           // 模板已删除
+    FP_DELETE_FAIL,         // 删除失败（模块报找不到、超时等）
+} fp_delete_result_e;
+
 /**
  * @brief : 指纹模块任务按index删除
  * @param : params, 结构体fp_delete_params_t（起始index及数量）
  * @return : none
- * @note : 按照index删除单个或多个连续指纹/指静脉
+ * @note : 模块是异步状态机，同一时刻只认一条删除命令，且同模式重复下发会被丢弃
+ *         （fp_set_mode_API 的同模式早退）。所以这里只把 index 记进待删表，由
+ *         fp_task_loop() 在模块空闲时一条一条下发；调用方不必等待、不必重试
  */
-void fp_task_delete_fp(fp_delete_params_t params);      // 按Index删除
+void fp_task_delete_fp(fp_delete_params_t params);      // 按Index删除（入队）
+
+/**
+ * @brief : 查询最近一条按index删除命令的结果
+ * @return : fp_delete_result_e
+ */
+uint8_t fp_task_delete_result(void);
+
+/**
+ * @brief : 查询待删模板是否已全部删完
+ * @return : 1, 没有待删模板；0, 还有待删模板（含正在删的那一条）
+ * @note : 待删模板全部删完时，指纹任务层会推 EVENT_RESULT_DELETE_KEYS_DONE（Q_HANDLE_SIG）
+ */
+uint8_t fp_task_delete_is_done(void);
 
 void fp_task_reset_all_fp(fp_delete_params_t params);
 #endif
