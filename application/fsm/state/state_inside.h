@@ -40,6 +40,9 @@ QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e);
+QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e);         // 添加/修改管理指纹
+QState lock_fsm_menu_repeat_change_master_code(LockFsm *me, QEvent const *e);   // 再输一次管理密码
+QState lock_fsm_menu_repeat_add_code(LockFsm *me, QEvent const *e);             // 再输一次普通密码
 
 QState lock_fsm_aging_test(LockFsm *me, QEvent const *e);
 QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e);
@@ -48,6 +51,7 @@ QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_delete_wait_done(LockFsm *me, QEvent const *e);   // 等指纹模板删完再报成功
 QState lock_fsm_exit_admin_mode(LockFsm *me, QEvent const *e);         // 退出管理模式提示，播完进休眠
+QState lockFsmMenuTimeOut(LockFsm *me, QEvent const *e);               // 子菜单操作超时提示，播完回上级菜单
 QState lockFsmDeleteUserSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailAdmin(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailNotExist(LockFsm *me, QEvent const *e);

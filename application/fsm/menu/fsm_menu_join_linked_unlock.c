@@ -25,7 +25,7 @@ QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_JOIN_LINKED_UNLOCK);
             break;
         case Q_EXIT_SIG:
@@ -34,13 +34,13 @@ QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e)
             if (e->dynamic_[0] <= KEY_OK)
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
                 keyEventLinkedUnlock((e->dynamic_[0]), LINKED_UNLOCK_JOIN, 0);
             }
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
                 state = Q_TRAN(lock_fsm_menu_system_settings); // 输入密码空的时候,再按*键,回系统设置菜单
@@ -48,10 +48,11 @@ QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e)
             break;
         case Q_USER_HANDLE_SIG:
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_exit_admin_mode);
+        case Q_FUNCTION_TIME_OUT_SIG:                               // 超时：播"操作超时"后回上级（更多设置）
+            me->branch = (QStateHandler)(lock_fsm_menu_system_settings);
+            state = Q_TRAN(lockFsmMenuTimeOut);
             break;
         default:
             break;

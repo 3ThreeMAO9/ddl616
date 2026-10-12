@@ -254,3 +254,7 @@ QState lockFsmInputError(LockFsm *me, QEvent const *e)
     return lockFsmFailDeal(me, e, HMI_STATE_INPUT_ERROR, false);
 }
 
+QState lockFsmMenuTimeOut(LockFsm *me, QEvent const *e)
+{
+    return lockFsmFailDeal(me, e, HMI_STATE_MENU_TIME_OUT, false);
+}

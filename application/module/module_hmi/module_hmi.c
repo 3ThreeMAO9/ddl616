@@ -280,6 +280,10 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed, VOICE_Operation_timed_out);
             break;
 
+        case HMI_STATE_MENU_TIME_OUT:           // 子菜单停留超时：只播"操作超时"，播完由 FSM 回上级菜单
+            PLAYER_LIST_CLEAR_ADD(VOICE_Operation_timed_out);
+            break;
+
         case HMI_STATE_MODIFY_ADMIN_USER_SETTINGS:
             PLAYER_LIST_ADD(VOICE_To_change_the_master_PIN_code_please_press, VOICE_One);
             if (!isExistMasterFinger())     // 无管理指纹 -> 提示添加；已录入 -> 提示修改

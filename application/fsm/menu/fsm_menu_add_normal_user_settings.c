@@ -78,25 +78,26 @@ QState lock_fsm_menu_add_normal_user_settings(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_ADD_NORMAL_USER);
             break;
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             state = menu_event_handle(me, e);
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
         case Q_USER_HANDLE_SIG:
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_exit_admin_mode);
+        case Q_FUNCTION_TIME_OUT_SIG:                               // 超时：播"操作超时"后回上级（管理员菜单）
+            me->branch = (QStateHandler)(lock_fsm_menu_admin);
+            state = Q_TRAN(lockFsmMenuTimeOut);
             break;
         default:
             break;

@@ -121,13 +121,13 @@ QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);            //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_DELETE_NORMAL_USER);
             break;
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
             if (KEY_NUM_1 == e->dynamic_[0])
             {
@@ -144,10 +144,13 @@ QState lock_fsm_menu_delete_normal_user(LockFsm *me, QEvent const *e)
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
-        case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_exit_admin_mode);
+        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时：播"操作超时"后回上级（管理员菜单）
+            me->branch = (QStateHandler)(lock_fsm_menu_admin);
+            state = Q_TRAN(lockFsmMenuTimeOut);
+            break;
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作
             break;
         default:
             break;
@@ -170,13 +173,13 @@ QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);            //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_DELETE_NORMAL_USER_INPUT_ID);
             break;
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             if (key <= KEY_NUM_9)                               // 数字：攒进缓冲
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
@@ -199,10 +202,13 @@ QState lock_fsm_menu_delete_normal_user_input_id(LockFsm *me, QEvent const *e)
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
-        case Q_WORK_TIME_OUT_SIG:                               // 超时未输入
-            state = delete_result_deal(me, 0xFF);
+        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时未输入：播"操作超时"后回上级（删除用户菜单）
+            me->branch = (QStateHandler)(lock_fsm_menu_delete_normal_user);
+            state = Q_TRAN(lockFsmMenuTimeOut);
+            break;
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作
             break;
         default:
             break;
@@ -225,13 +231,13 @@ QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);            //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_DELETE_ALL_NORMAL_USER_CONFIRM);
             break;
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             if (KEY_CAN == key)                                 // 星号键：返回删除用户菜单
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
@@ -248,10 +254,13 @@ QState lock_fsm_menu_delete_all_normal_user(LockFsm *me, QEvent const *e)
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
-        case Q_WORK_TIME_OUT_SIG:                               // 超时未输入
-            state = delete_result_deal(me, 0xFF);
+        case Q_FUNCTION_TIME_OUT_SIG:                           // 超时未输入：播"操作超时"后回上级（删除用户菜单）
+            me->branch = (QStateHandler)(lock_fsm_menu_delete_normal_user);
+            state = Q_TRAN(lockFsmMenuTimeOut);
+            break;
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作
             break;
         default:
             break;

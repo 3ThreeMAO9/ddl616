@@ -31,7 +31,7 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_REPEAT_INPUT_CODE);
             break;
         case Q_EXIT_SIG:
@@ -40,13 +40,13 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
             if (e->dynamic_[0] <= KEY_OK)
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
                 keyEventHandleCode((e->dynamic_[0]), code_handle, 1);
             }
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             else if (EVENT_RESULT_SUCCESS == e->dynamic_[0])
             {
                 if (CODE_HANDLE_ADD == e->dynamic_[1])
@@ -87,10 +87,16 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
             break;
         case Q_USER_HANDLE_SIG:
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_exit_admin_mode);
+        case Q_FUNCTION_TIME_OUT_SIG:       // 超时：播"操作超时"后回上级菜单（本状态被多处复用，按来源区分）
+            if (CODE_HANDLE_ADD == code_handle)
+                me->branch = (QStateHandler)(lock_fsm_menu_add_normal_user_settings);
+            else if (me->admin_flag == false)
+                me->branch = (QStateHandler)(lock_fsm_menu_admin);
+            else
+                me->branch = (QStateHandler)(lock_fsm_menu_modify_admin_user_settings);
+            state = Q_TRAN(lockFsmMenuTimeOut);
             break;
         default:
             break;

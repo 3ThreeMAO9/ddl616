@@ -18,7 +18,7 @@
 
 
 /***************Function***************/
-static QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e);   // 添加/修改管理指纹
+QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e);   // 添加/修改管理指纹
 static QState menu_event_handle(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED(); //  没有对应事件就返回Q_IGNORED()
@@ -55,25 +55,26 @@ QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_MODIFY_ADMIN_USER_SETTINGS);
             break;
         case Q_EXIT_SIG:
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             state = menu_event_handle(me, e);
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
         case Q_USER_HANDLE_SIG:
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_exit_admin_mode);
+        case Q_FUNCTION_TIME_OUT_SIG:                               // 超时：播"操作超时"后回上级（管理员菜单）
+            me->branch = (QStateHandler)(lock_fsm_menu_admin);
+            state = Q_TRAN(lockFsmMenuTimeOut);
             break;
         default:
             break;
@@ -85,7 +86,7 @@ QState lock_fsm_menu_modify_admin_user_settings(LockFsm *me, QEvent const *e)
 // ------------------------------------------
 // 添加/修改管理指纹：录入成功后由 task_fingerprint 存成管理指纹（key_id 0、归属管理员档案 0）
 // 重复录入直接覆盖原来那把管理指纹，不占普通指纹编号
-static QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e)
+QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e)
 {
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
@@ -94,7 +95,7 @@ static QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e)
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             fp_task_set_mode(FP_MODE_REGISTER_MASTER);      // 管理指纹：合并模板后直接覆盖模块 0 号区域
             hmiTaskSetState(HMI_STATE_ADD_NORMAL_FINGER);   // 请触摸指纹传感器，返回上级菜单请按*号键
             break;
@@ -109,7 +110,7 @@ static QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e)
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             break;
         case Q_USER_HANDLE_SIG:
             if (EVENT_RESULT_SUCCESS_ADD == e->dynamic_[0])
@@ -127,10 +128,11 @@ static QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e)
                 state = Q_TRAN(lockFsmHandleAddFail);
             }
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_exit_admin_mode);
+        case Q_FUNCTION_TIME_OUT_SIG:                               // 超时：播"操作超时"后回上级（修改管理员设置）
+            me->branch = (QStateHandler)(lock_fsm_menu_modify_admin_user_settings);
+            state = Q_TRAN(lockFsmMenuTimeOut);
             break;
         default:
             break;

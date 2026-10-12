@@ -18,7 +18,7 @@
 
 
 /***************Function***************/
-static QState lock_fsm_menu_repeat_change_master_code(LockFsm *me, QEvent const *e)
+QState lock_fsm_menu_repeat_change_master_code(LockFsm *me, QEvent const *e)
 {
     return lock_fsm_menu_repeat_input_code(me, e, CODE_HANDLE_CHANGE_MASTER);
 }
@@ -35,7 +35,7 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             if (isEmptyKey(false))   // 初始化状态
                 hmiTaskSetState(HMI_STATE_CHANGE_MASTER_CODE); // 添加管理用戶，请输入六至十二位管理密码，以井号键结束，取消请按星号键
             else
@@ -45,12 +45,12 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             break;
         case Q_KEY_BOARD_PRESS_SIG:
             hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-            system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             keyEventHandleCode((e->dynamic_[0]), CODE_HANDLE_CHANGE_MASTER, 0);
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             else if (EVENT_RESULT_SUCCESS == e->dynamic_[0])
             {
                 state = Q_TRAN(lock_fsm_menu_repeat_change_master_code);
@@ -98,10 +98,18 @@ QState lock_fsm_menu_modfiy_admin_pin(LockFsm *me, QEvent const *e)
             break;
         case Q_USER_HANDLE_SIG:
             break;
-        case Q_FUNCTION_TIME_OUT_SIG:
+        case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
-        case Q_WORK_TIME_OUT_SIG:
-            state = Q_TRAN(lock_fsm_exit_admin_mode);
+        case Q_FUNCTION_TIME_OUT_SIG:
+            if (isEmptyKey(false))          // 初始化（还没有管理密码）：保持原行为，退出管理模式
+            {
+                state = Q_TRAN(lock_fsm_exit_admin_mode);
+            }
+            else                            // 超时：播"操作超时"后回上级（修改管理员设置）
+            {
+                me->branch = (QStateHandler)(lock_fsm_menu_modify_admin_user_settings);
+                state = Q_TRAN(lockFsmMenuTimeOut);
+            }
             break;
         default:
             break;

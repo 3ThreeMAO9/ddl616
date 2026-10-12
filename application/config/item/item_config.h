@@ -162,6 +162,7 @@ typedef enum{
 #define VERIFY_FAIL_CNT_DEFAULT                      0
 
 #define WORK_TIME_OUT_VAULE                         (10 * 1000)     // unit: ms
+#define MENU_TIME_OUT_VAULE                         (30 * 1000)     // unit: ms    管理菜单停留超时
 #define WORK_WAKE_TIME_OUT_VAULE                    (1500)          // unit: ms
 #define WORK_TIME_OUT_MAX_VAULE                     (30000)         // unit: ms
 #define WORK_TIME_OUT_VAULE_LOWBATTERY              (4000)         // unit: ms

@@ -33,6 +33,7 @@ static const struct
     FSM_STATE_NAME(lock_fsm_idle),
     FSM_STATE_NAME(lock_fsm_sleep),
     FSM_STATE_NAME(lock_fsm_exit_admin_mode),
+    FSM_STATE_NAME(lockFsmMenuTimeOut),         // 子菜单操作超时提示（播完回上级菜单）
     FSM_STATE_NAME(lock_fsm_verify_admin),
     FSM_STATE_NAME(lock_fsm_reset),
     FSM_STATE_NAME(lock_fsm_system_lock),
@@ -53,6 +54,9 @@ static const struct
     FSM_STATE_NAME(lock_fsm_menu_delete_normal_user_input_id),
     FSM_STATE_NAME(lock_fsm_menu_delete_all_normal_user),
     FSM_STATE_NAME(lock_fsm_menu_delete_wait_done),
+    FSM_STATE_NAME(lock_fsm_menu_modfiy_admin_finger),          // 添加/修改管理指纹
+    FSM_STATE_NAME(lock_fsm_menu_repeat_change_master_code),    // 再输一次管理密码
+    FSM_STATE_NAME(lock_fsm_menu_repeat_add_code),              // 再输一次普通密码
     // 结果状态
     FSM_STATE_NAME(lockFsmHandleAddSuccess),
     FSM_STATE_NAME(lockFsmDeleteUserSuccess),

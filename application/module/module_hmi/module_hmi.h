@@ -163,6 +163,7 @@ typedef enum{
     HMI_STATE_DEV_PARA,
     HMI_STATE_DEV_PARA_MUTE,
     HMI_STATE_DEVICE_TEST_TIME_OUT,     
+    HMI_STATE_MENU_TIME_OUT,        //子菜单操作超时：播"操作超时"，播完回上级菜单
 
     HMI_STATE_CNT,
 }hmi_state_t;
