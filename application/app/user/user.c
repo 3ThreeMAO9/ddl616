@@ -29,7 +29,8 @@ typedef struct
 
 static const user_area_t key_area[USER_TYPE_PERMANENT_MAX] =
 {
-    { BLOCK_INDEX_CODE_START,   PERMANENT_USER_CODE_CNT },
+    // 密码：flash 预留 50 槽（PERMANENT_USER_CODE_CNT），但运行时只认前 20 个（USER_CODE_CNT_ENABLE）
+    { BLOCK_INDEX_CODE_START,   USER_CODE_CNT_ENABLE    },
     { BLOCK_INDEX_FINGER_START, USER_FINGERPRINTS_CNT  },
     { BLOCK_INDEX_CARD_START,   USER_CARD_CNT          },
     { BLOCK_INDEX_FACE_START,   USER_FACE_CNT          },
@@ -353,7 +354,7 @@ void updateKeyCnt(void)
  * @brief 比较密码密钥（密码区第 index 把）
  * @param input       输入密码
  * @param input_len   密码长度
- * @param index       密码区索引（0~19）
+ * @param index       密码区索引（0~19；flash 预留到 50 槽）
  * @param dummy_flag  是否匹配虚位
  * @param key_id      输出：该密码在本类型内的编号（0~19），可为 NULL
  * @return true=匹配成功
@@ -567,7 +568,7 @@ uint8_t isValidKeyCode(uint8_t* input, uint8_t input_len, uint8_t mode, uint8_t 
     }
     else
     {
-        for (i = 0; i < PERMANENT_USER_CODE_CNT; i++)
+        for (i = 0; i < USER_CODE_CNT_ENABLE; i++)      // 只扫可用槽位（后面 30 个是 flash 预留，永远为空）
         {
             if (compareKeyCode(input, input_len, i, dummy_flag, key_id))
             {
@@ -736,7 +737,7 @@ uint8_t addKeyCode(uint8_t *input, uint8_t len, uint8_t userType, user_time_t *p
     user_info.key_sn = user_sn;
     user_info.key_type = userType;
     user_info.info.password.len = len;
-    user_info.key_id = read_empty_min_key_id(userType);     // 本类型内编号 0~19
+    user_info.key_id = read_empty_min_key_id(userType);     // 本类型内编号（密码 0~19，指纹/人脸 0~49，卡片 0~99）
     if (key_id) *key_id = user_info.key_id;
 
     user_info.parameter.user_id = para->user_id;
@@ -1022,7 +1023,7 @@ uint8_t delKeyCode(uint8_t* input, uint8_t len)
 {
     uint16_t i;
 
-    for (i = 1; i < PERMANENT_USER_CODE_CNT; i++)
+    for (i = 1; i < USER_CODE_CNT_ENABLE; i++)
     {
         if (compareKeyCode(input, len, i, false, NULL))
         {

@@ -61,15 +61,15 @@
 
 // ========== 用户数据固定地址布局 ==========
 // 每个用户块 32 字节，块0为页标记
-// 布局：页标记(1块) + 密码(20块) + 指纹(50块) + 卡片(100块) + 人脸(50块) = 221块
+// 布局：页标记(1块) + 密码(50块) + 指纹(50块) + 卡片(100块) + 人脸(50块) = 251块
 
 #define USER_BLOCK_SIZE                 (32)
 
 // 各类型用户起始块索引（从块1开始，块0为页标记）
 #define BLOCK_INDEX_CODE_START          (1)                                          // 1
-#define BLOCK_INDEX_FINGER_START        (BLOCK_INDEX_CODE_START + PERMANENT_USER_CODE_CNT)   // 1+20=21
-#define BLOCK_INDEX_CARD_START          (BLOCK_INDEX_FINGER_START + USER_FINGERPRINTS_CNT)   // 21+50=71
-#define BLOCK_INDEX_FACE_START          (BLOCK_INDEX_CARD_START + USER_CARD_CNT)             // 71+100=171
+#define BLOCK_INDEX_FINGER_START        (BLOCK_INDEX_CODE_START + PERMANENT_USER_CODE_CNT)   // 1+50=51
+#define BLOCK_INDEX_CARD_START          (BLOCK_INDEX_FINGER_START + USER_FINGERPRINTS_CNT)   // 51+50=101
+#define BLOCK_INDEX_FACE_START          (BLOCK_INDEX_CARD_START + USER_CARD_CNT)             // 101+100=201
 
 // 各类型用户Flash地址宏
 #define USER_ADDR_CODE(index)           (USER_PAGE_START_ADDR + (BLOCK_INDEX_CODE_START + (index)) * USER_BLOCK_SIZE)

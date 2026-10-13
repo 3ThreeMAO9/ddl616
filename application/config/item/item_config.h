@@ -79,8 +79,10 @@
 #define PROFILE_NAME_MAX_LEN                        (PROFILE_NAME_LEN)
 
 #define MASTER_USER_CODE_CNT                        (1)
-#define COMMON_USER_CODE_CNT      		            (19)
-#define PERMANENT_USER_CODE_CNT                     (MASTER_USER_CODE_CNT + COMMON_USER_CODE_CNT)
+#define COMMON_USER_CODE_CNT                        (19)
+#define USER_CODE_CNT_ENABLE                        (MASTER_USER_CODE_CNT + COMMON_USER_CODE_CNT)    // 运行时可用的密码槽位（1 管理 + 19 普通 = 20 把；将来按项目放开时改上面那行）
+#define USER_CODE_CNT_RESERVED                      (50)     // flash 预留密码槽位：两个项目一致，布局相同；放开上限只改上面，不用挪后面各区
+#define PERMANENT_USER_CODE_CNT                     (USER_CODE_CNT_RESERVED)                        // 布局用：按预留算
 
 #define USER_FINGERPRINTS_CNT                       (50)
 
