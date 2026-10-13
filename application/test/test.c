@@ -28,6 +28,11 @@ void test_run(void)
     test_user_profile_all();
 #endif
 
+#ifdef TEST_USER_KEY_ENABLE
+    OB_LOGW(TAG, "--- [user_key] ---");
+    test_user_key_all();
+#endif
+
 #ifdef TEST_FLASH_ENABLE
     OB_LOGW(TAG, "--- [flash] ---");
     test_flash_all();

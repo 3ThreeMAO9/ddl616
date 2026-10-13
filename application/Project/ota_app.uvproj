@@ -1262,6 +1262,11 @@
               <FileType>1</FileType>
               <FilePath>..\test\test_file\flash_test.c</FilePath>
             </File>
+            <File>
+              <FileName>user_key_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\test\test_file\user_key_test.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -2521,6 +2526,11 @@
               <FileName>flash_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\test\test_file\flash_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>user_key_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\test\test_file\user_key_test.c</FilePath>
             </File>
           </Files>
         </Group>

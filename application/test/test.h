@@ -16,6 +16,7 @@
 #ifdef TEST_ENABLE
     // #define TEST_ACTIVECODE_ENABLE   // 测试激活码功能
     // #define TEST_USER_PROFILE_ENABLE // 测试用户管理
+    // #define TEST_USER_KEY_ENABLE     // 测试密码密钥存储（密码区：写入/读回/校验/容量/删除）
     // #define TEST_FLASH_ENABLE        // 测试FLASH性能
 
 
@@ -42,6 +43,10 @@ void test_activecode_all(void);
 
 #ifdef TEST_USER_PROFILE_ENABLE
 void test_user_profile_all(void);
+#endif
+
+#ifdef TEST_USER_KEY_ENABLE
+void test_user_key_all(void);
 #endif
 
 #ifdef TEST_FLASH_ENABLE
