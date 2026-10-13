@@ -64,35 +64,27 @@ typedef enum
     VOICE_Please_verify_master_access_method,                               // 请验证管理密钥
     VOICE_To_add_a_master_user,                                             // 添加管理用户
     VOICE_To_cancel_please_press_the_asterisk_key,                          // 取消请按星号键
-    VOICE_For_Chinese_press,                                                // 中文请按
-    VOICE_For_English_press,                                                // 英文请按
+    VOICE_General_user_database_is_empty,                                   // 普通用户库为空
     VOICE_User_does_not_exist,                                              // 用户不存在
     VOICE_Master_users_cannot_be_deleted,                                   // 管理用户不可删除
     VOICE_Please_enter_the_user_number_to_delete,                           // 请输入要删除的用户编号
-    VOICE_To_delete_all_general_users,                                      // 删除全部普通用户
+    VOICE_To_delete_all_general_users,                                      // 删除全部普通用户请按#号键确认
     VOICE_To_add_the_master_fingerprint_please_press,                       // 添加管理指纹请按
     VOICE_To_delete_a_user_please_press,                                    // 删除单个用户请按
     VOICE_Delete_all_users_please_press,                                    // 删除全部用户,请按
     VOICE_To_delete_a_general_user_please_press,                            // 删除普通用户，请按
     VOICE_To_modify_the_master_fingerprint_please_press,                    // 修改管理指纹请按
-    VOICE_Face_is_too_far_back,                                             // 人脸偏后
-    VOICE_Face_is_too_far_forward,                                          // 人脸偏前
-    VOICE_Face,                                                             // 人脸
-    VOICE_Please_look_at_the_door_lock_camera,                              // 请正对门锁摄像头
     VOICE_Please_swipe_the_key_tag,                                         // 请刷卡
-    VOICE_Your_face_is_misaligned_please_face_the_camera,                   // 人脸偏转角度过大
     VOICE_Please_touch_the_fingerprint_sensor,                              // 请按手指
     VOICE_Please_replace_the_key_tag_and_swipe_again,                       // 请更换卡片重新刷卡
     VOICE_To_add_a_key_tag_please_press,                                    // 添加卡片，请按
     VOICE_To_delete_a_general_user_please_press_2,                          // 删除普通用户，请按
     VOICE_To_add_a_PIN_code_please_press,                                   // 添加密码，请按
-    VOICE_To_add_a_face_ID_please_press,                                    // 添加人脸，请按
     VOICE_To_add_a_fingerprint_please_press,                                // 添加指纹，请按
     VOICE_To_modify_the_master_user_please_press,                           // 修改管理用户，请按
-    VOICE_Please_slightly_move_your_face_backward,                          // 请向后微微移动人脸
-    VOICE_Please_slightly_move_your_face_forward,                           // 请向前微微移动人脸
     VOICE_Deletion_successful,                                              // 删除成功
     VOICE_Deletion_failed,                                                  // 删除失败
+    VOICE_Pairing_settings_please_press,                                    // 配网设置请按
 
     SOUND_START,
     SOUND_BUTTON_DI,                                                        // 按键音Di(0.75)

@@ -256,8 +256,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_DELETE_ALL_NORMAL_USER_CONFIRM:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            PLAYER_LIST_CLEAR_ADD(VOICE_To_delete_all_general_users, VOICE_End_with_pound_key,
-                                  VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
+            PLAYER_LIST_CLEAR_ADD(VOICE_To_delete_all_general_users, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
         case HMI_STATE_DELETE_SUCCESS:
@@ -273,7 +272,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_DELETE_FAIL_EMPTY:
-            PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed);       // 新语音表里没有"用户为空"，只报删除失败
+            PLAYER_LIST_CLEAR_ADD(VOICE_Deletion_failed, VOICE_General_user_database_is_empty);     // 删除失败，普通用户库为空
             break;
 
         case HMI_STATE_DELETE_FAIL_TIME_OUT:
