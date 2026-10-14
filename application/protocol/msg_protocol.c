@@ -128,6 +128,12 @@ void uart_msg_userdata_raw(uint8_t *data, uint16_t len)
     uart_msg_common_send(UP_CMD_GET_USERDATA_RAW_ACK, data, len);
 }
 
+// 添加用户应答（0x85）：payload = 1 字节用户ID（kiot_tm_action_out_a_add_user_raw_stu_t）
+void uart_msg_add_user_ack(uint8_t user_id)
+{
+    uart_msg_common_send(UP_CMD_ADD_USER_ACK, &user_id, sizeof(user_id));
+}
+
 void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count)
 {
     uart_msg_common_send(UP_CMD_GET_USERLIST_TIMESTAMP_ACK,

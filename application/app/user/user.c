@@ -183,7 +183,8 @@ uint8_t user_get_key_info(uint8_t user_id, uint8_t index, user_key_info_t* info)
 // 找最小未用的"用户档案ID"（1~PROFILE_COUNT-1，0 留给管理员）
 // 占用来源：① 档案表里已存在的档案；② 钥匙记录上的 parameter.user_id
 //（本地录入的用户还没建档，先把号占住，免得下一批用户拿到同一个号）
-static uint16_t find_free_profile_id(void)
+// 同时供云端下发（0x05 add_user）用：那边只取号，不该动本地录入的缓存
+uint16_t find_free_profile_id(void)
 {
     user_profile_t profile;
     user_info_t temp;
@@ -1198,6 +1199,63 @@ uint8_t user_profile_update(uint16_t user_id, user_profile_t* profile)
 
 #if (Enabled == PRINTF_USER)
     OB_LOGI(TAG, "user_profile_update: id=%u, idx=%u", user_id, idx);
+#endif
+    return 1;
+}
+
+/**
+ * @brief 写入用户档案（云端下发 0x05/0x07 用）
+ * @param user_id 对外 ID
+ * @param profile 完整档案数据（含 timestamp，按传入值保存）
+ * @return 1=成功，0=失败（档案表满）
+ * @note 与 user_profile_update 的区别：update 把 timestamp 刷成本地 RTC 时间（本地编辑语义），
+ *       本接口保留调用方给的时间（云端同步语义，服务器下发的修改时间不被本地时间顶掉）
+ */
+uint8_t user_profile_write(uint16_t user_id, user_profile_t* profile)
+{
+    uint8_t idx;
+    uint8_t is_new = false;
+    user_profile_t temp;
+
+    if (profile == NULL)
+    {
+        return 0;
+    }
+
+    idx = find_profile_idx_by_user_id((uint8_t)user_id);
+    if (0xFF == idx)
+    {
+        // 还没有这个用户：找空槽新建
+        for (idx = 0; idx < PROFILE_COUNT; idx++)
+        {
+            read_profile(idx, &temp);
+            if (temp.user_id == 0xFF)
+            {
+                is_new = true;
+                break;
+            }
+        }
+
+        if (idx >= PROFILE_COUNT)
+        {
+            OB_LOGE(TAG, "user_profile_write: profile table full");
+            return 0;
+        }
+    }
+
+    profile->user_id = (uint8_t)user_id;
+
+    save_profile(idx, profile);
+
+    if (is_new)
+    {
+        lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                            KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_YONG_HU,
+                            0, user_id);      // 添加用户
+    }
+
+#if (Enabled == PRINTF_USER)
+    OB_LOGI(TAG, "user_profile_write: id=%u, idx=%u, ts=%u", user_id, idx, profile->timestamp);
 #endif
     return 1;
 }

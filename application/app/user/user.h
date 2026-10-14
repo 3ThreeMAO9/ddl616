@@ -222,6 +222,7 @@ uint8_t getKeyFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id);
 uint8_t getKeyFingerID(uint16_t *user_sn, uint16_t id);
 
 // ========== 即将创建的用户档案ID 分配（HMI 播报"用户编号N"） ==========
+uint16_t find_free_profile_id(void); // 查最小空闲档案ID（1~49，0=已满）；只查不缓存，云端下发（0x05）用
 uint16_t alloc_user_id(void);       // 分配"即将创建的普通用户档案ID"（1~49；0=管理员），新钥匙的 parameter.user_id 写它
 uint16_t read_user_id(void);        // 读缓存值：HMI 播报"用户编号N"用它（档案ID，不是 key_id）
 void     clean_user_id(void);       // 清空缓存（当前工程内无调用）
@@ -229,6 +230,9 @@ void     clean_user_id(void);       // 清空缓存（当前工程内无调用�
 // ========== 用户档案（真正的"用户"，0~49）==========
 uint8_t  user_profile_add(uint16_t user_id, const char* name);
 uint8_t  user_profile_update(uint16_t user_id, user_profile_t* profile);
+// 云端下发写入（0x05/0x07）：已有槽位就覆盖、没有就新建；timestamp 用传入值（不刷新成本地时间），
+// 与 user_profile_update 的区别正是"不把服务器给的修改时间顶掉"
+uint8_t  user_profile_write(uint16_t user_id, user_profile_t* profile);
 void     user_profile_delete(uint16_t user_id);
 uint8_t  user_get_name(uint16_t user_id, char* buf, uint8_t len);
 uint8_t  user_get_profile(uint16_t user_id, user_profile_t* profile);

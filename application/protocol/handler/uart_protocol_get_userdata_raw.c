@@ -20,46 +20,11 @@
 
 #include "uart_protocol.h"
 #include "user.h"
+#include "user_data_raw.h"      // 用户数据 raw 结构（与 0x05 add_user 共用）
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "up_getdata"
-
-/* keys_num 上限（附表 1：0~13） */
-#define USERDATA_RAW_MAX_KEY        (13)
-/* 单条应答最大长度：64 + 1 + 13 * 7 = 156 */
-#define USERDATA_RAW_MAX_LEN        (sizeof(userdata_raw_head_t) + 1 + USERDATA_RAW_MAX_KEY * sizeof(userdata_raw_key_t))
-
-#pragma pack(1)
-
-/* 附表 1：用户档案部分（64 字节） */
-typedef struct
-{
-    uint8_t  user_id;                           // 1  用户ID
-    char     user_name[PROFILE_NAME_MAX_LEN];   // 41 用户名称
-    uint32_t timestamp;                         // 4  用户时间戳（最后编辑时间）
-    uint8_t  policy;                            // 1  用户策略：0=永久 1=自定义
-    uint32_t effective_date;                    // 4  生效日期（unix s，自定义时有效）
-    uint32_t expire_date;                       // 4  失效日期（unix s）
-    uint8_t  valid_day;                         // 1  生效天（bit0=周日 … bit6=周六）
-    uint32_t effective_time;                    // 4  当天生效时间（0~86400s）
-    uint32_t expire_time;                       // 4  当天失效时间（0~86400s）
-} userdata_raw_head_t;
-
-/* 附表 1：每把数字钥匙（7 字节） */
-typedef struct
-{
-    uint8_t  key_type;                          // 1  1=指纹 2=密码 3=卡片 4=人脸
-    uint8_t  key_id;                            // 1  数字钥匙ID
-    uint8_t  key_urgent;                        // 1  胁迫标记
-    uint32_t timestamp;                         // 4  数字钥匙添加时间
-} userdata_raw_key_t;
-
-#pragma pack()
-
-/* 自检：字节数必须和附表 1 一致（不一致时编译报错） */
-typedef char userdata_raw_head_size_check[(sizeof(userdata_raw_head_t) == 64) ? 1 : -1];
-typedef char userdata_raw_key_size_check[(sizeof(userdata_raw_key_t) == 7) ? 1 : -1];
 
 /***************Function***************/
 

@@ -81,6 +81,9 @@ void uart_msg_ack(uint8_t cmd, uint8_t status);
 // 原始用户数据应答（0x81）：直接回一段 raw 数据
 void uart_msg_userdata_raw(uint8_t *data, uint16_t len);
 
+// 添加用户应答（0x85）：payload = 1 字节用户ID（= a_add_user 的 out）
+void uart_msg_add_user_ack(uint8_t user_id);
+
 // 无 payload 应答（如 0x89）
 void uart_msg_empty_ack(uint8_t cmd);
 
