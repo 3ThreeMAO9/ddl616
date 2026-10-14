@@ -48,6 +48,10 @@ QState lock_fsm_menu_add_normal_pw(LockFsm *me, QEvent const *e)
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
                 system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
+            else if (EVENT_RESULT_CANCEL_ADD_KEY == e->dynamic_[0])     // 云端(0x03)取消添加：退出录入，回上级
+            {
+                state = Q_TRAN(lock_fsm_menu_add_normal_user_settings);
+            }
             else if (EVENT_RESULT_SUCCESS == e->dynamic_[0])
             {
                 state = Q_TRAN(lock_fsm_menu_repeat_add_code);

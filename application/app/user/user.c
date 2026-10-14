@@ -5,6 +5,7 @@
 #include "system_timer.h"
 #include "lock_log.h"
 #include "task_fingerprint.h"       // 删除指纹密钥时同步删模块里的模板
+#include "msg_protocol.h"           // 钥匙添加完成事件上报(0x47)
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -755,6 +756,10 @@ uint8_t addKeyCode(uint8_t *input, uint8_t len, uint8_t userType, user_time_t *p
 
     ensure_user_profile((uint8_t)user_info.parameter.user_id);      // 该用户的第一把钥匙：顺手建档
 
+    // 上报"数字钥匙添加完成"（0x47）：本地录入 / 协议下发（0x02）都汇聚到这里，一处覆盖
+    uart_msg_event_key_add_complete(KIOT_TM_P_ADD_KEY_RESULT_TIAN_JIA_CHENG_GONG,
+                                    userType, user_info.key_id, user_info.parameter.timestamp);
+
 #if (Enabled == PRINTF_USER)
     OB_LOGD(TAG,"add key code: len[%u], sn[%u], key_id[%u]", len, user_sn, user_info.key_id);
     OB_LOGD_DUMP(user_info.info.password.buffer, len);
@@ -865,6 +870,10 @@ static uint8_t add_key_record(uint8_t type, const void* key, uint8_t* key_id)
     cache_and_update(user_sn, &user_info);
 
     ensure_user_profile((uint8_t)user_info.parameter.user_id);      // 该用户的第一把钥匙：顺手建档
+
+    // 上报"数字钥匙添加完成"（0x47）：本地录入指纹/卡片也走这里
+    uart_msg_event_key_add_complete(KIOT_TM_P_ADD_KEY_RESULT_TIAN_JIA_CHENG_GONG,
+                                    type, user_info.key_id, user_info.parameter.timestamp);
 
     return true;
 }
@@ -1490,6 +1499,47 @@ static void user_delete_keys(uint16_t user_id)
             }
         }
     }
+}
+
+// 按"类型 + 编号"删一把钥匙（云端 0x04 删除数字钥匙用）：成功返回 true
+// 管理钥匙（归属档案 0）不允许从协议删；指纹同时把模块模板入队删掉（与 user_delete_keys 同一套规则）
+uint8_t user_delete_key_by_id(uint8_t type, uint8_t key_id)
+{
+    const user_area_t* area = key_area_of(type);
+    user_info_t temp;
+    uint16_t sn;
+
+    if ((NULL == area) || (key_id >= area->count))
+    {
+        return false;
+    }
+
+    sn = area->base + key_id;
+
+    if (!read_user_data_with_check(sn, &temp) || !temp.flag)
+    {
+        return false;
+    }
+
+    if (0 == temp.parameter.user_id)        // 管理密码 / 管理指纹：不给协议删
+    {
+        return false;
+    }
+
+#if (FP_ENABLE_DELETE)
+    if (USER_TYPE_PERMANENT_FINGERPRINTS == temp.key_type)
+    {
+        fp_delete_params_t fp_del;
+
+        fp_del.page_id = temp.info.finger.id;       // 模块里的模板号
+        fp_del.count   = 1;                         // 单把指纹 = 一个模板号
+        fp_task_delete_fp(fp_del);                  // 入队，不等结果
+    }
+#endif
+
+    delKeyInfo(sn);
+
+    return true;
 }
 
 // 删单个普通用户：档案 + 它的全部钥匙（管理员不可删、不存在要能区分出来）

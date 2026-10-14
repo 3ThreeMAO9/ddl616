@@ -88,6 +88,9 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_ACK_HEART)        // (0xAA)   // 心跳应答
         HANDLER_IMPORT(UP_CMD_KEY)              // (0x60)   // 按键事件
         HANDLER_IMPORT(UP_CMD_GET_USERDATA_RAW) // (0x01)   // 获取原始用户数据
+        HANDLER_IMPORT(UP_CMD_ADD_NUMBER_KEY)   // (0x02)   // 添加数字密码
+        HANDLER_IMPORT(UP_CMD_CANCEL_NUMBER_KEY)// (0x03)   // 取消添加数字钥匙
+        HANDLER_IMPORT(UP_CMD_DELETE_NUMBER_KEY)// (0x04)   // 删除数字密码
         HANDLER_IMPORT(UP_CMD_ADD_USER)         // (0x05)   // 添加用户
         HANDLER_IMPORT(UP_CMD_DELETE_USER)      // (0x06)   // 删除用户
         HANDLER_IMPORT(UP_CMD_SET_USER)         // (0x07)   // 设置用户
@@ -135,7 +138,7 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
     // 3. 打印接收信息
     uint8_t addr = lock_packet_get_addr(pkt->attr);
     uint8_t enc  = lock_packet_get_enc(pkt->attr);
-    OB_LOGW(TAG, "[uart rx] cmd=0x%02X, sn=%u, len=%u, addr=%u, enc=%u",
+    OB_LOGI(TAG, "[uart rx] cmd=0x%02X, sn=%u, len=%u, addr=%u, enc=%u",
             pkt->cmd, pkt->sn, pkt->length, addr, enc);
     OB_LOGW_DUMP(data, len);
 

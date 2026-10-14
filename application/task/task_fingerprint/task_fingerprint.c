@@ -133,6 +133,8 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
         break;
     case FP_EVENT_PROCESSING:
         OB_LOGI(TAG, "FP_EVENT_PROCESSING");
+        // 上报指纹添加进度（0x46）：驱动层传的是"已成功按压次数"
+        uart_msg_event_fingerprint_add_status((NULL != ptr) ? *ptr : 0);
         userHandleEventPush(EVENT_RESULT_FINGERPRINT_PRESS, 0);
         break;
     case FP_EVENT_INVALID_REPEAT:

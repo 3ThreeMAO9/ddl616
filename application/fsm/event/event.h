@@ -129,6 +129,7 @@ typedef enum{
     EVENT_RESULT_DEV_PARA_MODE,
     EVENT_RESULT_DEV_NORMAL_MODE,
     EVENT_RESULT_VERTION_TEST,
+    EVENT_RESULT_CANCEL_ADD_KEY,        // 云端(0x03)取消添加数字钥匙：录入状态退出到上级
 
 
     USER_EVENT_CNT,

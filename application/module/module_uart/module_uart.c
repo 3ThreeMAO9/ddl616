@@ -162,7 +162,7 @@ static void uart_poll_tx(void)
 
     // 读取对应长度的数据并发送
     if (uart_queue_get_bulk(tx_buf, data_len) == data_len){
-        OB_LOGW(TAG, "[%s] data_len=%d", __func__, data_len);
+        OB_LOGI(TAG, "[%s] data_len=%d", __func__, data_len);
         OB_LOGW_DUMP(tx_buf, data_len);
         hal_uartSendBuff(BACK_UART_SEL, tx_buf, data_len); // 串口硬件发送
 

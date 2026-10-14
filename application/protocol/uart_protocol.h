@@ -37,6 +37,9 @@
 /* WiFi 模块下发指令：命令字与 ob_lock.h 的 CMD_SERVER_* 保持一致 */
 
 #define UP_CMD_GET_USERDATA_RAW             (0x01)  // 获取原始用户数据（WiFi模块 -> 门锁）
+#define UP_CMD_ADD_NUMBER_KEY               (0x02)  // 添加数字密码（WiFi模块 -> 门锁）
+#define UP_CMD_CANCEL_NUMBER_KEY            (0x03)  // 取消添加数字钥匙（WiFi模块 -> 门锁）
+#define UP_CMD_DELETE_NUMBER_KEY            (0x04)  // 删除数字密码（WiFi模块 -> 门锁）
 #define UP_CMD_ADD_USER                     (0x05)  // 添加用户（WiFi模块 -> 门锁）
 #define UP_CMD_DELETE_USER                  (0x06)  // 删除用户（WiFi模块 -> 门锁）
 #define UP_CMD_SET_USER                     (0x07)  // 设置用户（WiFi模块 -> 门锁）
@@ -46,6 +49,10 @@
 /* WiFi 模块下发指令：参数设置，命令字与 ob_lock.h 的 PROP_CMD_* 保持一致 */
 #define UP_CMD_SET_LANGUAGE                 (0x19)  // 设置语言（对齐 PROP_CMD_LANGUAGE）
 #define UP_CMD_SET_VOLUME                   (0x22)  // 设置音量（对齐 PROP_CMD_LOCK_VOLUME）
+
+/* 门锁上报事件（门锁 -> WiFi模块 -> APP/服务器），命令字与 ob_lock.h 的 EVENT_CMD_* 保持一致 */
+#define UP_EVENT_FINGERPRINT_ADD_STATUS     (0x46)  // 指纹添加状态/进度（按压次数）
+#define UP_EVENT_KEY_ADD_COMPLETE           (0x47)  // 数字钥匙添加完成
 
 
 
@@ -61,6 +68,9 @@
 #define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)    
 #define UP_CMD_BLUE_VERSION_ACK             SET_UART_ACK_CMD(UP_CMD_BLUE_VERSION)
 #define UP_CMD_GET_USERDATA_RAW_ACK         SET_UART_ACK_CMD(UP_CMD_GET_USERDATA_RAW) // 0x81
+#define UP_CMD_ADD_NUMBER_KEY_ACK           SET_UART_ACK_CMD(UP_CMD_ADD_NUMBER_KEY)   // 0x82
+#define UP_CMD_CANCEL_NUMBER_KEY_ACK        SET_UART_ACK_CMD(UP_CMD_CANCEL_NUMBER_KEY) // 0x83
+#define UP_CMD_DELETE_NUMBER_KEY_ACK        SET_UART_ACK_CMD(UP_CMD_DELETE_NUMBER_KEY) // 0x84
 #define UP_CMD_ADD_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_ADD_USER)      // 0x85
 #define UP_CMD_DELETE_USER_ACK              SET_UART_ACK_CMD(UP_CMD_DELETE_USER)   // 0x86
 #define UP_CMD_SET_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_SET_USER)      // 0x87

@@ -47,6 +47,11 @@ QState lock_fsm_menu_repeat_input_code(LockFsm *me, QEvent const *e, uint8_t cod
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
                 system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
+            else if ((EVENT_RESULT_CANCEL_ADD_KEY == e->dynamic_[0])
+                     && (CODE_HANDLE_ADD == code_handle))    // 云端(0x03)取消：只对"添加普通用户"这条流程生效
+            {
+                state = Q_TRAN(lock_fsm_menu_add_normal_user_settings);
+            }
             else if (EVENT_RESULT_SUCCESS == e->dynamic_[0])
             {
                 if (CODE_HANDLE_ADD == e->dynamic_[1])
