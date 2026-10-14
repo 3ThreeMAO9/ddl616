@@ -123,8 +123,7 @@ HANDLER_DEFINE(UP_CMD_GET_USERDATA_RAW)
     if (len == 0)
     {
         OB_LOGW(TAG, "user %u not exist", user_id);
-        uart_msg_ack(UP_CMD_GET_USERDATA_RAW_ACK, STATUS_FAILED);
-        return 0;
+        return 0;       // 失败：暂不回应答（待与模块侧确认失败如何表达）
     }
 
     OB_LOGI(TAG, "user %u: raw_len=%u", user_id, len);

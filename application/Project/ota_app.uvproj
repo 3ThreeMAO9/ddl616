@@ -748,6 +748,11 @@
               <FilePath>..\fsm\state\fsm_state_idle.c</FilePath>
             </File>
             <File>
+              <FileName>fsm_state_remote_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\state\fsm_state_remote_key.c</FilePath>
+            </File>
+            <File>
               <FileName>fsm_state_power_on.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\state\fsm_state_power_on.c</FilePath>
@@ -2026,6 +2031,11 @@
               <FileName>fsm_state_idle.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\state\fsm_state_idle.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_state_remote_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\state\fsm_state_remote_key.c</FilePath>
             </File>
             <File>
               <FileName>fsm_state_power_on.c</FileName>

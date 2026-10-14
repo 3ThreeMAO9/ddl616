@@ -2,98 +2,52 @@
  * Copyright (c) 2026 GZ-OB, All rights reserved.
  * File name: uart_protocol_add_user.c
  * Desc: 添加用户（服务器下发 -> WiFi 模块 -> 门锁）
- * Version: 1.1.0
+ * Version: 1.5.0
  * Revision: James_Zhang
  * Date: 2026-10-14
  *
  * 说明：命令字 0x05 / 应答码 0x85，与 参考/ob_lock.h 的
  *       CMD_SERVER_ADD_USER / CMD_LOCK_ADD_USER_RSP 一致。
- *       下发 payload = 用户数据 raw（见 user_data_raw.h / 附表 1）；
- *       其中 p_user_id = 0xFF 表示由设备端分配用户ID（取最小空闲档案ID）。
- *       应答 payload = 1 字节用户ID（kiot_tm_action_out_a_add_user_raw_stu_t）。
- *       钥匙清单（keys_num + 每把 7 字节）只解析打印、不落库：raw 里只有元数据
- *       （无密码明文、无指纹模板），钥匙实体由 0x02 添加数字钥匙 / 本地录入产生。
+ *       下发 payload **只有 1 字节 p_user_id**，APP 约定固定送 0xFF：
+ *         p_user_id = 0xFF -> 由设备端确定"当前可用的用户ID"
+ *                             （0~49 都算，含管理用户：空锁上就分到 0）
+ *       本命令**不带档案字段**（名字/策略/有效期…），档案随后由 0x07 set_user 下发，
+ *       这里先按默认档案建出来（永久有效；管理用户兜底昵称 "Admin"）。
+ *
+ *       应答规则（kiot action 是透传，不带 status）：本命令 out = 1 字节用户ID ->
+ *         成功：回真实用户ID（0 是合法值 = 管理用户）
+ *         失败：暂不回应答（待与模块侧确认；0 不能兼作失败标志，否则和"管理用户"撞车）
  */
 
 #include "uart_protocol.h"
 #include "user.h"
-#include "user_data_raw.h"
+#include "user_data_raw.h"      // USERDATA_RAW_USER_ID_AUTO
+#include "hal_rtc.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
 #define TAG "up_add_user"
 
+#define ADD_USER_NAME_ADMIN     "Admin"     // 没给名字时，管理用户的兜底昵称
+
 /***************Function***************/
 
-// 解析 raw -> 写档案。成功返回用户ID，失败返回 0
-static uint16_t add_user_apply(const uart_packet_t* packet)
+// 默认档案：永久有效（普通用户名字留空等 0x07 补；管理用户兜底 "Admin"）
+static void add_user_default_profile(user_profile_t* profile, uint8_t user_id)
 {
-    userdata_raw_head_t head;
-    user_profile_t profile;
-    uint16_t user_id;
+    memset(profile, 0, sizeof(user_profile_t));
 
-    // 1. 解 raw（payload 未对齐，必须 memcpy 到本地结构体）
-    memcpy(&head, packet->payload, sizeof(head));
+    profile->policy         = USER_POLICY_PERMANENT;
+    profile->timestamp      = hal_get_rtc_time();
+    profile->effective_date = 0xFFFFFFFF;
+    profile->expire_date    = 0xFFFFFFFF;
+    profile->valid_day      = 0xFF;
+    profile->effective_time = 0xFFFFFFFF;
+    profile->expire_time    = 0xFFFFFFFF;
 
-    // 2. 用户ID：0xFF = 由设备端分配（最小空闲档案ID，返回 0 表示已满）
-    //    用 find_free_profile_id 而不是 alloc_user_id：后者会刷新本地录入的"即将创建用户ID"缓存
-    user_id = head.user_id;
-    if (USERDATA_RAW_USER_ID_AUTO == user_id)
+    if (0 == user_id)
     {
-        user_id = find_free_profile_id();
-        if (0 == user_id)
-        {
-            OB_LOGE(TAG, "no free user id");
-            return 0;
-        }
-    }
-    else if ((0 == user_id) || (user_id >= PROFILE_COUNT))
-    {
-        OB_LOGW(TAG, "invalid user id %u", user_id);
-        return 0;
-    }
-
-    // 3. 组档案（附表 1 的字段顺序和 user_profile_t 不同，逐个搬）
-    memset(&profile, 0, sizeof(profile));
-    memcpy(profile.user_name, head.user_name, PROFILE_NAME_MAX_LEN);
-    profile.user_name[PROFILE_NAME_MAX_LEN - 1] = '\0';     // 名字定长 41，保证有结束符
-    profile.policy         = head.policy;
-    profile.timestamp      = head.timestamp;                // 存服务器给的时间，不刷成本地时间
-    profile.effective_date = head.effective_date;
-    profile.expire_date    = head.expire_date;
-    profile.valid_day      = head.valid_day;
-    profile.effective_time = head.effective_time;
-    profile.expire_time    = head.expire_time;
-
-    if (!user_profile_write(user_id, &profile))
-    {
-        OB_LOGE(TAG, "write profile fail, id=%u", user_id);
-        return 0;
-    }
-
-    return user_id;
-}
-
-// 打印 raw 里的钥匙清单（只校验长度并记日志）
-static void add_user_dump_keys(const uart_packet_t* packet)
-{
-    userdata_raw_key_t key;
-    uint8_t keys_num = packet->payload[sizeof(userdata_raw_head_t)];
-    uint16_t offset  = sizeof(userdata_raw_head_t) + 1;
-    uint8_t i;
-
-    for (i = 0; i < keys_num; i++)
-    {
-        if ((uint16_t)(offset + sizeof(key)) > packet->length)
-        {
-            OB_LOGW(TAG, "keys_num=%u but len=%u, cut at %u", keys_num, packet->length, i);
-            break;
-        }
-
-        memcpy(&key, packet->payload + offset, sizeof(key));
-        OB_LOGI(TAG, "  key[%u]: type=%u, id=%u, urgent=%u, ts=%u",
-                i, key.key_type, key.key_id, key.key_urgent, key.timestamp);
-        offset += sizeof(key);
+        memcpy(profile->user_name, ADD_USER_NAME_ADMIN, sizeof(ADD_USER_NAME_ADMIN));
     }
 }
 
@@ -102,32 +56,50 @@ static void add_user_dump_keys(const uart_packet_t* packet)
 // ============================================================
 HANDLER_DEFINE(UP_CMD_ADD_USER)
 {
-    uint16_t user_id;
+    user_profile_t profile;
+    uint8_t user_id;
 
-    // 至少要有档案部分(64) + keys_num(1)
-    if (packet->length < (sizeof(userdata_raw_head_t) + 1))
+    // 1. 长度校验：只有 1 字节 p_user_id
+    if (packet->length < 1)
     {
-        OB_LOGW(TAG, "recv add user, len=%u too short (need >= %u)",
-                packet->length, (uint16_t)(sizeof(userdata_raw_head_t) + 1));
-        uart_msg_ack(UP_CMD_ADD_USER_ACK, STATUS_FAILED);
-        return 0;
+        OB_LOGW(TAG, "recv add user: empty payload");
+        return 0;       // 失败：暂不回应答
     }
 
-    OB_LOGI(TAG, "recv add user: req_id=0x%02X, keys_num=%u, len=%u",
-            packet->payload[0], packet->payload[sizeof(userdata_raw_head_t)], packet->length);
-
-    add_user_dump_keys(packet);
-
-    user_id = add_user_apply(packet);
-    if (0 == user_id)
+    // 2. 0xFF = 由设备端确定一个可用ID（**0~49，含管理用户**）
+    //    其它值按"指定普通用户"处理；用 find_free_user_id 而不是 alloc_user_id：
+    //    后者会刷新本地录入的"即将创建用户ID"缓存
+    user_id = packet->payload[0];
+    if (USERDATA_RAW_USER_ID_AUTO == user_id)
     {
-        uart_msg_ack(UP_CMD_ADD_USER_ACK, STATUS_FAILED);
-        return 0;
+        uint16_t free_id = find_free_user_id();
+
+        if (0xFFFF == free_id)
+        {
+            OB_LOGE(TAG, "no free user id");
+            return 0;   // 失败：暂不回应答
+        }
+
+        user_id = (uint8_t)free_id;
+    }
+    else if (user_id >= PROFILE_COUNT)
+    {
+        OB_LOGW(TAG, "invalid user id %u", user_id);
+        return 0;       // 失败：暂不回应答
+    }
+
+    // 3. 先按默认档案建出来（字段由 0x07 set_user 补）
+    add_user_default_profile(&profile, user_id);
+
+    if (!user_profile_write(user_id, &profile))
+    {
+        OB_LOGE(TAG, "write profile fail, id=%u", user_id);
+        return 0;       // 失败：暂不回应答
     }
 
     OB_LOGI(TAG, "add user OK: id=%u", user_id);
 
-    uart_msg_add_user_ack((uint8_t)user_id);
+    uart_msg_add_user_ack(user_id);         // 成功：out = 1 字节用户ID
 
     return 0;
 }

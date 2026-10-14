@@ -183,9 +183,8 @@ uint8_t user_get_key_info(uint8_t user_id, uint8_t index, user_key_info_t* info)
 
 // 找最小未用的"用户档案ID"（1~PROFILE_COUNT-1，0 留给管理员）
 // 占用来源：① 档案表里已存在的档案；② 钥匙记录上的 parameter.user_id
-//（本地录入的用户还没建档，先把号占住，免得下一批用户拿到同一个号）
-// 同时供云端下发（0x05 add_user）用：那边只取号，不该动本地录入的缓存
-uint16_t find_free_profile_id(void)
+// 扫档案表 + 钥匙记录，从 from_id 起找最小未用的用户档案ID；找不到返回 0xFFFF
+static uint16_t find_free_id_from(uint16_t from_id)
 {
     user_profile_t profile;
     user_info_t temp;
@@ -210,14 +209,29 @@ uint16_t find_free_profile_id(void)
         }
     }
 
-    // ---- 最小未用（1~49） ----
-    for (id = 1; id < PROFILE_COUNT; id++) {
+    // ---- 最小未用 ----
+    for (id = from_id; id < PROFILE_COUNT; id++) {
         if ((used_bitmap[id / 8] & (1 << (id % 8))) == 0) {
             return id;
         }
     }
 
-    return 0;   // 用户档案已满
+    return 0xFFFF;      // 用户档案已满
+}
+
+//（本地录入的用户还没建档，先把号占住，免得下一批用户拿到同一个号）
+// 本地菜单录入用：只分配**普通用户**ID（1~49），0 是管理员不参与；返回 0 表示已满
+uint16_t find_free_profile_id(void)
+{
+    uint16_t id = find_free_id_from(1);
+
+    return (0xFFFF == id) ? 0 : id;
+}
+
+// 云端 0x05 分配用：**0~49 都算**（0 = 管理用户，所以 0 也是合法返回值）；返回 0xFFFF 表示已满
+uint16_t find_free_user_id(void)
+{
+    return find_free_id_from(0);
 }
 
 // 分配"即将创建的普通用户档案ID"（1~49）：本次录入的密码/指纹/卡片都写进 parameter.user_id 归它
@@ -239,6 +253,14 @@ uint16_t read_user_id(void)
 void clean_user_id(void)
 {
     g_pending_user_id = 0;
+}
+
+// 云端 0x02 指定归属用户：直接把档案ID 写进缓存（本地流程是 alloc_user_id 找一个空闲的）
+// 之后录入成功时 addKeyCode / add_key_record 会把钥匙归到这个档案ID 上
+void set_user_id(uint16_t user_id)
+{
+    OB_LOGI(TAG, "set user_id [%u]", user_id);
+    g_pending_user_id = user_id;
 }
 
 // 某用户的第一把钥匙录入成功后，把这个用户的档案建出来
@@ -646,6 +668,8 @@ uint8_t isValidKeyCard(const uint8_t* card_id, uint8_t* key_id)
     return isValidKey(USER_TYPE_PERMANENT_CARD, card_id, key_id);
 }
 
+// 给"普通钥匙"找一个空槽：0 号槽固定是管理位
+//（管理密码 / 管理指纹由 modifyMasterKeyCode()、modifyMasterKeyFinger() 直接写 0 号槽，不走这里）
 static uint8_t read_empty_key_sn(uint16_t* user_sn, uint8_t userType)
 {
     const user_area_t* area = key_area_of(userType);
@@ -657,7 +681,7 @@ static uint8_t read_empty_key_sn(uint16_t* user_sn, uint8_t userType)
         return false;
     }
 
-    for (i = 0; i < area->count; i++) {
+    for (i = 1; i < area->count; i++) {
         if (!read_user_data_with_check(area->base + i, &temp_user) || !temp_user.flag) {
             *user_sn = area->base + i;
             return true;
@@ -962,13 +986,9 @@ void modifyMasterKeyFinger(uint16_t finger_id)
         return;
     }
 
-    if (!find_master_finger_sn(&user_sn)
-        && !read_empty_key_sn(&user_sn, USER_TYPE_PERMANENT_FINGERPRINTS))
+    if (!find_master_finger_sn(&user_sn))
     {
-#if (Enabled == PRINTF_USER)
-        OB_LOGD(TAG, "master finger: no free slot");
-#endif
-        return;
+        user_sn = area->base;       // 还没有管理指纹：固定写 0 号槽（管理位），不跟普通指纹抢
     }
 
     user_info.flag = true;

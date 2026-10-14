@@ -222,10 +222,12 @@ uint8_t getKeyFlag(uint16_t *user_sn, uint8_t key_type, uint16_t id);
 uint8_t getKeyFingerID(uint16_t *user_sn, uint16_t id);
 
 // ========== 即将创建的用户档案ID 分配（HMI 播报"用户编号N"） ==========
-uint16_t find_free_profile_id(void); // 查最小空闲档案ID（1~49，0=已满）；只查不缓存，云端下发（0x05）用
+uint16_t find_free_profile_id(void); // 查最小空闲普通用户档案ID（1~49，0=已满）；本地菜单录入用，只查不缓存
+uint16_t find_free_user_id(void);    // 查最小空闲用户档案ID（0~49，含管理员；0xFFFF=已满）；云端 0x05 分配用
 uint16_t alloc_user_id(void);       // 分配"即将创建的普通用户档案ID"（1~49；0=管理员），新钥匙的 parameter.user_id 写它
 uint16_t read_user_id(void);        // 读缓存值：HMI 播报"用户编号N"用它（档案ID，不是 key_id）
 void     clean_user_id(void);       // 清空缓存（当前工程内无调用）
+void     set_user_id(uint16_t user_id);  // 云端 0x02 指定归属用户：直接写缓存（本地流程走 alloc_user_id）
 
 // ========== 用户档案（真正的"用户"，0~49）==========
 uint8_t  user_profile_add(uint16_t user_id, const char* name);

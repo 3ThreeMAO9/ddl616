@@ -74,6 +74,8 @@ static const struct
     FSM_STATE_NAME(lockFsmHandleAddFail),
     FSM_STATE_NAME(lockFsmVerifyFail),
     FSM_STATE_NAME(lockFsmInputError),
+    FSM_STATE_NAME(lock_fsm_remote_add_finger),     // 云端(0x02)发起的指纹录入
+    FSM_STATE_NAME(lock_fsm_remote_add_card),       // 云端(0x02)发起的卡片录入
 };
 
 // 查表：找不到就返回 "?"（新状态忘了登记时）

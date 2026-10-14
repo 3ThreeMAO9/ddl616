@@ -2,7 +2,7 @@
  * Copyright (c) 2026 GZ-OB, All rights reserved.
  * File name: uart_protocol_delete_key.c
  * Desc: 删除数字钥匙（删除数字密码）（服务器下发 -> WiFi 模块 -> 门锁）
- * Version: 1.0.0
+ * Version: 1.1.0
  * Revision: James_Zhang
  * Date: 2026-10-14
  *
@@ -13,6 +13,10 @@
  *       p_key_id 是"该类型内的编号"（密码 0~19，0 = 管理密码），p_key_type 用物模型编号
  *       （0=密码 3=卡片 4=指纹 7=人脸）；管理密码/管理指纹不允许通过协议删除。
  *       指纹会同时把模块里的模板入队删掉（user_delete_key_by_id 内部处理）。
+ *
+ *       应答规则（kiot action 是透传，不带 status）：本命令 out 无 payload ->
+ *         成功：回空 payload（uart_msg_empty_ack）
+ *         失败：暂不回应答（待与模块侧确认失败如何表达）
  */
 
 #include "uart_protocol.h"
@@ -58,8 +62,7 @@ HANDLER_DEFINE(UP_CMD_DELETE_NUMBER_KEY)
     if (packet->length < sizeof(req))
     {
         OB_LOGW(TAG, "len=%u too short (need %u)", packet->length, (uint16_t)sizeof(req));
-        uart_msg_ack(UP_CMD_DELETE_NUMBER_KEY_ACK, STATUS_FAILED);
-        return 0;
+        return 0;       // 失败：暂不回应答
     }
 
     memcpy(&req, packet->payload, sizeof(req));
@@ -71,21 +74,19 @@ HANDLER_DEFINE(UP_CMD_DELETE_NUMBER_KEY)
     if (0xFF == type)
     {
         OB_LOGW(TAG, "unsupported key type %u", req.p_key_type);
-        uart_msg_ack(UP_CMD_DELETE_NUMBER_KEY_ACK, STATUS_FAILED);
-        return 0;
+        return 0;       // 失败：暂不回应答
     }
 
     // 3. 删除（管理钥匙 / 编号非法 / 该编号为空 都算失败）
     if (!user_delete_key_by_id(type, req.p_key_id))
     {
         OB_LOGW(TAG, "delete key fail: type=%u, key_id=%u", type, req.p_key_id);
-        uart_msg_ack(UP_CMD_DELETE_NUMBER_KEY_ACK, STATUS_FAILED);
-        return 0;
+        return 0;       // 失败：暂不回应答
     }
 
     OB_LOGI(TAG, "delete key OK: type=%u, key_id=%u", type, req.p_key_id);
 
-    uart_msg_ack(UP_CMD_DELETE_NUMBER_KEY_ACK, STATUS_SUCCESS);
+    uart_msg_empty_ack(UP_CMD_DELETE_NUMBER_KEY_ACK);       // 成功：out 无 payload
 
     return 0;
 }

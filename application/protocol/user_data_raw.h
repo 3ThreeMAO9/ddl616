@@ -25,7 +25,7 @@
 
 /***********Macro***********/
 #define USERDATA_RAW_MAX_KEY        (13)        // keys_num 上限（附表 1：0~13）
-#define USERDATA_RAW_USER_ID_AUTO   (0xFF)      // 下发时 p_user_id = 0xFF：由设备端分配用户ID
+#define USERDATA_RAW_USER_ID_AUTO   (0xFF)      // 下发时 p_user_id = 0xFF：由设备端分配一个可用用户ID(0~49)；0x85 应答回 0xFF 表示"没分配到"
 
 /***********Struct***********/
 #pragma pack(1)

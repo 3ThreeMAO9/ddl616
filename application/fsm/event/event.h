@@ -130,6 +130,8 @@ typedef enum{
     EVENT_RESULT_DEV_NORMAL_MODE,
     EVENT_RESULT_VERTION_TEST,
     EVENT_RESULT_CANCEL_ADD_KEY,        // 云端(0x03)取消添加数字钥匙：录入状态退出到上级
+    EVENT_RESULT_REMOTE_ADD_FINGER,     // 云端(0x02)发起添加指纹：待机态转入录入
+    EVENT_RESULT_REMOTE_ADD_CARD,       // 云端(0x02)发起添加卡片：待机态转入录入
 
 
     USER_EVENT_CNT,

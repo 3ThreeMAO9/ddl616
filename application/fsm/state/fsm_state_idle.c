@@ -79,6 +79,14 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             }
+            else if (EVENT_RESULT_REMOTE_ADD_FINGER == e->dynamic_[0])      // 云端(0x02)发起添加指纹
+            {
+                state = Q_TRAN(lock_fsm_remote_add_finger);
+            }
+            else if (EVENT_RESULT_REMOTE_ADD_CARD == e->dynamic_[0])        // 云端(0x02)发起添加卡片
+            {
+                state = Q_TRAN(lock_fsm_remote_add_card);
+            }
             else if (EVENT_RESULT_VERIFY_INPUT_ERROR == e->dynamic_[0])
             {
                 me->branch = (QStateHandler)(lock_fsm_idle);

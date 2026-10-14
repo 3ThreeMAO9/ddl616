@@ -52,6 +52,8 @@ QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e);
 QState lock_fsm_menu_delete_wait_done(LockFsm *me, QEvent const *e);   // 等指纹模板删完再报成功
 QState lock_fsm_exit_admin_mode(LockFsm *me, QEvent const *e);         // 退出管理模式提示，播完进休眠
 QState lockFsmMenuTimeOut(LockFsm *me, QEvent const *e);               // 子菜单操作超时提示，播完回上级菜单
+QState lock_fsm_remote_add_finger(LockFsm *me, QEvent const *e);       // 云端(0x02)发起的指纹录入，录完回待机
+QState lock_fsm_remote_add_card(LockFsm *me, QEvent const *e);         // 云端(0x02)发起的卡片录入，刷完回待机
 QState lockFsmDeleteUserSuccess(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailAdmin(LockFsm *me, QEvent const *e);
 QState lockFsmDeleteUserFailNotExist(LockFsm *me, QEvent const *e);
