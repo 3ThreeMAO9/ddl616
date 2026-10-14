@@ -14,6 +14,8 @@
  *         失败/超时/被取消 -> 0x47（在这里上报，key_id 填 0xFF）
  *       与本地菜单里的录入状态（fsm_menu_add_normal_finger/nfc）的区别：这里结束回"待机"，
  *       不回菜单。
+ *       管理指纹：APP 指定 user=0 + 指纹时（is_master_finger_pending），切 FP_MODE_REGISTER_MASTER
+ *       （模块固定存 0 号模板），落库走 modifyMasterKeyFinger，0x47 由那里上报（key_id 0）。
  */
 
 #include "fsm_state.h"
@@ -52,12 +54,14 @@ QState lock_fsm_remote_add_finger(LockFsm *me, QEvent const *e)
         case Q_ENTRY_SIG:
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
-            fp_task_set_mode(FP_MODE_REGISTER);
+            // APP 指定录"管理指纹"时用管理注册模式（模块固定存 0 号模板），普通指纹从 1 号起
+            fp_task_set_mode(is_master_finger_pending() ? FP_MODE_REGISTER_MASTER : FP_MODE_REGISTER);
             nfc_task_set_state(NFC_STATE_SLEEP);
             system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
             hmiTaskSetState(HMI_STATE_ADD_NORMAL_FINGER);
             break;
         case Q_EXIT_SIG:
+            set_master_finger_pending(false);       // 标记只在本次录入期间有效（成功路径在落库时已清）
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])

@@ -11,9 +11,15 @@
  *       下发 payload = kiot_tm_action_in_a_add_key_stu_t（17 字节）：
  *         p_user_id(1) + p_key_id(1) + p_key_type(1) + p_key_urgent(1) + p_password(13)
  *       p_key_type 用物模型编号：0=密码 3=卡片 4=指纹 7=人脸（人脸本工程暂无录入接口）。
+ *       p_password 是 ASCII 数字（'1' = 0x31），而门锁内部（本地按键录入、isValidKeyCode 校验
+ *       用的输入缓冲）存的是键值（KEY_NUM_1 = 0x01），所以落库前要用 add_key_pw_convert() 转换；
+ *       直接存 ASCII 会导致本地输入永远匹配不上（"密码写进去了但开不了门"）。
  *
- *       管理密码：p_user_id = 0 或 p_key_id = 0 视为"管理员密码"，固定写 0 号槽
- *       （modifyMasterKeyCode：归属管理员档案 0、编号 0）；已存在管理密码时是覆盖（修改语义）。
+ *       管理位（p_user_id = 0 或 p_key_id = 0）：
+ *         - 管理密码：固定写 0 号槽（modifyMasterKeyCode：归属管理员档案 0、编号 0），已存在是覆盖；
+ *         - 管理指纹：受理后等用户在锁上按压，模块固定存 0 号模板（FP_MODE_REGISTER_MASTER），
+ *           落库走 modifyMasterKeyFinger（编号 0、归属管理员档案 0），0x47 由那里上报；
+ *         - 管理位不支持卡片 / 人脸。
  *       普通钥匙：p_key_id 必须是 0xFF（编号由设备分配），p_user_id 取 1~49。
  *
  *       时序（见"添加与删除数字钥匙流程"图）：
@@ -91,18 +97,38 @@ static uint8_t add_key_pw_check(const char* pw)
     return len;
 }
 
+// APP 下发的是 ASCII 数字（'1' = 0x31），门锁内部（本地按键）存的是键值（KEY_NUM_1 = 0x01）：
+// 落库前必须转一遍，否则本地输入（键值）永远匹配不上。含非数字返回 0
+static uint8_t add_key_pw_convert(const char* ascii, uint8_t len, uint8_t* out)
+{
+    uint8_t i;
+
+    for (i = 0; i < len; i++)
+    {
+        if ((ascii[i] < '0') || (ascii[i] > '9'))
+        {
+            return 0;
+        }
+
+        out[i] = (uint8_t)(ascii[i] - '0');     // KEY_NUM_0 = 0 … KEY_NUM_9 = 9
+    }
+
+    return 1;
+}
+
 // 管理密码：固定写 0 号槽（归属管理员档案 0、编号 0）；已存在时是覆盖
 static uint8_t add_key_master_code(const kiot_tm_action_in_a_add_key_stu_t* req)
 {
+    uint8_t pw[ADD_KEY_PW_LEN_MAX];
     uint8_t pw_len = add_key_pw_check(req->p_password);
 
-    if (0 == pw_len)
+    if ((0 == pw_len) || !add_key_pw_convert(req->p_password, pw_len, pw))
     {
         OB_LOGW(TAG, "invalid master password");
         return false;
     }
 
-    modifyMasterKeyCode((uint8_t *)req->p_password, pw_len);
+    modifyMasterKeyCode(pw, pw_len);
 
     OB_LOGI(TAG, "master key code OK: len=%u", pw_len);
 
@@ -118,11 +144,12 @@ static uint8_t add_key_code(const kiot_tm_action_in_a_add_key_stu_t* req, uint8_
 {
     user_profile_t profile;
     user_time_t para;
+    uint8_t pw[ADD_KEY_PW_LEN_MAX];
     uint8_t pw_len;
     uint8_t key_id = 0xFF;
 
     pw_len = add_key_pw_check(req->p_password);
-    if (0 == pw_len)
+    if ((0 == pw_len) || !add_key_pw_convert(req->p_password, pw_len, pw))
     {
         OB_LOGW(TAG, "invalid password");
         return false;
@@ -138,7 +165,7 @@ static uint8_t add_key_code(const kiot_tm_action_in_a_add_key_stu_t* req, uint8_
         para.user_policy = profile.policy;
     }
 
-    if (!addKeyCode((uint8_t *)req->p_password, pw_len, USER_TYPE_PERMANENT_CODE, &para, &key_id))
+    if (!addKeyCode(pw, pw_len, USER_TYPE_PERMANENT_CODE, &para, &key_id))
     {
         OB_LOGE(TAG, "addKeyCode fail, user=%u", req->p_user_id);
         return false;
@@ -186,23 +213,34 @@ HANDLER_DEFINE(UP_CMD_ADD_NUMBER_KEY)
         return 0;       // 失败：暂不回应答
     }
 
-    // 3. 管理密码：p_user_id = 0 或 p_key_id = 0（管理位只有密码这一种有录入接口）
+    // 3. 管理位：p_user_id = 0 或 p_key_id = 0
+    //    管理密码 = 立即写入；管理指纹 = 受理，等用户在锁上按压（模块固定存 0 号模板）
     if ((ADD_KEY_USER_MASTER == req.p_user_id) || (ADD_KEY_ID_MASTER == req.p_key_id))
     {
-        if (USER_TYPE_PERMANENT_CODE != type)
+        if (USER_TYPE_PERMANENT_CODE == type)
         {
-            OB_LOGW(TAG, "master key: only code supported (type=%u)", req.p_key_type);
-            return 0;   // 失败：暂不回应答
+            if (!add_key_master_code(&req))
+            {
+                return 0;   // 失败：暂不回应答
+            }
+
+            uart_msg_empty_ack(UP_CMD_ADD_NUMBER_KEY_ACK);  // 成功：out 无 payload
+
+            return 0;
         }
 
-        if (!add_key_master_code(&req))
+        if (USER_TYPE_PERMANENT_FINGERPRINTS == type)
         {
-            return 0;   // 失败：暂不回应答
+            set_master_finger_pending(true);    // FSM 据此切 FP_MODE_REGISTER_MASTER
+            OB_LOGI(TAG, "add master finger accepted: wait user press");
+            add_key_start_remote(type);
+            uart_msg_empty_ack(UP_CMD_ADD_NUMBER_KEY_ACK);
+
+            return 0;
         }
 
-        uart_msg_empty_ack(UP_CMD_ADD_NUMBER_KEY_ACK);      // 成功：out 无 payload
-
-        return 0;
+        OB_LOGW(TAG, "master key: only code/finger supported (type=%u)", req.p_key_type);
+        return 0;   // 失败：暂不回应答
     }
 
     // 4. 普通钥匙：编号必须由设备分配

@@ -92,6 +92,7 @@ QState lock_fsm_menu_modfiy_admin_finger(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            set_master_finger_pending(false);       // 本地录管理指纹：不用远程标记（0x47 由本地流程自己处理）
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             nfc_task_set_state(NFC_STATE_SLEEP);

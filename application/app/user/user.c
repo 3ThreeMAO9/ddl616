@@ -20,6 +20,8 @@ static user_info_t current_user = {0};
 static uint16_t current_user_sn = 0;
 
 static uint16_t g_pending_user_id = 0;  // 即将创建的用户档案ID（1~49；写进新钥匙的 parameter.user_id；管理员固定 0）
+static uint8_t  g_master_finger_pending = false;    // 本次远程录入的是"管理指纹"（APP 0x02: user=0 + 指纹）
+
 /***************Function Implementation***************/
 // 各类型钥匙区：起始内部 SN（=Flash 起始块号）、容量
 typedef struct
@@ -261,6 +263,20 @@ void set_user_id(uint16_t user_id)
 {
     OB_LOGI(TAG, "set user_id [%u]", user_id);
     g_pending_user_id = user_id;
+}
+
+// 本次远程录入的是"管理指纹"（APP 0x02: user=0 + 指纹）：
+// FSM 据此把模块切到 FP_MODE_REGISTER_MASTER（固定 0 号模板），落库走 modifyMasterKeyFinger；
+// 本地菜单录管理指纹不经这里（它自己 fp_task_set_mode）
+void set_master_finger_pending(uint8_t on)
+{
+    OB_LOGI(TAG, "master finger pending [%u]", on);
+    g_master_finger_pending = on;
+}
+
+uint8_t is_master_finger_pending(void)
+{
+    return g_master_finger_pending;
 }
 
 // 某用户的第一把钥匙录入成功后，把这个用户的档案建出来
@@ -1007,6 +1023,14 @@ void modifyMasterKeyFinger(uint16_t finger_id)
     save_user_key(USER_TYPE_PERMANENT_FINGERPRINTS, (uint8_t)(user_sn - area->base), &user_info);
     user_profile_add(0, "Admin");                   // 管理员档案，已存在则不会重复创建
     cache_and_update(user_sn, &user_info);
+
+    // APP(0x02) 远程录管理指纹：成功时在这里补报 0x47（本地菜单录管理指纹不上报）
+    if (is_master_finger_pending())
+    {
+        set_master_finger_pending(false);
+        uart_msg_event_key_add_complete(KIOT_TM_P_ADD_KEY_RESULT_TIAN_JIA_CHENG_GONG,
+                                        USER_TYPE_PERMANENT_FINGERPRINTS, 0, hal_get_rtc_time());
+    }
 
     // 管理指纹固定 key_id 0、归属管理员档案 0；模块 0 号模板由注册模式那边覆盖，这里只管写记录
 #if (Enabled == PRINTF_USER)

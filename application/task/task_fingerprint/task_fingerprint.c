@@ -107,9 +107,11 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
         uint8_t key_id = 0;
 
         OB_LOGI(TAG, "FP_EVENT_SUCCESS_HANDLE finger_id %u", finger_id);
-        if (0 == finger_id)             // 模块 0 号 = 管理指纹（普通注册不会占 0 号，见 read_empty_fp_index）
+        // 模块 0 号 = 管理指纹（普通注册不会占 0 号，见 read_empty_fp_index）；
+        // APP(0x02 user=0 + 指纹) 走 FP_MODE_REGISTER_MASTER，模块固定存 0 号，这里再用标记兜底判定
+        if ((0 == finger_id) || is_master_finger_pending())
         {
-            modifyMasterKeyFinger(finger_id);
+            modifyMasterKeyFinger(0);   // 管理指纹固定模块 0 号模板
             lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                 KIOT_TM_P_RECORD_OPERATION_TYPE_TIAN_JIA_SHU_ZI_YAO_SHI,
                                 0, 0);      // 添加密钥：管理指纹（key_id 0）

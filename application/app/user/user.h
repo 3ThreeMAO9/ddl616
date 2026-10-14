@@ -228,6 +228,8 @@ uint16_t alloc_user_id(void);       // 分配"即将创建的普通用户档案I
 uint16_t read_user_id(void);        // 读缓存值：HMI 播报"用户编号N"用它（档案ID，不是 key_id）
 void     clean_user_id(void);       // 清空缓存（当前工程内无调用）
 void     set_user_id(uint16_t user_id);  // 云端 0x02 指定归属用户：直接写缓存（本地流程走 alloc_user_id）
+void     set_master_finger_pending(uint8_t on);  // 云端 0x02 录"管理指纹"：置本次标记（FSM 据此切 FP_MODE_REGISTER_MASTER）
+uint8_t  is_master_finger_pending(void);         // 本次是否在录管理指纹（远程）
 
 // ========== 用户档案（真正的"用户"，0~49）==========
 uint8_t  user_profile_add(uint16_t user_id, const char* name);

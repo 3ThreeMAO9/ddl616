@@ -25,6 +25,7 @@ QState lock_fsm_menu_add_normal_finger(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            set_master_finger_pending(false);       // 本地普通指纹：清掉可能残留的"管理指纹"标记
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_REGISTER);
