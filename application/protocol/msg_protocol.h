@@ -98,6 +98,8 @@ void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count);
 void uart_msg_records_raw(uint8_t *data, uint16_t len);
 
 // ---- 事件上报（门锁 -> WiFi 模块 -> APP/服务器）----
+// 恢复出厂设置（0x45）：payload = 4 字节时间戳（kiot_tm_event_e_reset_factory_stu_t）
+void uart_msg_event_reset_factory(uint32_t timestamp);
 // 数字钥匙添加完成（0x47）：result 取 kiot_tm_p_add_key_result_enum_t；type 用本工程 user_type_t（内部转物模型编号）
 void uart_msg_event_key_add_complete(uint8_t result, uint8_t type, uint8_t key_id, uint32_t timestamp);
 // 指纹添加状态/进度（0x46）：press_cnt = 已成功按压次数

@@ -51,6 +51,7 @@
 #define UP_CMD_SET_VOLUME                   (0x22)  // 设置音量（对齐 PROP_CMD_LOCK_VOLUME）
 
 /* 门锁上报事件（门锁 -> WiFi模块 -> APP/服务器），命令字与 ob_lock.h 的 EVENT_CMD_* 保持一致 */
+#define UP_EVENT_RESET_FACTORY              (0x45)  // 恢复出厂设置事件
 #define UP_EVENT_FINGERPRINT_ADD_STATUS     (0x46)  // 指纹添加状态/进度（按压次数）
 #define UP_EVENT_KEY_ADD_COMPLETE           (0x47)  // 数字钥匙添加完成
 

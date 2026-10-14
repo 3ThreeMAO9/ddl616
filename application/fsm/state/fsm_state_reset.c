@@ -11,6 +11,8 @@
 #include "user.h"
 #include "flash_data.h"
 #include "lock_log.h"
+#include "msg_protocol.h"       // 恢复出厂设置事件上报(0x45)
+#include "hal_rtc.h"            // hal_get_rtc_time()
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -48,6 +50,9 @@ QState lock_fsm_reset(LockFsm *me, QEvent const *e)
             flash_data_init();
 
             lock_log_flash_clear();
+
+            // 上报"恢复出厂设置"事件(0x45)：放在清空动作之后、播报之前
+            uart_msg_event_reset_factory(hal_get_rtc_time());
 
             hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_BLUE_OB); // 复位过程中蓝灯常亮
             // 复位完成绿灯2s

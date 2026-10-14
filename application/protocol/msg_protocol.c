@@ -176,6 +176,16 @@ void uart_msg_event_key_add_complete(uint8_t result, uint8_t type, uint8_t key_i
     uart_msg_common_send(UP_EVENT_KEY_ADD_COMPLETE, (uint8_t *)&ev, sizeof(ev));
 }
 
+// 恢复出厂设置（0x45）：时间戳（kiot_tm_event_e_reset_factory_stu_t）
+void uart_msg_event_reset_factory(uint32_t timestamp)
+{
+    kiot_tm_event_e_reset_factory_stu_t ev;
+
+    ev.p_timestamp = timestamp;
+
+    uart_msg_common_send(UP_EVENT_RESET_FACTORY, (uint8_t *)&ev, sizeof(ev));
+}
+
 // 指纹添加状态/进度（0x46）：已成功按压次数
 void uart_msg_event_fingerprint_add_status(uint8_t press_cnt)
 {
