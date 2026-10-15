@@ -128,6 +128,7 @@ typedef enum{
     HMI_STATE_DEVICE_TEST_STEP_FAIL,    //整机测试单步失败：播"测试失败"
     HMI_STATE_DEVICE_TEST_START,        //整机测试进入：键盘灯全亮
     HMI_STATE_DEVICE_TEST_KEY_PRESS,    //整机测试按键反馈：键盘灯闪一下 + 指示灯换一个颜色
+    HMI_STATE_DEVICE_TEST_NFC,          //整机测试第三步：NFC 检卡，播"请刷卡"
 
     HMI_STATE_RESET_SUCCESS,            //已恢复到出厂设置       Restored_to_factory_settings
 
