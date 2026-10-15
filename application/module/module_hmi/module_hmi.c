@@ -396,16 +396,19 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         // 整机测试(258#)第二步：指纹识别，只播"请按手指"（不带"返回上级菜单请按*号键"）
         case HMI_STATE_DEVICE_TEST_FINGER_ENROLL:
+            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);  // 触摸测试通过：绿灯闪
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_touch_the_fingerprint_sensor);
             break;
 
         // 整机测试(258#)第三步：NFC 检卡，只播"请刷卡"（不带"返回上级菜单请按*号键"）
         case HMI_STATE_DEVICE_TEST_NFC:
+            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);  // 指纹识别通过：绿灯闪
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_swipe_the_key_tag);
             break;
 
-        // 整机测试(258#)第四步：实体按键测试，只播一声"嘀"（不动键盘灯，区别于第一步的触摸按键反馈）
+        // 整机测试(258#)第四步：实体按键测试，绿灯闪 + 提示音（不动键盘灯，区别于第一步的触摸按键反馈）
         case HMI_STATE_DEVICE_TEST_KEY_TEST:
+            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);  // 绿灯闪
             PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
             break;
 
