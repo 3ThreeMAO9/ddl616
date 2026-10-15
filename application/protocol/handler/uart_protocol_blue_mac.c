@@ -50,16 +50,13 @@ HANDLER_DEFINE(UP_CMD_BLUE_MAC_ACK)
 
     // 长度校验
     if (packet->length < BLUE_MAC_LEN_MAX) {
-        OB_LOGE(TAG, "blue mac payload too small: %u", packet->length);
+        OB_LOGW(TAG, "blue mac payload too small: %u", packet->length);
         return 0;
     }
 
     // 保存 MAC
     blue_mac_set(packet->payload);
 
-    OB_LOGI(TAG, "blue mac: %02X:%02X:%02X:%02X:%02X:%02X",
-            s_blue_mac[0], s_blue_mac[1], s_blue_mac[2],
-            s_blue_mac[3], s_blue_mac[4], s_blue_mac[5]);
 
     return 0;
 }

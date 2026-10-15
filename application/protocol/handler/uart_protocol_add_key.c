@@ -6,31 +6,15 @@
  * Revision: James_Zhang
  * Date: 2026-10-14
  *
- * 说明：命令字 0x02 / 应答码 0x82，与 参考/ob_lock.h 的
- *       CMD_SERVER_ADD_NUMBER_KEY / CMD_LOCK_ADD_NUMBER_KEY_RSP 一致。
- *       下发 payload = kiot_tm_action_in_a_add_key_stu_t（17 字节）：
- *         p_user_id(1) + p_key_id(1) + p_key_type(1) + p_key_urgent(1) + p_password(13)
- *       p_key_type 用物模型编号：0=密码 3=卡片 4=指纹 7=人脸（人脸本工程暂无录入接口）。
- *       p_password 是 ASCII 数字（'1' = 0x31），而门锁内部（本地按键录入、isValidKeyCode 校验
- *       用的输入缓冲）存的是键值（KEY_NUM_1 = 0x01），所以落库前要用 add_key_pw_convert() 转换；
- *       直接存 ASCII 会导致本地输入永远匹配不上（"密码写进去了但开不了门"）。
- *
- *       管理位（p_user_id = 0 或 p_key_id = 0）：
- *         - 管理密码：固定写 0 号槽（modifyMasterKeyCode：归属管理员档案 0、编号 0），已存在是覆盖；
- *         - 管理指纹：受理后等用户在锁上按压，模块固定存 0 号模板（FP_MODE_REGISTER_MASTER），
- *           落库走 modifyMasterKeyFinger（编号 0、归属管理员档案 0），0x47 由那里上报；
- *         - 管理位不支持卡片 / 人脸。
- *       普通钥匙：p_key_id 必须是 0xFF（编号由设备分配），p_user_id 取 1~49。
- *
- *       时序（见"添加与删除数字钥匙流程"图）：
- *         - 密码（含管理密码）：同步写入，写完回应答；
- *         - 指纹/卡片：钥匙实体要等用户在锁上按压/刷卡，这里只回"已受理"的应答，
- *           实体由 FSM 的 lock_fsm_remote_add_finger/card 录入，进度/结果走 0x46 / 0x47 事件上报。
- *       归属用户：普通钥匙写进 user 模块的"即将创建用户ID"缓存（set_user_id），落库时归它。
- *
- *       应答规则（kiot action 是透传，不带 status）：本命令 out 无 payload ->
- *         成功：回空 payload（uart_msg_empty_ack）
- *         失败：暂不回应答（待与模块侧确认失败如何表达）
+ * 说明：命令字 0x02 / 应答码 0x82。payload = kiot_tm_action_in_a_add_key_stu_t（17 字节）：
+ *       p_user_id(1) + p_key_id(1) + p_key_type(1) + p_key_urgent(1) + p_password(13)。
+ *       p_key_type 物模型编号：0=密码 3=卡片 4=指纹 7=人脸（人脸无录入接口）。
+ *       p_password 是 ASCII（'1'=0x31），门锁内部存键值（KEY_NUM_1=0x01），落库前必须
+ *       add_key_pw_convert() 转换，否则本地输入永远匹配不上。
+ *       管理位(p_user_id=0 或 p_key_id=0)：密码固定写 0 号槽(覆盖)；指纹受理后等用户按压，
+ *       固定存 0 号模板；管理位不支持卡片/人脸。普通钥匙：p_key_id 必须 0xFF(设备分配)，p_user_id 1~49。
+ *       时序：密码同步写完再应答；指纹/卡片只回"已受理"，实体由 FSM 录入，进度走 0x46/0x47 上报。
+ *       应答：成功回空 payload，失败暂不回应答。
  */
 
 #include "uart_protocol.h"
@@ -130,7 +114,6 @@ static uint8_t add_key_master_code(const kiot_tm_action_in_a_add_key_stu_t* req)
 
     modifyMasterKeyCode(pw, pw_len);
 
-    OB_LOGI(TAG, "master key code OK: len=%u", pw_len);
 
     // 上报"添加完成"（0x47）：管理密码 = 类型密码、编号 0
     uart_msg_event_key_add_complete(KIOT_TM_P_ADD_KEY_RESULT_TIAN_JIA_CHENG_GONG,
@@ -167,11 +150,10 @@ static uint8_t add_key_code(const kiot_tm_action_in_a_add_key_stu_t* req, uint8_
 
     if (!addKeyCode(pw, pw_len, USER_TYPE_PERMANENT_CODE, &para, &key_id))
     {
-        OB_LOGE(TAG, "addKeyCode fail, user=%u", req->p_user_id);
+        OB_LOGW(TAG, "addKeyCode fail, user=%u", req->p_user_id);
         return false;
     }
 
-    OB_LOGI(TAG, "add key code OK: user=%u, key_id=%u", req->p_user_id, key_id);
 
     return true;
 }
@@ -202,8 +184,6 @@ HANDLER_DEFINE(UP_CMD_ADD_NUMBER_KEY)
 
     memcpy(&req, packet->payload, sizeof(req));
 
-    OB_LOGI(TAG, "recv add key: user=%u, key_id=0x%02X, type=%u, urgent=%u",
-            req.p_user_id, req.p_key_id, req.p_key_type, req.p_key_urgent);
 
     // 2. 类型映射
     type = add_key_type_map(req.p_key_type);
@@ -232,7 +212,6 @@ HANDLER_DEFINE(UP_CMD_ADD_NUMBER_KEY)
         if (USER_TYPE_PERMANENT_FINGERPRINTS == type)
         {
             set_master_finger_pending(true);    // FSM 据此切 FP_MODE_REGISTER_MASTER
-            OB_LOGI(TAG, "add master finger accepted: wait user press");
             add_key_start_remote(type);
             uart_msg_empty_ack(UP_CMD_ADD_NUMBER_KEY_ACK);
 
@@ -278,7 +257,6 @@ HANDLER_DEFINE(UP_CMD_ADD_NUMBER_KEY)
     {
         // 指纹/卡片：等用户按压/刷卡，钥匙归属走"即将创建用户ID"缓存
         set_user_id(req.p_user_id);
-        OB_LOGI(TAG, "add key accepted: wait user press/scan (type=%u)", type);
         add_key_start_remote(type);
     }
 

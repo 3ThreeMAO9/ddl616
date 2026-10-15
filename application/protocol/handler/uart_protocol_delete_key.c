@@ -6,17 +6,10 @@
  * Revision: James_Zhang
  * Date: 2026-10-14
  *
- * 说明：命令字 0x04 / 应答码 0x84，与 参考/ob_lock.h 的
- *       CMD_SERVER_DELETE_NUMBER_KEY / CMD_LOCK_DELETE_NUMBER_KEY_RSP 一致。
- *       下发 payload = kiot_tm_action_in_a_del_key_stu_t（2 字节）：
- *         p_key_id(1) + p_key_type(1)
- *       p_key_id 是"该类型内的编号"（密码 0~19，0 = 管理密码），p_key_type 用物模型编号
- *       （0=密码 3=卡片 4=指纹 7=人脸）；管理密码/管理指纹不允许通过协议删除。
- *       指纹会同时把模块里的模板入队删掉（user_delete_key_by_id 内部处理）。
- *
- *       应答规则（kiot action 是透传，不带 status）：本命令 out 无 payload ->
- *         成功：回空 payload（uart_msg_empty_ack）
- *         失败：暂不回应答（待与模块侧确认失败如何表达）
+ * 说明：命令字 0x04 / 应答码 0x84。payload = kiot_tm_action_in_a_del_key_stu_t（2 字节）：
+ *       p_key_id(1) + p_key_type(1)。p_key_id 是类型内编号（密码 0~19，0=管理密码），
+ *       p_key_type 物模型编号（0=密码 3=卡片 4=指纹 7=人脸）；管理密码/管理指纹不允许协议删除。
+ *       指纹会同步把模块模板入队删除。应答：成功回空 payload，失败暂不回应答。
  */
 
 #include "uart_protocol.h"
@@ -67,7 +60,6 @@ HANDLER_DEFINE(UP_CMD_DELETE_NUMBER_KEY)
 
     memcpy(&req, packet->payload, sizeof(req));
 
-    OB_LOGI(TAG, "recv delete key: key_id=%u, tm_type=%u", req.p_key_id, req.p_key_type);
 
     // 2. 类型映射
     type = del_key_type_map(req.p_key_type);
@@ -84,7 +76,6 @@ HANDLER_DEFINE(UP_CMD_DELETE_NUMBER_KEY)
         return 0;       // 失败：暂不回应答
     }
 
-    OB_LOGI(TAG, "delete key OK: type=%u, key_id=%u", type, req.p_key_id);
 
     uart_msg_empty_ack(UP_CMD_DELETE_NUMBER_KEY_ACK);       // 成功：out 无 payload
 

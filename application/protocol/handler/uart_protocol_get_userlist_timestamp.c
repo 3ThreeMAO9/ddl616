@@ -35,8 +35,6 @@ HANDLER_DEFINE(UP_CMD_GET_USERLIST_TIMESTAMP)
 
     user_get_list_timestamp(s_userlist_timestamp, count);
 
-    OB_LOGI(TAG, "recv get userlist timestamp, cmd=0x%02X, len=%u, count=%u",
-            packet->cmd, packet->length, count);
 
     uart_msg_userlist_timestamp(s_userlist_timestamp, count);
 

@@ -6,17 +6,11 @@
  * Revision: James_Zhang
  * Date: 2026-10-14
  *
- * 说明：命令字 0x05 / 应答码 0x85，与 参考/ob_lock.h 的
- *       CMD_SERVER_ADD_USER / CMD_LOCK_ADD_USER_RSP 一致。
- *       下发 payload **只有 1 字节 p_user_id**，APP 约定固定送 0xFF：
- *         p_user_id = 0xFF -> 由设备端确定"当前可用的用户ID"
- *                             （0~49 都算，含管理用户：空锁上就分到 0）
- *       本命令**不带档案字段**（名字/策略/有效期…），档案随后由 0x07 set_user 下发，
- *       这里先按默认档案建出来（永久有效；管理用户兜底昵称 "Admin"）。
- *
- *       应答规则（kiot action 是透传，不带 status）：本命令 out = 1 字节用户ID ->
- *         成功：回真实用户ID（0 是合法值 = 管理用户）
- *         失败：暂不回应答（待与模块侧确认；0 不能兼作失败标志，否则和"管理用户"撞车）
+ * 说明：命令字 0x05 / 应答码 0x85。payload 只有 1 字节 p_user_id，APP 固定送 0xFF：
+ *       0xFF -> 由设备端分配当前可用用户ID（0~49 含管理用户，空锁上分到 0）。
+ *       本命令不带档案字段，先按默认档案建出（永久有效，管理用户昵称兜底 "Admin"），
+ *       档案随后由 0x07 set_user 下发。
+ *       应答：out = 1 字节用户ID（0 是合法值=管理用户，故不能用 0 表示失败）；失败暂不回应答。
  */
 
 #include "uart_protocol.h"
@@ -76,7 +70,7 @@ HANDLER_DEFINE(UP_CMD_ADD_USER)
 
         if (0xFFFF == free_id)
         {
-            OB_LOGE(TAG, "no free user id");
+            OB_LOGW(TAG, "no free user id");
             return 0;   // 失败：暂不回应答
         }
 
@@ -93,11 +87,10 @@ HANDLER_DEFINE(UP_CMD_ADD_USER)
 
     if (!user_profile_write(user_id, &profile))
     {
-        OB_LOGE(TAG, "write profile fail, id=%u", user_id);
+        OB_LOGW(TAG, "write profile fail, id=%u", user_id);
         return 0;       // 失败：暂不回应答
     }
 
-    OB_LOGI(TAG, "add user OK: id=%u", user_id);
 
     uart_msg_add_user_ack(user_id);         // 成功：out = 1 字节用户ID
 

@@ -6,20 +6,13 @@
  * Revision: James_Zhang
  * Date: 2026-10-08
  *
- * 说明：命令字 0x09 / 应答码 0x89 与 ob_lock.h 的
- *       CMD_SERVER_GET_RECORD_LOG / CMD_LOCK_GET_RECORD_LOG_RSP 一致。
- *
- * 下发 payload（WiFi 模块侧即 kiot_tm_action_in_a_get_records_data_stu_t，pack(1)，共 7 字节）：
- *   uint32_t p_timestamp               // 时间戳（查询基准时刻，单位 s）
- *   uint8_t  p_record_event_type       // 记录事件类型：0=全部 1=操作记录 2=报警记录 3=访客记录
- *   uint8_t  p_record_cursor_count     // 本次要获取的记录条数
- *   uint8_t  p_record_cursor_direction // 方向：0=基于该时刻取过去的数据 1=取未来的数据
- *
- * 应答 payload（0x89）：N 条历史记录 raw，单条 8 字节（结构见 lock_log_def.h），按时间正序：
+ * 说明：命令字 0x09 / 应答码 0x89。
+ * 下发 payload = kiot_tm_action_in_a_get_records_data_stu_t（pack(1)，7 字节）：
+ *   p_timestamp(4) 查询基准时刻(s) + p_record_event_type(1) 0=全部 1=操作 2=报警 3=访客
+ *   + p_record_cursor_count(1) 条数 + p_record_cursor_direction(1) 0=取过去 1=取未来
+ * 应答 payload（0x89）：N 条记录 raw，单条 8 字节（见 lock_log_def.h），按时间正序：
  *   p_record_event_type(1) + 事件类型(1) + p_timestamp(4) + 参数1(1) + p_key_id(1)
- *   事件类型/参数1 是 union，随 p_record_event_type 取操作/报警/访客类型
- *   长度上限 200 字节（instance: p_records_data_raw maxLength=200 -> 25 条）
- *   没有记录时回空 payload 的 0x89。
+ *   事件类型/参数1 是 union，随 p_record_event_type 取值；上限 200 字节(25 条)；无记录回空 payload。
  */
 
 #include "uart_protocol.h"
@@ -62,10 +55,6 @@ HANDLER_DEFINE(UP_CMD_GET_RECORD_LOG)
                                    req->p_record_cursor_count, req->p_record_cursor_direction,
                                    buf, sizeof(buf));
 
-    OB_LOGI(TAG, "req: timestamp=%u, event_type=%u, count=%u, direction=%u -> %u record(s)",
-            req->p_timestamp, req->p_record_event_type,
-            req->p_record_cursor_count, req->p_record_cursor_direction,
-            len / sizeof(lock_log_record_t));
 
     uart_msg_records_raw(buf, len);     // len==0 时回空 payload 的 0x89
 

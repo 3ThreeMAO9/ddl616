@@ -6,16 +6,14 @@
  * Revision: James_Zhang
  * Date: 2026-10-10
  *
- * 说明：命令字 0x01 / 应答码 0x81，与 参考/ob_lock.h 的
- *       CMD_SERVER_GET_USERDATA_RAW / CMD_LOCK_GET_USERDATA_RAW_RSP 一致。
- *       下发 payload = kiot_tm_action_in_a_get_user_data_raw_stu_t（1 字节 p_user_id）。
- *       应答 payload = 用户数据 raw（附表 1），按字节顺序：
+ * 说明：命令字 0x01 / 应答码 0x81。下发 payload = kiot_tm_action_in_a_get_user_data_raw_stu_t
+ *       （1 字节 p_user_id）。应答 = 用户数据 raw（附表 1），按字节顺序：
  *         p_user_id(1) + p_user_name(41) + timestamp(4) + p_user_policy(1)
  *         + p_user_effective_date(4) + p_user_expire_date(4) + p_user_valid_day(1)
  *         + p_user_effective_time(4) + p_user_expire_time(4)   = 64 字节
- *         + keys_num(1)                                        （钥匙数量 0~13）
+ *         + keys_num(1)（钥匙数量 0~13）
  *         + 每把钥匙：p_key_type(1) + p_key_id(1) + p_key_urgent(1) + timestamp(4) = 7 字节
- *       注意：附表 1 的字段顺序和 user_profile_t 不同（policy 在第 4 位），所以按字段逐个拼。
+ *       注意：附表 1 字段顺序和 user_profile_t 不同（policy 在第 4 位），要按字段逐个拼。
  */
 
 #include "uart_protocol.h"
@@ -126,7 +124,6 @@ HANDLER_DEFINE(UP_CMD_GET_USERDATA_RAW)
         return 0;       // 失败：暂不回应答（待与模块侧确认失败如何表达）
     }
 
-    OB_LOGI(TAG, "user %u: raw_len=%u", user_id, len);
 
     uart_msg_userdata_raw(buf, len);
 
