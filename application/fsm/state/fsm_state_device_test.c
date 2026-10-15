@@ -30,7 +30,7 @@
  *       走 NFC_STATE_DETECT：驱动不做周期读卡，只在 ADC/LPCD 检到卡时才寻卡读 UID 并回调，
  *
  *       第四步（STEP4）实体按键检测：**只检测按键通路，不触发任何业务动作**。检测三个实体按键：
- *         - 防撬按键（EVENT_RESULT_TAMPER_PRESS，短按即上报）；
+ *         - 防撬按键（EVENT_RESULT_BREAK_LONG_PRESS，按住约 500ms 才算一次，只触发一次）；
  *         - 后板 RESET 键（EVENT_RESULT_BACK_KEY_SINGLE，后板单击上报，仅本状态处理）；
  *         - 后板 SETTING 键（EVENT_RESULT_ADD_ADMIN，后板单击上报）。
  *         三个键**顺序无所谓**，每个键**只记一次**（重复按忽略），三个都按过 -> 置位
@@ -134,6 +134,7 @@ static void device_test_back_key_press(uint8_t bit)
     {
         setDeviceTestFlagBit(DEVICE_TEST_FLAG_RESET_KEY_ID);  // 本步三个键统一用这个已有位上报
         device_test_step = DEVICE_TEST_STEP_IDLE;
+        keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);            // 本步结束关防撬，别把长按报警事件带出去
         hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_SUCCESS);  // 播"测试成功"（当前流程最后一步）
         // TODO: 下一步（电机/门磁/过流…）
     }
@@ -150,6 +151,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
         case Q_ENTRY_SIG:
             keyEventInit();
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
+            keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);         // 前三步不检测防撬（第四步才打开），避免误碰触发报警
             nfc_task_set_state(NFC_STATE_IDLE);
             fp_task_set_mode(FP_MODE_IDLE);
 
@@ -165,6 +167,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             key_step = 0;
             device_test_step = DEVICE_TEST_STEP_IDLE;
             device_test_key_flag = 0;
+            keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);         // 退出产测关闭防撬，别把长按报警事件带出去
             break;
         case Q_KEY_BOARD_PRESS_SIG:
             if ((DEVICE_TEST_STEP_KEY_BOARD == device_test_step) && (KEY_CNT > e->dynamic_[0]))
@@ -192,8 +195,9 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             // 第四步：三个按键（防撬 / 后板 RESET / 后板 SETTING），顺序无所谓、每个只记一次
             if (DEVICE_TEST_STEP_LOCK_KEY == device_test_step)
             {
-                if (EVENT_RESULT_TAMPER_PRESS == e->dynamic_[0])            // 防撬键（短按即上报）
+                if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])       // 防撬键（按住约 1s，只触发一次）
                 {
+                    // 这里复用防撬的报警事件做按键检测：产测期间它只被本状态消费，不会触发防撬报警
                     device_test_back_key_press(DEVICE_TEST_KEY_BIT_TAMPER);
                 }
                 else if (EVENT_RESULT_BACK_KEY_SINGLE == e->dynamic_[0])   // 后板 RESET 键（单击上报，仅本状态处理）

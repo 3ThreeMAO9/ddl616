@@ -133,7 +133,6 @@ typedef enum{
     EVENT_RESULT_REMOTE_ADD_FINGER,     // 云端(0x02)发起添加指纹：待机态转入录入
     EVENT_RESULT_REMOTE_ADD_CARD,       // 云端(0x02)发起添加卡片：待机态转入录入
     EVENT_RESULT_BACK_KEY_SINGLE,       // 后板按键单击（仅产测按键测试使用，其它状态不处理）
-    EVENT_RESULT_TAMPER_PRESS,          // 防撬按键按下（短按即上报，仅产测按键测试使用）
 
 
     USER_EVENT_CNT,
