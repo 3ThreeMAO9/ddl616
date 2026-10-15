@@ -40,6 +40,10 @@ static void key_task_callback(uint8_t keyType,uint8_t key_value)
             if(key_value == KEY_EVENT_TAMPER_PRESS){
                 baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_BREAK_LONG_PRESS);
             }
+            else if (key_value == KEY_EVENT_TAMPER_PRESS_DOWN) {
+                // 防撬短按即上报（仅产测按键测试消费，其它状态忽略）
+                baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_TAMPER_PRESS);
+            }
         }
         break;
     case KEY_TYPE_KEY_BOARD:

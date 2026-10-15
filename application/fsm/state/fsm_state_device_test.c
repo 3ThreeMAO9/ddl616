@@ -7,12 +7,12 @@
  * Date: 2026-10-15
  *
  * 说明：258# -> EVENT_RESULT_DEVICE_TEST_STEP1 -> 本状态（整机产测）。
- *       实现进度：**STEP1 键盘检测、STEP2 指纹识别、STEP3 NFC 检卡、STEP4 防撬+后板按键检测已完成**，其余步骤待接。
+ *       实现进度：**STEP1 触摸键盘检测、STEP2 指纹识别、STEP3 NFC 检卡、STEP4 实体按键（防撬+后板）检测已完成**，其余步骤待接。
  *       每步通过后置位对应的 deviceTest flag，并转入下一步；**只有最后一步跑完才播"测试成功"**。
  *
- *       第一步（STEP1）按键检测：必须严格按
+ *       第一步（STEP1）触摸键盘检测：必须严格按
  *         门铃 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> * -> 0 -> #
- *       的顺序，把 13 个键各按一次（按键中断产生 Q_KEY_BOARD_PRESS_SIG）。
+ *       的顺序，把 13 个触摸键各按一次（触摸芯片上报产生 Q_KEY_BOARD_PRESS_SIG）。
  *         - 按对的键：给按键反馈（键盘灯"灭 100ms 再亮起" + 指示灯换下一个颜色 + 一声"嘀"）；
  *           其中门铃键额外发门铃命令(0x61)给后板响铃；
  *         - 顺序错：**完全无响应**（不亮灯、不播报、进度不变），继续等正确的键
@@ -29,8 +29,8 @@
  *         - 识别失败     -> 播报"测试失败"。
  *       走 NFC_STATE_DETECT：驱动不做周期读卡，只在 ADC/LPCD 检到卡时才寻卡读 UID 并回调，
  *
- *       第四步（STEP4）按键测试：**只检测按键通路，不触发任何业务动作**。检测三个按键：
- *         - 防撬按键（EVENT_RESULT_BREAK_LONG_PRESS）；
+ *       第四步（STEP4）实体按键检测：**只检测按键通路，不触发任何业务动作**。检测三个实体按键：
+ *         - 防撬按键（EVENT_RESULT_TAMPER_PRESS，短按即上报）；
  *         - 后板 RESET 键（EVENT_RESULT_BACK_KEY_SINGLE，后板单击上报，仅本状态处理）；
  *         - 后板 SETTING 键（EVENT_RESULT_ADD_ADMIN，后板单击上报）。
  *         三个键**顺序无所谓**，每个键**只记一次**（重复按忽略），三个都按过 -> 置位
@@ -70,13 +70,13 @@ static const uint8_t device_test_key_seq[DEVICE_TEST_KEY_SEQ_CNT] = DEVICE_TEST_
 // 当前测试阶段（用 device_test_step_t 的子集，见 module_produce_test.h）
 static uint8_t device_test_step = DEVICE_TEST_STEP_IDLE;
 
-// 第四步三个按键的位掩码（顺序无所谓，每个键只记一次）
+// 第四步三个实体按键的位掩码（顺序无所谓，每个键只记一次）
 #define DEVICE_TEST_KEY_BIT_TAMPER      (0x01)        // 防撬按键
 #define DEVICE_TEST_KEY_BIT_RESET       (0x02)        // 后板 RESET 键
 #define DEVICE_TEST_KEY_BIT_SETTING     (0x04)        // 后板 SETTING 键
 #define DEVICE_TEST_KEY_BIT_ALL         (0x01 | 0x02 | 0x04)
 
-// 第四步已按过的按键
+// 第四步已按过的实体按键
 static uint8_t device_test_key_flag = 0;
 
 /***************Function***************/
@@ -107,19 +107,19 @@ static void device_test_nfc_start(void)
     OB_LOGD(TAG, "STEP3: nfc verify");
 }
 
-// 进入第四步：按键测试（防撬键 + 后板 RESET 键 + 后板 SETTING 键，顺序无所谓，每个键只记一次）
+// 进入第四步：实体按键测试（防撬键 + 后板 RESET 键 + 后板 SETTING 键，顺序无所谓，每个键只记一次）
 static void device_test_back_key_start(void)
 {
-    device_test_step = DEVICE_TEST_STEP_LOCK_KEY;      // 复用已有枚举：本步测的就是锁体上的按键
+    device_test_step = DEVICE_TEST_STEP_LOCK_KEY;      // 复用已有枚举：本步测的就是锁体上的实体按键
     nfc_task_set_state(NFC_STATE_IDLE);
-    keyTaskHandle(KEY_TYPE_TAMPER_KEY, true);          // 确保防撬键扫描是开的（要用它的长按事件）
+    keyTaskHandle(KEY_TYPE_TAMPER_KEY, true);          // 确保防撬键扫描是开的（要用它的短按事件）
     device_test_key_flag = 0;
-    hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_PRESS);  // 键盘灯闪一下 + "嘀"，提示开始按按键
+    hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_TEST);   // 一声"嘀"，提示开始按实体按键
     system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
     OB_LOGD(TAG, "STEP4: tamper + back key");
 }
 
-// 第四步某个键被按下：顺序无所谓、每个键只记一次；三个都按过 -> 本步通过，播"测试成功"
+// 第四步某个实体按键被按下：顺序无所谓、每个键只记一次；三个都按过 -> 本步通过，播"测试成功"
 static void device_test_back_key_press(uint8_t bit)
 {
     if (device_test_key_flag & bit)
@@ -128,7 +128,7 @@ static void device_test_back_key_press(uint8_t bit)
     }
 
     device_test_key_flag |= bit;
-    hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_PRESS);  // 键盘灯闪 + 指示灯换色 + "嘀"
+    hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_TEST);   // 每按对一个键播一声"嘀"
 
     if (DEVICE_TEST_KEY_BIT_ALL == device_test_key_flag)    // 三个键都按过 -> 本步通过
     {
@@ -192,7 +192,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             // 第四步：三个按键（防撬 / 后板 RESET / 后板 SETTING），顺序无所谓、每个只记一次
             if (DEVICE_TEST_STEP_LOCK_KEY == device_test_step)
             {
-                if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])       // 防撬键
+                if (EVENT_RESULT_TAMPER_PRESS == e->dynamic_[0])            // 防撬键（短按即上报）
                 {
                     device_test_back_key_press(DEVICE_TEST_KEY_BIT_TAMPER);
                 }

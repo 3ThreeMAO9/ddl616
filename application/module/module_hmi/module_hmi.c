@@ -404,6 +404,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_swipe_the_key_tag);
             break;
 
+        // 整机测试(258#)第四步：实体按键测试，只播一声"嘀"（不动键盘灯，区别于第一步的触摸按键反馈）
+        case HMI_STATE_DEVICE_TEST_KEY_TEST:
+            PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
+            break;
+
         // 整机测试(258#)进入：键盘灯全亮 + 指示灯灭 + 按键配色从头开始
         case HMI_STATE_DEVICE_TEST_START:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
@@ -411,7 +416,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             device_test_logo_color_idx = 0;
             break;
 
-        // 整机测试(258#)按键反馈：键盘灯"灭 100ms 再亮起" + 指示灯换下一个颜色
+        // 整机测试(258#)第一步：触摸按键反馈：键盘灯"灭 100ms 再亮起" + 指示灯换下一个颜色
         case HMI_STATE_DEVICE_TEST_KEY_PRESS:
             hmi_key_board_led_config(TRUN_OFF, TRUN_ON, HMI_STATE_KEY_BOARD_LED_TIME, 1);
             hmi_logo_led_config(device_test_logo_color_tab[device_test_logo_color_idx], LOGO_LED_COLOR_IDLE, 0, 0);
