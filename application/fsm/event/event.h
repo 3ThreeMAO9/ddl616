@@ -118,6 +118,7 @@ typedef enum{
     EVENT_RESULT_AGING_TEST,
     EVENT_RESULT_AGING_TEST_TIME,
     EVENT_RESULT_DEVICE_TEST_RESULT,
+    EVENT_RESULT_VERIFY_MODE_SWITCH,    // 259#：切换单一/双重验证（调试用）
     EVENT_RESULT_DEVICE_TEST_STEP1,
     EVENT_RESULT_DEVICE_TEST_STEP2,
     EVENT_RESULT_PRODUCE_TEST,
@@ -159,6 +160,7 @@ typedef enum{
 /***************Function***************/
 void baseEventPush(uint8_t event_type, uint8_t value);
 void userHandleEventPush(uint8_t result, uint16_t user_sn);
+void userHandleEventPushType(uint8_t result, uint16_t user_sn, uint8_t key_type);
 void handleEventPush(uint8_t handle, uint8_t value);
 void nfcKeyEventPush(uint8_t* id, uint8_t size);
 void linkKeyEventPush(uint8_t* id, uint8_t size);

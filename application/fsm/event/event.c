@@ -30,7 +30,7 @@ void handleEventPush(uint8_t handle, uint8_t value)
     eventQueuePush(&event);
 }
 
-void userHandleEventPush(uint8_t result, uint16_t user_sn)
+static void userHandleEventPushKey(uint8_t result, uint16_t user_sn, uint8_t key_type)
 {
     QEvent event;
 
@@ -38,8 +38,20 @@ void userHandleEventPush(uint8_t result, uint16_t user_sn)
     event.dynamic_[0] = result;
     event.dynamic_[1] = (uint8_t)(user_sn>>8);
     event.dynamic_[2] = (uint8_t)(user_sn&0xFF);
+    event.dynamic_[3] = key_type;       // 钥匙类型（双重验证用它区分两次验证方式）
 
     eventQueuePush(&event);
+}
+
+void userHandleEventPush(uint8_t result, uint16_t user_sn)
+{
+    userHandleEventPushKey(result, user_sn, 0xFF);      // 0xFF = 无钥匙类型（不参与双重验证）
+}
+
+// 验证类事件：带上钥匙类型（user_type_t），双重验证需要判断两次是否不同类型
+void userHandleEventPushType(uint8_t result, uint16_t user_sn, uint8_t key_type)
+{
+    userHandleEventPushKey(result, user_sn, key_type);
 }
 
 void nfcKeyEventPush(uint8_t* id, uint8_t size) {

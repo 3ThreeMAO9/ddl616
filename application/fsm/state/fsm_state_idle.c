@@ -24,6 +24,8 @@
 
 /***************Variable***************/
 
+// 双重验证：第一重已通过的钥匙类型 + 1（0 = 还没有第一重）。进入待机即复位，超时/离开也会清
+static uint8_t dual_verify_type = 0;
 
 /***************Function***************/
 
@@ -37,6 +39,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            dual_verify_type = 0;       // 进入待机 = 新会话，双重验证重新开始
             keyTaskInit(KEY_TYPE_KEY_BOARD);
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_VERIFY);
@@ -55,6 +58,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             break;
         case Q_EXIT_SIG:
+            dual_verify_type = 0;       // 离开待机（超时/开锁/失败）清掉第一重记录
             break;
         case Q_KEY_BOARD_PRESS_SIG:
             system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
@@ -196,6 +200,23 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 
             }
+#if (Enabled == VERIFY_MODE_SWITCH_DEBUG)
+            else if (EVENT_RESULT_VERIFY_MODE_SWITCH == e->dynamic_[0])
+            {
+                // 259#（调试用）：单一 <-> 双重验证切换，现场测试用
+                if (VERIFY_MODE_DUAL == readUserParameter(USER_PARA_VERIFY_MODE_ID))
+                {
+                    setUserParameter(USER_PARA_VERIFY_MODE_ID, VERIFY_MODE_SINGLE);
+                }
+                else
+                {
+                    setUserParameter(USER_PARA_VERIFY_MODE_ID, VERIFY_MODE_DUAL);
+                }
+                dual_verify_type = 0;
+                OB_LOGW(TAG, "verify mode -> %u", readUserParameter(USER_PARA_VERIFY_MODE_ID));
+                hmiTaskSetState(HMI_STATE_VERIFY_MODE_SWITCH);   // 单一:绿灯闪1次 / 双重:蓝灯闪2次
+            }
+#endif
             else if (EVENT_RESULT_DEVICE_TEST_RESULT == e->dynamic_[0])
             {
                 // 257#：出厂状态下查询产测结果并播报 100(未测试)/102(未通过)/103(通过)。
@@ -228,6 +249,33 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
             if (EVENT_RESULT_SUCCESS_VERIFY_USER == (e->dynamic_[0]))
             {
+                // 双重验证模式：必须两种不同类型的钥匙，第一重通过先不开锁
+                // （类型无效时退化为单一验证，避免将来新增验证通道忘了带类型导致卡住）
+                if ((VERIFY_MODE_DUAL == readUserParameter(USER_PARA_VERIFY_MODE_ID))
+                    && (USER_TYPE_PERMANENT_MAX > e->dynamic_[3]))
+                {
+                    uint8_t key_type = e->dynamic_[3];      // user_type_t
+
+                    if (0 == dual_verify_type)
+                    {
+                        dual_verify_type = key_type + 1;    // 第一重：记下类型（+1，0 表示"未记录"）
+                        hmiTaskSetState(HMI_STATE_DUAL_VERIFY_FIRST_OK);    // 蓝灯长亮，等第二重
+                        OB_LOGI(TAG, "dual verify: first OK, type[%u]", key_type);
+                        break;                              // 不开锁，留在待机等第二重
+                    }
+
+                    if (key_type == (uint8_t)(dual_verify_type - 1))
+                    {
+                        dual_verify_type = 0;               // 第二重与第一重同类型 -> 失败退出
+                        me->branch = (QStateHandler)(lock_fsm_idle);
+                        state = Q_TRAN(lockFsmDualVerifyFail);
+                        break;
+                    }
+
+                    dual_verify_type = 0;                   // 第二重类型不同 -> 双重验证通过
+                    OB_LOGI(TAG, "dual verify: second OK, type[%u]", key_type);
+                }
+
                 OB_LOGI(TAG, "user_id [%u]", ((uint16_t)e->dynamic_[1] << 8) | e->dynamic_[2]);
                 hmi_task_tamper_warn_time(0);
                 motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);

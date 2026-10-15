@@ -166,6 +166,12 @@ QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e)
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_ADD_SUCCESS);
 }
 
+// 双重验证：第二重与第一重类型相同（不算第二重）-> 红灯 0.1s 闪 2 次，播完回 me->branch
+QState lockFsmDualVerifyFail(LockFsm *me, QEvent const *e)
+{
+    return lockFsmFailDeal(me, e, HMI_STATE_DUAL_VERIFY_FAIL, false);
+}
+
 // ---- 整机测试(258#)结果播报：播完"测试成功"/"测试失败"后回 me->branch（通常是休眠）----
 QState lockFsmDeviceTestSuccess(LockFsm *me, QEvent const *e)
 {

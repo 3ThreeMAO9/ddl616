@@ -412,6 +412,32 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
             break;
 
+        // 双重验证：第一重通过，蓝灯长亮提示继续第二重（不播语音）
+        case HMI_STATE_DUAL_VERIFY_FIRST_OK:
+            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, 0, 0);
+            break;
+
+        // 双重验证：第二重失败（类型与第一重相同），红灯 0.1s 闪 2 次
+        case HMI_STATE_DUAL_VERIFY_FAIL:
+            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
+            keepTime = HMI_STATE_KEEP_TIME_500ms;
+            break;
+
+#if (Enabled == VERIFY_MODE_SWITCH_DEBUG)
+        // 259# 切换验证方式：单一=绿灯闪 1 次，双重=蓝灯闪 2 次（都用"设置成功"语音）
+        case HMI_STATE_VERIFY_MODE_SWITCH:
+            if (VERIFY_MODE_DUAL == readUserParameter(USER_PARA_VERIFY_MODE_ID))
+            {
+                hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 4);
+            }
+            else
+            {
+                hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 2);
+            }
+            PLAYER_LIST_CLEAR_ADD(VOICE_Setup_successful);
+            break;
+#endif
+
         // 整机测试(258#)结果查询(257#)：播报 100(未进行锁端功能测试) / 102(未通过) / 103(通过)
         case HMI_STATE_DEVICE_TEST_RESULT:
         {

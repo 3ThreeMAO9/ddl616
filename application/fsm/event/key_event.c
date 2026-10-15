@@ -127,7 +127,13 @@ static uint8_t keyEventCombineFunctionHandle(void)
         return true;
     }
 #endif
-
+#if (Enabled == VERIFY_MODE_SWITCH_DEBUG)
+    else if (COMBINE_KEY_BOARD_VERIFY_MODE == value)
+    {
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERIFY_MODE_SWITCH);
+        return true;
+    }
+#endif
     if (isEmptyKey(false))
     {
         if (COMBINE_KEY_BOARD_AGING_TEST == value)
@@ -355,7 +361,7 @@ void keyEventVerifyUser(uint8_t key_value)
                     {
                         setUserParameter(USER_PARA_VACATION_MODE_ID, Disabled);
                         password_unlock_log_add(key_id);
-                        userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id);
+                        userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, USER_TYPE_PERMANENT_CODE);
                     }
                     else
                     {
@@ -365,7 +371,7 @@ void keyEventVerifyUser(uint8_t key_value)
                 else
                 {
                     password_unlock_log_add(key_id);
-                    userHandleEventPush(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id);
+                    userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, USER_TYPE_PERMANENT_CODE);
                 }
             }
             else
