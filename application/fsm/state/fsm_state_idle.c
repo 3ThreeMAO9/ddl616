@@ -200,6 +200,10 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
 
             }
+            else if (EVENT_RESULT_DEVICE_TEST_STEP1 == e->dynamic_[0])
+            {
+                state = Q_TRAN(lock_fsm_device_test);       // 258#：整机测试，第一步按键检测
+            }
             else if (EVENT_RESULT_AGING_TEST == e->dynamic_[0])
             {
                 state = Q_TRAN(lock_fsm_aging_test);

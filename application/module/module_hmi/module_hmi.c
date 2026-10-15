@@ -49,6 +49,13 @@ static void hmiHandleEvent_callback(uint8_t event, uint32_t value)
     }
 #endif
 }
+// 整机测试(258#)按键反馈：每按一次键把指示灯切到下一个颜色（3 色循环；进入测试时复位为蓝色）
+static const uint8_t device_test_logo_color_tab[] =
+{
+    LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_RED,
+};
+static uint8_t device_test_logo_color_idx = 0;
+
 static void hmi_logo_led_config(uint8_t nowColor, uint8_t nextColor, uint32_t halfPeriod, uint32_t halfPeriodCnt)
 {
     hmihandle.logoLed.color = BCD_CONVERT_HEX(nextColor, nowColor);
@@ -376,6 +383,35 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             
         case HMI_STATE_HANDLE_SUCCESS:
             PLAYER_LIST_CLEAR_ADD(VOICE_Setup_successful);
+            break;
+
+        // 整机测试(258#)：单步通过/失败（这两条语音专供产测，其他流程不用）
+        case HMI_STATE_DEVICE_TEST_STEP_SUCCESS:
+            PLAYER_LIST_CLEAR_ADD(SOUND_TEST_SUCCESSFUL);
+            break;
+
+        case HMI_STATE_DEVICE_TEST_STEP_FAIL:
+            PLAYER_LIST_CLEAR_ADD(SOUND_TEST_FAILED);
+            break;
+
+        // 整机测试(258#)进入：键盘灯全亮 + 指示灯灭 + 按键配色从头开始
+        case HMI_STATE_DEVICE_TEST_START:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            hmi_logo_led_config(LOGO_LED_COLOR_IDLE, LOGO_LED_COLOR_IDLE, 0, 0);
+            device_test_logo_color_idx = 0;
+            break;
+
+        // 整机测试(258#)按键反馈：键盘灯"灭 100ms 再亮起" + 指示灯换下一个颜色
+        case HMI_STATE_DEVICE_TEST_KEY_PRESS:
+            hmi_key_board_led_config(TRUN_OFF, TRUN_ON, HMI_STATE_KEY_BOARD_LED_TIME, 1);
+            hmi_logo_led_config(device_test_logo_color_tab[device_test_logo_color_idx], LOGO_LED_COLOR_IDLE, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DI);
+            device_test_logo_color_idx++;
+            if (device_test_logo_color_idx >= (sizeof(device_test_logo_color_tab) / sizeof(device_test_logo_color_tab[0])))
+            {
+                device_test_logo_color_idx = 0;
+            }
+            keepTime = HMI_STATE_KEEP_TIME_90ms;
             break;
 
         case HMI_STATE_CREATE_LINKED_UNLOCK:

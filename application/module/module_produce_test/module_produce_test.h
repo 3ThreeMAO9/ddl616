@@ -16,7 +16,7 @@ typedef void (*produce_test_callback_t)(uint8_t, uint8_t);
 
 /*****************Macro****************/
 #define PRODUCE_PCBA_TEST_TIME_OUT_MAX                  (60 * 1000)             //unit: ms
-#define PRODUCE_DEVICE_TEST_TIME_OUT_MAX                (20 * 1000)             //unit: ms
+#define PRODUCE_DEVICE_TEST_TIME_OUT_MAX                (30 * 1000)             //unit: ms，整机测试每一步的操作超时
 #define AGING_TEST_TIME_OUT_2H                          (2 * 60 * 60 * 1000)    //unit: ms
 #define AGING_TEST_TIME_OUT_4H                          (4 * 60 * 60 * 1000)    //unit: ms
 #define AGING_TEST_TIME_OUT_8H                          (8 * 60 * 60 * 1000)    //unit: ms
@@ -92,21 +92,15 @@ typedef struct{
 
 
 /***************Function***************/
+// 活接口：由 bsp_produce_test 的驱动表引用（.init / .loop），task_produce_test 会调到
 void produceTestInit(void);
 void produceTestLoop(void);
-void produceTestSleep(void);
-void produceTestHwConfig(uint8_t initFlag);
 void produceTestEventRegister_callback(produce_test_callback_t callback);
-void pcbaNfcTestPressHandle(uint8_t flag);
-uint8_t pcbaTestGetHandleStep(void);
 
-uint8_t pcbaKeyBoardTestPressHandle(uint8_t keyValue);
-void pcbaMotorTestHandle(uint32_t value);
-void pcbaKeyTestHandle(uint8_t value);
-void exit_produce_test(void);
-uint8_t isTestEnable(void);
-uint8_t isTesting(void);
-uint8_t isLEDHoldOn(void);
+// 原 PCBA 产测专用接口（produceTestHwConfig / pcbaKeyBoardTestPressHandle / pcbaMotorTestHandle /
+// pcbaKeyTestHandle / pcbaNfcTestPressHandle / pcbaTestGetHandleStep / produceTestSleep /
+// exit_produce_test / isTestEnable / isTesting / isLEDHoldOn）只有声明、实现全被注释，
+// 属于"有声明无实现"的链接隐患，已删除；将来恢复产测协议时连实现一起加回。
 /**************************************/
 
 #endif 

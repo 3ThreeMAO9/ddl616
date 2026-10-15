@@ -310,8 +310,11 @@ void read_device_version_info(void);
 /*******************************************/
 #include "chip_config.h"
 
-#define DEVICE_TEST_KEY_BOARD_TAB {KEY_NUM_1, KEY_NUM_2, KEY_NUM_3, KEY_NUM_4, KEY_NUM_5, KEY_NUM_6, \
-                                   KEY_NUM_7, KEY_NUM_8, KEY_CAN, KEY_NUM_9, KEY_NUM_0, KEY_OK}
+// 整机测试(258#)第一步：按键检测的**顺序表**，必须严格按此顺序逐个按完：
+// 门铃 -> 1..9 -> * -> 0 -> #
+#define DEVICE_TEST_KEY_SEQ_CNT                     (13)
+#define DEVICE_TEST_KEY_SEQ_TAB {KEY_NUM_13, KEY_NUM_1, KEY_NUM_2, KEY_NUM_3, KEY_NUM_4, KEY_NUM_5, \
+                                 KEY_NUM_6, KEY_NUM_7, KEY_NUM_8, KEY_NUM_9, KEY_CAN, KEY_NUM_0, KEY_OK}
 
 
 

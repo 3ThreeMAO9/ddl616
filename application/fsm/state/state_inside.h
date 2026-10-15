@@ -45,6 +45,7 @@ QState lock_fsm_menu_repeat_change_master_code(LockFsm *me, QEvent const *e);   
 QState lock_fsm_menu_repeat_add_code(LockFsm *me, QEvent const *e);             // 再输一次普通密码
 
 QState lock_fsm_aging_test(LockFsm *me, QEvent const *e);
+QState lock_fsm_device_test(LockFsm *me, QEvent const *e);       // 整机测试（258#），第一步按键检测
 QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e);
 QState lock_fsm_system_lock(LockFsm *me, QEvent const *e);
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);

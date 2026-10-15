@@ -39,6 +39,7 @@ static const struct
     FSM_STATE_NAME(lock_fsm_system_lock),
     FSM_STATE_NAME(lock_fsm_low_power_system_lock),
     FSM_STATE_NAME(lock_fsm_aging_test),
+    FSM_STATE_NAME(lock_fsm_device_test),
     // 菜单状态
     FSM_STATE_NAME(lock_fsm_menu_admin),
     FSM_STATE_NAME(lock_fsm_menu_modfiy_admin_pin),
