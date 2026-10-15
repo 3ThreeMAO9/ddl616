@@ -44,6 +44,11 @@ typedef enum{
 
 }device_test_flag_id_e;
 
+// deviceTest.result 取值（257# 播报 / 上位机读取）
+#define DEVICE_TEST_RESULT_NONE          (100)    // 未进行锁端功能测试
+#define DEVICE_TEST_RESULT_FAIL          (102)    // 锁端功能测试未通过
+#define DEVICE_TEST_RESULT_PASS          (103)    // 锁端功能测试通过
+
 
 /****************Struct****************/
 typedef struct{

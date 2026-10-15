@@ -185,8 +185,9 @@ static void device_test_back_key_press(uint8_t bit)
         setDeviceTestFlagBit(DEVICE_TEST_FLAG_RESET_KEY_ID);  // 本步三个键统一用这个已有位上报
         device_test_step = DEVICE_TEST_STEP_IDLE;
         keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);            // 本步结束关防撬，别把长按报警事件带出去
+        writeDeviceTestResult(DEVICE_TEST_RESULT_PASS);       // 全部通过 -> 结果置 103 并落盘
         hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_SUCCESS);  // 播"测试成功"（当前流程最后一步）
-        // TODO: 下一步（电机/门磁/过流…）
+        // TODO: 下一步（门磁/过流/电流/BLE…接齐后在这里继续判结果）
     }
 }
 
@@ -206,6 +207,11 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             hmiTaskSetAllowSelintFlag(false);
 
             device_test_key_flag = 0;
+            // 开始一次新的锁端功能测试：本次进度从 0 开始，结果先置"未通过"，
+            // 只有全部通过时才会改成 103（满足"结果在下次测试成功前不更新"）
+            clearDeviceTestFlagAllBit();
+            writeDeviceTestResult(DEVICE_TEST_RESULT_FAIL);
+
             device_test_key_board_start();                      // 直接进入第一步触摸键盘
             break;
         case Q_EXIT_SIG:

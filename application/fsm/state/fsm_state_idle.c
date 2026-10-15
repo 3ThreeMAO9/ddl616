@@ -198,7 +198,9 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             }
             else if (EVENT_RESULT_DEVICE_TEST_RESULT == e->dynamic_[0])
             {
-
+                // 257#：出厂状态下查询产测结果并播报 100(未测试)/102(未通过)/103(通过)。
+                // 非出厂状态此组合键不会被识别（见 key_event.c 的 isEmptyKey 判断），会作为密码处理
+                hmiTaskSetState(HMI_STATE_DEVICE_TEST_RESULT);
             }
             else if (EVENT_RESULT_DEVICE_TEST_STEP1 == e->dynamic_[0])
             {

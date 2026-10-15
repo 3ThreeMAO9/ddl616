@@ -412,6 +412,25 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
             break;
 
+        // 整机测试(258#)结果查询(257#)：播报 100(未进行锁端功能测试) / 102(未通过) / 103(通过)
+        case HMI_STATE_DEVICE_TEST_RESULT:
+        {
+            uint8_t result = readDeviceTestResult();
+            if (DEVICE_TEST_RESULT_PASS == result)
+            {
+                play_num(DEVICE_TEST_RESULT_PASS);
+            }
+            else if (DEVICE_TEST_RESULT_FAIL == result)
+            {
+                play_num(DEVICE_TEST_RESULT_FAIL);
+            }
+            else
+            {
+                play_num(DEVICE_TEST_RESULT_NONE);       // 0(从未测试) / 0xFF(已复位) / 其它异常值都按未测试播
+            }
+            break;
+        }
+
         // 整机测试(258#)进入：键盘灯全亮 + 指示灯灭 + 按键配色从头开始
         case HMI_STATE_DEVICE_TEST_START:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);

@@ -130,6 +130,7 @@ typedef enum{
     HMI_STATE_DEVICE_TEST_KEY_PRESS,    //整机测试第一步：触摸按键反馈：键盘灯闪一下 + 指示灯换一个颜色
     HMI_STATE_DEVICE_TEST_NFC,          //整机测试第三步：NFC 检卡，播"请刷卡"
     HMI_STATE_DEVICE_TEST_KEY_TEST,     //整机测试第四步：实体按键（防撬/后板RESET/后板SETTING）测试提示：只播"嘀"，不动键盘灯
+    HMI_STATE_DEVICE_TEST_RESULT,       //257# 产测结果查询：播报 100(未测试) / 102(未通过) / 103(通过)
 
     HMI_STATE_RESET_SUCCESS,            //已恢复到出厂设置       Restored_to_factory_settings
 
