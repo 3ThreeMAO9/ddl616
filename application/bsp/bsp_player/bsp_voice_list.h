@@ -76,7 +76,7 @@ typedef enum
     VOICE_To_modify_the_master_fingerprint_please_press,                    // 修改管理指纹请按
     VOICE_Please_swipe_the_key_tag,                                         // 请刷卡
     VOICE_Please_touch_the_fingerprint_sensor,                              // 请按手指
-    VOICE_Please_replace_the_key_tag_and_swipe_again,                       // 请更换卡片重新刷卡
+    VOICE_Please_replace_the_key_tag_and_swipe_again,                       // XXX 请更换卡片重新刷卡
     VOICE_To_add_a_key_tag_please_press,                                    // 添加卡片，请按
     VOICE_To_delete_a_general_user_please_press_2,                          // 删除普通用户，请按
     VOICE_To_add_a_PIN_code_please_press,                                   // 添加密码，请按
@@ -84,7 +84,7 @@ typedef enum
     VOICE_To_modify_the_master_user_please_press,                           // 修改管理用户，请按
     VOICE_Deletion_successful,                                              // 删除成功
     VOICE_Deletion_failed,                                                  // 删除失败
-    VOICE_Pairing_settings_please_press,                                    // 配网设置请按
+    VOICE_Pairing_settings_please_press,                                    // XXX 配网设置请按
 
     SOUND_START,
     SOUND_BUTTON_DI,                                                        // 按键音Di(0.75)

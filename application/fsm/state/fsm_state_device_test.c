@@ -7,8 +7,21 @@
  * Date: 2026-10-15
  *
  * 说明：258# -> EVENT_RESULT_DEVICE_TEST_STEP1 -> 本状态（整机产测）。
- *       实现进度：**STEP1 触摸键盘检测、STEP2 指纹识别、STEP3 NFC 检卡、STEP4 实体按键（防撬+后板）检测已完成**，其余步骤待接。
+ *       实现进度：**STEP1 触摸键盘、STEP2 指纹识别、STEP3 NFC 检卡、STEP4 实体按键（防撬+后板）
+ *       + 离合电机测试（开/关）已完成**，其余步骤待接。
  *       每步通过后置位对应的 deviceTest flag，并转入下一步；**只有最后一步跑完才播"测试成功"**。
+ *
+ *       离合电机测试：**门锁无法感知"拧把手"动作**（没有把手位置传感器），所以融进相邻步骤 ——
+ *         - 指纹验证通过后 -> 驱动电机**开锁**，离合松开；测试人员在随后刷卡的过程中顺手拧把手，
+ *           此时**应能带动锁芯**；
+ *         - 刷卡验证通过后 -> 驱动电机**关锁**，离合咬合；测试人员在随后按实体键的过程中顺手拧把手，
+ *           此时**应拧不动**。
+ *       只驱动电机（各 250ms），**不额外等待、不做灯效/语音提示**，电机动作时间完全被人工操作
+ *       时间掩盖，不增加工时；两个检查点都只置 DEVICE_TEST_FLAG_MOTOR_HANDLE_ID，
+ *       **是否合格由测试人员现场判断**。
+ *
+ *       工时相关：任一步失败 -> 播"测试失败"，停留 DEVICE_TEST_FAIL_EXIT_TIME(2s) 后自动退出本状态，
+ *       **不干等 30s 工时超时**（产测按工时计费，失败台的 30s 空等是最大的浪费）。
  *
  *       第一步（STEP1）触摸键盘检测：必须严格按
  *         门铃 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> * -> 0 -> #
@@ -50,6 +63,7 @@
 #include "task_system_time.h"
 #include "task_fingerprint.h"
 #include "task_key.h"
+#include "task_motor.h"
 #include "task_nfc.h"
 
 #include "module_produce_test.h"
@@ -76,10 +90,27 @@ static uint8_t device_test_step = DEVICE_TEST_STEP_IDLE;
 #define DEVICE_TEST_KEY_BIT_SETTING     (0x04)        // 后板 SETTING 键
 #define DEVICE_TEST_KEY_BIT_ALL         (0x01 | 0x02 | 0x04)
 
+// 某步失败后：播完"测试失败"停留这么久就自动退出产测（不干等 30s 工时超时，省工时）
+#define DEVICE_TEST_FAIL_EXIT_TIME      (2000)        //unit: ms
+
 // 第四步已按过的实体按键
 static uint8_t device_test_key_flag = 0;
 
+// 第一步触摸键盘进度（当前等着按第几个键，0 ~ DEVICE_TEST_KEY_SEQ_CNT-1）
+static uint8_t key_step = 0;
+
 /***************Function***************/
+
+// 进入第一步：触摸键盘检测（必须严格按 门铃->1..9->*->0-># 顺序各按一次）
+static void device_test_key_board_start(void)
+{
+    device_test_step = DEVICE_TEST_STEP_KEY_BOARD;
+    key_step = 0;                                           // 进度清零，从门铃开始
+    hmiTaskSetState(HMI_STATE_DEVICE_TEST_START);           // 键盘灯全亮 + 指示灯灭 + 按键配色复位
+    system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
+    system_time_task_set_function_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
+    OB_LOGD(TAG, "STEP1: touch keys in order (bell,1..9,*,0,#)");
+}
 
 // 进入第二步：指纹识别（播"请按手指"，等用户放手指）
 // 只做识别：切 FP_MODE_VERIFY，不写指纹库、不涉及归属用户
@@ -112,11 +143,30 @@ static void device_test_back_key_start(void)
 {
     device_test_step = DEVICE_TEST_STEP_LOCK_KEY;      // 复用已有枚举：本步测的就是锁体上的实体按键
     nfc_task_set_state(NFC_STATE_IDLE);
-    keyTaskHandle(KEY_TYPE_TAMPER_KEY, true);          // 确保防撬键扫描是开的（要用它的短按事件）
+    keyTaskHandle(KEY_TYPE_TAMPER_KEY, true);          // 确保防撬键扫描是开的（要用它的长按事件）
     device_test_key_flag = 0;
     hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_TEST);   // 一声"嘀"，提示开始按实体按键
     system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
+    system_time_task_set_function_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
     OB_LOGD(TAG, "STEP4: tamper + back key");
+}
+
+// 离合电机测试(开锁)：指纹验证通过后驱动电机开锁，离合松开，测试人员在随后刷卡过程中
+// 顺手拧把手，此时应能带动锁芯。门锁无法感知拧把手，所以只驱动电机，不等待、不做提示
+static void device_test_motor_open(void)
+{
+    setDeviceTestFlagBit(DEVICE_TEST_FLAG_MOTOR_HANDLE_ID);    // 已执行离合电机(开锁)动作
+    motorTaskHandle(MOTOR_HANDLE_OPEN, 0);                    // 电机开锁，动作时间 250ms
+    OB_LOGD(TAG, "MOTOR: open");
+}
+
+// 离合电机测试(关锁)：刷卡验证通过后驱动电机关锁，离合咬合，测试人员在随后按实体键过程中
+// 顺手拧把手，此时应拧不动。同样只驱动电机，不等待、不做提示
+static void device_test_motor_lock(void)
+{
+    setDeviceTestFlagBit(DEVICE_TEST_FLAG_MOTOR_HANDLE_ID);    // 已执行离合电机(关锁)动作
+    motorTaskHandle(MOTOR_HANDLE_CLOSE, 0);                   // 电机关锁，动作时间 250ms
+    OB_LOGD(TAG, "MOTOR: close");
 }
 
 // 第四步某个实体按键被按下：顺序无所谓、每个键只记一次；三个都按过 -> 本步通过，播"测试成功"
@@ -144,7 +194,6 @@ static void device_test_back_key_press(uint8_t bit)
 
 QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
 {
-    static uint8_t key_step = 0;        // 当前等着按第几个键（0 ~ DEVICE_TEST_KEY_SEQ_CNT-1）
     QState state = Q_IGNORED();     //  没有对应事件就返回Q_IGNORED()
 
     switch (e->sig){
@@ -154,14 +203,10 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);         // 前三步不检测防撬（第四步才打开），避免误碰触发报警
             nfc_task_set_state(NFC_STATE_IDLE);
             fp_task_set_mode(FP_MODE_IDLE);
-
             hmiTaskSetAllowSelintFlag(false);
-            hmiTaskSetState(HMI_STATE_DEVICE_TEST_START);   // 键盘灯全亮 + 按键配色复位
 
-            device_test_step = DEVICE_TEST_STEP_KEY_BOARD;  // 从第一步开始
-            key_step = 0;       // 第一步按键检测：进度清零，从门铃开始
-            system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
-            OB_LOGD(TAG, "STEP1: press %u keys in order (bell,1..9,*,0,#)", DEVICE_TEST_KEY_SEQ_CNT);
+            device_test_key_flag = 0;
+            device_test_key_board_start();                      // 直接进入第一步触摸键盘
             break;
         case Q_EXIT_SIG:
             key_step = 0;
@@ -195,7 +240,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             // 第四步：三个按键（防撬 / 后板 RESET / 后板 SETTING），顺序无所谓、每个只记一次
             if (DEVICE_TEST_STEP_LOCK_KEY == device_test_step)
             {
-                if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])       // 防撬键（按住约 1s，只触发一次）
+                if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])       // 防撬键（按住约 500ms，只触发一次）
                 {
                     // 这里复用防撬的报警事件做按键检测：产测期间它只被本状态消费，不会触发防撬报警
                     device_test_back_key_press(DEVICE_TEST_KEY_BIT_TAMPER);
@@ -216,14 +261,16 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 // 第二步：指纹识别（事件来自 task_fingerprint 的验证回调）
                 if (EVENT_RESULT_SUCCESS_VERIFY_USER == e->dynamic_[0])
                 {
-                    // 识别成功 = 第二步通过 -> 转第三步
+                    // 识别成功 = 第二步通过 -> 驱动电机开锁做离合测试(应能带动锁芯) -> 转第三步
                     setDeviceTestFlagBit(DEVICE_TEST_FLAG_VERIFY_FINGERPRINT_ID);
+                    device_test_motor_open();
                     device_test_nfc_start();
                 }
                 else if (EVENT_RESULT_FAIL_INVALID == e->dynamic_[0])
                 {
                     hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_FAIL);       // 播"测试失败"
                     device_test_step = DEVICE_TEST_STEP_IDLE;
+                    system_time_task_set_work_time(DEVICE_TEST_FAIL_EXIT_TIME);  // 播完 2s 自动退出，不等 30s
                 }
             }
             else if (DEVICE_TEST_STEP_VERIFY_NFC == device_test_step)
@@ -231,8 +278,9 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 // 第三步：NFC 检卡（事件来自 task_nfc 的检卡回调）
                 if (EVENT_RESULT_SUCCESS_VERIFY_USER == e->dynamic_[0])
                 {
-                    // 刷卡识别成功 = 第三步通过 -> 转第四步（"测试成功"留到最后播）
+                    // 刷卡识别成功 = 第三步通过 -> 关锁做离合测试(应拧不动) -> 转第四步
                     setDeviceTestFlagBit(DEVICE_TEST_FLAG_NFC_ID);
+                    device_test_motor_lock();
                     device_test_back_key_start();
                 }
                 else if (EVENT_RESULT_FAIL_INVALID == e->dynamic_[0])
@@ -240,6 +288,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                     hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_FAIL);       // 播"测试失败"
                     device_test_step = DEVICE_TEST_STEP_IDLE;
                     nfc_task_set_state(NFC_STATE_IDLE);
+                    system_time_task_set_work_time(DEVICE_TEST_FAIL_EXIT_TIME);  // 播完 2s 自动退出，不等 30s
                 }
             }
             break;
