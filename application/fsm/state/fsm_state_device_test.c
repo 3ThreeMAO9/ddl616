@@ -2,24 +2,33 @@
  * Copyright (c) 2026 GZ-OB, All rights reserved.
  * File name: fsm_state_device_test.c
  * Desc: 整机测试状态（按键输入 258# 进入）
- * Version: 1.0.0
+ * Version: 1.1.0
  * Revision: James_Zhang
- * Date: 2026-10-14
+ * Date: 2026-10-15
  *
  * 说明：258# -> EVENT_RESULT_DEVICE_TEST_STEP1 -> 本状态（整机产测）。
- *       实现进度：**第一步（STEP1）按键检测已完成**，其余步骤待接。
+ *       实现进度：**第一步（按键检测）、第二步（指纹识别）已完成**，其余步骤待接。
  *
- *       第一步规则：必须严格按
+ *       第一步（STEP1）按键检测：必须严格按
  *         门铃 -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> * -> 0 -> #
  *       的顺序，把 13 个键各按一次（按键中断产生 Q_KEY_BOARD_PRESS_SIG）。
- *         - 按对了：继续等下一个键；
- *         - 顺序错：**无响应**（不播报、进度不变），继续等正确的键；
- *         - 13 个键全部按对：置位 DEVICE_TEST_FLAG_KEYPAD_ID + 播报"测试成功"。
- *       每一步的操作超时 = PRODUCE_DEVICE_TEST_TIME_OUT_MAX（30s），超时回待机。
+ *         - 按对的键：给按键反馈（键盘灯"灭 100ms 再亮起" + 指示灯换下一个颜色 + 一声"嘀"）；
+ *           其中门铃键额外发门铃命令(0x61)给后板响铃；
+ *         - 顺序错：**完全无响应**（不亮灯、不播报、进度不变），继续等正确的键
+ *           （例如门铃已经按过，再按门铃就不响应，此时只有按 1 才有反馈）；
+ *         - 13 个键全部按对：置位 DEVICE_TEST_FLAG_KEYPAD_ID，并**直接转入第二步**
+ *           （"测试成功"留到后续步骤跑完再播，见下面第二步）。
+ *
+ *       第二步（STEP2）指纹识别：**只做识别、不录入**。播报"请按手指"，用户把手指放上模块：
+ *         - 识别成功 -> 置位 DEVICE_TEST_FLAG_VERIFY_FINGERPRINT_ID + **播报"测试成功"**；
+ *         - 识别失败 -> 播报"测试失败"。
+ *       走 FP_MODE_VERIFY（指纹验证回调），**不往指纹库里写任何东西**，也没有归属用户的概念。
+ *
+ *       每一步的操作超时 = PRODUCE_DEVICE_TEST_TIME_OUT_MAX（30s），系统工时超时回待机。
  *       测试结果存放在参数区（produceInfo.deviceTest.flag），由 257# 读取。
  *
- *       后续步骤（指纹录入/删除、NFC、电机、复位键、门磁/过流等）在本状态内
- *       按 device_test_step_t（module_produce_test.h）逐个往下接。
+ *       后续步骤（指纹删除、NFC、电机、复位键、门磁/过流等）在本状态内按
+ *       device_test_step_t（module_produce_test.h）逐个往下接。
  */
 
 #include "fsm_state.h"
@@ -45,7 +54,22 @@
 // 整机测试第一步的按键顺序表（门铃 -> 1..9 -> * -> 0 -> #）
 static const uint8_t device_test_key_seq[DEVICE_TEST_KEY_SEQ_CNT] = DEVICE_TEST_KEY_SEQ_TAB;
 
+// 当前测试阶段（用 device_test_step_t 的子集，见 module_produce_test.h）
+static uint8_t device_test_step = DEVICE_TEST_STEP_IDLE;
+
 /***************Function***************/
+
+// 进入第二步：指纹识别（播"请按手指"，等用户放手指）
+// 只做识别：切 FP_MODE_VERIFY，不写指纹库、不涉及归属用户
+static void device_test_finger_start(void)
+{
+    device_test_step = DEVICE_TEST_STEP_VERIFY_FINGER;
+    fp_task_set_mode(FP_MODE_VERIFY);
+    hmiTaskSetState(HMI_STATE_DEVICE_TEST_FINGER_ENROLL);       // 播"请按手指"
+    system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
+    system_time_task_set_function_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
+    OB_LOGW(TAG, "device test STEP2: finger verify");
+}
 
 // ------------------------------------------
 
@@ -64,20 +88,22 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             hmiTaskSetAllowSelintFlag(false);
             hmiTaskSetState(HMI_STATE_DEVICE_TEST_START);   // 键盘灯全亮 + 按键配色复位
 
+            device_test_step = DEVICE_TEST_STEP_KEY_BOARD;  // 从第一步开始
             key_step = 0;       // 第一步按键检测：进度清零，从门铃开始
             system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
             OB_LOGW(TAG, "device test STEP1: press %u keys in order (bell,1..9,*,0,#)", DEVICE_TEST_KEY_SEQ_CNT);
             break;
         case Q_EXIT_SIG:
             key_step = 0;
+            device_test_step = DEVICE_TEST_STEP_IDLE;
             break;
         case Q_KEY_BOARD_PRESS_SIG:
-            if (KEY_CNT > e->dynamic_[0])
+            if ((DEVICE_TEST_STEP_KEY_BOARD == device_test_step) && (KEY_CNT > e->dynamic_[0]))
             {
                 if (device_test_key_seq[key_step] == e->dynamic_[0])
                 {
                     if (KEY_NUM_13 == e->dynamic_[0])
-                        uart_msg_bell(1, 1000);
+                        uart_msg_bell(1, 0);     // 门铃：发命令给后板响铃
 
                     hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_PRESS);
                     key_step++;
@@ -85,17 +111,16 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
 
                     if (key_step >= DEVICE_TEST_KEY_SEQ_CNT)
                     {
-                        // 13 个键全部按对：记录测试结果 + 播报"测试成功"
+                        // 13 个键全部按对：记录结果，直接转入第二步（"测试成功"留到最后播）
                         key_step = 0;
                         setDeviceTestFlagBit(DEVICE_TEST_FLAG_KEYPAD_ID);
-                        hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_SUCCESS);
                         OB_LOGW(TAG, "key board test PASS");
-                        // TODO: STEP2
+                        device_test_finger_start();
                     }
                 }
                 else
                 {
-                    // 顺序错：无响应（不播报、进度不变），继续等正确的键
+                    // 顺序错：完全无响应（不亮灯、不播报、进度不变），继续等正确的键
                     OB_LOGI(TAG, "key out of order: %u (expect %u, step %u), ignored",
                             e->dynamic_[0], device_test_key_seq[key_step], key_step);
                 }
@@ -104,6 +129,25 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
         case Q_HANDLE_SIG:
             break;
         case Q_USER_HANDLE_SIG:
+            // 第二步：指纹识别（事件来自 task_fingerprint 的验证回调）
+            if (DEVICE_TEST_STEP_VERIFY_FINGER == device_test_step)
+            {
+                if (EVENT_RESULT_SUCCESS_VERIFY_USER == e->dynamic_[0])
+                {
+                    // 识别成功 = 第二步通过
+                    setDeviceTestFlagBit(DEVICE_TEST_FLAG_VERIFY_FINGERPRINT_ID);
+                    hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_SUCCESS);    // 播"测试成功"
+                    OB_LOGW(TAG, "finger test PASS");
+                    device_test_step = DEVICE_TEST_STEP_IDLE;
+                    // TODO: 下一步（NFC/电机/复位键…）
+                }
+                else if (EVENT_RESULT_FAIL_INVALID == e->dynamic_[0])
+                {
+                    hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_FAIL);       // 播"测试失败"
+                    OB_LOGW(TAG, "finger test FAIL");
+                    device_test_step = DEVICE_TEST_STEP_IDLE;
+                }
+            }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;

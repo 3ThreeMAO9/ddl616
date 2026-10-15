@@ -394,6 +394,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(SOUND_TEST_FAILED);
             break;
 
+        // 整机测试(258#)第二步：指纹识别，只播"请按手指"（不带"返回上级菜单请按*号键"）
+        case HMI_STATE_DEVICE_TEST_FINGER_ENROLL:
+            PLAYER_LIST_CLEAR_ADD(VOICE_Please_touch_the_fingerprint_sensor);
+            break;
+
         // 整机测试(258#)进入：键盘灯全亮 + 指示灯灭 + 按键配色从头开始
         case HMI_STATE_DEVICE_TEST_START:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
