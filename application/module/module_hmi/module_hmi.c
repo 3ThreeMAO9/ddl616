@@ -67,6 +67,14 @@ static void hmi_logo_led_config(uint8_t nowColor, uint8_t nextColor, uint32_t ha
         hmihandle.busy |= HMI_BUSY_BIT_LOGO_LED;
         hmihandle.logoLed.halfPeriod = halfPeriod;
     }
+    else
+    {
+        // 常亮/常灭：必须停掉上一次还没跑完的闪烁。否则 module_hmi_loop 仍按旧的 halfPeriod
+        // 周期调用 hmi_logo_led_loop() 翻转颜色，表现为"该常亮时却一直闪"
+        // （如：触摸唤醒亮蓝灯的 2s 内刷卡，进双重验证等待态后蓝灯停不下来）
+        hmihandle.logoLed.halfPeriod = 0;
+        hmihandle.busy &= (~HMI_BUSY_BIT_LOGO_LED);
+    }
 
     logoLedDrive(hmihandle.logoLed.color);
 }
@@ -82,6 +90,12 @@ static void hmi_key_board_led_config(uint8_t nowState, uint8_t nextState, uint32
     {
         hmihandle.busy |= HMI_BUSY_BIT_KEY_BOARD_LED;
         hmihandle.keyBoardLed.halfPeriod = halfPeriod;
+    }
+    else
+    {
+        // 同 hmi_logo_led_config：常亮/常灭时停掉上一次未跑完的闪烁，否则键盘灯也会停不下来
+        hmihandle.keyBoardLed.halfPeriod = 0;
+        hmihandle.busy &= (~HMI_BUSY_BIT_KEY_BOARD_LED);
     }
 
     keyBoardLedDrive(hmihandle.keyBoardLed.state);
