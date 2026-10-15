@@ -19,7 +19,8 @@ typedef enum {
     NFC_MODE_READ_BLOCK,        // 读块信息
     NFC_MODE_WRITE_BLOCK,       // 写块信息
     NFC_MODE_CARRIER,           // 载波测试(天线打开)
-    
+    NFC_MODE_DETECT,            // 检卡读卡：与 CHECK 相同，只是不做周期读卡，仅检卡触发
+
 } nfc_mode_e;
 
 typedef enum {

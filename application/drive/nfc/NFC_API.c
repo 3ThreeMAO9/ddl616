@@ -80,6 +80,7 @@ uint8_t nfc_set_mode(uint8_t mode) {
                 FM17622_HardReset();
                 nfc_sacn_handle_get_tick(0);
                 break;
+            case NFC_MODE_DETECT:
             case NFC_MODE_CHECK:
                 FM17622_HardReset();
                 nfc_sacn_handle_get_tick(0);
@@ -87,6 +88,7 @@ uint8_t nfc_set_mode(uint8_t mode) {
             case NFC_MODE_IDLE:
                 FM17622_HardReset();
                 nfc_sacn_handle_get_tick(0);
+                break;
             case NFC_MODE_FUNC:
                 FM17622_HardReset();
                 nfc_sacn_handle_get_tick(0);
@@ -312,6 +314,12 @@ void nfc_loop(void) {
         case NFC_MODE_SCAN:
             if (system_out_time_cnt(nfc_handle.time_out)) {
                 nfc_handle.time_out = system_inc_time_cnt(NFC_SCAN_TIME_OUT);
+                Card_Handle_Event(&nfc_handle.attr);
+            }
+            break;
+        case NFC_MODE_DETECT:
+            if (is_nfc_wake())  // adc检卡
+            {
                 Card_Handle_Event(&nfc_handle.attr);
             }
             break;

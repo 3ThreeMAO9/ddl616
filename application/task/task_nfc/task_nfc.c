@@ -24,6 +24,7 @@ static void nfc_task_callback(nfc_event_t *event)
         switch (event->state)
         {
         case NFC_STATE_VERIFY:
+        case NFC_STATE_DETECT:
             OB_LOGI(TAG, "verify success");
             if (isValidKeyCard(event->card_id, &key_id)) {
                 
@@ -71,6 +72,7 @@ static void nfc_task_callback(nfc_event_t *event)
         switch (event->state)
         {
         case NFC_STATE_VERIFY:
+        case NFC_STATE_DETECT:
             OB_LOGI(TAG, "verify fail");
             userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
             break;
@@ -211,6 +213,11 @@ void nfc_task_set_state(uint8_t state)
         break;
     case NFC_STATE_CARRIER:
         mode = NFC_MODE_CARRIER; // 开启天线，用于测试模式
+        break;
+    case NFC_STATE_DETECT:
+        nfc_task_driver.attr.encrypt = 0;
+        nfc_task_driver.attr.sector_id = NFC_USER_CARD_SECTOR_ID;
+        mode = NFC_MODE_DETECT;
         break;
     case NFC_STATE_FUNCTION:
         mode = NFC_MODE_FUNC; // 采用定时扫描或LPCD中断事件触发

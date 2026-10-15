@@ -24,6 +24,7 @@ typedef enum {
     NFC_STATE_REGISTER,         // 注册模式
     NFC_STATE_CARRIER,          // 单载波模式
     NFC_STATE_FUNCTION,         // 功能卡
+    NFC_STATE_DETECT,           // 检卡验证模式
 
 }nfc_task_state_e;
 

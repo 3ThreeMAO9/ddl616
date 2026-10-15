@@ -27,7 +27,7 @@
  *       第三步（STEP3）NFC 检卡：**只做识别、不写卡**。播报"请刷卡"，用户把卡贴近：
  *         - 刷卡识别成功 -> 置位 DEVICE_TEST_FLAG_NFC_ID，播报"测试成功"（当前流程最后一步）；
  *         - 识别失败     -> 播报"测试失败"。
- *       走 NFC_STATE_VERIFY；空锁时 isValidKeyCard() 直接返回 true，所以刷任意卡都算识别成功。
+ *       走 NFC_STATE_DETECT：驱动不做周期读卡，只在 ADC/LPCD 检到卡时才寻卡读 UID 并回调，
  *
  *       每一步的操作超时 = PRODUCE_DEVICE_TEST_TIME_OUT_MAX（30s），系统工时超时回待机。
  *       测试结果存放在参数区（produceInfo.deviceTest.flag），由 257# 读取。
@@ -78,13 +78,12 @@ static void device_test_finger_start(void)
 }
 
 // 进入第三步：NFC 检卡（播"请刷卡"，等用户刷卡）
-// 用 NFC_STATE_VERIFY：驱动在 NFC_MODE_CHECK 下"ADC 检卡 + 周期读 UID"；
-// 空锁时 isValidKeyCard() 直接返回 true，所以刷任意卡都算识别成功
+// 用 NFC_STATE_DETECT：驱动侧不做周期读卡，只有 ADC/LPCD 检到卡才读一次卡
 static void device_test_nfc_start(void)
 {
     device_test_step = DEVICE_TEST_STEP_VERIFY_NFC;
     fp_task_set_mode(FP_MODE_IDLE);
-    nfc_task_set_state(NFC_STATE_VERIFY);
+    nfc_task_set_state(NFC_STATE_DETECT);       // 只靠检卡触发读卡，不主动定时读卡
     hmiTaskSetState(HMI_STATE_DEVICE_TEST_NFC);                 // 播"请刷卡"
     system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
     system_time_task_set_function_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
