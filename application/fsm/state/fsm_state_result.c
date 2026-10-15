@@ -166,6 +166,17 @@ QState lockFsmHandleAddSuccess(LockFsm *me, QEvent const *e)
     return lockFsmSuccessDeal(me, e, HMI_STATE_HANDLE_ADD_SUCCESS);
 }
 
+// ---- 整机测试(258#)结果播报：播完"测试成功"/"测试失败"后回 me->branch（通常是休眠）----
+QState lockFsmDeviceTestSuccess(LockFsm *me, QEvent const *e)
+{
+    return lockFsmSuccessDeal(me, e, HMI_STATE_DEVICE_TEST_STEP_SUCCESS);
+}
+
+QState lockFsmDeviceTestFail(LockFsm *me, QEvent const *e)
+{
+    return lockFsmFailDeal(me, e, HMI_STATE_DEVICE_TEST_STEP_FAIL, false);
+}
+
 // ---- 删除普通用户的几种结果语音（播完回 me->branch，调用方指向删除用户菜单）----
 QState lockFsmDeleteUserSuccess(LockFsm *me, QEvent const *e)
 {

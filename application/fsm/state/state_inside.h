@@ -46,6 +46,8 @@ QState lock_fsm_menu_repeat_add_code(LockFsm *me, QEvent const *e);             
 
 QState lock_fsm_aging_test(LockFsm *me, QEvent const *e);
 QState lock_fsm_device_test(LockFsm *me, QEvent const *e);       // 整机测试（258#），第一步按键检测
+QState lockFsmDeviceTestSuccess(LockFsm *me, QEvent const *e);     // 整机测试：播"测试成功"，播完回 me->branch
+QState lockFsmDeviceTestFail(LockFsm *me, QEvent const *e);       // 整机测试：播"测试失败"，播完回 me->branch
 QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e);
 QState lock_fsm_system_lock(LockFsm *me, QEvent const *e);
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);
