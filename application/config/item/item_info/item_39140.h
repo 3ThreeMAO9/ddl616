@@ -31,7 +31,6 @@
 #define PRINTF_TEST                 PRINTF_FUN
 
 #define DEFINE_299_CHECK_TIME       // 299快捷键查询时间
-#define VERIFY_MODE_SWITCH_DEBUG    Enabled
 
 /***********Enum***********/
 

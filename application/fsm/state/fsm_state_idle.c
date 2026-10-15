@@ -200,23 +200,6 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 
             }
-#if (Enabled == VERIFY_MODE_SWITCH_DEBUG)
-            else if (EVENT_RESULT_VERIFY_MODE_SWITCH == e->dynamic_[0])
-            {
-                // 259#（调试用）：单一 <-> 双重验证切换，现场测试用
-                if (VERIFY_MODE_DUAL == readUserParameter(USER_PARA_VERIFY_MODE_ID))
-                {
-                    setUserParameter(USER_PARA_VERIFY_MODE_ID, VERIFY_MODE_SINGLE);
-                }
-                else
-                {
-                    setUserParameter(USER_PARA_VERIFY_MODE_ID, VERIFY_MODE_DUAL);
-                }
-                dual_verify_type = 0;
-                OB_LOGW(TAG, "verify mode -> %u", readUserParameter(USER_PARA_VERIFY_MODE_ID));
-                hmiTaskSetState(HMI_STATE_VERIFY_MODE_SWITCH);   // 单一:绿灯闪1次 / 双重:蓝灯闪2次
-            }
-#endif
             else if (EVENT_RESULT_DEVICE_TEST_RESULT == e->dynamic_[0])
             {
                 // 257#：出厂状态下查询产测结果并播报 100(未测试)/102(未通过)/103(通过)。

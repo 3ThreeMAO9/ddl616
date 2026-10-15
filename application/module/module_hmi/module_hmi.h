@@ -133,7 +133,6 @@ typedef enum{
     HMI_STATE_DEVICE_TEST_RESULT,       //257# 产测结果查询：播报 100(未测试) / 102(未通过) / 103(通过)
     HMI_STATE_DUAL_VERIFY_FIRST_OK,     //双重验证：第一重通过，蓝灯长亮等第二重
     HMI_STATE_DUAL_VERIFY_FAIL,         //双重验证：第二重失败，红灯 0.1s 闪 2 次
-    HMI_STATE_VERIFY_MODE_SWITCH,       //259# 切换验证方式：单一(绿灯闪1次) / 双重(蓝灯闪2次)，开关见 VERIFY_MODE_SWITCH_DEBUG
 
     HMI_STATE_RESET_SUCCESS,            //已恢复到出厂设置       Restored_to_factory_settings
 

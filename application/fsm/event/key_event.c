@@ -127,13 +127,6 @@ static uint8_t keyEventCombineFunctionHandle(void)
         return true;
     }
 #endif
-#if (Enabled == VERIFY_MODE_SWITCH_DEBUG)
-    else if (COMBINE_KEY_BOARD_VERIFY_MODE == value)
-    {
-        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_VERIFY_MODE_SWITCH);
-        return true;
-    }
-#endif
     if (isEmptyKey(false))
     {
         if (COMBINE_KEY_BOARD_AGING_TEST == value)

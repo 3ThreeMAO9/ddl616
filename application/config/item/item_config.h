@@ -207,7 +207,6 @@ typedef enum{
 #define COMBINE_KEY_BOARD_SN                        (400)           //400+#     SN
 #define COMBINE_KEY_BOARD_PID                       (504)           //504+#     PID
 #define COMBINE_KEY_BOARD_DEVICE_TEST_RESULT        (257)           //257+#     产测结果
-#define COMBINE_KEY_BOARD_VERIFY_MODE               (259)           //259+#     切换单一/双重验证（调试用）
 
 #define COMBINE_KEY_BOARD_TIME                      (299)           //299+#     获取时间
 
