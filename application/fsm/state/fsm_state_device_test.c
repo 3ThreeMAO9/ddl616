@@ -2,12 +2,12 @@
  * Copyright (c) 2026 GZ-OB, All rights reserved.
  * File name: fsm_state_device_test.c
  * Desc: 整机测试状态（按键输入 258# 进入）
- * Version: 1.2.0
+ * Version: 1.3.0
  * Revision: James_Zhang
  * Date: 2026-10-15
  *
  * 说明：258# -> EVENT_RESULT_DEVICE_TEST_STEP1 -> 本状态（整机产测）。
- *       实现进度：**STEP1 按键检测、STEP2 指纹识别、STEP3 NFC 检卡已完成**，其余步骤待接。
+ *       实现进度：**STEP1 键盘检测、STEP2 指纹识别、STEP3 NFC 检卡、STEP4 防撬+后板按键检测已完成**，其余步骤待接。
  *       每步通过后置位对应的 deviceTest flag，并转入下一步；**只有最后一步跑完才播"测试成功"**。
  *
  *       第一步（STEP1）按键检测：必须严格按
@@ -28,6 +28,14 @@
  *         - 刷卡识别成功 -> 置位 DEVICE_TEST_FLAG_NFC_ID，播报"测试成功"（当前流程最后一步）；
  *         - 识别失败     -> 播报"测试失败"。
  *       走 NFC_STATE_DETECT：驱动不做周期读卡，只在 ADC/LPCD 检到卡时才寻卡读 UID 并回调，
+ *
+ *       第四步（STEP4）按键测试：**只检测按键通路，不触发任何业务动作**。检测三个按键：
+ *         - 防撬按键（EVENT_RESULT_BREAK_LONG_PRESS）；
+ *         - 后板 RESET 键（EVENT_RESULT_BACK_KEY_SINGLE，后板单击上报，仅本状态处理）；
+ *         - 后板 SETTING 键（EVENT_RESULT_ADD_ADMIN，后板单击上报）。
+ *         三个键**顺序无所谓**，每个键**只记一次**（重复按忽略），三个都按过 -> 置位
+ *         DEVICE_TEST_FLAG_RESET_KEY_ID，播"测试成功"（当前流程最后一步）。
+ *         30s 内没按齐 -> 工时超时回待机（不会主动判失败）。
  *
  *       每一步的操作超时 = PRODUCE_DEVICE_TEST_TIME_OUT_MAX（30s），系统工时超时回待机。
  *       测试结果存放在参数区（produceInfo.deviceTest.flag），由 257# 读取。
@@ -62,6 +70,15 @@ static const uint8_t device_test_key_seq[DEVICE_TEST_KEY_SEQ_CNT] = DEVICE_TEST_
 // 当前测试阶段（用 device_test_step_t 的子集，见 module_produce_test.h）
 static uint8_t device_test_step = DEVICE_TEST_STEP_IDLE;
 
+// 第四步三个按键的位掩码（顺序无所谓，每个键只记一次）
+#define DEVICE_TEST_KEY_BIT_TAMPER      (0x01)        // 防撬按键
+#define DEVICE_TEST_KEY_BIT_RESET       (0x02)        // 后板 RESET 键
+#define DEVICE_TEST_KEY_BIT_SETTING     (0x04)        // 后板 SETTING 键
+#define DEVICE_TEST_KEY_BIT_ALL         (0x01 | 0x02 | 0x04)
+
+// 第四步已按过的按键
+static uint8_t device_test_key_flag = 0;
+
 /***************Function***************/
 
 // 进入第二步：指纹识别（播"请按手指"，等用户放手指）
@@ -74,7 +91,7 @@ static void device_test_finger_start(void)
     hmiTaskSetState(HMI_STATE_DEVICE_TEST_FINGER_ENROLL);       // 播"请按手指"
     system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
     system_time_task_set_function_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
-    OB_LOGW(TAG, "device test STEP2: finger verify");
+    OB_LOGD(TAG, "STEP2: finger verify");
 }
 
 // 进入第三步：NFC 检卡（播"请刷卡"，等用户刷卡）
@@ -87,7 +104,39 @@ static void device_test_nfc_start(void)
     hmiTaskSetState(HMI_STATE_DEVICE_TEST_NFC);                 // 播"请刷卡"
     system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
     system_time_task_set_function_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
-    OB_LOGW(TAG, "device test STEP3: nfc verify");
+    OB_LOGD(TAG, "STEP3: nfc verify");
+}
+
+// 进入第四步：按键测试（防撬键 + 后板 RESET 键 + 后板 SETTING 键，顺序无所谓，每个键只记一次）
+static void device_test_back_key_start(void)
+{
+    device_test_step = DEVICE_TEST_STEP_LOCK_KEY;      // 复用已有枚举：本步测的就是锁体上的按键
+    nfc_task_set_state(NFC_STATE_IDLE);
+    keyTaskHandle(KEY_TYPE_TAMPER_KEY, true);          // 确保防撬键扫描是开的（要用它的长按事件）
+    device_test_key_flag = 0;
+    hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_PRESS);  // 键盘灯闪一下 + "嘀"，提示开始按按键
+    system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
+    OB_LOGD(TAG, "STEP4: tamper + back key");
+}
+
+// 第四步某个键被按下：顺序无所谓、每个键只记一次；三个都按过 -> 本步通过，播"测试成功"
+static void device_test_back_key_press(uint8_t bit)
+{
+    if (device_test_key_flag & bit)
+    {
+        return;                                        // 只能按一次：重复按忽略
+    }
+
+    device_test_key_flag |= bit;
+    hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_PRESS);  // 键盘灯闪 + 指示灯换色 + "嘀"
+
+    if (DEVICE_TEST_KEY_BIT_ALL == device_test_key_flag)    // 三个键都按过 -> 本步通过
+    {
+        setDeviceTestFlagBit(DEVICE_TEST_FLAG_RESET_KEY_ID);  // 本步三个键统一用这个已有位上报
+        device_test_step = DEVICE_TEST_STEP_IDLE;
+        hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_SUCCESS);  // 播"测试成功"（当前流程最后一步）
+        // TODO: 下一步（电机/门磁/过流…）
+    }
 }
 
 // ------------------------------------------
@@ -110,11 +159,12 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             device_test_step = DEVICE_TEST_STEP_KEY_BOARD;  // 从第一步开始
             key_step = 0;       // 第一步按键检测：进度清零，从门铃开始
             system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
-            OB_LOGW(TAG, "device test STEP1: press %u keys in order (bell,1..9,*,0,#)", DEVICE_TEST_KEY_SEQ_CNT);
+            OB_LOGD(TAG, "STEP1: press %u keys in order (bell,1..9,*,0,#)", DEVICE_TEST_KEY_SEQ_CNT);
             break;
         case Q_EXIT_SIG:
             key_step = 0;
             device_test_step = DEVICE_TEST_STEP_IDLE;
+            device_test_key_flag = 0;
             break;
         case Q_KEY_BOARD_PRESS_SIG:
             if ((DEVICE_TEST_STEP_KEY_BOARD == device_test_step) && (KEY_CNT > e->dynamic_[0]))
@@ -126,26 +176,35 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
 
                     hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_PRESS);
                     key_step++;
-                    OB_LOGI(TAG, "key ok: %u (%u/%u)", e->dynamic_[0], key_step, DEVICE_TEST_KEY_SEQ_CNT);
 
                     if (key_step >= DEVICE_TEST_KEY_SEQ_CNT)
                     {
                         // 13 个键全部按对：记录结果，转入第二步（"测试成功"留到最后播）
                         key_step = 0;
                         setDeviceTestFlagBit(DEVICE_TEST_FLAG_KEYPAD_ID);
-                        OB_LOGW(TAG, "key board test PASS");
                         device_test_finger_start();
                     }
                 }
-                else
-                {
-                    // 顺序错：完全无响应（不亮灯、不播报、进度不变），继续等正确的键
-                    OB_LOGI(TAG, "key out of order: %u (expect %u, step %u), ignored",
-                            e->dynamic_[0], device_test_key_seq[key_step], key_step);
-                }
+                // 顺序错：完全无响应（不亮灯、不播报、进度不变），继续等正确的键
             }
             break;
         case Q_HANDLE_SIG:
+            // 第四步：三个按键（防撬 / 后板 RESET / 后板 SETTING），顺序无所谓、每个只记一次
+            if (DEVICE_TEST_STEP_LOCK_KEY == device_test_step)
+            {
+                if (EVENT_RESULT_BREAK_LONG_PRESS == e->dynamic_[0])       // 防撬键
+                {
+                    device_test_back_key_press(DEVICE_TEST_KEY_BIT_TAMPER);
+                }
+                else if (EVENT_RESULT_BACK_KEY_SINGLE == e->dynamic_[0])   // 后板 RESET 键（单击上报，仅本状态处理）
+                {
+                    device_test_back_key_press(DEVICE_TEST_KEY_BIT_RESET);
+                }
+                else if (EVENT_RESULT_ADD_ADMIN == e->dynamic_[0])         // 后板 SETTING 键（单击上报）
+                {
+                    device_test_back_key_press(DEVICE_TEST_KEY_BIT_SETTING);
+                }
+            }
             break;
         case Q_USER_HANDLE_SIG:
             if (DEVICE_TEST_STEP_VERIFY_FINGER == device_test_step)
@@ -155,13 +214,11 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 {
                     // 识别成功 = 第二步通过 -> 转第三步
                     setDeviceTestFlagBit(DEVICE_TEST_FLAG_VERIFY_FINGERPRINT_ID);
-                    OB_LOGW(TAG, "finger test PASS -> nfc test");
                     device_test_nfc_start();
                 }
                 else if (EVENT_RESULT_FAIL_INVALID == e->dynamic_[0])
                 {
                     hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_FAIL);       // 播"测试失败"
-                    OB_LOGW(TAG, "finger test FAIL");
                     device_test_step = DEVICE_TEST_STEP_IDLE;
                 }
             }
@@ -170,18 +227,15 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 // 第三步：NFC 检卡（事件来自 task_nfc 的检卡回调）
                 if (EVENT_RESULT_SUCCESS_VERIFY_USER == e->dynamic_[0])
                 {
-                    // 刷卡识别成功 = 第三步通过 = 当前流程跑完，播"测试成功"
+                    // 刷卡识别成功 = 第三步通过 -> 转第四步（"测试成功"留到最后播）
                     setDeviceTestFlagBit(DEVICE_TEST_FLAG_NFC_ID);
-                    device_test_step = DEVICE_TEST_STEP_IDLE;
-                    hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_SUCCESS);    // 播"测试成功"
-                    OB_LOGW(TAG, "nfc test PASS -> device test done");
-                    // TODO: 下一步（电机/复位键…）
+                    device_test_back_key_start();
                 }
                 else if (EVENT_RESULT_FAIL_INVALID == e->dynamic_[0])
                 {
                     hmiTaskSetState(HMI_STATE_DEVICE_TEST_STEP_FAIL);       // 播"测试失败"
-                    OB_LOGW(TAG, "nfc test FAIL");
                     device_test_step = DEVICE_TEST_STEP_IDLE;
+                    nfc_task_set_state(NFC_STATE_IDLE);
                 }
             }
             break;

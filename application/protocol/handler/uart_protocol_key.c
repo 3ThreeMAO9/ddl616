@@ -18,6 +18,10 @@ static void on_reset_key(uint8_t report)
 {
     switch (report)
     {
+    case EVENT_KEY_REPORT_SINGLE:
+        OB_LOGI(TAG, "[RESET] SINGLE");
+        baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_BACK_KEY_SINGLE);
+        break;
     case EVENT_KEY_REPORT_DOUBLE:
         OB_LOGI(TAG, "[RESET] DOUBLE 进入恢复出厂设置");
         baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_RESET);
