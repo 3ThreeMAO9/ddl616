@@ -305,7 +305,11 @@ static user_info_t* get_key_data(uint16_t user_sn)
         current_user_sn = user_sn;
         return &current_user;
     }
-    
+
+    // 读失败（空槽/校验不过）时 current_user 已被本次数据覆盖，但 current_user_sn 还是旧槽号；
+    // 不作废的话，下次访问该槽号会命中这份错误数据（表现为"连续验证，第 2 次起必判无效"）
+    current_user_sn = 0;
+
     return NULL;
 }
 

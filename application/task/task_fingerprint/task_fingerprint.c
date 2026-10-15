@@ -24,6 +24,10 @@
 /***************Variable***************/
 static fp_task_driver_t fp_task_driver;
 
+// 任务层最后请求的模式：指纹模块未初始化完时驱动会丢弃 set_mode（fp_set_mode_API 直接 return false），
+// 初始化完成后用它补发一次，否则模块会一直停在 IDLE（不扫描），表现为"进待机后第一次按指纹无效"
+static uint8_t fp_task_mode = FP_MODE_IDLE;
+
 // ------------------------------------------
 static uint8_t fp_init_event_callback(uint8_t event, void* params, uint8_t lenth) {
     // fp_module_attr_t* ptr = (fp_module_attr_t*)(params);
@@ -36,7 +40,9 @@ static uint8_t fp_init_event_callback(uint8_t event, void* params, uint8_t lenth
 
     // 同步指纹or指静脉类型，容量，指纹库(按bit对应)
 
-    fp_task_set_mode(FP_MODE_IDLE); // 上电初始化完成，自动切至默认模式下
+    // 上电初始化完成：补发任务层最后请求的模式（通常是待机的 FP_MODE_VERIFY）。
+    // 进待机时模块可能还没初始化完，那次 set_mode 会被驱动丢弃，不补发就会停在 IDLE 不扫描
+    fp_task_set_mode(fp_task_mode);
 
     return true;
 }
@@ -174,7 +180,6 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
 static uint8_t fp_del_pending[(FINGERPRINT_COUNT_MAX + 7) / 8];
 static uint8_t fp_delete_busy   = false;    // 已下发一条，等模块终态
 static uint8_t fp_delete_result = FP_DELETE_NONE;
-static uint8_t fp_task_mode     = FP_MODE_IDLE;  // 任务层最后请求的模式（非 IDLE 时不抢模块）
 static uint8_t fp_delete_notify = false;    // 本批有待删项：全部删完要补发一次完成事件
 static uint8_t fp_delete_range_hint     = false;    // 有待下发的范围删除请求
 static uint8_t fp_delete_range_inflight = false;    // 正在执行的这条是范围删除
@@ -403,9 +408,7 @@ void fp_task_set_mode(uint8_t mode) {
         return;
     }
 
-#if (FP_ENABLE_DELETE)
-    fp_task_mode = mode;        // 记录当前模式：待删模板只在 IDLE 时下发，不打断验证/注册
-#endif
+    fp_task_mode = mode;        // 记录当前模式：初始化完成时补发、待删模板只在 IDLE 时下发
 
     switch (mode)
     {
