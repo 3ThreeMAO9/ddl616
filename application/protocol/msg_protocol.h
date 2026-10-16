@@ -59,12 +59,6 @@ typedef struct {
     uint32_t timeout;       // 间隔多久  单位：1ms
 } frame_bell_def_t;
 
-typedef struct {
-    uint8_t pid[10];
-    uint8_t device_name[14];
-    uint8_t secret_key[24];
-} frame_join_net_def_t;
-
 /**************************************************/
 
 #pragma pack()
