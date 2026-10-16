@@ -48,7 +48,7 @@
 
 /* WiFi 模块下发指令：属性读写（命令字对齐 ob_lock.h 的 PROP_CMD_*）
  * payload = [opt(1字节), value...]：opt 0=读取（value 是模组缓冲值，须忽略）/ 1=设置
- * 上行用原命令字（不是 |0x80）：模组侧 g_async_tx_queue 的 tx_cmd 就是原命令字 */
+ * 应答与其它命令统一：回 cmd|0x80 + 属性值（一包）*/
 
 #define UP_CMD_PROP_MODEL_SAFE              (0x16)  // 双重验证模式（读写：0=通用 1=双重）
 #define UP_CMD_PROP_MODE_DEFENSE            (0x17)  // 布防模式（读写：0=撤防 1=布防）
@@ -89,6 +89,14 @@
 #define UP_CMD_SET_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_SET_USER)      // 0x87
 #define UP_CMD_GET_USERLIST_TIMESTAMP_ACK   SET_UART_ACK_CMD(UP_CMD_GET_USERLIST_TIMESTAMP) // 0x88
 #define UP_CMD_GET_RECORD_LOG_ACK           SET_UART_ACK_CMD(UP_CMD_GET_RECORD_LOG) // 0x89
+#define UP_CMD_PROP_MODEL_SAFE_ACK          SET_UART_ACK_CMD(UP_CMD_PROP_MODEL_SAFE)               // 0x96
+#define UP_CMD_PROP_MODE_DEFENSE_ACK        SET_UART_ACK_CMD(UP_CMD_PROP_MODE_DEFENSE)             // 0x97
+#define UP_CMD_PROP_LANGUAGE_ACK            SET_UART_ACK_CMD(UP_CMD_PROP_LANGUAGE)                 // 0x99
+#define UP_CMD_PROP_LOCK_VOLUME_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_LOCK_VOLUME)              // 0xA2
+#define UP_CMD_PROP_LOCK_STATUS_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_LOCK_STATUS)              // 0xA3
+#define UP_CMD_PROP_LOCKED_INSIDE_STATUS_ACK SET_UART_ACK_CMD(UP_CMD_PROP_LOCKED_INSIDE_STATUS)    // 0xA4
+#define UP_CMD_PROP_BATTERY_INFO_ACK        SET_UART_ACK_CMD(UP_CMD_PROP_BATTERY_INFO)             // 0xB1
+#define UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS_ACK SET_UART_ACK_CMD(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS) // 0xB3
 /***********Enum***********/
 
 /***********Struct***********/

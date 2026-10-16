@@ -87,7 +87,7 @@ HANDLER_DEFINE(UP_CMD_PROP_LANGUAGE)
         }
     }
 
-    uart_msg_property_send(UP_CMD_PROP_LANGUAGE, (uint8_t*)lang_enum_to_str(lang), strlen(lang_enum_to_str(lang)));
+    uart_msg_property_ack(UP_CMD_PROP_LANGUAGE_ACK, (uint8_t*)lang_enum_to_str(lang), strlen(lang_enum_to_str(lang)));
 
     return 0;
 }

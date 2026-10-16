@@ -173,7 +173,13 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
         return 0xff;
     }
 
-    // 7. 业务处理
+    // 7. 收到 ACK（最高位=1）统一清重传：覆盖全部命令，避免个别 handler 漏调
+    if (IS_UART_ACK_CMD(pkt->cmd))
+    {
+        uartTaskRetryClean(GET_UART_RAW_CMD(pkt->cmd), pkt->sn);
+    }
+
+    // 8. 业务处理
     uart_protocol_try_handle(pkt);
     uart_protocol_heart_inc_time_out();
     // uart_protocol_clean_heart_send_cnt();

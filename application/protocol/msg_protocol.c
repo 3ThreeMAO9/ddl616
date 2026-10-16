@@ -119,8 +119,15 @@ void uart_msg_records_raw(uint8_t *data, uint16_t len)
     uart_msg_common_send(UP_CMD_GET_RECORD_LOG_ACK, data, len);
 }
 
-// 属性上行
-void uart_msg_property_send(uint8_t cmd, uint8_t *data, uint16_t len)
+// 属性应答：回属性值（cmd 传 UP_CMD_PROP_*_ACK），与其它命令同款
+void uart_msg_property_ack(uint8_t cmd, uint8_t *data, uint16_t len)
+{
+    uart_msg_common_send(cmd, data, len);
+}
+
+// 属性主动上报（门锁 -> WiFi）：照门铃 0x61 / 入网 0x62 的模式 —— cmd 传属性原命令字，
+// payload = 属性值；对端需回 cmd|0x80（未收到时会按 300ms/2 次重传）
+void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len)
 {
     uart_msg_common_send(cmd, data, len);
 }

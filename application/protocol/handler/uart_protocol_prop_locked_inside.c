@@ -17,7 +17,7 @@ HANDLER_DEFINE(UP_CMD_PROP_LOCKED_INSIDE_STATUS)
 
     (void)packet;
 
-    uart_msg_property_send(UP_CMD_PROP_LOCKED_INSIDE_STATUS, &status, sizeof(status));
+    uart_msg_property_ack(UP_CMD_PROP_LOCKED_INSIDE_STATUS_ACK, &status, sizeof(status));
 
     return 0;
 }

@@ -18,7 +18,7 @@ HANDLER_DEFINE(UP_CMD_PROP_MODE_DEFENSE)
 
     (void)packet;
 
-    uart_msg_property_send(UP_CMD_PROP_MODE_DEFENSE, &mode, sizeof(mode));
+    uart_msg_property_ack(UP_CMD_PROP_MODE_DEFENSE_ACK, &mode, sizeof(mode));
 
     return 0;
 }

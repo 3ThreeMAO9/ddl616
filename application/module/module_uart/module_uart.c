@@ -169,22 +169,21 @@ static void uart_poll_tx(void)
         // 还没做应答，取消重发
         memset(s_uart_tx.data, 0, sizeof(s_uart_tx.data)); // 清空待重传数据
         s_uart_tx.tx_state = UART_TX_STATE_IDLE;           // 状态置为空闲
-        // // ACK指令跳过重传配置
-        // if (IS_UART_ACK_CMD(tx_ctrl_info.cmd)){
-        //     // 清空重发逻辑：重置结构体字段
-        //     memset(s_uart_tx.data, 0, sizeof(s_uart_tx.data)); // 清空待重传数据
-        //     s_uart_tx.tx_state = UART_TX_STATE_IDLE;           // 状态置为空闲
-        // }
-        // else{
-        //     s_uart_tx.tx_state = UART_TX_STATE_WAIT_ACK;
-        //     memcpy(s_uart_tx.data, tx_buf, data_len);
-        //     s_uart_tx.ctrl.len = data_len;
-        //     s_uart_tx.ctrl.tsn = tx_ctrl_info.tsn;
-        //     s_uart_tx.ctrl.cmd = tx_ctrl_info.cmd;
-        //     s_uart_tx.pri = cur_pri;
-        //     s_uart_tx.retry_cnt = 0;
-        //     s_uart_tx.send_timestamp = system_ms_get(); // 记录发送时间
-        // }
+        // ACK指令跳过重传配置
+        if (IS_UART_ACK_CMD(tx_ctrl_info.cmd)){
+            // 清空重发逻辑：重置结构体字段
+            memset(s_uart_tx.data, 0, sizeof(s_uart_tx.data)); // 清空待重传数据
+            s_uart_tx.tx_state = UART_TX_STATE_IDLE;           // 状态置为空闲
+        }
+        else{
+            s_uart_tx.tx_state = UART_TX_STATE_WAIT_ACK;
+            memcpy(s_uart_tx.data, tx_buf, data_len);
+            s_uart_tx.ctrl.len = data_len;
+            s_uart_tx.ctrl.tsn = tx_ctrl_info.tsn;
+            s_uart_tx.ctrl.cmd = tx_ctrl_info.cmd;
+            s_uart_tx.retry_cnt = 0;
+            s_uart_tx.send_timestamp = system_ms_get(); // 记录发送时间
+        }
     }
     else
     {
