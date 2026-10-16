@@ -1163,14 +1163,44 @@
               <FilePath>..\protocol\handler\uart_protocol_get_userlist_timestamp.c</FilePath>
             </File>
             <File>
-              <FileName>uart_protocol_set_language.c</FileName>
+              <FileName>uart_protocol_prop_language.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\protocol\handler\uart_protocol_set_language.c</FilePath>
+              <FilePath>..\protocol\handler\uart_protocol_prop_language.c</FilePath>
             </File>
             <File>
-              <FileName>uart_protocol_set_volume.c</FileName>
+              <FileName>uart_protocol_prop_lock_volume.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\protocol\handler\uart_protocol_set_volume.c</FilePath>
+              <FilePath>..\protocol\handler\uart_protocol_prop_lock_volume.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_model_safe.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_model_safe.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_mode_defense.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_mode_defense.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_lock_status.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_lock_status.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_locked_inside.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_locked_inside.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_battery_info.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_battery_info.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_solar_panels.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_solar_panels.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -2453,14 +2483,44 @@
               <FilePath>..\protocol\handler\uart_protocol_get_userlist_timestamp.c</FilePath>
             </File>
             <File>
-              <FileName>uart_protocol_set_language.c</FileName>
+              <FileName>uart_protocol_prop_language.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\protocol\handler\uart_protocol_set_language.c</FilePath>
+              <FilePath>..\protocol\handler\uart_protocol_prop_language.c</FilePath>
             </File>
             <File>
-              <FileName>uart_protocol_set_volume.c</FileName>
+              <FileName>uart_protocol_prop_lock_volume.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\protocol\handler\uart_protocol_set_volume.c</FilePath>
+              <FilePath>..\protocol\handler\uart_protocol_prop_lock_volume.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_model_safe.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_model_safe.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_mode_defense.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_mode_defense.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_lock_status.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_lock_status.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_locked_inside.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_locked_inside.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_battery_info.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_battery_info.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_solar_panels.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_solar_panels.c</FilePath>
             </File>
           </Files>
         </Group>

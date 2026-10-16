@@ -46,9 +46,21 @@
 #define UP_CMD_GET_USERLIST_TIMESTAMP       (0x08)  // 获取用户列表时间戳（WiFi模块 -> 门锁）
 #define UP_CMD_GET_RECORD_LOG               (0x09)  // 获取开锁记录（WiFi模块 -> 门锁）
 
-/* WiFi 模块下发指令：参数设置，命令字与 ob_lock.h 的 PROP_CMD_* 保持一致 */
-#define UP_CMD_SET_LANGUAGE                 (0x19)  // 设置语言（对齐 PROP_CMD_LANGUAGE）
-#define UP_CMD_SET_VOLUME                   (0x22)  // 设置音量（对齐 PROP_CMD_LOCK_VOLUME）
+/* WiFi 模块下发指令：属性读写（命令字对齐 ob_lock.h 的 PROP_CMD_*）
+ * payload = [opt(1字节), value...]：opt 0=读取（value 是模组缓冲值，须忽略）/ 1=设置
+ * 上行用原命令字（不是 |0x80）：模组侧 g_async_tx_queue 的 tx_cmd 就是原命令字 */
+
+#define UP_CMD_PROP_MODEL_SAFE              (0x16)  // 双重验证模式（读写：0=通用 1=双重）
+#define UP_CMD_PROP_MODE_DEFENSE            (0x17)  // 布防模式（读写：0=撤防 1=布防）
+#define UP_CMD_PROP_LANGUAGE                (0x19)  // 门锁语言（读写：字符串 "zh"/"en"/"sp"/"fr"）
+#define UP_CMD_PROP_LOCK_VOLUME             (0x22)  // 门锁音量（读写：0=静音 1=低 2=中 3=高）
+#define UP_CMD_PROP_LOCK_STATUS             (0x23)  // 门锁状态（只读：1=关锁 2=开锁）
+#define UP_CMD_PROP_LOCKED_INSIDE_STATUS    (0x24)  // 门内反锁状态（只读：0=未反锁 1=反锁）
+#define UP_CMD_PROP_BATTERY_INFO            (0x31)  // 电池信息（只读）
+#define UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS (0x33) // 太阳能板连接状态（只读：1=已连接 2=已断开）
+
+#define UP_CMD_PROP_OPT_READ                (0)     // 属性 opt：读取
+#define UP_CMD_PROP_OPT_WRITE               (1)     // 属性 opt：设置
 
 /* 门锁上报事件（门锁 -> WiFi模块 -> APP/服务器），命令字与 ob_lock.h 的 EVENT_CMD_* 保持一致 */
 #define UP_EVENT_RESET_FACTORY              (0x45)  // 恢复出厂设置事件
@@ -77,8 +89,6 @@
 #define UP_CMD_SET_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_SET_USER)      // 0x87
 #define UP_CMD_GET_USERLIST_TIMESTAMP_ACK   SET_UART_ACK_CMD(UP_CMD_GET_USERLIST_TIMESTAMP) // 0x88
 #define UP_CMD_GET_RECORD_LOG_ACK           SET_UART_ACK_CMD(UP_CMD_GET_RECORD_LOG) // 0x89
-#define UP_CMD_SET_LANGUAGE_ACK             SET_UART_ACK_CMD(UP_CMD_SET_LANGUAGE)  // 0x99
-#define UP_CMD_SET_VOLUME_ACK               SET_UART_ACK_CMD(UP_CMD_SET_VOLUME)    // 0xA2
 /***********Enum***********/
 
 /***********Struct***********/

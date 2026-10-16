@@ -22,6 +22,10 @@ typedef void (*motor_callback_t)(uint8_t, uint32_t);
 #define MOTOR_UNLOCK_REVERSE_TIME_OUT               (250)       // unit: ms
 #define MOTOR_BRAKE_TIME_OUT                        (10)        // unit: ms
 
+// 门锁状态（对齐物模型 p_lock_status）：1=关锁 2=开锁
+#define MOTOR_DOOR_STATE_LOCKED                     (1)
+#define MOTOR_DOOR_STATE_UNLOCKED                   (2)
+
 
 /*****************Enum*****************/
 typedef enum{

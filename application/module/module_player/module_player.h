@@ -44,6 +44,7 @@ void module_player_loop(void);
 void player_list_add(uint16_t type,uint16_t index);
 void player_list_clear(void);
 void player_volume_level(uint8_t level);
+uint8_t module_playerReadVolume(void);
 void player_register_callback(module_player_callback_t callback);
 void register_callback(char *szIpaddr, char *wTcpPort);
 uint32_t player_list_size_get(void);

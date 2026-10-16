@@ -37,6 +37,8 @@ void player_task_language_set(uint8_t language);
 
 void player_task_volume_set(int8_t level);
 
+uint32_t sys_volume_get(void);
+
 void operate_tips_set(uint8_t enable);
 
 uint32_t play_task_is_busy(void);

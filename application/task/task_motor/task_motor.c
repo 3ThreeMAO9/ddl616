@@ -46,6 +46,12 @@ void motorTaskHandle(uint8_t handleCmd, uint8_t value)
 #endif
 }
 
+// 门锁状态：1=关锁 2=开锁
+uint8_t motorTaskReadDoorState(void)
+{
+    return module_motorReadDoorState();
+}
+
 
 void motorTaskInit(void)
 {

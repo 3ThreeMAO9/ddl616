@@ -119,6 +119,12 @@ void uart_msg_records_raw(uint8_t *data, uint16_t len)
     uart_msg_common_send(UP_CMD_GET_RECORD_LOG_ACK, data, len);
 }
 
+// 属性上行
+void uart_msg_property_send(uint8_t cmd, uint8_t *data, uint16_t len)
+{
+    uart_msg_common_send(cmd, data, len);
+}
+
 // ---- 事件上报（门锁 -> WiFi 模块）----
 
 // 本工程 user_type_t -> 物模型 kiot_tm_p_key_type_enum_t（两套编号不同，别混用）

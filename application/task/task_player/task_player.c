@@ -135,7 +135,7 @@ uint32_t player_task_register_callback(module_player_callback_t callback)
 
 uint32_t sys_volume_get(void)
 {
-    return 3;
+    return module_playerReadVolume();
 }
 
 void operate_tips_set(uint8_t enable)

@@ -96,8 +96,14 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_SET_USER)         // (0x07)   // 设置用户
         HANDLER_IMPORT(UP_CMD_GET_USERLIST_TIMESTAMP) // (0x08)  // 获取用户列表时间戳
         HANDLER_IMPORT(UP_CMD_GET_RECORD_LOG)   // (0x09)   // 获取开锁记录
-        HANDLER_IMPORT(UP_CMD_SET_LANGUAGE)     // (0x19)   // 设置语言
-        HANDLER_IMPORT(UP_CMD_SET_VOLUME)       // (0x22)   // 设置音量
+        HANDLER_IMPORT(UP_CMD_PROP_MODEL_SAFE)              // (0x16)   // 属性：双重验证模式（读写）
+        HANDLER_IMPORT(UP_CMD_PROP_MODE_DEFENSE)            // (0x17)   // 属性：布防模式（读写）
+        HANDLER_IMPORT(UP_CMD_PROP_LANGUAGE)                // (0x19)   // 属性：门锁语言（读写）
+        HANDLER_IMPORT(UP_CMD_PROP_LOCK_VOLUME)             // (0x22)   // 属性：门锁音量（读写）
+        HANDLER_IMPORT(UP_CMD_PROP_LOCK_STATUS)             // (0x23)   // 属性：门锁状态（只读）
+        HANDLER_IMPORT(UP_CMD_PROP_LOCKED_INSIDE_STATUS)    // (0x24)   // 属性：门内反锁状态（只读）
+        HANDLER_IMPORT(UP_CMD_PROP_BATTERY_INFO)            // (0x31)   // 属性：电池信息（只读）
+        HANDLER_IMPORT(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS)// (0x33)   // 属性：太阳能板连接状态（只读）
 
 
         HANDLER_IMPORT(UP_CMD_JOIN_NET_ACK)     // (0x8F)   // 入网命令---ack

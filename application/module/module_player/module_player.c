@@ -345,6 +345,11 @@ void player_volume_level(uint8_t level)
 	player_ctrl.volume_level = level;
 }
 
+uint8_t module_playerReadVolume(void)
+{
+	return player_ctrl.volume_level;
+}
+
 void player_list_clear(void)
 {
 	player_ctrl.playing = false;

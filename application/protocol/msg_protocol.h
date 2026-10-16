@@ -91,6 +91,9 @@ void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count);
 // 历史记录应答（0x89）：payload = N 条记录 raw（单条 8 字节，见 lock_log_def.h）
 void uart_msg_records_raw(uint8_t *data, uint16_t len);
 
+// 属性上行
+void uart_msg_property_send(uint8_t cmd, uint8_t *data, uint16_t len);
+
 // ---- 事件上报（门锁 -> WiFi 模块 -> APP/服务器）----
 // 恢复出厂设置（0x45）：payload = 4 字节时间戳（kiot_tm_event_e_reset_factory_stu_t）
 void uart_msg_event_reset_factory(uint32_t timestamp);

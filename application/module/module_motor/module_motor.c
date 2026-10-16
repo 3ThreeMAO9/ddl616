@@ -59,6 +59,7 @@ void module_motorInit(void)
 
     memset((uint8_t *)(&motorHandle), 0, sizeof(motor_handle_t));
     motorHandle.scanTimeOut = system_inc_time_cnt(0);
+    motorHandle.doorState = MOTOR_DOOR_STATE_LOCKED;        // 上电默认关锁
 }
 
 //  @brief 注册回调函数
@@ -66,6 +67,12 @@ void module_motorInit(void)
 void motorEventRegister_callback(motor_callback_t callback)
 {
     motor_callback = callback;
+}
+
+// 门锁状态：最近一次下发的动作（module_motorHandle），上电默认关锁
+uint8_t module_motorReadDoorState(void)
+{
+    return motorHandle.doorState;
 }
 
 static void motorHandleStartup(uint8_t step, uint8_t duty, uint32_t timeOut)
@@ -97,16 +104,19 @@ void module_motorHandle(uint8_t handle, uint16_t value)
     case MOTOR_HANDLE_UNLOCK:
         OB_LOGD(TAG, "motor unlock");
         motorHandle.busy = true;
+        motorHandle.doorState = MOTOR_DOOR_STATE_UNLOCKED;      // 开锁动作
         motorHandleStartup(MOTOR_STEP_UNLOCK, 0, MOTOR_UNLOCK_TIME_OUT);
         break;
     case MOTOR_HANDLE_OPEN:
         OB_LOGD(TAG, "motor open");
         motorHandle.busy = true;
+        motorHandle.doorState = MOTOR_DOOR_STATE_UNLOCKED;
         motorHandleStartup(MOTOR_STEP_UNLOCK, 0, MOTOR_UNLOCK_TIME_OUT);
         break;
     case MOTOR_HANDLE_CLOSE:
         OB_LOGD(TAG, "motor close");
         motorHandle.busy = true;
+        motorHandle.doorState = MOTOR_DOOR_STATE_LOCKED;        // 上锁动作
         motorHandleStartup(MOTOR_STEP_UNLOCK_REVERSE, 0, MOTOR_UNLOCK_REVERSE_TIME_OUT);
         break;
     default:
