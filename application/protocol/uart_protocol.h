@@ -76,7 +76,17 @@
 #define UP_CMD_BELL                         (0x61)  // 门铃事件
 #define UP_CMD_JOIN_NET                     (0x62)  // 入网命令
 #define UP_CMD_BLUE_MAC                     (0x63)  // 获取蓝牙MAC
-#define UP_CMD_BLUE_VERSION                 (0x64)  // 获取蓝牙版本号
+#define UP_CMD_BLUE_VERSION                 (0x64)  // 获取蓝牙版本
+
+/* 链路层：串口加密密钥交换（出厂密钥 K_F 加密）
+ * 0x70 密钥发送（门锁 -> WiFi）：payload = 4 字节密钥帧（下标 1 为 K_L），WiFi 回 ACK 0xF0
+ * 0x71 密钥请求（WiFi -> 门锁）：payload 空，门锁回 0xF1（同样带 4 字节密钥帧） */
+#define UP_CMD_SEND_LOCK_KEY                (0x70)  // 密钥发送（门锁 -> WiFi），回执 0xF0
+#define UP_CMD_REQUEST_KEY                  (0x71)  // 密钥请求（WiFi -> 门锁），回执 0xF1
+#define UP_CMD_REQUEST_KEY_ACK              SET_UART_ACK_CMD(UP_CMD_REQUEST_KEY)     // 0xF1（门锁回）
+
+
+
 
 #define UP_CMD_KEY_ACK                      SET_UART_ACK_CMD(UP_CMD_KEY)
 #define UP_CMD_BELL_ACK                     SET_UART_ACK_CMD(UP_CMD_BELL)

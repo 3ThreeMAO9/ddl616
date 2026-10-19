@@ -15,6 +15,7 @@
 #include "ota_helper.h"
 #include "task_sleep.h"
 #include "utils.h"
+#include "encrypt.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -108,6 +109,8 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_PROP_BATTERY_INFO)            // (0x31)   // 属性：电池信息（只读）
         HANDLER_IMPORT(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS)// (0x33)   // 属性：太阳能板连接状态（只读）
 
+        HANDLER_IMPORT(UP_CMD_REQUEST_KEY)      // (0x71)   // 密钥请求（收到后重发 0x70）
+
 
         HANDLER_IMPORT(UP_CMD_JOIN_NET_ACK)     // (0x8F)   // 入网命令---ack
         HANDLER_IMPORT(UP_CMD_BELL_ACK)         // (0x61)   // 门铃事件---ack
@@ -159,20 +162,27 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
         return 0xff;
     }
 
-    // 5. 解密（如果需要）
+    // 5. 解密：密钥交换命令族用出厂密钥，其余用门锁密钥
 #if (ENCRYPT_EN == true)
     if (enc != LOCK_PACKET_ENCRYPT_TYPE_NONE) {
-        data_decrypt(pkt->random, pkt->payload, pkt->length);
-        OB_LOGW(TAG, "[uart rx-decrypt]");
-        OB_LOGW_DUMP(pkt->payload, pkt->length);
+        uint8_t raw = GET_UART_RAW_CMD(pkt->cmd);
+        uint8_t key = ((UP_CMD_SEND_LOCK_KEY == raw) || (UP_CMD_REQUEST_KEY == raw))
+                      ? LOCK_KEY_FACTORY : get_lock_key();
+
+        data_xor_crypt(pkt->random, key, pkt->payload, pkt->length);
     }
 #endif
 
-    // 6. 校验 checksum2（明文 payload）
+    // 6. 校验 checksum2（明文 payload）：不过说明密钥失配，主动重发 0x70
     uint16_t calc2 = calc_checksum2(pkt->payload, pkt->length);
     if (calc2 != pkt->checksum2) {
-        OB_LOGE(TAG, "checksum2 fail: calc=0x%04X, recv=0x%04X",
-                calc2, pkt->checksum2);
+        OB_LOGE(TAG, "checksum2 fail: calc=0x%04X, recv=0x%04X", calc2, pkt->checksum2);
+#if (ENCRYPT_EN == true)
+        // 只有加密帧失配才说明密钥不同步；明文帧损坏与密钥无关
+        if (LOCK_PACKET_ENCRYPT_TYPE_NONE != enc) {
+            uart_msg_send_lock_key();
+        }
+#endif
         return 0xff;
     }
 

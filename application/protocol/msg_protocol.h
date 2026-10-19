@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include "uart_protocol.h"
 #include "uart_packet.h"
-#include "encrypt.h"
 #include "config.h"
 #include "tm_data.h"
 /***********Macro***********/
@@ -96,6 +95,9 @@ void uart_msg_property_ack(uint8_t cmd, uint8_t *data, uint16_t len);
 
 // 属性主动上报（cmd 传属性原命令字）：payload = 属性值；对端需回 cmd|0x80
 void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len);
+
+// 密钥发送（0x70）：payload = 4 字节随机数（下标 1 为门锁密钥），出厂密钥加密，回执为通用 ACK 0xF0
+void uart_msg_send_lock_key(void);
 
 // ---- 事件上报（门锁 -> WiFi 模块 -> APP/服务器）----
 // 恢复出厂设置（0x45）：payload = 4 字节时间戳（kiot_tm_event_e_reset_factory_stu_t）

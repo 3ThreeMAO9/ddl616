@@ -1207,6 +1207,11 @@
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_prop_solar_panels.c</FilePath>
             </File>
+            <File>
+              <FileName>uart_protocol_request_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_request_key.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2531,6 +2536,11 @@
               <FileName>uart_protocol_prop_solar_panels.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_prop_solar_panels.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_request_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_request_key.c</FilePath>
             </File>
           </Files>
         </Group>

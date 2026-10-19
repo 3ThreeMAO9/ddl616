@@ -11,6 +11,8 @@
 #include "event.h"
 #include "key_event.h"
 #include "parameter.h"
+#include "msg_protocol.h"
+#include "encrypt.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -32,6 +34,10 @@ QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
 
     switch (e->sig){
         case Q_ENTRY_SIG:
+            // 上电：生成门锁密钥并广播给 WiFi（0x70，出厂密钥加密，等 0xF0 回执）
+            lock_key_generate();
+            uart_msg_send_lock_key();
+
             me->verify_fail_cnt = readUserParameter(USER_PARA_VERIFY_FAIL_CNT_ID);
             if (me->verify_fail_cnt)
                 me->verify_fail_time = hal_get_rtc_work_time();

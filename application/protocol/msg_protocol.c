@@ -8,8 +8,10 @@
  */
 
 #include "msg_protocol.h"
+#include "uart_protocol.h"      // 加密密钥交换命令字（0x70/0x71）
 #include "utils.h"
 #include "user.h"               // 事件上报要按本工程 user_type_t 转物模型编号
+#include "encrypt.h"
 #include <stdarg.h>  
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
@@ -27,13 +29,34 @@ static void uart_msg_common_send(uint8_t cmd, uint8_t* payload, uint16_t payload
     static uint16_t s_sn = 0;
     uint8_t buf[UART0_BUF_LEN];
     uart_packet_t* pkt = (uart_packet_t*)buf;
+    uint8_t enc = LOCK_PACKET_ENCRYPT_TYPE_NONE;
+    uint8_t key = 0;
+    uint8_t rnd = 0;
+
+#if (ENCRYPT_EN == true)
+    // 密钥交换命令族用出厂密钥，其余用门锁密钥；只加密 payload（空包无需加密）
+    if ((UP_CMD_SEND_LOCK_KEY == GET_UART_RAW_CMD(cmd)) || (UP_CMD_REQUEST_KEY == GET_UART_RAW_CMD(cmd)))
+    {
+        key = LOCK_KEY_FACTORY;
+    }
+    else
+    {
+        key = get_lock_key();
+    }
+
+    if (0 != key)                                        // 只有密钥未生成时才退化为明文
+    {
+        enc = LOCK_PACKET_ENCRYPT_TYPE_XOR;
+        rnd = (uint8_t)(s_sn * 0x1F + 0x37);            // 随帧密钥 R（放帧头，对端直接取用）
+    }
+#endif
 
     // 1. 填充头部
-    pkt->mark   = LOCK_PACKET_MARK;                                                                 // 0xA5
-    pkt->attr   = lock_packet_build_attr(LOCK_PACKET_ADDR_FRONT, LOCK_PACKET_ENCRYPT_TYPE_NONE);    // 无加密
-    pkt->sn     = s_sn++;                                                                           // 序列号
+    pkt->mark   = LOCK_PACKET_MARK;                                         // 0xA5
+    pkt->attr   = lock_packet_build_attr(LOCK_PACKET_ADDR_FRONT, enc);
+    pkt->sn     = s_sn++;
     pkt->cmd    = cmd;
-    pkt->random = 0;                                                                                // 无加密时填 0
+    pkt->random = rnd;
     pkt->length = payload_len;
 
     // 2. 填 payload
@@ -44,8 +67,10 @@ static void uart_msg_common_send(uint8_t cmd, uint8_t* payload, uint16_t payload
     // 3. 算 checksum2（明文 payload）
     pkt->checksum2 = check_sum(pkt->payload, payload_len);
 
-    // 4. 加密（如果启用）
-    // if (enc != NONE) data_encrypt(pkt->random, pkt->payload, payload_len);
+    // 4. 加密 payload（key = random ^ K）
+    if (LOCK_PACKET_ENCRYPT_TYPE_NONE != enc) {
+        data_xor_crypt(rnd, key, pkt->payload, payload_len);
+    }
 
     // 5. 算 checksum1（attr + sn~payload，跳过 checksum1）
     pkt->checksum1 = check_sum(buf + 1, 1)                // attr (1 字节)
@@ -130,6 +155,16 @@ void uart_msg_property_ack(uint8_t cmd, uint8_t *data, uint16_t len)
 void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len)
 {
     uart_msg_common_send(cmd, data, len);
+}
+
+// 密钥发送（0x70）：发 4 字节随机数（下标 1 为真正的 K_L），对端回 0xF0 即同步完成
+void uart_msg_send_lock_key(void)
+{
+    uint8_t frame[LOCK_KEY_FRAME_LEN];
+
+    lock_key_build_frame(frame);    // 内部已保证 K_L 存在（未生成会先补生成）
+
+    uart_msg_common_send(UP_CMD_SEND_LOCK_KEY, frame, sizeof(frame));
 }
 
 // ---- 事件上报（门锁 -> WiFi 模块）----
