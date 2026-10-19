@@ -148,6 +148,11 @@ typedef enum{
 #define LANGUAGE_MODE_MAX                           LANGUAGE_FR
 #define LANGUAGE_MODE_DEFAULT                       LANGUAGE_CN
 
+//channel mode（通道/常开模式）
+#define CHANNEL_MODE_MIN                            Disabled
+#define CHANNEL_MODE_MAX                            Enabled
+#define CHANNEL_MODE_DEFAULT                        Disabled
+
 //system lock flag
 #define SYSTEM_LOCK_FLAG_MIN                        Disabled
 #define SYSTEM_LOCK_FLAG_MAX                        Enabled

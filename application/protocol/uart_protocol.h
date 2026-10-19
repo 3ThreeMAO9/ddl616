@@ -56,6 +56,9 @@
 #define UP_CMD_PROP_LOCK_VOLUME             (0x22)  // 门锁音量（读写：0=静音 1=低 2=中 3=高）
 #define UP_CMD_PROP_LOCK_STATUS             (0x23)  // 门锁状态（只读：1=关锁 2=开锁）
 #define UP_CMD_PROP_LOCKED_INSIDE_STATUS    (0x24)  // 门内反锁状态（只读：0=未反锁 1=反锁）
+#define UP_CMD_PROP_CHANNEL_MODE_ENABLED    (0x2b)  // 通道(常开)模式开关（读写：0=关闭 1=开启）
+#define UP_CMD_PROP_CHANNEL_MODE_POLICY     (0x2c)  // 通道模式策略（暂不实现：固定回 0=永久）
+#define UP_CMD_PROP_CHANNEL_MODE            (0x2d)  // 通道模式时段（暂不实现：固定回空）
 #define UP_CMD_PROP_BATTERY_INFO            (0x31)  // 电池信息（只读）
 #define UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS (0x33) // 太阳能板连接状态（只读：1=已连接 2=已断开）
 
@@ -95,6 +98,9 @@
 #define UP_CMD_PROP_LOCK_VOLUME_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_LOCK_VOLUME)              // 0xA2
 #define UP_CMD_PROP_LOCK_STATUS_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_LOCK_STATUS)              // 0xA3
 #define UP_CMD_PROP_LOCKED_INSIDE_STATUS_ACK SET_UART_ACK_CMD(UP_CMD_PROP_LOCKED_INSIDE_STATUS)    // 0xA4
+#define UP_CMD_PROP_CHANNEL_MODE_ENABLED_ACK SET_UART_ACK_CMD(UP_CMD_PROP_CHANNEL_MODE_ENABLED)      // 0xAB
+#define UP_CMD_PROP_CHANNEL_MODE_POLICY_ACK  SET_UART_ACK_CMD(UP_CMD_PROP_CHANNEL_MODE_POLICY)       // 0xAC
+#define UP_CMD_PROP_CHANNEL_MODE_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_CHANNEL_MODE)              // 0xAD
 #define UP_CMD_PROP_BATTERY_INFO_ACK        SET_UART_ACK_CMD(UP_CMD_PROP_BATTERY_INFO)             // 0xB1
 #define UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS_ACK SET_UART_ACK_CMD(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS) // 0xB3
 /***********Enum***********/

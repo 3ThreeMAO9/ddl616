@@ -40,6 +40,19 @@ static void motorTask_callback(uint8_t event, uint32_t value)
 
 void motorTaskHandle(uint8_t handleCmd, uint8_t value)
 {
+    // 通道模式：一直保持开锁状态
+    if (Enabled == readUserParameter(USER_PARA_CHANNEL_MODE_ID))
+    {
+        if (MOTOR_HANDLE_CLOSE == handleCmd)
+        {
+            return;                                     // 禁止上锁
+        }
+        if (MOTOR_HANDLE_UNLOCK == handleCmd)
+        {
+            handleCmd = MOTOR_HANDLE_OPEN;              // UNLOCK 是"开锁→延时→关锁"，改走只开不关
+        }
+    }
+
     motor_task_driver.io->handle(handleCmd, value);
 #if (Enabled == PRINTF_MOTOR)
     OB_LOGD(TAG, "motorTask handle[%u], value[%u]", handleCmd, value);

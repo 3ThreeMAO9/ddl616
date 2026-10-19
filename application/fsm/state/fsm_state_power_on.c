@@ -6,6 +6,7 @@
 #include "task_nfc.h"
 #include "task_fingerprint.h"
 #include "task_battery.h"
+#include "task_motor.h"
 
 #include "event.h"
 #include "key_event.h"
@@ -42,10 +43,23 @@ QState lock_fsm_power_on(LockFsm *me, QEvent const *e)
             system_time_task_set_function_time(1200);
             system_time_task_set_work_time(1000);
             hmiTaskSetAllowSelintFlag(true);
+            // 低电系统锁定：不驱动电机
             if (BATTERY_STATE_LOW_SYSTEM_LOCK == batteryTaskReadState())
-                ;
+            {
+                break;
+            }
+
+            hmiTaskSetState(HMI_STATE_POWER_ON);
+
+            // 通道模式保持开锁，否则默认关锁
+            if (Enabled == readUserParameter(USER_PARA_CHANNEL_MODE_ID))
+            {
+                motorTaskHandle(MOTOR_HANDLE_OPEN, 0);
+            }
             else
-                hmiTaskSetState(HMI_STATE_POWER_ON);
+            {
+                motorTaskHandle(MOTOR_HANDLE_CLOSE, 0);
+            }
             break;
         case Q_EXIT_SIG:
             break;

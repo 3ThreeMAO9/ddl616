@@ -1193,6 +1193,11 @@
               <FilePath>..\protocol\handler\uart_protocol_prop_locked_inside.c</FilePath>
             </File>
             <File>
+              <FileName>uart_protocol_prop_channel_mode.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_channel_mode.c</FilePath>
+            </File>
+            <File>
               <FileName>uart_protocol_prop_battery_info.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_prop_battery_info.c</FilePath>
@@ -2511,6 +2516,11 @@
               <FileName>uart_protocol_prop_locked_inside.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_prop_locked_inside.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_prop_channel_mode.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_prop_channel_mode.c</FilePath>
             </File>
             <File>
               <FileName>uart_protocol_prop_battery_info.c</FileName>
