@@ -6,8 +6,9 @@
  * Date: 2026-10-16
  *
  * 0x2b 开关（读写：0=关闭 1=开启）
- * 0x2c 策略 / 0x2d 时段：暂不实现（需先做 RTC 时间同步），固定回"永久"/空，
- *       仅用于应答，避免 APP 等待超时
+ * 0x2c 策略（读写：0=永久 1=自定义）
+ * 0x2d 时间计划（读写，最多 4 组；仅策略=自定义时有效）
+ * 注：计划的生效判断（按时间开/关锁）待 RTC 时间同步后再做
  */
 
 #include "uart_protocol.h"
@@ -51,24 +52,58 @@ HANDLER_DEFINE(UP_CMD_PROP_CHANNEL_MODE_ENABLED)
     return 0;
 }
 
-// 0x2c 策略：固定回"永久"
+// 0x2c 通道模式策略（0=永久 / 1=自定义）
 HANDLER_DEFINE(UP_CMD_PROP_CHANNEL_MODE_POLICY)
 {
-    uint8_t policy = KIOT_TM_P_CHANNEL_MODE_POLICY_YONG_JIU;
+    uint8_t opt = (packet->length >= 1) ? packet->payload[0] : UP_CMD_PROP_OPT_READ;
+    channel_plan_t *cp = getChannelPlan();
+    uint8_t policy = cp->policy;
 
-    (void)packet;
+    if ((UP_CMD_PROP_OPT_WRITE == opt) && (packet->length >= 2)
+        && (packet->payload[1] <= KIOT_TM_P_CHANNEL_MODE_POLICY_ZI_DING_YI))
+    {
+        // 只改策略，保留已设的 plan[]：切回"自定义"时计划仍然有效
+        cp->policy = packet->payload[1];
+        saveChannelPlan();
+        policy = cp->policy;
+    }
 
     uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_POLICY_ACK, &policy, sizeof(policy));
 
     return 0;
 }
 
-// 0x2d 时段：固定回空
+// 0x2d 通道模式时间计划（最多 CHANNEL_PLAN_MAX 组）
 HANDLER_DEFINE(UP_CMD_PROP_CHANNEL_MODE)
 {
-    (void)packet;
+    uint8_t opt = (packet->length >= 1) ? packet->payload[0] : UP_CMD_PROP_OPT_READ;
+    channel_plan_t *cp = getChannelPlan();
+    const uint16_t unit = sizeof(kiot_tm_prop_p_channel_mode_stu_t);
 
-    uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_ACK, NULL, 0);
+    if ((UP_CMD_PROP_OPT_WRITE == opt) && (packet->length > 1))
+    {
+        uint16_t n = (uint16_t)((packet->length - 1) / unit);
+
+        if (n > CHANNEL_PLAN_MAX)
+        {
+            n = CHANNEL_PLAN_MAX;
+        }
+
+        memcpy(cp->plan, packet->payload + 1, n * unit);
+        cp->plan_cnt = (uint8_t)n;
+        cp->policy = KIOT_TM_P_CHANNEL_MODE_POLICY_ZI_DING_YI;      // 下发计划即视为自定义
+        saveChannelPlan();
+    }
+
+    // 永久模式或无计划：回空
+    if ((KIOT_TM_P_CHANNEL_MODE_POLICY_YONG_JIU == cp->policy) || (0 == cp->plan_cnt))
+    {
+        uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_ACK, NULL, 0);
+    }
+    else
+    {
+        uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_ACK, (uint8_t *)cp->plan, (uint16_t)(cp->plan_cnt * unit));
+    }
 
     return 0;
 }

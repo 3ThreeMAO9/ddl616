@@ -2,6 +2,7 @@
 #define PARAMETER__HH
 
 #include "config.h"
+#include "tm_data.h"        // kiot_tm_prop_p_channel_mode_stu_t
 
 
 
@@ -12,6 +13,8 @@
 
 #define ACTIVECODE_LEN_MAX                      (6)     // 激活码实际长度（6位）
 #define ACTIVECODE_HASH_LEN                     (4)     // 哈希值长度（4字节）
+
+#define CHANNEL_PLAN_MAX                        (4)     // 通道模式最多 4 组时间计划
 
 /*****************Enum*****************/
 typedef enum {
@@ -51,6 +54,9 @@ typedef enum{
 
 
 /****************Struct****************/
+// 以下结构体均按 1 字节对齐（Flash 存储用，布局必须固定可预测）
+#pragma pack(1)
+
 typedef struct{
     uint32_t min_value;
     uint32_t max_value;
@@ -65,13 +71,19 @@ typedef struct{
 
 }finger_chip_t;
 
+// 通道模式时间计划
+typedef struct{
+    uint8_t  policy;                                    // kiot_tm_p_channel_mode_policy_enum_t
+    uint8_t  plan_cnt;                                  // 有效组数 0~4
+    kiot_tm_prop_p_channel_mode_stu_t plan[CHANNEL_PLAN_MAX];
+}channel_plan_t;
 
 typedef struct{
     uint32_t sum;
 
-    finger_chip_t finger_chip;
     uint32_t function[USER_PARA_CNT];
-
+    finger_chip_t finger_chip;
+    channel_plan_t channel;
 }parameter_t;
 
 typedef struct{
@@ -104,6 +116,8 @@ typedef struct{
 
 }produce_info_t;
 
+#pragma pack()
+
 /***************Variable***************/
 
 
@@ -115,6 +129,9 @@ uint32_t readUserParameter(uint8_t index);
 uint8_t setUserParameter(uint8_t index, uint32_t value);
 void writeFingerChipSn(uint8_t* chipSn);
 uint32_t readFingerChipSn(uint8_t* chipSn);
+
+channel_plan_t* getChannelPlan(void);
+uint8_t saveChannelPlan(void);
 
 void produceInfoInit(void);
 uint8_t writeProduceSn(uint8_t sn_id, uint8_t* sn, uint8_t len);

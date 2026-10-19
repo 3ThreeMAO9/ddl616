@@ -50,11 +50,23 @@ void userParameterInit(void)
     uint16_t sum;
     OB_LOGD(TAG, "parameter init");
 
-    sum = check_sum((uint8_t *)(&userParameter.finger_chip), (sizeof(parameter_t) - sizeof(userParameter.sum)));
+    // 校验范围：sum 之后的全部字段（含 function[] / finger_chip / channel）
+    sum = check_sum((uint8_t *)(&userParameter) + sizeof(userParameter.sum),
+                    (sizeof(parameter_t) - sizeof(userParameter.sum)));
     if (sum != userParameter.sum)
     {
         OB_LOGD(TAG, "Sum: %04X, %08X", sum, userParameter.sum);
         memset((uint8_t *)(&userParameter), 0xFF, sizeof(parameter_t));
+    }
+
+    // 通道模式计划：归一化（memset 0xFF 后可能出现非法值）
+    if (userParameter.channel.policy > KIOT_TM_P_CHANNEL_MODE_POLICY_ZI_DING_YI)
+    {
+        userParameter.channel.policy = KIOT_TM_P_CHANNEL_MODE_POLICY_YONG_JIU;
+    }
+    if (userParameter.channel.plan_cnt > CHANNEL_PLAN_MAX)
+    {
+        userParameter.channel.plan_cnt = 0;
     }
 
     for (i = 0; i < USER_PARA_CNT; i++)
@@ -124,7 +136,8 @@ void writeFingerChipSn(uint8_t *chipSn)
     memcpy((uint8_t *)(userParameter.finger_chip.sn), (uint8_t *)(chipSn), sizeof(userParameter.finger_chip.sn));
     userParameter.finger_chip.flag = true;
 
-    sum = check_sum((uint8_t *)(&userParameter.finger_chip), (sizeof(parameter_t) - sizeof(userParameter.sum)));
+    sum = check_sum((uint8_t *)(&userParameter) + sizeof(userParameter.sum),
+                    (sizeof(parameter_t) - sizeof(userParameter.sum)));
     userParameter.sum = sum;
 
     save_parameter_data((uint8_t *)(&userParameter), sizeof(parameter_t));
@@ -144,7 +157,8 @@ uint8_t setUserParameter(uint8_t index, uint32_t value)
     if (IS_NUMBER_IN_RANGE(value, parameter_range[index].min_value, parameter_range[index].max_value))
     {
         userParameter.function[index] = value;
-        sum = check_sum((uint8_t *)(&userParameter.finger_chip), (sizeof(parameter_t) - sizeof(userParameter.sum)));
+        sum = check_sum((uint8_t *)(&userParameter) + sizeof(userParameter.sum),
+                        (sizeof(parameter_t) - sizeof(userParameter.sum)));
         userParameter.sum = sum;
 
         save_parameter_data((uint8_t *)(&userParameter), sizeof(parameter_t));
@@ -154,6 +168,22 @@ uint8_t setUserParameter(uint8_t index, uint32_t value)
     }
     OB_LOGE(TAG, "fail -> set parameter[%u] is out: %u", index, value);
     return false;
+}
+
+channel_plan_t* getChannelPlan(void)
+{
+    return &userParameter.channel;
+}
+
+uint8_t saveChannelPlan(void)
+{
+    uint16_t sum = check_sum((uint8_t *)(&userParameter) + sizeof(userParameter.sum),
+                             (sizeof(parameter_t) - sizeof(userParameter.sum)));
+
+    userParameter.sum = sum;
+    save_parameter_data((uint8_t *)(&userParameter), sizeof(parameter_t));
+
+    return true;
 }
 
 void produceInfoInit(void)
