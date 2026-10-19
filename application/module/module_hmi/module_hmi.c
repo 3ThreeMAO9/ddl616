@@ -144,6 +144,20 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(VOICE_Entered_network_pairing);
             break;
 
+        case HMI_STATE_JOIN_NET_SUCCESS:        // 配网成功：绿灯亮，播"配网成功"
+            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Network_pairing_successful);
+            keepTime = HMI_STATE_KEEP_TIME_2s;
+            break;
+
+        case HMI_STATE_JOIN_NET_FAIL:           // 配网失败：红灯闪，播"配网失败"
+            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
+            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Network_pairing_failed);
+            keepTime = HMI_STATE_KEEP_TIME_2s;
+            break;
+
         case HMI_STATE_KEY_BOARD_LED_ON:
             hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             break;

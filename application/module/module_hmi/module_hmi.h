@@ -174,6 +174,8 @@ typedef enum{
     HMI_STATE_DEV_PARA_MUTE,
     HMI_STATE_DEVICE_TEST_TIME_OUT,     
     HMI_STATE_MENU_TIME_OUT,        //子菜单操作超时：播"操作超时"，播完回上级菜单
+    HMI_STATE_JOIN_NET_SUCCESS,     //配网成功：绿灯 + 语音"配网成功"
+    HMI_STATE_JOIN_NET_FAIL,        //配网失败：红灯 + 语音"配网失败"
 
     HMI_STATE_CNT,
 }hmi_state_t;

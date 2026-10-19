@@ -81,6 +81,11 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
                 state = Q_TRAN(lock_fsm_idle);
                 hmiTaskSetState(HMI_STATE_JOIN_NET);
             }
+            else if (EVENT_RESULT_JOIN_NET_DONE == e->dynamic_[0])
+            {
+                me->idle_sleep_flag = true;         // 保留配网的声光提示，不被待机灯效覆盖
+                state = Q_TRAN(lock_fsm_idle);
+            }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;

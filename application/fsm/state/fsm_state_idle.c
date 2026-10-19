@@ -184,6 +184,11 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
             {
                 hmiTaskSetState(HMI_STATE_JOIN_NET);
             }
+            else if (EVENT_RESULT_JOIN_NET_DONE == e->dynamic_[0])
+            {
+                // 配网结束：重置待机计时，保持唤醒等待 WiFi 同步数据
+                system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
+            }
             else if (EVENT_RESULT_VERSION == e->dynamic_[0])
             {
                 hmiTaskSetState(HMI_STATE_VERSION);

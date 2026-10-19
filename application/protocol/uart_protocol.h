@@ -78,6 +78,11 @@
 #define UP_CMD_BLUE_MAC                     (0x63)  // 获取蓝牙MAC
 #define UP_CMD_BLUE_VERSION                 (0x64)  // 获取蓝牙版本
 
+/* 入网(蓝牙绑定)结果：WiFi 在蓝牙绑定完成时主动下发
+ * payload = 1 字节（0=成功 1=失败），门锁回 ACK 0xE5 */
+#define UP_CMD_JOIN_NET_RESULT              (0x65)  // 入网结果（WiFi -> 门锁）
+#define UP_CMD_JOIN_NET_RESULT_ACK          SET_UART_ACK_CMD(UP_CMD_JOIN_NET_RESULT)   // 0xE5
+
 /* 链路层：串口加密密钥交换（出厂密钥 K_F 加密）
  * 0x70 密钥发送（门锁 -> WiFi）：payload = 4 字节密钥帧（下标 1 为 K_L），WiFi 回 ACK 0xF0
  * 0x71 密钥请求（WiFi -> 门锁）：payload 空，门锁回 0xF1（同样带 4 字节密钥帧） */
