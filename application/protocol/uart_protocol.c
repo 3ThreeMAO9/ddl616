@@ -152,7 +152,6 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
     uint8_t enc  = lock_packet_get_enc(pkt->attr);
     OB_LOGI(TAG, "[uart rx] cmd=0x%02X, sn=%u, len=%u, addr=%u, enc=%u",
             pkt->cmd, pkt->sn, pkt->length, addr, enc);
-    OB_LOGW_DUMP(data, len);
 
     // 4. 校验 checksum1（attr + 头部 + 密文 payload）
     uint16_t calc1 = calc_checksum1(data, pkt->length);
@@ -169,6 +168,9 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
         uint8_t key = ((UP_CMD_SEND_LOCK_KEY == raw) || (UP_CMD_REQUEST_KEY == raw))
                       ? LOCK_KEY_FACTORY : get_lock_key();
 
+        if (pkt->length > 0) {
+            OB_LOGI_DUMP(pkt->payload, pkt->length);
+        }
         data_xor_crypt(pkt->random, key, pkt->payload, pkt->length);
     }
 #endif
