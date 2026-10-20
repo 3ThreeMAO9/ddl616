@@ -75,7 +75,7 @@ static uint8_t enter_sleep_event_deal(void){
         return false;
     }
 
-    // uartTaskSleep();
+    uartTaskSleep();
 
     OB_LOGD(TAG, "Enter Sleep");
     system_time_task_sleep(ENTER_SLEEP);
@@ -89,7 +89,7 @@ static uint8_t exit_sleep_event_scan(void){
     sleep_task_driver.attribute.wake_source |= fp_task_is_wake();       //  指纹
     sleep_task_driver.attribute.wake_source |= nfc_task_is_wake();      //  NFC
     sleep_task_driver.attribute.wake_source |= system_timer_loop();     //  WDT定时
-    // sleep_task_driver.attribute.wake_source |= uart_task_is_wake();     //  串口
+    sleep_task_driver.attribute.wake_source |= uart_task_is_wake();     //  串口
 
 #if (Enabled == WAKE_STAT_ENABLE)
     switch (sleep_task_driver.attribute.wake_source)    {
@@ -137,7 +137,7 @@ static uint8_t exit_sleep_event_scan(void){
 #endif
     ob_log_init();
     system_time_task_sleep(EXIT_SLEEP);
-    // uartTaskWake();
+    uartTaskWake();
 
     uint8_t wake_type = WAKE_UP_TYPE_NULL;
     if (sleep_task_driver.attribute.wake_source & WAKE_SOURCE_KEY_BOARD)
