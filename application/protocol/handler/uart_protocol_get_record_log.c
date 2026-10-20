@@ -18,7 +18,7 @@
 #include "uart_protocol.h"
 #include "lock_log.h"       // lock_log_get_records_raw()、lock_log_record_t
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_get_rec_log"
 
@@ -45,7 +45,7 @@ HANDLER_DEFINE(UP_CMD_GET_RECORD_LOG)
     if (packet->length < sizeof(kiot_tm_action_in_a_get_records_data_stu_t))
     {
         OB_LOGW(TAG, "len=%u too short, cmd=0x%02X", packet->length, packet->cmd);
-        uart_msg_empty_ack(UP_CMD_GET_RECORD_LOG_ACK);
+        uart_msg_empty_ack(packet->cmd);
         return 0;
     }
 

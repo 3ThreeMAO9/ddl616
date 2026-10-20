@@ -17,7 +17,7 @@ HANDLER_DEFINE(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS)
 
     (void)packet;
 
-    uart_msg_property_ack(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS_ACK, &status, sizeof(status));
+    uart_msg_property_ack(packet->cmd, &status, sizeof(status));
 
     return 0;
 }

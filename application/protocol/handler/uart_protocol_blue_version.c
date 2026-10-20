@@ -10,7 +10,7 @@
 #include "uart_protocol.h"
 #include "ota_helper.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_blue_version"
 

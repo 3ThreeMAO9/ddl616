@@ -21,7 +21,7 @@
 #include "msg_protocol.h"
 #include "hal_rtc.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_time"
 
@@ -63,7 +63,7 @@ HANDLER_DEFINE(UP_CMD_TIME_PUSH)
         time_apply(packet->payload);
     }
 
-    uart_msg_empty_ack(UP_CMD_TIME_PUSH_ACK);
+    uart_msg_empty_ack(packet->cmd);
 
     return 0;
 }

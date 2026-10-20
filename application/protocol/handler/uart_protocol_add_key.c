@@ -23,7 +23,7 @@
 #include "event.h"
 #include "msg_protocol.h"       // 0x47 事件上报
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_add_key"
 
@@ -204,7 +204,7 @@ HANDLER_DEFINE(UP_CMD_ADD_NUMBER_KEY)
                 return 0;   // 失败：暂不回应答
             }
 
-            uart_msg_empty_ack(UP_CMD_ADD_NUMBER_KEY_ACK);  // 成功：out 无 payload
+            uart_msg_empty_ack(packet->cmd);  // 成功：out 无 payload
 
             return 0;
         }
@@ -213,7 +213,7 @@ HANDLER_DEFINE(UP_CMD_ADD_NUMBER_KEY)
         {
             set_master_finger_pending(true);    // FSM 据此切 FP_MODE_REGISTER_MASTER
             add_key_start_remote(type);
-            uart_msg_empty_ack(UP_CMD_ADD_NUMBER_KEY_ACK);
+            uart_msg_empty_ack(packet->cmd);
 
             return 0;
         }
@@ -260,7 +260,7 @@ HANDLER_DEFINE(UP_CMD_ADD_NUMBER_KEY)
         add_key_start_remote(type);
     }
 
-    uart_msg_empty_ack(UP_CMD_ADD_NUMBER_KEY_ACK);          // 成功：out 无 payload
+    uart_msg_empty_ack(packet->cmd);          // 成功：out 无 payload
 
     return 0;
 }

@@ -80,52 +80,28 @@
 
 /* 入网(蓝牙绑定)结果：WiFi 在蓝牙绑定完成时主动下发
  * payload = 1 字节（0=成功 1=失败），门锁回 ACK 0xE5 */
-#define UP_CMD_JOIN_NET_RESULT              (0x65)  // 入网结果（WiFi -> 门锁）
-#define UP_CMD_JOIN_NET_RESULT_ACK          SET_UART_ACK_CMD(UP_CMD_JOIN_NET_RESULT)   // 0xE5
+#define UP_CMD_JOIN_NET_RESULT              (0x65)  // 入网结果（WiFi -> 门锁），回执 0xE5
 
 /* 时间同步（见《串口时间同步对接说明 v1.0》）
  * 0x66 时间下发（WiFi -> 门锁）：payload = 8 字节 [UTC 4B LE][tz_offset 4B LE(秒)]，门锁回 0xE6
  * 0x67 时间查询（门锁 -> WiFi）：payload 空，WiFi 回 0xE7 + 8 字节；空 0xE7 = WiFi 暂无有效时间 */
-#define UP_CMD_TIME_PUSH                    (0x66)  // 时间下发（WiFi -> 门锁）
-#define UP_CMD_TIME_QUERY                   (0x67)  // 时间查询（门锁 -> WiFi）
-#define UP_CMD_TIME_PUSH_ACK                SET_UART_ACK_CMD(UP_CMD_TIME_PUSH)    // 0xE6
-#define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)   // 0xE7
+#define UP_CMD_TIME_PUSH                    (0x66)  // 时间下发（WiFi -> 门锁），回执 0xE6
+#define UP_CMD_TIME_QUERY                   (0x67)  // 时间查询（门锁 -> WiFi），回执 0xE7
+#define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)   // 0xE7 — handler: uart_protocol_time.c
 
 /* 链路层：串口加密密钥交换（出厂密钥 K_F 加密）
  * 0x70 密钥发送（门锁 -> WiFi）：payload = 4 字节密钥帧（下标 1 为 K_L），WiFi 回 ACK 0xF0
  * 0x71 密钥请求（WiFi -> 门锁）：payload 空，门锁回 0xF1（同样带 4 字节密钥帧） */
 #define UP_CMD_SEND_LOCK_KEY                (0x70)  // 密钥发送（门锁 -> WiFi），回执 0xF0
 #define UP_CMD_REQUEST_KEY                  (0x71)  // 密钥请求（WiFi -> 门锁），回执 0xF1
-#define UP_CMD_REQUEST_KEY_ACK              SET_UART_ACK_CMD(UP_CMD_REQUEST_KEY)     // 0xF1（门锁回）
 
 
 
 
-#define UP_CMD_KEY_ACK                      SET_UART_ACK_CMD(UP_CMD_KEY)
-#define UP_CMD_BELL_ACK                     SET_UART_ACK_CMD(UP_CMD_BELL)
-#define UP_CMD_JOIN_NET_ACK                 SET_UART_ACK_CMD(UP_CMD_JOIN_NET)    
-#define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)    
-#define UP_CMD_BLUE_VERSION_ACK             SET_UART_ACK_CMD(UP_CMD_BLUE_VERSION)
-#define UP_CMD_GET_USERDATA_RAW_ACK         SET_UART_ACK_CMD(UP_CMD_GET_USERDATA_RAW) // 0x81
-#define UP_CMD_ADD_NUMBER_KEY_ACK           SET_UART_ACK_CMD(UP_CMD_ADD_NUMBER_KEY)   // 0x82
-#define UP_CMD_CANCEL_NUMBER_KEY_ACK        SET_UART_ACK_CMD(UP_CMD_CANCEL_NUMBER_KEY) // 0x83
-#define UP_CMD_DELETE_NUMBER_KEY_ACK        SET_UART_ACK_CMD(UP_CMD_DELETE_NUMBER_KEY) // 0x84
-#define UP_CMD_ADD_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_ADD_USER)      // 0x85
-#define UP_CMD_DELETE_USER_ACK              SET_UART_ACK_CMD(UP_CMD_DELETE_USER)   // 0x86
-#define UP_CMD_SET_USER_ACK                 SET_UART_ACK_CMD(UP_CMD_SET_USER)      // 0x87
-#define UP_CMD_GET_USERLIST_TIMESTAMP_ACK   SET_UART_ACK_CMD(UP_CMD_GET_USERLIST_TIMESTAMP) // 0x88
-#define UP_CMD_GET_RECORD_LOG_ACK           SET_UART_ACK_CMD(UP_CMD_GET_RECORD_LOG) // 0x89
-#define UP_CMD_PROP_MODEL_SAFE_ACK          SET_UART_ACK_CMD(UP_CMD_PROP_MODEL_SAFE)               // 0x96
-#define UP_CMD_PROP_MODE_DEFENSE_ACK        SET_UART_ACK_CMD(UP_CMD_PROP_MODE_DEFENSE)             // 0x97
-#define UP_CMD_PROP_LANGUAGE_ACK            SET_UART_ACK_CMD(UP_CMD_PROP_LANGUAGE)                 // 0x99
-#define UP_CMD_PROP_LOCK_VOLUME_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_LOCK_VOLUME)              // 0xA2
-#define UP_CMD_PROP_LOCK_STATUS_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_LOCK_STATUS)              // 0xA3
-#define UP_CMD_PROP_LOCKED_INSIDE_STATUS_ACK SET_UART_ACK_CMD(UP_CMD_PROP_LOCKED_INSIDE_STATUS)    // 0xA4
-#define UP_CMD_PROP_CHANNEL_MODE_ENABLED_ACK SET_UART_ACK_CMD(UP_CMD_PROP_CHANNEL_MODE_ENABLED)      // 0xAB
-#define UP_CMD_PROP_CHANNEL_MODE_POLICY_ACK  SET_UART_ACK_CMD(UP_CMD_PROP_CHANNEL_MODE_POLICY)       // 0xAC
-#define UP_CMD_PROP_CHANNEL_MODE_ACK         SET_UART_ACK_CMD(UP_CMD_PROP_CHANNEL_MODE)              // 0xAD
-#define UP_CMD_PROP_BATTERY_INFO_ACK        SET_UART_ACK_CMD(UP_CMD_PROP_BATTERY_INFO)             // 0xB1
-#define UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS_ACK SET_UART_ACK_CMD(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS) // 0xB3
+/* ACK 命令 = 请求命令字 | 0x80。
+ * 需要为 ACK 写 handler 的几条在这里命名（HANDLER_DEFINE 要靠它做 token 粘贴） */
+#define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)       // 0xE3
+#define UP_CMD_BLUE_VERSION_ACK             SET_UART_ACK_CMD(UP_CMD_BLUE_VERSION)   // 0xE4
 /***********Enum***********/
 
 /***********Struct***********/

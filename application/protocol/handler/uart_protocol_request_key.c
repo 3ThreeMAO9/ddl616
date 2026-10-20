@@ -17,11 +17,9 @@ HANDLER_DEFINE(UP_CMD_REQUEST_KEY)
 {
     uint8_t frame[LOCK_KEY_FRAME_LEN];
 
-    (void)packet;
-
     lock_key_build_frame(frame);
 
-    uart_msg_property_ack(UP_CMD_REQUEST_KEY_ACK, frame, sizeof(frame));
+    uart_msg_property_ack(packet->cmd, frame, sizeof(frame));
 
     return 0;
 }

@@ -18,7 +18,7 @@
 #include "user_data_raw.h"      // USERDATA_RAW_USER_ID_AUTO
 #include "hal_rtc.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_add_user"
 

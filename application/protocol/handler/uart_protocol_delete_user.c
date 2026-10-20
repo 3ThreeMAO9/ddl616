@@ -15,7 +15,7 @@
 #include "uart_protocol.h"
 #include "user.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_del_user"
 
@@ -48,7 +48,7 @@ HANDLER_DEFINE(UP_CMD_DELETE_USER)
     }
 
 
-    uart_msg_empty_ack(UP_CMD_DELETE_USER_ACK);             // 成功：out 无 payload
+    uart_msg_empty_ack(packet->cmd);             // 成功：out 无 payload
 
     return 0;
 }

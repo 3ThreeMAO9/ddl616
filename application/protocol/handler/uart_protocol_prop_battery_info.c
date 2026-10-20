@@ -25,7 +25,7 @@ HANDLER_DEFINE(UP_CMD_PROP_BATTERY_INFO)
     info.p_battery_electricity = batteryTaskReadPercent();
     info.p_charging_state      = KIOT_TM_P_CHARGING_STATE_WEI_CHONG_DIAN;   // 无充电检测
 
-    uart_msg_property_ack(UP_CMD_PROP_BATTERY_INFO_ACK, (uint8_t*)&info, sizeof(info));
+    uart_msg_property_ack(packet->cmd, (uint8_t*)&info, sizeof(info));
 
     return 0;
 }

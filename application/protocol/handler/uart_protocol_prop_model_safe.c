@@ -13,7 +13,7 @@
 #include "parameter.h"
 #include "tm_data.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_prop_safe"
 
@@ -33,7 +33,7 @@ HANDLER_DEFINE(UP_CMD_PROP_MODEL_SAFE)
         OB_LOGW(TAG, "invalid verify mode %u", (packet->length >= 2) ? packet->payload[1] : 0xFF);
     }
 
-    uart_msg_property_ack(UP_CMD_PROP_MODEL_SAFE_ACK, &mode, sizeof(mode));
+    uart_msg_property_ack(packet->cmd, &mode, sizeof(mode));
 
     return 0;
 }

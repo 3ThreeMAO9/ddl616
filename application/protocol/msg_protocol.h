@@ -80,8 +80,7 @@ void uart_msg_userdata_raw(uint8_t *data, uint16_t len);
 // 添加用户应答（0x85）：payload = 1 字节用户ID（= a_add_user 的 out）
 void uart_msg_add_user_ack(uint8_t user_id);
 
-// 无 payload 应答：kiot action 里 out 为"无"的成功应答（0x82/0x83/0x84/0x86/0x87），
-// 以及本身就没有数据的情况（如 0x89 回 0 条）
+// 无 payload 应答：传入"请求命令字"即可，内部自动置最高位（0x07 → 0x87）
 void uart_msg_empty_ack(uint8_t cmd);
 
 // 用户列表时间戳应答（0x88）：payload = uint32 数组，count = 项数
@@ -90,7 +89,7 @@ void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count);
 // 历史记录应答（0x89）：payload = N 条记录 raw（单条 8 字节，见 lock_log_def.h）
 void uart_msg_records_raw(uint8_t *data, uint16_t len);
 
-// 属性应答（cmd 传 UP_CMD_PROP_*_ACK）：payload = 属性值
+// 属性应答（cmd 传属性请求命令字，内部自动置位）：payload = 属性值
 void uart_msg_property_ack(uint8_t cmd, uint8_t *data, uint16_t len);
 
 // 属性主动上报（cmd 传属性原命令字）：payload = 属性值；对端需回 cmd|0x80

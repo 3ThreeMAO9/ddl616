@@ -23,7 +23,7 @@ HANDLER_DEFINE(UP_CMD_PROP_LOCK_VOLUME)
         vol = (uint8_t)sys_volume_get();
     }
 
-    uart_msg_property_ack(UP_CMD_PROP_LOCK_VOLUME_ACK, &vol, sizeof(vol));
+    uart_msg_property_ack(packet->cmd, &vol, sizeof(vol));
 
     return 0;
 }

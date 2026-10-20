@@ -21,7 +21,7 @@ HANDLER_DEFINE(UP_CMD_JOIN_NET_RESULT)
         result = packet->payload[0];
     }
 
-    uart_msg_empty_ack(UP_CMD_JOIN_NET_RESULT_ACK);     // 先应答，避免对端重发
+    uart_msg_empty_ack(packet->cmd);     // 先应答，避免对端重发
 
     if (!hmi_task_join_net_is_busy()) {
         return 0;                                       // 已不在配网流程（超时退出/重复包），只应答

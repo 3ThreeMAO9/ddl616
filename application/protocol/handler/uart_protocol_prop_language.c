@@ -14,7 +14,7 @@
 #include "parameter.h"
 #include "task_player.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_prop_lang"
 
@@ -87,7 +87,7 @@ HANDLER_DEFINE(UP_CMD_PROP_LANGUAGE)
         }
     }
 
-    uart_msg_property_ack(UP_CMD_PROP_LANGUAGE_ACK, (uint8_t*)lang_enum_to_str(lang), strlen(lang_enum_to_str(lang)));
+    uart_msg_property_ack(packet->cmd, (uint8_t*)lang_enum_to_str(lang), strlen(lang_enum_to_str(lang)));
 
     return 0;
 }

@@ -20,7 +20,7 @@
 #include "user.h"
 #include "user_data_raw.h"      // 用户数据 raw 结构（与 0x05 add_user 共用）
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_getdata"
 

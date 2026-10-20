@@ -15,7 +15,7 @@
 #include "uart_protocol.h"
 #include "event.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_cancel_key"
 
@@ -30,7 +30,7 @@ HANDLER_DEFINE(UP_CMD_CANCEL_NUMBER_KEY)
     // 让正在录入的菜单退回上级（不在录入状态时无人处理，事件被忽略）
     baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_CANCEL_ADD_KEY);
 
-    uart_msg_empty_ack(UP_CMD_CANCEL_NUMBER_KEY_ACK);       // 成功：out 无 payload
+    uart_msg_empty_ack(packet->cmd);       // 成功：out 无 payload
 
     return 0;
 }

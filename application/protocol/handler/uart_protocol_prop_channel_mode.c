@@ -47,7 +47,7 @@ HANDLER_DEFINE(UP_CMD_PROP_CHANNEL_MODE_ENABLED)
         }
     }
 
-    uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_ENABLED_ACK, &on, sizeof(on));
+    uart_msg_property_ack(packet->cmd, &on, sizeof(on));
 
     return 0;
 }
@@ -68,7 +68,7 @@ HANDLER_DEFINE(UP_CMD_PROP_CHANNEL_MODE_POLICY)
         policy = cp->policy;
     }
 
-    uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_POLICY_ACK, &policy, sizeof(policy));
+    uart_msg_property_ack(packet->cmd, &policy, sizeof(policy));
 
     return 0;
 }
@@ -98,11 +98,11 @@ HANDLER_DEFINE(UP_CMD_PROP_CHANNEL_MODE)
     // 永久模式或无计划：回空
     if ((KIOT_TM_P_CHANNEL_MODE_POLICY_YONG_JIU == cp->policy) || (0 == cp->plan_cnt))
     {
-        uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_ACK, NULL, 0);
+        uart_msg_property_ack(packet->cmd, NULL, 0);
     }
     else
     {
-        uart_msg_property_ack(UP_CMD_PROP_CHANNEL_MODE_ACK, (uint8_t *)cp->plan, (uint16_t)(cp->plan_cnt * unit));
+        uart_msg_property_ack(packet->cmd, (uint8_t *)cp->plan, (uint16_t)(cp->plan_cnt * unit));
     }
 
     return 0;

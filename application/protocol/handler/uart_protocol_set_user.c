@@ -17,7 +17,7 @@
 #include "user.h"
 #include "user_data_raw.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "up_set_user"
 
@@ -86,7 +86,7 @@ HANDLER_DEFINE(UP_CMD_SET_USER)
                 packet->length, raw_min_len);
     }
 
-    uart_msg_empty_ack(UP_CMD_SET_USER_ACK);                // 成功：out 无 payload
+    uart_msg_empty_ack(packet->cmd);                // 成功：out 无 payload
 
     return 0;
 }

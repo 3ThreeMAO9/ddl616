@@ -113,45 +113,47 @@ void uart_msg_join_net(void)
     uart_msg_common_send(UP_CMD_JOIN_NET, NULL, 0);
 }
 
+// 以下应答接口统一接收"请求命令字"，内部置最高位（SET_UART_ACK_CMD 幂等，传 ACK 也安全）
+
 void uart_msg_ack(uint8_t cmd, uint8_t status)
 {
     frame_ack_def_t ack = {.status = status};
-    uart_msg_common_send(cmd, (uint8_t *)&ack, sizeof(frame_ack_def_t));
+    uart_msg_common_send(SET_UART_ACK_CMD(cmd), (uint8_t *)&ack, sizeof(frame_ack_def_t));
 }
 
 void uart_msg_empty_ack(uint8_t cmd)
 {
-    uart_msg_common_send(cmd, NULL, 0);
+    uart_msg_common_send(SET_UART_ACK_CMD(cmd), NULL, 0);
 }
 
 // 原始用户数据应答（0x81）：直接回一段 raw 数据
 void uart_msg_userdata_raw(uint8_t *data, uint16_t len)
 {
-    uart_msg_common_send(UP_CMD_GET_USERDATA_RAW_ACK, data, len);
+    uart_msg_common_send(SET_UART_ACK_CMD(UP_CMD_GET_USERDATA_RAW), data, len);
 }
 
 // 添加用户应答（0x85）：payload = 1 字节用户ID（kiot_tm_action_out_a_add_user_raw_stu_t）
 void uart_msg_add_user_ack(uint8_t user_id)
 {
-    uart_msg_common_send(UP_CMD_ADD_USER_ACK, &user_id, sizeof(user_id));
+    uart_msg_common_send(SET_UART_ACK_CMD(UP_CMD_ADD_USER), &user_id, sizeof(user_id));
 }
 
 void uart_msg_userlist_timestamp(uint32_t *timestamp, uint16_t count)
 {
-    uart_msg_common_send(UP_CMD_GET_USERLIST_TIMESTAMP_ACK,
+    uart_msg_common_send(SET_UART_ACK_CMD(UP_CMD_GET_USERLIST_TIMESTAMP),
                          (uint8_t *)timestamp, count * sizeof(uint32_t));
 }
 
 // 历史记录应答（0x89）：直接回一段 N 条记录 raw
 void uart_msg_records_raw(uint8_t *data, uint16_t len)
 {
-    uart_msg_common_send(UP_CMD_GET_RECORD_LOG_ACK, data, len);
+    uart_msg_common_send(SET_UART_ACK_CMD(UP_CMD_GET_RECORD_LOG), data, len);
 }
 
-// 属性应答：回属性值（cmd 传 UP_CMD_PROP_*_ACK），与其它命令同款
+// 属性应答：回属性值（cmd 传属性请求命令字，内部自动置位）
 void uart_msg_property_ack(uint8_t cmd, uint8_t *data, uint16_t len)
 {
-    uart_msg_common_send(cmd, data, len);
+    uart_msg_common_send(SET_UART_ACK_CMD(cmd), data, len);
 }
 
 // 属性主动上报（门锁 -> WiFi）：照门铃 0x61 / 入网 0x62 的模式 —— cmd 传属性原命令字，
