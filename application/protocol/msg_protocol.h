@@ -99,6 +99,9 @@ void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len);
 // 密钥发送（0x70）：payload = 4 字节随机数（下标 1 为门锁密钥），出厂密钥加密，回执为通用 ACK 0xF0
 void uart_msg_send_lock_key(void);
 
+// 时间查询（0x67）：payload 空，WiFi 回 0xE7 + 8 字节（UTC 4B + 时区偏移 4B，小端）
+void uart_msg_time_query(void);
+
 // ---- 事件上报（门锁 -> WiFi 模块 -> APP/服务器）----
 // 恢复出厂设置（0x45）：payload = 4 字节时间戳（kiot_tm_event_e_reset_factory_stu_t）
 void uart_msg_event_reset_factory(uint32_t timestamp);

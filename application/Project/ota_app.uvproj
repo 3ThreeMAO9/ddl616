@@ -1123,6 +1123,11 @@
               <FilePath>..\protocol\handler\uart_protocol_join_net_result.c</FilePath>
             </File>
             <File>
+              <FileName>uart_protocol_time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_time.c</FilePath>
+            </File>
+            <File>
               <FileName>uart_protocol_add_key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_add_key.c</FilePath>
@@ -2456,6 +2461,11 @@
               <FileName>uart_protocol_join_net_result.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_join_net_result.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_time.c</FilePath>
             </File>
             <File>
               <FileName>uart_protocol_add_key.c</FileName>

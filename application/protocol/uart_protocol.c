@@ -33,10 +33,10 @@
     ((BACK_UART_SEL == UART_0) ? UART0_BUF_LEN : \
      (BACK_UART_SEL == UART_1) ? UART1_BUF_LEN : 0)
 
-// static uint32_t protocol_time_out = HEART_TIME_OUT;
+static uint32_t protocol_time_out = HEART_TIME_OUT;
 
-// static uint8_t ota_to_boot_flag = 0;
-// static uint32_t ota_to_boot_time_out = 0;
+static uint8_t ota_to_boot_flag = 0;
+static uint32_t ota_to_boot_time_out = 0;
 
 
 // static uint8_t param_data_flag = false;// 参数同步
@@ -57,13 +57,19 @@ static uint16_t calc_checksum1(uint8_t* raw, uint16_t payload_len)
 }
 void uart_protocol_heart_inc_time_out(void)
 {
-    // protocol_time_out = system_inc_time_cnt(HEART_TIME_OUT);
+    protocol_time_out = system_inc_time_cnt(HEART_TIME_OUT);
+}
+
+// 让心跳计时立刻到期：唤醒后下一圈 poll 就补一包时间查询
+void uart_protocol_heart_expire(void)
+{
+    protocol_time_out = system_inc_time_cnt(0);
 }
 
 void uart_protocol_ota_to_boot_inc_time_out(void)
 {
-    // ota_to_boot_flag = 1;
-    // ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
+    ota_to_boot_flag = 1;
+    ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
 }
 
 void uart_protocol_set_param_data_flag(uint8_t data)
@@ -71,10 +77,10 @@ void uart_protocol_set_param_data_flag(uint8_t data)
     // param_data_flag = data;
 }
 
-// void uart_protocol_set_ota_to_boot_flag(uint8_t data)
-// {
-//     ota_to_boot_flag = data;
-// }
+void uart_protocol_set_ota_to_boot_flag(uint8_t data)
+{
+    ota_to_boot_flag = data;
+}
 
 uint16_t get_tsn(void)
 {
@@ -114,6 +120,8 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
 
         HANDLER_IMPORT(UP_CMD_JOIN_NET_ACK)     // (0xE2)   // 入网命令---ack
         HANDLER_IMPORT(UP_CMD_JOIN_NET_RESULT)  // (0x65)   // 入网(蓝牙绑定)结果：0=成功 1=失败
+        HANDLER_IMPORT(UP_CMD_TIME_PUSH)        // (0x66)   // 时间下发（WiFi -> 门锁）
+        HANDLER_IMPORT(UP_CMD_TIME_QUERY_ACK)   // (0xE7)   // 时间查询应答
         HANDLER_IMPORT(UP_CMD_BELL_ACK)         // (0xE1)   // 门铃事件---ack
 
     default:
@@ -197,45 +205,31 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
 
     // 8. 业务处理
     uart_protocol_try_handle(pkt);
-    uart_protocol_heart_inc_time_out();
-    // uart_protocol_clean_heart_send_cnt();
+    uart_protocol_heart_inc_time_out();     // 收到有效帧 → 心跳计时重新开始
 
     return 0;
 }
 
 
-// static uint8_t uart_protocol_heart_send_cnt = 0;
-// void uart_protocol_clean_heart_send_cnt(void)
-// {
-//     uart_protocol_heart_send_cnt = 0;
-// }
-
 void uart_protocol_poll(void)
 {
-    // if (system_out_time_cnt(protocol_time_out))
-    // {
-    //     uart_protocol_heart_inc_time_out();
-    //     uart_msg_heartbeat();
-    //     if (ota_helper_get_state() == OTA_STATE_IDLE)
-    //     {
-    //         uart_protocol_heart_send_cnt++;
-    //         if (uart_protocol_heart_send_cnt > 3)
-    //         {
-                
-    //         }
-    //     }
-    // }
+    // 心跳：串口静默 HEART_TIME_OUT（3s）就发一包时间查询，兼作 WiFi 保活
+    if (system_out_time_cnt(protocol_time_out))
+    {
+        uart_protocol_heart_inc_time_out();
+        uart_msg_time_query();
+    }
 }
 
 void uart_protocol_ota_poll(void)
 {
-    // if (ota_to_boot_flag == 1)
-    // {
-    //     if (system_out_time_cnt(ota_to_boot_time_out))
-    //     {
-    //         ota_helper_set_boot(1);
-    //     }
-    // }
+    if (ota_to_boot_flag == 1)
+    {
+        if (system_out_time_cnt(ota_to_boot_time_out))
+        {
+            ota_helper_set_boot(1);
+        }
+    }
 }
 
 void uart_protocol_param_poll(void)

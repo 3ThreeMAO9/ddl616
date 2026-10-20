@@ -44,6 +44,9 @@ uint32_t hal_get_rtc_interrupt(void);
 void hal_set_rtc_interrupt(uint32_t data);
 uint32_t hal_get_rtc_work_time(void);
 
+// 同时设置 UTC 时间与时区（time_zone 单位：15 分钟，东 8 区 = +32）
+void hal_set_rtc_time(time_t timestamp, int16_t time_zone);
+
 void hal_set_rtc_local_timestamp(uint32_t timestamp);
 time_t hal_get_rtc_local_timestamp(void);
 void hal_set_rtc_utc_timestamp(uint32_t timestamp);

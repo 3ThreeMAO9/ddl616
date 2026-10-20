@@ -57,7 +57,7 @@ void MainLoop(void)
         sleep_task_loop();      // sleep task loop
         qp_fsm_task_loop();     // fsm task loop
         produceTestTaskLoop();  // produce test task loop
-        // protocol_task_loop();   // protocol task loop
+        protocol_task_loop();   // protocol task loop
     }
 }
 

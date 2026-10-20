@@ -83,6 +83,14 @@
 #define UP_CMD_JOIN_NET_RESULT              (0x65)  // 入网结果（WiFi -> 门锁）
 #define UP_CMD_JOIN_NET_RESULT_ACK          SET_UART_ACK_CMD(UP_CMD_JOIN_NET_RESULT)   // 0xE5
 
+/* 时间同步（见《串口时间同步对接说明 v1.0》）
+ * 0x66 时间下发（WiFi -> 门锁）：payload = 8 字节 [UTC 4B LE][tz_offset 4B LE(秒)]，门锁回 0xE6
+ * 0x67 时间查询（门锁 -> WiFi）：payload 空，WiFi 回 0xE7 + 8 字节；空 0xE7 = WiFi 暂无有效时间 */
+#define UP_CMD_TIME_PUSH                    (0x66)  // 时间下发（WiFi -> 门锁）
+#define UP_CMD_TIME_QUERY                   (0x67)  // 时间查询（门锁 -> WiFi）
+#define UP_CMD_TIME_PUSH_ACK                SET_UART_ACK_CMD(UP_CMD_TIME_PUSH)    // 0xE6
+#define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)   // 0xE7
+
 /* 链路层：串口加密密钥交换（出厂密钥 K_F 加密）
  * 0x70 密钥发送（门锁 -> WiFi）：payload = 4 字节密钥帧（下标 1 为 K_L），WiFi 回 ACK 0xF0
  * 0x71 密钥请求（WiFi -> 门锁）：payload 空，门锁回 0xF1（同样带 4 字节密钥帧） */
@@ -133,9 +141,9 @@ uint16_t get_tsn(void);
 uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len);
 void uart_protocol_heart_inc_time_out(void);
 void uart_protocol_poll(void);
+void uart_protocol_heart_expire(void); // 让心跳计时立刻到期（唤醒后立刻补一包时间查询）
 void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);
-void uart_protocol_clean_heart_send_cnt(void);
 void uart_protocol_set_param_data_flag(uint8_t data);
 void uart_protocol_param_poll(void);
 /*****************************/

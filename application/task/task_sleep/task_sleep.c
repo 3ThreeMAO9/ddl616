@@ -14,6 +14,7 @@
 
 
 #include "task_uart.h"
+#include "uart_protocol.h"
 #include "task_fingerprint.h"
 #include "task_battery.h"
 #include "task_hmi.h"
@@ -138,6 +139,7 @@ static uint8_t exit_sleep_event_scan(void){
     ob_log_init();
     system_time_task_sleep(EXIT_SLEEP);
     uartTaskWake();
+    uart_protocol_heart_expire();
 
     uint8_t wake_type = WAKE_UP_TYPE_NULL;
     if (sleep_task_driver.attribute.wake_source & WAKE_SOURCE_KEY_BOARD)

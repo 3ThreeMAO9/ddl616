@@ -171,6 +171,12 @@ void uart_msg_send_lock_key(void)
     uart_msg_common_send(UP_CMD_SEND_LOCK_KEY, frame, sizeof(frame));
 }
 
+// 时间查询（0x67）：向 WiFi 要当前时间，应答 0xE7 带 8 字节（空包 = 暂无有效时间）
+void uart_msg_time_query(void)
+{
+    uart_msg_common_send(UP_CMD_TIME_QUERY, NULL, 0);
+}
+
 // ---- 事件上报（门锁 -> WiFi 模块）----
 
 // 本工程 user_type_t -> 物模型 kiot_tm_p_key_type_enum_t（两套编号不同，别混用）

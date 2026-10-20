@@ -195,8 +195,15 @@ static void uart_poll_tx(void)
 
 void module_uart_sleep(void)
 {
+    // 马上要断开 UART：丢掉未发完的帧和重传状态，避免唤醒后补发旧数据
+    uart_queue_clear();
+    memset(&s_uart_tx, 0, sizeof(s_uart_tx));
+    s_uart_tx.tx_state = UART_TX_STATE_IDLE;
+
     hal_uart_sleep(BACK_UART_SEL,HAL_GPIO_MODE_INPUT_PULLUP,1);
 
+    // 清掉引脚切换过程中可能产生的边沿，避免刚睡下就被"串口唤醒"误触发
+    LOCK_UART_INT_CLEAR_INTSTATE();
     LOCK_UART_INT_PIN_ENABLE();
 }
 
