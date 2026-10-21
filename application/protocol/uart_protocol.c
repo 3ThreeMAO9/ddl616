@@ -193,10 +193,10 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
         uint8_t key = ((UP_CMD_SEND_LOCK_KEY == raw) || (UP_CMD_REQUEST_KEY == raw))
                       ? LOCK_KEY_FACTORY : get_lock_key();
 
+        data_xor_crypt(pkt->random, key, pkt->payload, pkt->length);
         if (pkt->length > 0) {
             OB_LOGI_DUMP(pkt->payload, pkt->length);
         }
-        data_xor_crypt(pkt->random, key, pkt->payload, pkt->length);
     }
 #endif
 

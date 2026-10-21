@@ -21,6 +21,9 @@ HANDLER_DEFINE(UP_CMD_GET_BACK_VERSION_ACK)
 {
     if (packet->length >= BACK_VER_SEG_CNT) {
         uart_msg_set_back_version(packet->payload);
+        OB_LOGI(TAG, "back ver: V%u.%u.%u.%u",
+                packet->payload[0], packet->payload[1],
+                packet->payload[2], packet->payload[3]);
         uart_msg_report_back_panel_version();
     }
 

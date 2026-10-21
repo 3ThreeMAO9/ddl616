@@ -71,11 +71,10 @@ static void uart_msg_common_send(uint8_t cmd, uint8_t* payload, uint16_t payload
     pkt->checksum2 = check_sum(pkt->payload, payload_len);
 
     // 4. 加密 payload（key = random ^ K）
+    OB_LOGW(TAG, " [uart tx] cmd=0x%02X, sn=%u, len[%u]:", cmd, pkt->sn, payload_len);
+    // OB_LOGW_DUMP(pkt->payload, payload_len);
+
     if (LOCK_PACKET_ENCRYPT_TYPE_NONE != enc) {
-        if (payload_len > 0) {
-            OB_LOGW(TAG, " [uart tx] cmd=0x%02X, sn=%u, len[%u]:", cmd, pkt->sn, payload_len);
-            // OB_LOGW_DUMP(pkt->payload, payload_len);
-        }
         data_xor_crypt(rnd, key, pkt->payload, payload_len);
     }
 
