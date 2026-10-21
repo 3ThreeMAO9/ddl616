@@ -62,7 +62,7 @@
 #define UP_CMD_PROP_MODEL_SAFE              (0x16)      // 双重验证模式（读写：0=通用 1=双重）
 #define UP_CMD_PROP_MODE_DEFENSE            (0x17)      // 布防模式（读写：0=撤防 1=布防）
 #define UP_CMD_PROP_LANGUAGE                (0x19)      // 门锁语言（读写："zh"/"en"/"sp"/"fr"）
-#define UP_CMD_PROP_FRONT_PANEL_VERSION     (0x20)      // 前面板版本（只读，字符串 "V0.03\0"）
+#define UP_CMD_PROP_FRONT_PANEL_VERSION     (0x20)      // 前面板版本（只读，如 "V39.140.118.003\0"）
 #define UP_CMD_PROP_BACK_PANEL_VERSION      (0x21)      // 后面板版本（只读，如 "V1.2.3.4\0"）
 #define UP_CMD_PROP_LOCK_VOLUME             (0x22)      // 门锁音量（读写：0=静音 1=低 2=中 3=高）
 #define UP_CMD_PROP_LOCK_STATUS             (0x23)      // 门锁状态（只读：1=关锁 2=开锁）
@@ -70,7 +70,7 @@
 #define UP_CMD_PROP_CHANNEL_MODE_ENABLED    (0x2b)      // 通道(常开)模式开关（读写：0=关 1=开）
 #define UP_CMD_PROP_CHANNEL_MODE_POLICY     (0x2c)      // 通道模式策略（0=永久 1=自定义）
 #define UP_CMD_PROP_CHANNEL_MODE            (0x2d)      // 通道模式时段（最多 4 组）
-#define UP_CMD_PROP_VOICE_VERSION           (0x30)      // 语音包版本（只读，字符串 "103\0" 4 字节）
+#define UP_CMD_PROP_VOICE_VERSION           (0x30)      // 语音包版本（只读，如 "V1.0.3\0"）
 #define UP_CMD_PROP_BATTERY_INFO            (0x31)      // 电池信息（只读）
 #define UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS (0x33)     // 太阳能板连接状态（只读：1=已连 2=断开）
 

@@ -97,10 +97,13 @@ void uart_msg_property_ack(uint8_t cmd, uint8_t *data, uint16_t len);
 // 属性主动上报（cmd 传属性原命令字）：payload = 属性值；对端需回 cmd|0x80
 void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len);
 
-// 语音包版本主动上报（0x30）：payload = "103\0"（3 位数字 + 结尾 0，共 4 字节），WiFi 回 0xB0
+// 语音包版本串 "V1.0.3"，返回长度（不含 '\0'）
+uint16_t uart_msg_voice_version_str(char *buf, uint16_t size);
+
+// 上报语音包版本（0x30）
 void uart_msg_report_voice_version(void);
 
-// 前板版本串 "V39.140.003"，返回长度（不含 '\0'）
+// 前板版本串 "V39.140.118.003"，返回长度（不含 '\0'）
 uint16_t uart_msg_front_version_str(char *buf, uint16_t size);
 
 // 上报前板版本（0x20）

@@ -176,19 +176,40 @@ void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len)
     uart_msg_common_send(cmd, data, len);
 }
 
-// 语音包版本主动上报（0x30）：payload = "103\0"（3 位数字 + 结尾 0，共 4 字节），WiFi 回 0xB0
-// 带 '\0' 是因为 WiFi 侧用 strlen(value) 取长度
+// 语音包版本串 "V1.0.3"，返回长度（不含 '\0'）
+uint16_t uart_msg_voice_version_str(char *buf, uint16_t size)
+{
+    uint16_t v = readVoiceInfoVersion();
+    uint16_t n = 0;
+
+    if ((NULL == buf) || (size < 7)) {
+        return 0;
+    }
+
+    buf[n++] = 'V';
+    buf[n++] = (char)('0' + (v / 100) % 10);
+    buf[n++] = '.';
+    buf[n++] = (char)('0' + (v / 10) % 10);
+    buf[n++] = '.';
+    buf[n++] = (char)('0' + v % 10);
+    buf[n] = '\0';
+
+    return n;
+}
+
+// 上报语音包版本（0x30）
 void uart_msg_report_voice_version(void)
 {
-    uint16_t version = readVoiceInfoVersion();
-    char str[4];
+    char str[8];
+    uint16_t len = uart_msg_voice_version_str(str, sizeof(str));
 
-    str[0] = (char)('0' + (version / 100) % 10);
-    str[1] = (char)('0' + (version / 10) % 10);
-    str[2] = (char)('0' + version % 10);
-    str[3] = '\0';                          // 供对端 strlen 取长度
+    if (0 == len) {
+        return;
+    }
 
-    uart_msg_property_report(UP_CMD_PROP_VOICE_VERSION, (uint8_t *)str, sizeof(str));
+    OB_LOGI(TAG, "voice ver: %s", str);
+
+    uart_msg_property_report(UP_CMD_PROP_VOICE_VERSION, (uint8_t *)str, (uint16_t)(len + 1));
 }
 
 // 数字转字符，返回长度
@@ -203,11 +224,12 @@ static uint16_t ver_put_num(char *p, uint8_t v)
     return n;
 }
 
-// "V39.140.003"，返回长度（不含 '\0'）
+// "V39.140.118.003"，返回长度（不含 '\0'）
 uint16_t uart_msg_front_version_str(char *buf, uint16_t size)
 {
-    uint16_t sn  = readDeviceClientProjectSn();
-    uint16_t ver = readDeviceVersion();
+    uint16_t sn    = readDeviceClientProjectSn();
+    uint16_t ver   = readDeviceVersion();
+    uint16_t voice = readVoiceInfoVersion();
     uint16_t n = 0;
 
     if ((NULL == buf) || (size < 16)) {
@@ -218,6 +240,10 @@ uint16_t uart_msg_front_version_str(char *buf, uint16_t size)
     n += ver_put_num(&buf[n], (uint8_t)((sn / 1000) % 1000));
     buf[n++] = '.';
     n += ver_put_num(&buf[n], (uint8_t)(sn % 1000));
+    buf[n++] = '.';
+    buf[n++] = (char)('0' + (voice / 100) % 10);
+    buf[n++] = (char)('0' + (voice / 10) % 10);
+    buf[n++] = (char)('0' + voice % 10);
     buf[n++] = '.';
     buf[n++] = (char)('0' + (ver / 100) % 10);
     buf[n++] = (char)('0' + (ver / 10) % 10);

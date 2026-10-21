@@ -506,12 +506,12 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
             play_num(sn / 1000);                            // 39
             play_num(sn % 1000);                            // 140
+            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 100) % 10);   // 118
+            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 10) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver % 10));
             PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION / 100) % 10);   // 003
             PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION / 10) % 10);
             PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION % 10));
-            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 100) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 10) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver % 10));
             break;
         }
 #ifdef DEFINE_299_CHECK_TIME
