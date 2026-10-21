@@ -92,7 +92,6 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
 {
     switch (packet->cmd)
     {
-        HANDLER_IMPORT(UP_CMD_ACK_HEART)        // (0xAA)   // 心跳应答
         HANDLER_IMPORT(UP_CMD_KEY)              // (0x60)   // 按键事件
         HANDLER_IMPORT(UP_CMD_GET_USERDATA_RAW) // (0x01)   // 获取原始用户数据
         HANDLER_IMPORT(UP_CMD_ADD_NUMBER_KEY)   // (0x02)   // 添加数字密码
