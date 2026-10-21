@@ -124,6 +124,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_PROP_CHANNEL_MODE_ENABLED)    // (0x2b)   // 属性：通道(常开)模式开关（读写）
         HANDLER_IMPORT(UP_CMD_PROP_CHANNEL_MODE_POLICY)     // (0x2c)   // 属性：通道模式策略（只读）
         HANDLER_IMPORT(UP_CMD_PROP_CHANNEL_MODE)            // (0x2d)   // 属性：通道模式时段（只读）
+        HANDLER_IMPORT(UP_CMD_PROP_VOICE_VERSION)           // (0x30)   // 属性：语音包版本（只读）
         HANDLER_IMPORT(UP_CMD_PROP_BATTERY_INFO)            // (0x31)   // 属性：电池信息（只读）
         HANDLER_IMPORT(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS)// (0x33)   // 属性：太阳能板连接状态（只读）
 

@@ -15,7 +15,6 @@
 #define TAG "module_spi_flash"
 
 
-uint8_t Audio_Version[AUDIO_VERSION_LEN] = {0};		//后期可以用voice_info.version代替
 static uint32_t end_flag_address;
 static uint8_t self_test_flag=0;
 
@@ -161,9 +160,6 @@ void flash_addr_update_handler(const sfud_flash *flash,const spi_flash_frame_t  
 	{
 		//基础数据内容，如果读到该类型，语音版本按照这个为准
 		voice_info.version = flash_info_frame.version;
-		Audio_Version[0] = flash_info_frame.version / 100;
-		Audio_Version[1] = flash_info_frame.version / 10 % 10;
-		Audio_Version[2] = flash_info_frame.version % 10;
     	flash_pack_head_t flash_head_info = {0};
 
 		hal_flash_read(addr,(uint8_t*)&flash_head_info,sizeof(flash_pack_head_t));

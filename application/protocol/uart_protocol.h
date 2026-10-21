@@ -68,6 +68,7 @@
 #define UP_CMD_PROP_CHANNEL_MODE_ENABLED    (0x2b)      // 通道(常开)模式开关（读写：0=关 1=开）
 #define UP_CMD_PROP_CHANNEL_MODE_POLICY     (0x2c)      // 通道模式策略（0=永久 1=自定义）
 #define UP_CMD_PROP_CHANNEL_MODE            (0x2d)      // 通道模式时段（最多 4 组）
+#define UP_CMD_PROP_VOICE_VERSION           (0x30)      // 语音包版本（只读，字符串 "103\0" 4 字节）
 #define UP_CMD_PROP_BATTERY_INFO            (0x31)      // 电池信息（只读）
 #define UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS (0x33)     // 太阳能板连接状态（只读：1=已连 2=断开）
 

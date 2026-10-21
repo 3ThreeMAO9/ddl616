@@ -7,7 +7,7 @@
  *
  * 物模型 p_language 是 string（maxLength 6，默认 "zh"）：
  *   payload = [opt(1字节), 语言字符串...]（读取时只有 opt）；
- *   应答 = 0x99 + 变长字符串。
+ *   应答 = 0x99 + 字符串 + 结尾 '\0'（共 3 字节，供 WiFi 侧 strlen 取长度）。
  */
 
 #include "uart_protocol.h"
@@ -87,7 +87,9 @@ HANDLER_DEFINE(UP_CMD_PROP_LANGUAGE)
         }
     }
 
-    uart_msg_property_ack(packet->cmd, (uint8_t*)lang_enum_to_str(lang), strlen(lang_enum_to_str(lang)));
+    // 应答带结尾 '\0'：WiFi 侧用 strlen(value) 取长度，其接收缓冲区不保证以 0 结尾
+    uart_msg_property_ack(packet->cmd, (uint8_t*)lang_enum_to_str(lang),
+                          (uint16_t)(strlen(lang_enum_to_str(lang)) + 1));
 
     return 0;
 }

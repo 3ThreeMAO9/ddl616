@@ -11,6 +11,7 @@
 #include "uart_protocol.h"      // 加密密钥交换命令字（0x70/0x71）
 #include "utils.h"
 #include "user.h"               // 事件上报要按本工程 user_type_t 转物模型编号
+#include "module_spi_flash.h"   // 语音包版本上报（readVoiceInfoVersion）
 #include "encrypt.h"
 #include <stdarg.h>  
 
@@ -163,6 +164,21 @@ void uart_msg_property_ack(uint8_t cmd, uint8_t *data, uint16_t len)
 void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len)
 {
     uart_msg_common_send(cmd, data, len);
+}
+
+// 语音包版本主动上报（0x30）：payload = "103\0"（3 位数字 + 结尾 0，共 4 字节），WiFi 回 0xB0
+// 带 '\0' 是因为 WiFi 侧用 strlen(value) 取长度
+void uart_msg_report_voice_version(void)
+{
+    uint16_t version = readVoiceInfoVersion();
+    char str[4];
+
+    str[0] = (char)('0' + (version / 100) % 10);
+    str[1] = (char)('0' + (version / 10) % 10);
+    str[2] = (char)('0' + version % 10);
+    str[3] = '\0';                          // 供对端 strlen 取长度
+
+    uart_msg_property_report(UP_CMD_PROP_VOICE_VERSION, (uint8_t *)str, sizeof(str));
 }
 
 // 密钥发送（0x70）：发 4 字节随机数（下标 1 为真正的 K_L），对端回 0xF0 即同步完成

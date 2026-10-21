@@ -13,6 +13,7 @@
 #include "hal_rtc.h"
 #include "timestamp.h"
 #include "system_timer.h"
+#include "module_spi_flash.h"       // readVoiceInfoVersion()（版本播报）
 #include "uart_protocol_blue_mac.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
@@ -499,13 +500,17 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_VERSION:
+        {
+            uint16_t voice_ver = readVoiceInfoVersion();    // 语音包版本（3 位十进制）
+
             play_num(CLIENT_ITEM_SN);
             PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION / 10));
             PLAYER_LIST_ADD(VOICE_Zero + PATCH_VERSION);
-            PLAYER_LIST_ADD(VOICE_Zero + Audio_Version[0]);
-            PLAYER_LIST_ADD(VOICE_Zero + Audio_Version[1]);
-            PLAYER_LIST_ADD(VOICE_Zero + Audio_Version[2]);
+            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 100) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 10) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver % 10));
             break;
+        }
 #ifdef DEFINE_299_CHECK_TIME
         case HMI_STATE_TIME:
         {

@@ -7,7 +7,6 @@
 #include "string.h"
 #include "config.h"
 
-#define AUDIO_VERSION_LEN                                  (3)
 #define FLASH_PAGE_SIZE                                    (256)
 
 typedef struct{
@@ -86,5 +85,4 @@ uint8_t is_spi_flash_test(void);
 uint16_t readVoiceInfoVersion(void);
 uint32_t module_spi_flash_self_test(void);
 
-extern uint8_t Audio_Version[AUDIO_VERSION_LEN];
 #endif
