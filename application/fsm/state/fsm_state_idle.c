@@ -6,6 +6,7 @@
 #include "parameter.h"
 #include "user.h"
 #include "msg_protocol.h"
+#include "uart_protocol_blue_mac.h"
 #include "lock_log.h"
 
 #include "task_sleep.h"
@@ -57,9 +58,12 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                     hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
             }
 
-            // 后板版本：没取到就再问一次
+            // 后板版本 / 蓝牙 MAC：没取到就再问一次
             if (!uart_msg_back_version_valid()) {
                 uart_msg_get_back_version();
+            }
+            if (!blue_mac_is_valid()) {
+                uart_msg_blue_mac();
             }
             break;
         case Q_EXIT_SIG:

@@ -87,7 +87,6 @@
 #define UP_CMD_BELL                         (0x61)      // 门铃事件
 #define UP_CMD_JOIN_NET                     (0x62)      // 入网命令
 #define UP_CMD_BLUE_MAC                     (0x63)      // 获取蓝牙 MAC
-#define UP_CMD_BLUE_VERSION                 (0x64)      // 获取蓝牙版本
 #define UP_CMD_JOIN_NET_RESULT              (0x65)      // 入网(蓝牙绑定)结果：0=成功 1=失败，回执 0xE5
 
 /* ---- 4.5 时间同步（见《串口时间同步对接说明 v1.0》）
@@ -108,7 +107,6 @@
 /* ---- 4.7 需要单独写 handler 的 ACK（其余 ACK 由 uart_protocol.c 统一清重传）
  *      HANDLER_DEFINE 需要完整标识符做 token 粘贴，故在此命名 ---- */
 #define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)       // 0xE3
-#define UP_CMD_BLUE_VERSION_ACK             SET_UART_ACK_CMD(UP_CMD_BLUE_VERSION)   // 0xE4
 #define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)     // 0xE7
 #define UP_CMD_GET_BACK_VERSION_ACK         SET_UART_ACK_CMD(UP_CMD_GET_BACK_VERSION) // 0xE8
 

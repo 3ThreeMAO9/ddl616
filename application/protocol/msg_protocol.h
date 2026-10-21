@@ -67,7 +67,6 @@ typedef struct {
 /***********Function***********/
 void uart_msg_bell(uint8_t cnt, uint32_t timeout);
 void uart_msg_blue_mac(void);
-void uart_msg_blue_version(void);
 void uart_msg_join_net(void);
 
 // 带 1 字节 status 的应答：**只给门锁<->WiFi 模块自定义指令（0x60~0x64）用**；

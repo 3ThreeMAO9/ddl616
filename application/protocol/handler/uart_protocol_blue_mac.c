@@ -45,18 +45,12 @@ uint8_t blue_mac_is_valid(void)
 // ============================================================
 HANDLER_DEFINE(UP_CMD_BLUE_MAC_ACK)
 {
-    // 清理重发队列
-    uartTaskRetryClean(GET_UART_RAW_CMD(packet->cmd), packet->sn);
-
-    // 长度校验
     if (packet->length < BLUE_MAC_LEN_MAX) {
         OB_LOGW(TAG, "blue mac payload too small: %u", packet->length);
         return 0;
     }
 
-    // 保存 MAC
     blue_mac_set(packet->payload);
-
 
     return 0;
 }

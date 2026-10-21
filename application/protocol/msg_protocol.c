@@ -107,11 +107,6 @@ void uart_msg_blue_mac(void)
     uart_msg_common_send(UP_CMD_BLUE_MAC, NULL, 0);
 }
 
-void uart_msg_blue_version(void)
-{
-    uart_msg_common_send(UP_CMD_BLUE_VERSION, NULL, 0);
-}
-
 void uart_msg_join_net(void)
 {
     uart_msg_common_send(UP_CMD_JOIN_NET, NULL, 0);

@@ -135,6 +135,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
 
         HANDLER_IMPORT(UP_CMD_JOIN_NET_RESULT)  // (0x65)   // 入网(蓝牙绑定)结果：0=成功 1=失败
         HANDLER_IMPORT(UP_CMD_TIME_PUSH)        // (0x66)   // 时间下发（WiFi -> 门锁）
+        HANDLER_IMPORT(UP_CMD_BLUE_MAC_ACK)     // (0xE3)   // 蓝牙 MAC 应答
         HANDLER_IMPORT(UP_CMD_TIME_QUERY_ACK)   // (0xE7)   // 时间查询应答
         HANDLER_IMPORT(UP_CMD_GET_BACK_VERSION_ACK) // (0xE8)  // 后板版本应答
 
