@@ -98,6 +98,9 @@ void uart_msg_property_report(uint8_t cmd, uint8_t *data, uint16_t len);
 // 语音包版本主动上报（0x30）：payload = "103\0"（3 位数字 + 结尾 0，共 4 字节），WiFi 回 0xB0
 void uart_msg_report_voice_version(void);
 
+// 前面板版本主动上报（0x20）：payload = "V0.03\0"（6 字节），WiFi 回 0xA0
+void uart_msg_report_front_panel_version(void);
+
 // 密钥发送（0x70）：payload = 4 字节随机数（下标 1 为门锁密钥），出厂密钥加密，回执为通用 ACK 0xF0
 void uart_msg_send_lock_key(void);
 

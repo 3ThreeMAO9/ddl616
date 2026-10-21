@@ -32,8 +32,9 @@ HANDLER_DEFINE(UP_CMD_JOIN_NET_RESULT)
     if (0 == result) {
         hmiTaskSetState(HMI_STATE_JOIN_NET_SUCCESS);    // 绿灯 + "配网成功"
 
-        // 入网成功后上报语音包版本（0x30）：此时 WiFi 已连上云端，上报才有接收方
-        uart_msg_report_voice_version();
+        // 入网成功后上报版本类属性：此时 WiFi 已连上云端，上报才有接收方
+        uart_msg_report_voice_version();            // 0x30 语音包版本
+        uart_msg_report_front_panel_version();      // 0x20 前面板版本
     }
     else {
         hmiTaskSetState(HMI_STATE_JOIN_NET_FAIL);       // 红灯 + "配网失败"

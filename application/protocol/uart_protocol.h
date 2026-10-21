@@ -62,6 +62,7 @@
 #define UP_CMD_PROP_MODEL_SAFE              (0x16)      // 双重验证模式（读写：0=通用 1=双重）
 #define UP_CMD_PROP_MODE_DEFENSE            (0x17)      // 布防模式（读写：0=撤防 1=布防）
 #define UP_CMD_PROP_LANGUAGE                (0x19)      // 门锁语言（读写："zh"/"en"/"sp"/"fr"）
+#define UP_CMD_PROP_FRONT_PANEL_VERSION     (0x20)      // 前面板版本（只读，字符串 "V0.03\0"）
 #define UP_CMD_PROP_LOCK_VOLUME             (0x22)      // 门锁音量（读写：0=静音 1=低 2=中 3=高）
 #define UP_CMD_PROP_LOCK_STATUS             (0x23)      // 门锁状态（只读：1=关锁 2=开锁）
 #define UP_CMD_PROP_LOCKED_INSIDE_STATUS    (0x24)      // 门内反锁状态（只读：0=未反锁 1=反锁）

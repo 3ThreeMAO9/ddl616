@@ -12,6 +12,7 @@
 #include "utils.h"
 #include "user.h"               // 事件上报要按本工程 user_type_t 转物模型编号
 #include "module_spi_flash.h"   // 语音包版本上报（readVoiceInfoVersion）
+#include "item_config.h"        // 前面板版本上报（readDeviceVersion）
 #include "encrypt.h"
 #include <stdarg.h>  
 
@@ -179,6 +180,22 @@ void uart_msg_report_voice_version(void)
     str[3] = '\0';                          // 供对端 strlen 取长度
 
     uart_msg_property_report(UP_CMD_PROP_VOICE_VERSION, (uint8_t *)str, sizeof(str));
+}
+
+// 前面板版本主动上报（0x20）：payload = "V0.03\0"（6 字节），WiFi 回 0xA0
+void uart_msg_report_front_panel_version(void)
+{
+    uint16_t version = readDeviceVersion();
+    char str[6];
+
+    str[0] = 'V';
+    str[1] = '0';
+    str[2] = '.';
+    str[3] = (char)('0' + (version / 10) % 10);
+    str[4] = (char)('0' + version % 10);
+    str[5] = '\0';                          // 供对端 strlen 取长度
+
+    uart_msg_property_report(UP_CMD_PROP_FRONT_PANEL_VERSION, (uint8_t *)str, sizeof(str));
 }
 
 // 密钥发送（0x70）：发 4 字节随机数（下标 1 为真正的 K_L），对端回 0xF0 即同步完成
