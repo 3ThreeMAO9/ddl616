@@ -246,12 +246,11 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
 
             if (EVENT_RESULT_SUCCESS_VERIFY_USER == (e->dynamic_[0]))
             {
-                // 双重验证模式：必须两种不同类型的钥匙，第一重通过先不开锁
-                // （类型无效时退化为单一验证，避免将来新增验证通道忘了带类型导致卡住）
+                // 双重验证：两种不同类型才开锁（一次性密码不参与）
                 if ((VERIFY_MODE_DUAL == readUserParameter(USER_PARA_VERIFY_MODE_ID))
-                    && (USER_TYPE_PERMANENT_MAX > e->dynamic_[3]))
+                    && (VERIFY_SRC_ONE_TIME != e->dynamic_[3]))
                 {
-                    uint8_t key_type = e->dynamic_[3];      // user_type_t
+                    uint8_t key_type = e->dynamic_[3];      // verify_src_t
 
                     if (0 == dual_verify_type)
                     {

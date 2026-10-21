@@ -65,7 +65,7 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
             lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                 KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
                                 KIOT_TM_P_RECORD_UNLOCK_TYPE_ZHI_WEN_KAI_SUO, key_id);
-            userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, USER_TYPE_PERMANENT_FINGERPRINTS);
+            userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, VERIFY_SRC_FINGERPRINT);
         }
         else {
             userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
@@ -75,7 +75,7 @@ static uint8_t fp_verify_event_callback(uint8_t event, void* params, uint8_t len
     case FP_EVENT_INVALID_FP:
         OB_LOGI(TAG, "FP_EVENT_VERIFY_FAIL");
         if(isEmptyKey(false)){
-            userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, 0, USER_TYPE_PERMANENT_FINGERPRINTS);
+            userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, 0, VERIFY_SRC_FINGERPRINT);
         }
         else{
             userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);

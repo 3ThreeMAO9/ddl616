@@ -13,6 +13,7 @@
 #include "user.h"               // 事件上报要按本工程 user_type_t 转物模型编号
 #include "module_spi_flash.h"   // 语音包版本上报（readVoiceInfoVersion）
 #include "item_config.h"        // 前面板版本上报（readDeviceVersion）
+#include "hal_rtc.h"            // 一次性密码校验带 UTC 时间戳
 #include "encrypt.h"
 #include <stdarg.h>  
 
@@ -105,6 +106,20 @@ void uart_msg_bell(uint8_t cnt, uint32_t timeout)
 void uart_msg_blue_mac(void)
 {
     uart_msg_common_send(UP_CMD_BLUE_MAC, NULL, 0);
+}
+
+void uart_msg_totp_verify(const uint8_t *pwd6)
+{
+    uint8_t  buf[4 + ONE_TIME_PWD_LEN];
+    uint32_t utc = (uint32_t)hal_get_rtc_utc_timestamp();
+
+    buf[0] = (uint8_t)(utc);
+    buf[1] = (uint8_t)(utc >> 8);
+    buf[2] = (uint8_t)(utc >> 16);
+    buf[3] = (uint8_t)(utc >> 24);
+    memcpy(&buf[4], pwd6, ONE_TIME_PWD_LEN);
+
+    uart_msg_common_send(UP_CMD_TOTP_VERIFY, buf, sizeof(buf));
 }
 
 void uart_msg_join_net(void)

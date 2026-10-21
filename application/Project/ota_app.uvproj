@@ -1193,6 +1193,11 @@
               <FilePath>..\protocol\handler\uart_protocol_back_version.c</FilePath>
             </File>
             <File>
+              <FileName>uart_protocol_totp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_totp.c</FilePath>
+            </File>
+            <File>
               <FileName>uart_protocol_prop_front_panel_version.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_prop_front_panel_version.c</FilePath>
@@ -2526,6 +2531,11 @@
               <FileName>uart_protocol_back_version.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_back_version.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_totp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_totp.c</FilePath>
             </File>
             <File>
               <FileName>uart_protocol_prop_front_panel_version.c</FileName>

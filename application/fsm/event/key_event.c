@@ -9,6 +9,7 @@
 #include "led.h"
 #include "flash_data.h"
 #include "hal_rtc.h"
+#include "uart_protocol.h"
 
 // #include "offlinekey_port.h"
 // #include "offlinekey.h"
@@ -354,7 +355,7 @@ void keyEventVerifyUser(uint8_t key_value)
                     {
                         setUserParameter(USER_PARA_VACATION_MODE_ID, Disabled);
                         password_unlock_log_add(key_id);
-                        userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, USER_TYPE_PERMANENT_CODE);
+                        userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, VERIFY_SRC_CODE);
                     }
                     else
                     {
@@ -364,7 +365,7 @@ void keyEventVerifyUser(uint8_t key_value)
                 else
                 {
                     password_unlock_log_add(key_id);
-                    userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, USER_TYPE_PERMANENT_CODE);
+                    userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, VERIFY_SRC_CODE);
                 }
             }
             else
@@ -372,6 +373,14 @@ void keyEventVerifyUser(uint8_t key_value)
 #if (Enabled == PRINTF_PASSWORD)
                 OB_LOGE(TAG, "verify fail: password user is invalid");
 #endif
+                // 6 位密码本地失败 → 问 WiFi
+                if (keyBoardEvent.input[0].len == ONE_TIME_PWD_LEN)
+                {
+                    uart_totp_verify_start(keyBoardEvent.input[0].buffer);
+                    CLEAR_KEY_EVENT();
+                    return;                 // 结果由 0xE9 或超时决定
+                }
+
                 userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);
             }
             CLEAR_KEY_EVENT();

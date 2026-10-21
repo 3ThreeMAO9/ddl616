@@ -138,6 +138,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_BLUE_MAC_ACK)     // (0xE3)   // 蓝牙 MAC 应答
         HANDLER_IMPORT(UP_CMD_TIME_QUERY_ACK)   // (0xE7)   // 时间查询应答
         HANDLER_IMPORT(UP_CMD_GET_BACK_VERSION_ACK) // (0xE8)  // 后板版本应答
+        HANDLER_IMPORT(UP_CMD_TOTP_VERIFY_ACK)  // (0xE9)   // 一次性密码校验应答
 
     default:
         return 0;
@@ -229,6 +230,8 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
 
 void uart_protocol_poll(void)
 {
+    uart_totp_poll();                       // 一次性密码校验超时判定
+
     // 心跳：串口静默 HEART_TIME_OUT（3s）就发一包时间查询，兼作 WiFi 保活
     if (system_out_time_cnt(protocol_time_out))
     {

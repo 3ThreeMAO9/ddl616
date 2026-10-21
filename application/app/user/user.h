@@ -21,7 +21,7 @@ typedef enum{
     USER_TYPE_PERMANENT_FINGERPRINTS,
     USER_TYPE_PERMANENT_CARD,
     USER_TYPE_PERMANENT_FACE,
-    USER_TYPE_PERMANENT_MAX,
+    USER_TYPE_PERMANENT_MAX,          // 类型数量
 }user_type_t;
 
 typedef enum

@@ -48,10 +48,10 @@ void userHandleEventPush(uint8_t result, uint16_t user_sn)
     userHandleEventPushKey(result, user_sn, 0xFF);      // 0xFF = 无钥匙类型（不参与双重验证）
 }
 
-// 验证类事件：带上钥匙类型（user_type_t），双重验证需要判断两次是否不同类型
-void userHandleEventPushType(uint8_t result, uint16_t user_sn, uint8_t key_type)
+// 验证类事件：带验证来源
+void userHandleEventPushType(uint8_t result, uint16_t user_sn, verify_src_t src)
 {
-    userHandleEventPushKey(result, user_sn, key_type);
+    userHandleEventPushKey(result, user_sn, (uint8_t)src);
 }
 
 void nfcKeyEventPush(uint8_t* id, uint8_t size) {

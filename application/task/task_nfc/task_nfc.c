@@ -31,7 +31,7 @@ static void nfc_task_callback(nfc_event_t *event)
                 lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
                                     KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
                                     KIOT_TM_P_RECORD_UNLOCK_TYPE_KA_PIAN_KAI_SUO, key_id);
-                userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, USER_TYPE_PERMANENT_CARD);
+                userHandleEventPushType(EVENT_RESULT_SUCCESS_VERIFY_USER, key_id, VERIFY_SRC_CARD);
             }
             else{
                 userHandleEventPush(EVENT_RESULT_FAIL_INVALID, 0);

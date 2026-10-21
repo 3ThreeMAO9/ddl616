@@ -104,11 +104,15 @@
 /* 后板(WiFi)版本：0x68 请求（空），WiFi 回 0xE8 + 4 字节 X.X.X.X */
 #define UP_CMD_GET_BACK_VERSION             (0x68)      // 获取后板版本（门锁 → WiFi）
 
+/* 一次性密码校验：0x69 = 4B UTC + 6B 密码(0~9)，应答 0xE9（0=通过） */
+#define UP_CMD_TOTP_VERIFY                  (0x69)      // 一次性密码校验（门锁 → WiFi）
+
 /* ---- 4.7 需要单独写 handler 的 ACK（其余 ACK 由 uart_protocol.c 统一清重传）
  *      HANDLER_DEFINE 需要完整标识符做 token 粘贴，故在此命名 ---- */
 #define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)       // 0xE3
 #define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)     // 0xE7
 #define UP_CMD_GET_BACK_VERSION_ACK         SET_UART_ACK_CMD(UP_CMD_GET_BACK_VERSION) // 0xE8
+#define UP_CMD_TOTP_VERIFY_ACK              SET_UART_ACK_CMD(UP_CMD_TOTP_VERIFY)    // 0xE9
 
 /*==============================================================================
  * 5. 接口
@@ -121,6 +125,10 @@ void     uart_protocol_poll(void);
 /* 心跳（时间查询复用该机制） */
 void uart_protocol_heart_inc_time_out(void);            // 重置心跳计时
 void uart_protocol_heart_expire(void);                  // 让心跳立刻到期（唤醒后补发）
+
+/* 一次性密码校验（0x69 → 0xE9） */
+void    uart_totp_verify_start(const uint8_t *pwd6);    // 发起校验
+void    uart_totp_poll(void);                           // 超时检查
 
 /* 串口活动时间（收发都会刷新），供休眠判定"串口是否已安静" */
 void     uart_protocol_comm_touch(void);                // 刷新最近一次收发时刻

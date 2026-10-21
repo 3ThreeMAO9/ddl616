@@ -43,6 +43,7 @@
 #define USER_CARD_CNT_MAX                           (2)     // 卡片（不分胁迫）
 #define USER_FACE_CNT_MAX                           (1)     // 人脸
 
+#define ONE_TIME_PWD_LEN                            (6)     // 一次性密码固定 6 位
 #define USER_CODE_LEN_MIN                           (6)
 #define USER_CODE_LEN_MAX                           (12)
 #define USER_CODE_LEN_SIZE                          (12)

@@ -151,6 +151,15 @@ typedef enum{
     HANDLE_EVENT_CNT,
 }handle_event_e;
 
+// 验证来源
+typedef enum{
+    VERIFY_SRC_CODE = 0,
+    VERIFY_SRC_FINGERPRINT,
+    VERIFY_SRC_CARD,
+    VERIFY_SRC_FACE,
+    VERIFY_SRC_ONE_TIME,        // 一次性密码，不参与双重验证
+}verify_src_t;
+
 /****************Struct****************/
 
 
@@ -160,7 +169,7 @@ typedef enum{
 /***************Function***************/
 void baseEventPush(uint8_t event_type, uint8_t value);
 void userHandleEventPush(uint8_t result, uint16_t user_sn);
-void userHandleEventPushType(uint8_t result, uint16_t user_sn, uint8_t key_type);
+void userHandleEventPushType(uint8_t result, uint16_t user_sn, verify_src_t src);
 void handleEventPush(uint8_t handle, uint8_t value);
 void nfcKeyEventPush(uint8_t* id, uint8_t size);
 void linkKeyEventPush(uint8_t* id, uint8_t size);
