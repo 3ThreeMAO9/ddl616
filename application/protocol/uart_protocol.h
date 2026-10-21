@@ -117,6 +117,10 @@ void     uart_protocol_poll(void);
 void uart_protocol_heart_inc_time_out(void);            // 重置心跳计时
 void uart_protocol_heart_expire(void);                  // 让心跳立刻到期（唤醒后补发）
 
+/* 串口活动时间（收发都会刷新），供休眠判定"串口是否已安静" */
+void     uart_protocol_comm_touch(void);                // 刷新最近一次收发时刻
+uint32_t uart_protocol_idle_ms(void);                   // 距最近一次收发的毫秒数
+
 /* OTA */
 void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);

@@ -76,6 +76,14 @@ static uint8_t enter_sleep_event_deal(void){
         return false;
     }
 
+    // 串口最近还有收发（比如刚发出的请求正等应答）：让出，等链路安静再睡。
+    // 否则刚睡下就被对端的应答叫醒，这次休眠等于白做。
+    if (uart_protocol_idle_ms() < SLEEP_QUIET_TIME) {
+        OB_LOGD(TAG, "uart active[%ums], sleep later", uart_protocol_idle_ms());
+        handleEventPush(HANDLE_EVENT_SLEEP_BUSY, 3);   //3 * 100ms
+        return false;
+    }
+
     uartTaskSleep();
 
     OB_LOGD(TAG, "Enter Sleep");

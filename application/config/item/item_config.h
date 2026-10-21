@@ -70,6 +70,7 @@
 #define SYSTEM_LOCK_TIMEOUT                         (10 * 1000)     // unit:ms
 #define WORK_TIMEOUT                                (10000)         // unit:ms
 #define WAKE_TIMEOUT                                (1500)          // unit:ms
+#define SLEEP_QUIET_TIME                            (500)           // unit:ms 串口需静默这么久才允许休眠（避免刚睡就被对端应答叫醒）
 
 //log cnt
 #define LOG_CNT                                     (200)

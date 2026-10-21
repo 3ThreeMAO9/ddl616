@@ -87,6 +87,8 @@ static void uart_msg_common_send(uint8_t cmd, uint8_t* payload, uint16_t payload
     // 7. 入队发送
     uint16_t total_len = LOCK_PACKET_HEAD_SIZE + payload_len;
     uartTaskQueuePut(buf, pkt->sn, pkt->cmd, total_len);
+
+    uart_protocol_comm_touch();             // 发送也算串口活动（休眠判定用）
 }
 
 void uart_msg_bell(uint8_t cnt, uint32_t timeout)

@@ -66,6 +66,19 @@ void uart_protocol_heart_expire(void)
     protocol_time_out = system_inc_time_cnt(0);
 }
 
+// 最近一次串口收发时刻：休眠前用它判断链路是否已经安静下来
+static uint32_t s_uart_last_act;
+
+void uart_protocol_comm_touch(void)
+{
+    s_uart_last_act = system_ms_get();
+}
+
+uint32_t uart_protocol_idle_ms(void)
+{
+    return (uint32_t)(system_ms_get() - s_uart_last_act);   // 无符号差值，天然处理回绕
+}
+
 void uart_protocol_ota_to_boot_inc_time_out(void)
 {
     ota_to_boot_flag = 1;
@@ -203,6 +216,7 @@ uint8_t uart_protocol_receive_handle(uint8_t *data, uint16_t len)
     // 8. 业务处理
     uart_protocol_try_handle(pkt);
     uart_protocol_heart_inc_time_out();     // 收到有效帧 → 心跳计时重新开始
+    uart_protocol_comm_touch();             // 记录串口活动时刻（休眠判定用）
 
     return 0;
 }
