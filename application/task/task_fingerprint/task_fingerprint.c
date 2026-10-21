@@ -433,7 +433,7 @@ void fp_task_set_mode(uint8_t mode) {
 
 void fp_task_init(void) {
     const fp_function_attr_t fp_attr = {
-        .register_count = 5,
+        .register_count = 8,
         .repeat = 0,
         .auto_sleep = 0,
         .idle_irq = 1,
@@ -472,7 +472,7 @@ void fp_task_set_attr(void* attr, uint8_t lenth) {
         return;
     }
 
-    fp_function_attr_t fp_attr;
+    fp_function_attr_t fp_attr = {0};
 
     memcpy(&fp_attr, attr, lenth);
     

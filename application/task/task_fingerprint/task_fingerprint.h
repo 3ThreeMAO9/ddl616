@@ -16,7 +16,7 @@
 /*
 void main (void) {
     const fp_function_attr_t fp_attr = {
-        .register_count = 5,
+        .register_count = 8,
         .repeat = 1,
         .auto_sleep = 1,
         .led_default = FP_LED_BLUE,

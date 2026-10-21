@@ -35,7 +35,7 @@ typedef uint8_t (*fingerprint_callback_t)(uint8_t result, void* para, uint8_t le
 
 #define FINGER_VEIN_FLAG                (0x9B)
 
-#define FINGERPRINT_REGISTER_COUNT_DEFAULT  (6)
+#define FINGERPRINT_REGISTER_COUNT_DEFAULT  (8)
 
 #define FINGERPRINT_REPEAT_CNT_MAX          (5)
 
@@ -207,7 +207,7 @@ typedef struct {
 }fp_module_attr_t;
 
 typedef struct {
-    uint8_t register_count : 3;                             // 注册次数
+    uint8_t register_count : 4;                             // 注册次数（≤15）
     uint8_t repeat : 1;                                     // 查重
     uint8_t auto_sleep : 1;                                 // 空闲状态进休眠
     uint8_t led_default : 2;                                // 空闲状态默认灯光
