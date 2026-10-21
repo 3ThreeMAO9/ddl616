@@ -504,8 +504,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             uint16_t sn        = CLIENT_ITEM_SN;
             uint16_t voice_ver = readVoiceInfoVersion();
 
-            play_num(sn / 1000);                            // 39
-            play_num(sn % 1000);                            // 140
+            PLAYER_LIST_ADD(VOICE_Zero + (sn / 10000) % 10);        // 39
+            PLAYER_LIST_ADD(VOICE_Zero + (sn / 1000) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (sn / 100) % 10);          // 140
+            PLAYER_LIST_ADD(VOICE_Zero + (sn / 10) % 10);
+            PLAYER_LIST_ADD(VOICE_Zero + (sn % 10));
             PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 100) % 10);   // 118
             PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 10) % 10);
             PLAYER_LIST_ADD(VOICE_Zero + (voice_ver % 10));
