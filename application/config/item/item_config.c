@@ -23,6 +23,10 @@ uint16_t readDeviceVersion(void)
 
 void read_device_version_info(void)
 {
-    OB_LOGD(TAG,"client_project: %05u, outside_version: V0.%02u", device_version.client_project, device_version.outside_version);
+    OB_LOGD(TAG,"client_project: %05u, outside_version: V%u.%03u.%03u",
+            device_version.client_project,
+            device_version.client_project / 1000,
+            device_version.client_project % 1000,
+            device_version.outside_version);
 }
 

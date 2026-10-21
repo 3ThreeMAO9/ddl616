@@ -182,20 +182,112 @@ void uart_msg_report_voice_version(void)
     uart_msg_property_report(UP_CMD_PROP_VOICE_VERSION, (uint8_t *)str, sizeof(str));
 }
 
-// 前面板版本主动上报（0x20）：payload = "V0.03\0"（6 字节），WiFi 回 0xA0
+// 数字转字符，返回长度
+static uint16_t ver_put_num(char *p, uint8_t v)
+{
+    uint16_t n = 0;
+
+    if (v >= 100) p[n++] = (char)('0' + v / 100);
+    if (v >= 10)  p[n++] = (char)('0' + (v / 10) % 10);
+    p[n++] = (char)('0' + v % 10);
+
+    return n;
+}
+
+// "V39.140.003"，返回长度（不含 '\0'）
+uint16_t uart_msg_front_version_str(char *buf, uint16_t size)
+{
+    uint16_t sn  = readDeviceClientProjectSn();
+    uint16_t ver = readDeviceVersion();
+    uint16_t n = 0;
+
+    if ((NULL == buf) || (size < 16)) {
+        return 0;
+    }
+
+    buf[n++] = 'V';
+    n += ver_put_num(&buf[n], (uint8_t)((sn / 1000) % 1000));
+    buf[n++] = '.';
+    n += ver_put_num(&buf[n], (uint8_t)(sn % 1000));
+    buf[n++] = '.';
+    buf[n++] = (char)('0' + (ver / 100) % 10);
+    buf[n++] = (char)('0' + (ver / 10) % 10);
+    buf[n++] = (char)('0' + ver % 10);
+    buf[n] = '\0';
+
+    return n;
+}
+
+// 上报前板版本（0x20）
 void uart_msg_report_front_panel_version(void)
 {
-    uint16_t version = readDeviceVersion();
-    char str[6];
+    char str[16];
+    uint16_t len = uart_msg_front_version_str(str, sizeof(str));
 
-    str[0] = 'V';
-    str[1] = '0';
-    str[2] = '.';
-    str[3] = (char)('0' + (version / 10) % 10);
-    str[4] = (char)('0' + version % 10);
-    str[5] = '\0';                          // 供对端 strlen 取长度
+    if (0 == len) {
+        return;
+    }
 
-    uart_msg_property_report(UP_CMD_PROP_FRONT_PANEL_VERSION, (uint8_t *)str, sizeof(str));
+    uart_msg_property_report(UP_CMD_PROP_FRONT_PANEL_VERSION, (uint8_t *)str, (uint16_t)(len + 1));
+}
+
+// 后板(WiFi)版本
+static uint8_t s_back_ver[4];
+static uint8_t s_back_ver_valid;
+
+// 请求后板版本（0x68）
+void uart_msg_get_back_version(void)
+{
+    uart_msg_common_send(UP_CMD_GET_BACK_VERSION, NULL, 0);
+}
+
+// 1 = 已取到
+uint8_t uart_msg_back_version_valid(void)
+{
+    return s_back_ver_valid;
+}
+
+void uart_msg_set_back_version(const uint8_t *ver4)
+{
+    memcpy(s_back_ver, ver4, sizeof(s_back_ver));
+    s_back_ver_valid = 1;
+}
+
+// "V1.2.3.4"，返回长度（不含 '\0'）
+uint16_t uart_msg_back_version_str(char *buf, uint16_t size)
+{
+    uint16_t n = 0;
+    uint8_t i;
+
+    if ((NULL == buf) || (size < 16)) {
+        return 0;
+    }
+
+    buf[n++] = 'V';
+    for (i = 0; i < 4; i++) {
+        n += ver_put_num(&buf[n], s_back_ver[i]);
+        if (i < 3) {
+            buf[n++] = '.';
+        }
+    }
+    buf[n] = '\0';
+
+    return n;
+}
+
+// 上报后板版本（0x21），未取到则不发
+void uart_msg_report_back_panel_version(void)
+{
+    char str[16];
+    uint16_t len;
+
+    if (!s_back_ver_valid) {
+        return;
+    }
+
+    len = uart_msg_back_version_str(str, sizeof(str));
+
+    uart_msg_property_report(UP_CMD_PROP_BACK_PANEL_VERSION, (uint8_t *)str, (uint16_t)(len + 1));
 }
 
 // 密钥发送（0x70）：发 4 字节随机数（下标 1 为真正的 K_L），对端回 0xF0 即同步完成

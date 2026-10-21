@@ -119,6 +119,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_PROP_MODE_DEFENSE)            // (0x17)   // 属性：布防模式（读写）
         HANDLER_IMPORT(UP_CMD_PROP_LANGUAGE)                // (0x19)   // 属性：门锁语言（读写）
         HANDLER_IMPORT(UP_CMD_PROP_FRONT_PANEL_VERSION)     // (0x20)   // 属性：前面板版本（只读）
+        HANDLER_IMPORT(UP_CMD_PROP_BACK_PANEL_VERSION)      // (0x21)   // 属性：后面板版本（只读）
         HANDLER_IMPORT(UP_CMD_PROP_LOCK_VOLUME)             // (0x22)   // 属性：门锁音量（读写）
         HANDLER_IMPORT(UP_CMD_PROP_LOCK_STATUS)             // (0x23)   // 属性：门锁状态（只读）
         HANDLER_IMPORT(UP_CMD_PROP_LOCKED_INSIDE_STATUS)    // (0x24)   // 属性：门内反锁状态（只读）
@@ -135,6 +136,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_JOIN_NET_RESULT)  // (0x65)   // 入网(蓝牙绑定)结果：0=成功 1=失败
         HANDLER_IMPORT(UP_CMD_TIME_PUSH)        // (0x66)   // 时间下发（WiFi -> 门锁）
         HANDLER_IMPORT(UP_CMD_TIME_QUERY_ACK)   // (0xE7)   // 时间查询应答
+        HANDLER_IMPORT(UP_CMD_GET_BACK_VERSION_ACK) // (0xE8)  // 后板版本应答
 
     default:
         return 0;

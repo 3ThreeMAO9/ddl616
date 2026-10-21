@@ -63,6 +63,7 @@
 #define UP_CMD_PROP_MODE_DEFENSE            (0x17)      // 布防模式（读写：0=撤防 1=布防）
 #define UP_CMD_PROP_LANGUAGE                (0x19)      // 门锁语言（读写："zh"/"en"/"sp"/"fr"）
 #define UP_CMD_PROP_FRONT_PANEL_VERSION     (0x20)      // 前面板版本（只读，字符串 "V0.03\0"）
+#define UP_CMD_PROP_BACK_PANEL_VERSION      (0x21)      // 后面板版本（只读，如 "V1.2.3.4\0"）
 #define UP_CMD_PROP_LOCK_VOLUME             (0x22)      // 门锁音量（读写：0=静音 1=低 2=中 3=高）
 #define UP_CMD_PROP_LOCK_STATUS             (0x23)      // 门锁状态（只读：1=关锁 2=开锁）
 #define UP_CMD_PROP_LOCKED_INSIDE_STATUS    (0x24)      // 门内反锁状态（只读：0=未反锁 1=反锁）
@@ -101,11 +102,15 @@
 #define UP_CMD_SEND_LOCK_KEY                (0x70)      // 密钥发送（门锁 → WiFi）
 #define UP_CMD_REQUEST_KEY                  (0x71)      // 密钥请求（WiFi → 门锁）
 
+/* 后板(WiFi)版本：0x68 请求（空），WiFi 回 0xE8 + 4 字节 X.X.X.X */
+#define UP_CMD_GET_BACK_VERSION             (0x68)      // 获取后板版本（门锁 → WiFi）
+
 /* ---- 4.7 需要单独写 handler 的 ACK（其余 ACK 由 uart_protocol.c 统一清重传）
  *      HANDLER_DEFINE 需要完整标识符做 token 粘贴，故在此命名 ---- */
 #define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)       // 0xE3
 #define UP_CMD_BLUE_VERSION_ACK             SET_UART_ACK_CMD(UP_CMD_BLUE_VERSION)   // 0xE4
 #define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)     // 0xE7
+#define UP_CMD_GET_BACK_VERSION_ACK         SET_UART_ACK_CMD(UP_CMD_GET_BACK_VERSION) // 0xE8
 
 /*==============================================================================
  * 5. 接口

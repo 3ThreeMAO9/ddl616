@@ -56,6 +56,11 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 else
                     hmiTaskSetState(HMI_STATE_KEY_BOARD_LED_ON);
             }
+
+            // 后板版本：没取到就再问一次
+            if (!uart_msg_back_version_valid()) {
+                uart_msg_get_back_version();
+            }
             break;
         case Q_EXIT_SIG:
             dual_verify_type = 0;       // 离开待机（超时/开锁/失败）清掉第一重记录
