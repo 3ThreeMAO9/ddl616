@@ -23,6 +23,7 @@
 
 /***************Variable***************/
 static fp_task_driver_t fp_task_driver;
+static uint8_t fp_register_count;       // 本次设定的录入次数（判断是否最后一次按压）
 
 // 任务层最后请求的模式：指纹模块未初始化完时驱动会丢弃 set_mode（fp_set_mode_API 直接 return false），
 // 初始化完成后用它补发一次，否则模块会一直停在 IDLE（不扫描），表现为"进待机后第一次按指纹无效"
@@ -143,7 +144,9 @@ static uint8_t fp_register_event_callback(uint8_t event, void* params, uint8_t l
         OB_LOGI(TAG, "FP_EVENT_PROCESSING");
         // 上报指纹添加进度（0x46）：驱动层传的是"已成功按压次数"
         uart_msg_event_fingerprint_add_status((NULL != ptr) ? *ptr : 0);
-        userHandleEventPush(EVENT_RESULT_FINGERPRINT_PRESS, 0);
+        if ((NULL == ptr) || (*ptr < fp_register_count)) {   // 最后一次按压不再提示"再按一次"
+            userHandleEventPush(EVENT_RESULT_FINGERPRINT_PRESS, 0);
+        }
         break;
     case FP_EVENT_INVALID_REPEAT:
         OB_LOGI(TAG, "FP_EVENT_INVALID_REPEAT");
@@ -475,6 +478,8 @@ void fp_task_set_attr(void* attr, uint8_t lenth) {
     fp_function_attr_t fp_attr = {0};
 
     memcpy(&fp_attr, attr, lenth);
+
+    fp_register_count = fp_attr.register_count;
     
     if (readFingerChipSn(fp_attr.chip_sn)){
         fp_attr.chip_sn_flag = 1;
