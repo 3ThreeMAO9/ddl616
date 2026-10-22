@@ -186,6 +186,7 @@ uint16_t lock_log_get_records_raw(uint8_t event_type, uint32_t timestamp, uint8_
     uint32_t cnt_in_range = 0;      // 有效范围内的记录条数（定位用）
     uint8_t keep_newest;
     uint8_t i;
+    int32_t tz_sec;
 
     if ((buf == NULL) || (count == 0))
     {
@@ -243,9 +244,15 @@ uint16_t lock_log_get_records_raw(uint8_t event_type, uint32_t timestamp, uint8_
         lock_log_query_add(&item, count, keep_newest);
     }
 
+    // 上报给 APP 用本地时间（存储和查询基准仍是 UTC）
+    tz_sec = (int32_t)hal_get_rtc_time_zone() * 15 * 60;
+
     for (i = 0; i < s_query_n; i++)
     {
-        memcpy(buf + i * sizeof(lock_log_record_t), &s_query_sel[i].record, sizeof(lock_log_record_t));
+        lock_log_record_t rec = s_query_sel[i].record;
+
+        rec.p_timestamp = (uint32_t)((int32_t)rec.p_timestamp + tz_sec);
+        memcpy(buf + i * sizeof(lock_log_record_t), &rec, sizeof(lock_log_record_t));
     }
 
     OB_LOGD(TAG, "records raw: event_type=%u, ts=%u, dir=%u, got=%u, seq[%u,%u], rec %u ts[%u,%u]",
