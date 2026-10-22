@@ -86,6 +86,14 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
                 me->idle_sleep_flag = true;         // 保留配网的声光提示，不被待机灯效覆盖
                 state = Q_TRAN(lock_fsm_idle);
             }
+            else if (EVENT_RESULT_REMOTE_ADD_FINGER == e->dynamic_[0])   // APP 发起的指纹录入：休眠态也要接
+            {
+                state = Q_TRAN(lock_fsm_remote_add_finger);
+            }
+            else if (EVENT_RESULT_REMOTE_ADD_CARD == e->dynamic_[0])     // APP 发起的卡片录入
+            {
+                state = Q_TRAN(lock_fsm_remote_add_card);
+            }
             break;
         case Q_FUNCTION_TIME_OUT_SIG:
             break;
