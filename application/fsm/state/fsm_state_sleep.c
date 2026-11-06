@@ -8,11 +8,14 @@
 #include "task_fingerprint.h"
 #include "task_hmi.h"
 #include "task_key.h"
+#include "task_motor.h"
 #include "task_nfc.h"
 #include "task_battery.h"
 
 #include "event.h"
 #include "key_event.h"
+#include "lock_log.h"
+#include "tm_data.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -85,6 +88,16 @@ QState lock_fsm_sleep(LockFsm *me, QEvent const *e){
             {
                 me->idle_sleep_flag = true;         // 保留配网的声光提示，不被待机灯效覆盖
                 state = Q_TRAN(lock_fsm_idle);
+            }
+            else if (EVENT_RESULT_LINKED_UNLOCK_OPEN == e->dynamic_[0])  // 背板联动开锁：休眠态也执行开锁
+            {
+                lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                    KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
+                                    KIOT_TM_P_RECORD_UNLOCK_TYPE_CHANG_JING_LIAN_DONG_KAI_SUO, 0xFF);
+                me->branch = (QStateHandler)(lock_fsm_sleep);
+                hmi_task_tamper_warn_time(0);
+                motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);
+                state = Q_TRAN(lockFsmVerifyUserSuccess);
             }
             else if (EVENT_RESULT_REMOTE_ADD_FINGER == e->dynamic_[0])   // APP 发起的指纹录入：休眠态也要接
             {

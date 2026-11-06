@@ -51,6 +51,9 @@ QState lock_fsm_reset(LockFsm *me, QEvent const *e)
 
             lock_log_flash_clear();
 
+            // 恢复出厂设置同步退出联动开锁(0x6D)：配对关系由背板/服务端清除，这里只发指令不等应答
+            uart_msg_linked_unlock_exit();
+
             // 上报"恢复出厂设置"事件(0x45)：放在清空动作之后、播报之前
             uart_msg_event_reset_factory(hal_get_rtc_time());
 

@@ -3,8 +3,9 @@
  * File name: uart_protocol_linked_unlock.c
  * Desc: 联动开锁 4 位配对码：0x6A 创建 / 0x6B 加入 → 0xEA/0xEB 应答；
  *       退出联动开锁：0x6D → 0xED 应答；
- *       配对/退出结果统一用 0x6C（role+result）上报，门锁回 0xEC
- * Version 1.1.0
+ *       配对/退出结果统一用 0x6C（role+result）上报，门锁回 0xEC；
+ *       背板下发联动开锁执行 0x6E → 门锁回 0xEE 并执行开锁
+ * Version 1.2.0
  * Date: 2026-11-06
  *
  * A 锁创建、B 锁加入、任意锁退出用同一套代码，仅由菜单传入的 role 区分：
@@ -16,6 +17,7 @@
 #include "uart_protocol.h"
 #include "msg_protocol.h"
 #include "system_timer.h"
+#include "event.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -27,6 +29,9 @@
 static uint8_t  s_role = LINKED_ROLE_NONE;  // 当前等待的角色
 static uint8_t  s_ack_waiting;              // 1 = 还在等背板 ACK
 static uint32_t s_ack_deadline;
+
+static uint16_t s_open_sn;                  // 最近一次已执行的 0x6E 帧序号
+static uint8_t  s_open_sn_valid;            // s_open_sn 是否有效
 
 static void linked_unlock_result_push(uint8_t success)
 {
@@ -146,6 +151,26 @@ HANDLER_DEFINE(UP_CMD_LINKED_UNLOCK_RESULT)
     OB_LOGI(TAG, "result role=%u, result=%u", role, packet->payload[1]);
 
     linked_unlock_result_push((LINKED_UNLOCK_RESULT_SUCCESS == packet->payload[1]) ? 1 : 0);
+
+    return 0;
+}
+
+// 0x6E：背板下发联动开锁执行（背板 → 门锁）
+HANDLER_DEFINE(UP_CMD_LINKED_UNLOCK_OPEN)
+{
+    // 先应答：背板 300ms 收不到 0xEE 会重发，应答后停止重传
+    uart_msg_empty_ack(packet->cmd);
+
+    // 重发帧 sn 不变：只执行一次开锁，避免重复开锁/重复记录
+    if (s_open_sn_valid && (s_open_sn == packet->sn)) {
+        OB_LOGI(TAG, "open duplicate, sn=%u ignored", packet->sn);
+        return 0;
+    }
+    s_open_sn       = packet->sn;
+    s_open_sn_valid = 1;
+
+    OB_LOGI(TAG, "linked open, sn=%u", packet->sn);
+    baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_LINKED_UNLOCK_OPEN);
 
     return 0;
 }

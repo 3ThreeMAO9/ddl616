@@ -136,6 +136,7 @@ typedef enum{
     EVENT_RESULT_BACK_KEY_SINGLE,       // 后板按键单击（仅产测按键测试使用，其它状态不处理）
     EVENT_RESULT_LINKED_UNLOCK_SUCCESS, // 联动开锁配对成功（0x6C result=0）
     EVENT_RESULT_LINKED_UNLOCK_FAIL,    // 联动开锁配对失败（0xEA/0xEB status!=0 或 0x6C result!=0 或应答超时）
+    EVENT_RESULT_LINKED_UNLOCK_OPEN,    // 背板下发联动开锁指令（0x6E）：前板执行开锁
 
 
     USER_EVENT_CNT,

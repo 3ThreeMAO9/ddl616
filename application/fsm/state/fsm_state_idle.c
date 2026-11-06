@@ -198,6 +198,16 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 // 配网结束：重置待机计时，保持唤醒等待 WiFi 同步数据
                 system_time_task_set_work_time(WORK_TIME_OUT_VAULE);
             }
+            else if (EVENT_RESULT_LINKED_UNLOCK_OPEN == e->dynamic_[0])      // 背板联动开锁：直接开锁并提示成功
+            {
+                lock_log_add_record(KIOT_TM_P_RECORD_EVENT_TYPE_CAO_ZUO_JI_LU,
+                                    KIOT_TM_P_RECORD_OPERATION_TYPE_KAI_SUO_JI_LU,
+                                    KIOT_TM_P_RECORD_UNLOCK_TYPE_CHANG_JING_LIAN_DONG_KAI_SUO, 0xFF);
+                me->branch = (QStateHandler)(lock_fsm_sleep);
+                hmi_task_tamper_warn_time(0);
+                motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);
+                state = Q_TRAN(lockFsmVerifyUserSuccess);
+            }
             else if (EVENT_RESULT_VERSION == e->dynamic_[0])
             {
                 hmiTaskSetState(HMI_STATE_VERSION);
