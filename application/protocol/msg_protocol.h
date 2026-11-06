@@ -77,6 +77,8 @@ void uart_msg_linked_unlock_create(const uint8_t *pin4);
 void uart_msg_linked_unlock_join(const uint8_t *pin4);
 // 退出联动开锁（0x6D）：空 payload
 void uart_msg_linked_unlock_exit(void);
+// 本地验证开锁成功通知（0x6F）：空 payload，触发配对锁联动开锁
+void uart_msg_linked_unlock_notify(void);
 
 // 带 1 字节 status 的应答：**只给门锁<->WiFi 模块自定义指令（0x60~0x64）用**；
 // kiot 的 action 应答（0x8x）是透传，一律用 uart_msg_empty_ack 或直接回 out 内容，不带 status

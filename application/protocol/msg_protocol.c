@@ -143,6 +143,12 @@ void uart_msg_linked_unlock_exit(void)
     uart_msg_common_send(UP_CMD_LINKED_UNLOCK_EXIT, NULL, 0);
 }
 
+// 本地验证开锁成功通知（0x6F）：空 payload，触发配对锁联动开锁
+void uart_msg_linked_unlock_notify(void)
+{
+    uart_msg_common_send(UP_CMD_LINKED_UNLOCK_NOTIFY, NULL, 0);
+}
+
 // 以下应答接口统一接收"请求命令字"，内部置最高位（SET_UART_ACK_CMD 幂等，传 ACK 也安全）
 
 void uart_msg_ack(uint8_t cmd, uint8_t status)

@@ -285,6 +285,7 @@ QState lock_fsm_idle(LockFsm *me, QEvent const *e)
                 OB_LOGI(TAG, "user_id [%u]", ((uint16_t)e->dynamic_[1] << 8) | e->dynamic_[2]);
                 hmi_task_tamper_warn_time(0);
                 motorTaskHandle(MOTOR_HANDLE_UNLOCK, 0);
+                uart_msg_linked_unlock_notify();        // 联动开锁：通知背板触发配对锁开锁（0x6F）
                 me->branch = (QStateHandler)(lock_fsm_sleep);
                 state = Q_TRAN(lockFsmVerifyUserSuccess);
             }

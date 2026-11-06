@@ -119,6 +119,7 @@
 #define UP_CMD_LINKED_UNLOCK_RESULT         (0x6C)      // 联动开锁结果上报（背板 → 门锁）
 #define UP_CMD_LINKED_UNLOCK_EXIT           (0x6D)      // 退出联动开锁（门锁 → 背板）
 #define UP_CMD_LINKED_UNLOCK_OPEN           (0x6E)      // 联动开锁执行（背板 → 门锁，门锁回 0xEE 后开锁）
+#define UP_CMD_LINKED_UNLOCK_NOTIFY         (0x6F)      // 本地验证开锁成功通知（门锁 → 背板，触发对方联动开锁）
 
 #define LINKED_UNLOCK_PIN_LEN               (4)         // 配对码长度（每字节 0~9）
 #define LINKED_UNLOCK_ROLE_CREATE           (0)         // 0x6C role：创建方(A)
@@ -138,6 +139,7 @@
 #define UP_CMD_LINKED_UNLOCK_RESULT_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_RESULT) // 0xEC
 #define UP_CMD_LINKED_UNLOCK_EXIT_ACK       SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_EXIT)   // 0xED
 #define UP_CMD_LINKED_UNLOCK_OPEN_ACK       SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_OPEN)   // 0xEE
+#define UP_CMD_LINKED_UNLOCK_NOTIFY_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_NOTIFY) // 0xEF
 
 /*==============================================================================
  * 5. 接口
