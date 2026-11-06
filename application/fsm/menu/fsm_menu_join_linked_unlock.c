@@ -8,6 +8,7 @@
 
 #include "event.h"
 #include "key_event.h"
+#include "uart_protocol.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -29,8 +30,11 @@ QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e)
             hmiTaskSetState(HMI_STATE_JOIN_LINKED_UNLOCK);
             break;
         case Q_EXIT_SIG:
+            uart_linked_unlock_cancel();                    // 离开菜单：丢弃迟到的背板应答
             break;
         case Q_KEY_BOARD_PRESS_SIG:
+            if (uart_linked_unlock_is_waiting())            // 等待配对结果期间不响应键盘，避免重复下发
+                break;
             if (e->dynamic_[0] <= KEY_OK)
             {
                 hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
@@ -40,14 +44,40 @@ QState lock_fsm_menu_join_linked_unlock(LockFsm *me, QEvent const *e)
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
-                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
+                // 等待配对结果期间保持完整等待时间，其它语音播完按普通停留超时
+                system_time_task_set_function_time(uart_linked_unlock_is_waiting() ? LINKED_UNLOCK_TIME_OUT : MENU_TIME_OUT_VAULE);
             else if (EVENT_RESULT_FAIL == e->dynamic_[0])
             {
                 state = Q_TRAN(lock_fsm_menu_system_settings); // 输入密码空的时候,再按*键,回系统设置菜单
             }
+            else if (EVENT_RESULT_LINKED_UNLOCK_SUCCESS == e->dynamic_[0])
+            {
+                me->branch = (QStateHandler)(lock_fsm_menu_system_settings);
+                state = Q_TRAN(lockFsmHandleSuccess);          // 背板上报加入成功：播"设置成功"
+            }
+            else if (EVENT_RESULT_LINKED_UNLOCK_FAIL == e->dynamic_[0])
+            {
+                me->branch = (QStateHandler)(lock_fsm_menu_system_settings);
+                state = Q_TRAN(lockFsmLinkedUnlockFail);       // 指令异常/配对失败：播"设置失败"
+            }
             break;
         case Q_USER_HANDLE_SIG:
             break;
+        case Q_LINK_KEY_SIG:
+        {
+            uint8_t pin[LINKED_UNLOCK_PIN_LEN];
+
+            if (e->dynamic_[0] < LINKED_UNLOCK_PIN_LEN)
+                break;
+
+            // 4 位配对码下发背板，等背板 ACK 后继续等配对结果（结果由 0x6C 上报触发）
+            memcpy(pin, &e->dynamic_[1], LINKED_UNLOCK_PIN_LEN);
+            keyEventInit();                                 // 清掉键盘缓冲，避免再次按键叠加
+            uart_linked_unlock_start(LINKED_UNLOCK_ROLE_JOIN, pin);
+            hmiTaskSetState(HMI_STATE_LINKED_UNLOCK_WAIT);  // 播"配对中请稍候"
+            system_time_task_set_function_time(LINKED_UNLOCK_TIME_OUT);
+            break;
+        }
         case Q_WORK_TIME_OUT_SIG:                               // 系统工时到期：菜单里不做动作（停留超时由功能超时管）
             break;
         case Q_FUNCTION_TIME_OUT_SIG:                               // 超时：播"操作超时"后回上级（更多设置）

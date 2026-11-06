@@ -1198,6 +1198,11 @@
               <FilePath>..\protocol\handler\uart_protocol_totp.c</FilePath>
             </File>
             <File>
+              <FileName>uart_protocol_linked_unlock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_linked_unlock.c</FilePath>
+            </File>
+            <File>
               <FileName>uart_protocol_prop_front_panel_version.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_prop_front_panel_version.c</FilePath>
@@ -2536,6 +2541,11 @@
               <FileName>uart_protocol_totp.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_totp.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_linked_unlock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_linked_unlock.c</FilePath>
             </File>
             <File>
               <FileName>uart_protocol_prop_front_panel_version.c</FileName>

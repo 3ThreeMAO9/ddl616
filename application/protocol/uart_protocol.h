@@ -107,12 +107,30 @@
 /* 一次性密码校验：0x69 = 4B UTC + 6B 密码(0~9)，应答 0xE9（0=通过） */
 #define UP_CMD_TOTP_VERIFY                  (0x69)      // 一次性密码校验（门锁 → WiFi）
 
+/* ---- 4.6.1 联动开锁（4 位配对码）
+ *      A 锁在"创建联动"菜单输入 4 位 PIN → 0x6A 发给背板，背板回 0xEA（1B status）
+ *      B 锁在"加入联动"菜单输入同一 4 位 PIN → 0x6B 发给背板，背板回 0xEB（1B status）
+ *      配对完成后背板主动上报 0x6C（2B：role+result），门锁回 0xEC ----
+ *      role：0=创建方(A) 1=加入方(B)；result：0=成功 1=失败 */
+#define UP_CMD_LINKED_UNLOCK_CREATE         (0x6A)      // 创建联动开锁（门锁 → 背板）
+#define UP_CMD_LINKED_UNLOCK_JOIN           (0x6B)      // 加入联动开锁（门锁 → 背板）
+#define UP_CMD_LINKED_UNLOCK_RESULT         (0x6C)      // 联动开锁结果上报（背板 → 门锁）
+
+#define LINKED_UNLOCK_PIN_LEN               (4)         // 配对码长度（每字节 0~9）
+#define LINKED_UNLOCK_ROLE_CREATE           (0)         // 0x6C role：创建方(A)
+#define LINKED_UNLOCK_ROLE_JOIN             (1)         // 0x6C role：加入方(B)
+#define LINKED_UNLOCK_RESULT_SUCCESS        (0)         // 0x6C result：成功
+#define LINKED_UNLOCK_RESULT_FAIL           (1)         // 0x6C result：失败
+
 /* ---- 4.7 需要单独写 handler 的 ACK（其余 ACK 由 uart_protocol.c 统一清重传）
  *      HANDLER_DEFINE 需要完整标识符做 token 粘贴，故在此命名 ---- */
 #define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)       // 0xE3
 #define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)     // 0xE7
 #define UP_CMD_GET_BACK_VERSION_ACK         SET_UART_ACK_CMD(UP_CMD_GET_BACK_VERSION) // 0xE8
 #define UP_CMD_TOTP_VERIFY_ACK              SET_UART_ACK_CMD(UP_CMD_TOTP_VERIFY)    // 0xE9
+#define UP_CMD_LINKED_UNLOCK_CREATE_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_CREATE) // 0xEA
+#define UP_CMD_LINKED_UNLOCK_JOIN_ACK       SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_JOIN)   // 0xEB
+#define UP_CMD_LINKED_UNLOCK_RESULT_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_RESULT) // 0xEC
 
 /*==============================================================================
  * 5. 接口
@@ -129,6 +147,12 @@ void uart_protocol_heart_expire(void);                  // 让心跳立刻到期
 /* 一次性密码校验（0x69 → 0xE9） */
 void    uart_totp_verify_start(const uint8_t *pwd6);    // 发起校验
 void    uart_totp_poll(void);                           // 超时检查
+
+/* 联动开锁（0x6A/0x6B → 0xEA/0xEB，结果 0x6C） */
+void    uart_linked_unlock_start(uint8_t role, const uint8_t *pin4);   // 发起创建/加入
+void    uart_linked_unlock_cancel(void);                               // 退出流程，丢弃后续应答
+uint8_t uart_linked_unlock_is_waiting(void);                           // 1 = 正在等背板应答/配对结果
+void    uart_linked_unlock_poll(void);                                 // 背板应答超时检查
 
 /* 串口活动时间（收发都会刷新），供休眠判定"串口是否已安静" */
 void     uart_protocol_comm_touch(void);                // 刷新最近一次收发时刻

@@ -277,3 +277,9 @@ QState lockFsmMenuTimeOut(LockFsm *me, QEvent const *e)
 {
     return lockFsmFailDeal(me, e, HMI_STATE_MENU_TIME_OUT, false);
 }
+
+// 联动开锁配对失败（背板应答异常 / 配对失败）：播"设置失败"，播完回上级菜单
+QState lockFsmLinkedUnlockFail(LockFsm *me, QEvent const *e)
+{
+    return lockFsmFailDeal(me, e, HMI_STATE_LINKED_UNLOCK_FAIL, false);
+}

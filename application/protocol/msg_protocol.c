@@ -126,6 +126,17 @@ void uart_msg_join_net(void)
     uart_msg_common_send(UP_CMD_JOIN_NET, NULL, 0);
 }
 
+// 联动开锁：创建（0x6A）/ 加入（0x6B），payload = 4 字节配对码（0~9）
+void uart_msg_linked_unlock_create(const uint8_t *pin4)
+{
+    uart_msg_common_send(UP_CMD_LINKED_UNLOCK_CREATE, (uint8_t *)pin4, LINKED_UNLOCK_PIN_LEN);
+}
+
+void uart_msg_linked_unlock_join(const uint8_t *pin4)
+{
+    uart_msg_common_send(UP_CMD_LINKED_UNLOCK_JOIN, (uint8_t *)pin4, LINKED_UNLOCK_PIN_LEN);
+}
+
 // 以下应答接口统一接收"请求命令字"，内部置最高位（SET_UART_ACK_CMD 幂等，传 ACK 也安全）
 
 void uart_msg_ack(uint8_t cmd, uint8_t status)

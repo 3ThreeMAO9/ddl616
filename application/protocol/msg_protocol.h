@@ -72,6 +72,10 @@ void uart_msg_join_net(void);
 // 一次性密码校验（0x69）
 void uart_msg_totp_verify(const uint8_t *pwd6);
 
+// 联动开锁（0x6A 创建 / 0x6B 加入）：payload = 4 字节配对码（每字节 0~9）
+void uart_msg_linked_unlock_create(const uint8_t *pin4);
+void uart_msg_linked_unlock_join(const uint8_t *pin4);
+
 // 带 1 字节 status 的应答：**只给门锁<->WiFi 模块自定义指令（0x60~0x64）用**；
 // kiot 的 action 应答（0x8x）是透传，一律用 uart_msg_empty_ack 或直接回 out 内容，不带 status
 void uart_msg_ack(uint8_t cmd, uint8_t status);
