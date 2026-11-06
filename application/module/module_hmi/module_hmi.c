@@ -513,6 +513,10 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_ADD(VOICE_Please_enter_a_4_digit_pairing_code, VOICE_End_with_pound_key);
             break;
 
+        case HMI_STATE_EXIT_LINKED_UNLOCK:
+            PLAYER_LIST_ADD(VOICE_Exit_linked_unlocking_please_press);
+            break;
+
         case HMI_STATE_VERSION:
         {
             uint16_t sn        = CLIENT_ITEM_SN;

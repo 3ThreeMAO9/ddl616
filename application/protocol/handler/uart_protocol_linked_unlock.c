@@ -1,15 +1,16 @@
 /**
  * Copyright (c) 2026 GZ-OB, All rights reserved.
  * File name: uart_protocol_linked_unlock.c
- * Desc: 联动开锁 4 位配对码：0x6A 创建 / 0x6B 加入 → 0xEA/0xEB 应答；0x6C 结果上报
- * Version 1.0.0
- * Date: 2026-11-05
+ * Desc: 联动开锁 4 位配对码：0x6A 创建 / 0x6B 加入 → 0xEA/0xEB 应答；
+ *       退出联动开锁：0x6D → 0xED 应答；
+ *       配对/退出结果统一用 0x6C（role+result）上报，门锁回 0xEC
+ * Version 1.1.0
+ * Date: 2026-11-06
  *
- * A 锁创建、B 锁加入用同一套代码，仅由菜单传入的 role 区分：
- *   role = LINKED_UNLOCK_ROLE_CREATE(0) → 发 0x6A，等 0xEA
- *   role = LINKED_UNLOCK_ROLE_JOIN(1)   → 发 0x6B，等 0xEB
- * 背板收到指令立刻回 ACK（1 字节 status），配对完成后再主动上报 0x6C：
- *   payload = [role][result]，门锁回 0xEC
+ * A 锁创建、B 锁加入、任意锁退出用同一套代码，仅由菜单传入的 role 区分：
+ *   role = LINKED_UNLOCK_ROLE_CREATE(0) → 发 0x6A，等 0xEA，结果 role=0
+ *   role = LINKED_UNLOCK_ROLE_JOIN(1)   → 发 0x6B，等 0xEB，结果 role=1
+ *   role = LINKED_UNLOCK_ROLE_EXIT(2)   → 发 0x6D，等 0xED，结果 role=2
  */
 
 #include "uart_protocol.h"
@@ -35,10 +36,10 @@ static void linked_unlock_result_push(uint8_t success)
                   success ? EVENT_RESULT_LINKED_UNLOCK_SUCCESS : EVENT_RESULT_LINKED_UNLOCK_FAIL);
 }
 
-// 发起创建/加入：4 位配对码随命令下发
+// 发起创建/加入/退出：pin4 仅创建/加入需要；退出时 role=EXIT，pin4 传 NULL
 void uart_linked_unlock_start(uint8_t role, const uint8_t *pin4)
 {
-    if (NULL == pin4) {
+    if ((LINKED_UNLOCK_ROLE_CREATE == role || LINKED_UNLOCK_ROLE_JOIN == role) && (NULL == pin4)) {
         return;
     }
 
@@ -46,12 +47,19 @@ void uart_linked_unlock_start(uint8_t role, const uint8_t *pin4)
     s_ack_waiting = 1;
     s_ack_deadline = system_inc_time_cnt(LINKED_ACK_TIME_OUT);
 
-    // 同一条流程只会发其中一条命令（A/B 由菜单决定）
-    if (LINKED_UNLOCK_ROLE_JOIN == role) {
-        uart_msg_linked_unlock_join(pin4);
-    }
-    else {
-        uart_msg_linked_unlock_create(pin4);
+    switch (role) {
+        case LINKED_UNLOCK_ROLE_CREATE:
+            uart_msg_linked_unlock_create(pin4);
+            break;
+        case LINKED_UNLOCK_ROLE_JOIN:
+            uart_msg_linked_unlock_join(pin4);
+            break;
+        case LINKED_UNLOCK_ROLE_EXIT:
+            uart_msg_linked_unlock_exit();
+            break;
+        default:
+            s_role = LINKED_ROLE_NONE;
+            break;
     }
 }
 
@@ -108,6 +116,13 @@ HANDLER_DEFINE(UP_CMD_LINKED_UNLOCK_CREATE_ACK)
 HANDLER_DEFINE(UP_CMD_LINKED_UNLOCK_JOIN_ACK)
 {
     linked_unlock_ack_handle(LINKED_UNLOCK_ROLE_JOIN, packet);
+    return 0;
+}
+
+// 0xED：退出指令应答
+HANDLER_DEFINE(UP_CMD_LINKED_UNLOCK_EXIT_ACK)
+{
+    linked_unlock_ack_handle(LINKED_UNLOCK_ROLE_EXIT, packet);
     return 0;
 }
 

@@ -833,6 +833,11 @@
               <FilePath>..\fsm\menu\fsm_menu_join_linked_unlock.c</FilePath>
             </File>
             <File>
+              <FileName>fsm_menu_exit_linked_unlock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_exit_linked_unlock.c</FilePath>
+            </File>
+            <File>
               <FileName>fsm_menu_add_normal_finger.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_add_normal_finger.c</FilePath>
@@ -2176,6 +2181,11 @@
               <FileName>fsm_menu_join_linked_unlock.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\fsm\menu\fsm_menu_join_linked_unlock.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm_menu_exit_linked_unlock.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\fsm\menu\fsm_menu_exit_linked_unlock.c</FilePath>
             </File>
             <File>
               <FileName>fsm_menu_add_normal_finger.c</FileName>

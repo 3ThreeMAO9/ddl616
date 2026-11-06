@@ -110,15 +110,19 @@
 /* ---- 4.6.1 联动开锁（4 位配对码）
  *      A 锁在"创建联动"菜单输入 4 位 PIN → 0x6A 发给背板，背板回 0xEA（1B status）
  *      B 锁在"加入联动"菜单输入同一 4 位 PIN → 0x6B 发给背板，背板回 0xEB（1B status）
- *      配对完成后背板主动上报 0x6C（2B：role+result），门锁回 0xEC ----
- *      role：0=创建方(A) 1=加入方(B)；result：0=成功 1=失败 */
+ *      配对完成后背板主动上报 0x6C（2B：role+result），门锁回 0xEC
+ *      任意锁在"退出联动"菜单 → 0x6D 发给背板，背板回 0xED（1B status）
+ *      退出完成后背板主动上报 0x6C（role=2, result），门锁回 0xEC ----
+ *      role：0=创建方(A) 1=加入方(B) 2=退出；result：0=成功 1=失败 */
 #define UP_CMD_LINKED_UNLOCK_CREATE         (0x6A)      // 创建联动开锁（门锁 → 背板）
 #define UP_CMD_LINKED_UNLOCK_JOIN           (0x6B)      // 加入联动开锁（门锁 → 背板）
 #define UP_CMD_LINKED_UNLOCK_RESULT         (0x6C)      // 联动开锁结果上报（背板 → 门锁）
+#define UP_CMD_LINKED_UNLOCK_EXIT           (0x6D)      // 退出联动开锁（门锁 → 背板）
 
 #define LINKED_UNLOCK_PIN_LEN               (4)         // 配对码长度（每字节 0~9）
 #define LINKED_UNLOCK_ROLE_CREATE           (0)         // 0x6C role：创建方(A)
 #define LINKED_UNLOCK_ROLE_JOIN             (1)         // 0x6C role：加入方(B)
+#define LINKED_UNLOCK_ROLE_EXIT             (2)         // 0x6C role：退出联动
 #define LINKED_UNLOCK_RESULT_SUCCESS        (0)         // 0x6C result：成功
 #define LINKED_UNLOCK_RESULT_FAIL           (1)         // 0x6C result：失败
 
@@ -131,6 +135,7 @@
 #define UP_CMD_LINKED_UNLOCK_CREATE_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_CREATE) // 0xEA
 #define UP_CMD_LINKED_UNLOCK_JOIN_ACK       SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_JOIN)   // 0xEB
 #define UP_CMD_LINKED_UNLOCK_RESULT_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_RESULT) // 0xEC
+#define UP_CMD_LINKED_UNLOCK_EXIT_ACK       SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_EXIT)   // 0xED
 
 /*==============================================================================
  * 5. 接口
@@ -148,8 +153,9 @@ void uart_protocol_heart_expire(void);                  // 让心跳立刻到期
 void    uart_totp_verify_start(const uint8_t *pwd6);    // 发起校验
 void    uart_totp_poll(void);                           // 超时检查
 
-/* 联动开锁（0x6A/0x6B → 0xEA/0xEB，结果 0x6C） */
-void    uart_linked_unlock_start(uint8_t role, const uint8_t *pin4);   // 发起创建/加入
+/* 联动开锁（0x6A/0x6B/0x6D → 0xEA/0xEB/0xED，结果 0x6C） */
+/* role：LINKED_UNLOCK_ROLE_CREATE / LINKED_UNLOCK_ROLE_JOIN / LINKED_UNLOCK_ROLE_EXIT；pin4 仅创建/加入需要，退出传 NULL */
+void    uart_linked_unlock_start(uint8_t role, const uint8_t *pin4);   // 发起创建/加入/退出
 void    uart_linked_unlock_cancel(void);                               // 退出流程，丢弃后续应答
 uint8_t uart_linked_unlock_is_waiting(void);                           // 1 = 正在等背板应答/配对结果
 void    uart_linked_unlock_poll(void);                                 // 背板应答超时检查

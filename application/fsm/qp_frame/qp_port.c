@@ -47,6 +47,7 @@ static const struct
     FSM_STATE_NAME(lock_fsm_menu_system_settings),
     FSM_STATE_NAME(lock_fsm_menu_create_linked_unlock),
     FSM_STATE_NAME(lock_fsm_menu_join_linked_unlock),
+    FSM_STATE_NAME(lock_fsm_menu_exit_linked_unlock),
     FSM_STATE_NAME(lock_fsm_menu_add_normal_user_settings),
     FSM_STATE_NAME(lock_fsm_menu_add_normal_pw),
     FSM_STATE_NAME(lock_fsm_menu_add_normal_nfc),

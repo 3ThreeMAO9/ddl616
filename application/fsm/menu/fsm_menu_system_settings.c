@@ -33,8 +33,7 @@ static QState menu_system_settings_event_handle(LockFsm *me, QEvent const *e)
         break;
     case KEY_NUM_3:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
-        me->branch = (QStateHandler)(lock_fsm_menu_system_settings);    // 退出联动解锁：播报完回本菜单
-        state = Q_TRAN(lockFsmHandleSuccess);
+        state = Q_TRAN(lock_fsm_menu_exit_linked_unlock);
         break;
     case KEY_CAN:
         hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);

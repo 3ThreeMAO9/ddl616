@@ -142,6 +142,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_LINKED_UNLOCK_CREATE_ACK) // (0xEA) // 创建联动指令应答
         HANDLER_IMPORT(UP_CMD_LINKED_UNLOCK_JOIN_ACK)   // (0xEB) // 加入联动指令应答
         HANDLER_IMPORT(UP_CMD_LINKED_UNLOCK_RESULT)     // (0x6C) // 联动开锁结果上报
+        HANDLER_IMPORT(UP_CMD_LINKED_UNLOCK_EXIT_ACK)   // (0xED) // 退出联动指令应答
 
     default:
         return 0;
