@@ -373,6 +373,8 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_SYSTEM_SETTINGS:
+            // 从"设置成功/失败"返回本菜单时，灯效状态仍是熄灭，这里必须重新点亮键盘灯
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
             PLAYER_LIST_CLEAR_ADD(VOICE_Create_linked_unlocking_please_press, VOICE_One, VOICE_Join_linked_unlocking_please_press, VOICE_Two, VOICE_Exit_linked_unlocking_please_press, VOICE_Three);
             break;
 
@@ -505,16 +507,15 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             keepTime = HMI_STATE_KEEP_TIME_90ms;
             break;
 
+        // 联动子菜单：用 CLEAR_ADD 重建播放队列，入口只播 1 声按键音
         case HMI_STATE_CREATE_LINKED_UNLOCK:
-            PLAYER_LIST_ADD(VOICE_Please_enter_a_random_4_digit_pairing_code, VOICE_End_with_pound_key);
-            break;
-        
-        case HMI_STATE_JOIN_LINKED_UNLOCK:
-            PLAYER_LIST_ADD(VOICE_Please_enter_a_4_digit_pairing_code, VOICE_End_with_pound_key);
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Please_enter_a_random_4_digit_pairing_code, VOICE_End_with_pound_key);
             break;
 
-        case HMI_STATE_EXIT_LINKED_UNLOCK:
-            PLAYER_LIST_ADD(VOICE_Exit_linked_unlocking_please_press);
+        case HMI_STATE_JOIN_LINKED_UNLOCK:
+            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            PLAYER_LIST_CLEAR_ADD(VOICE_Please_enter_a_4_digit_pairing_code, VOICE_End_with_pound_key);
             break;
 
         case HMI_STATE_VERSION:

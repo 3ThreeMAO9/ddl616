@@ -106,7 +106,6 @@ typedef enum{
     HMI_STATE_MODIFY_ADMIN_USER_SETTINGS,//修改管理员密码请按，修改管理指纹请按
     HMI_STATE_CREATE_LINKED_UNLOCK,     //创建联动开锁
     HMI_STATE_JOIN_LINKED_UNLOCK,       //加入联动开锁
-    HMI_STATE_EXIT_LINKED_UNLOCK,       //退出联动开锁
     HMI_STATE_AUTO_LOCK,                //自动上锁菜单
     HMI_STATE_VERSION,                  //版本号
     HMI_STATE_TIME,                     //当前时间

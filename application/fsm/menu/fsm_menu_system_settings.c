@@ -24,15 +24,15 @@ static QState menu_system_settings_event_handle(LockFsm *me, QEvent const *e)
     switch (e->dynamic_[0])
     {
     case KEY_NUM_1:
-        hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        // 按键声由目标菜单入口统一播放（HMI_STATE_CREATE_LINKED_UNLOCK），
+        // 这里再播一次会和入口的提示队列叠加成 2 声
         state = Q_TRAN(lock_fsm_menu_create_linked_unlock);
         break;
     case KEY_NUM_2:
-        hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
         state = Q_TRAN(lock_fsm_menu_join_linked_unlock);
         break;
     case KEY_NUM_3:
-        hmiTaskSetState(HMI_STATE_KEY_BOARD_PRESS);
+        // 进入即执行退出联动，提示由目标状态播报
         state = Q_TRAN(lock_fsm_menu_exit_linked_unlock);
         break;
     case KEY_CAN:

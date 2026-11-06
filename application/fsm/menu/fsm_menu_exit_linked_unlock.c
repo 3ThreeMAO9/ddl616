@@ -25,27 +25,13 @@ QState lock_fsm_menu_exit_linked_unlock(LockFsm *me, QEvent const *e)
             keyTaskHandle(KEY_TYPE_KEY_BOARD, true);           //key board
             fp_task_set_mode(FP_MODE_IDLE);
             nfc_task_set_state(NFC_STATE_SLEEP);
-            system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
-            hmiTaskSetState(HMI_STATE_EXIT_LINKED_UNLOCK);
+            // 进入即执行退出联动，无需再按 OK 确认
+            uart_linked_unlock_start(LINKED_UNLOCK_ROLE_EXIT, NULL);
+            hmiTaskSetState(HMI_STATE_LINKED_UNLOCK_WAIT);
+            system_time_task_set_function_time(LINKED_UNLOCK_TIME_OUT);
             break;
         case Q_EXIT_SIG:
             uart_linked_unlock_cancel();                    // 离开菜单：丢弃迟到的背板应答
-            break;
-        case Q_KEY_BOARD_PRESS_SIG:
-            if (uart_linked_unlock_is_waiting())            // 等待结果期间不响应键盘，避免重复下发
-                break;
-            if (e->dynamic_[0] <= KEY_OK)
-            {
-                system_time_task_set_function_time(MENU_TIME_OUT_VAULE);
-
-                if (KEY_OK == e->dynamic_[0])
-                {
-                    // 用户确认退出联动 → 下发 0x6D 给背板，等退出结果
-                    uart_linked_unlock_start(LINKED_UNLOCK_ROLE_EXIT, NULL);
-                    hmiTaskSetState(HMI_STATE_LINKED_UNLOCK_WAIT);
-                    system_time_task_set_function_time(LINKED_UNLOCK_TIME_OUT);
-                }
-            }
             break;
         case Q_HANDLE_SIG:
             if (EVENT_RESULT_VOICE_TIME_OUT == e->dynamic_[0])
