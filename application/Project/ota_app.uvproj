@@ -314,8 +314,8 @@
               </OCR_RVCT3>
               <OCR_RVCT4>
                 <Type>1</Type>
-                <StartAddress>0x0</StartAddress>
-                <Size>0xfe00</Size>
+                <StartAddress>0x200</StartAddress>
+                <Size>0xfc00</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -1361,11 +1361,6 @@
               <FileName>vector_table.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\common\code\vector_table.c</FilePath>
-            </File>
-            <File>
-              <FileName>boot_symbol.obj</FileName>
-              <FileType>3</FileType>
-              <FilePath>..\..\common\boot_symbol.obj</FilePath>
             </File>
           </Files>
         </Group>
@@ -2726,11 +2721,6 @@
               <FileName>vector_table.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\common\code\vector_table.c</FilePath>
-            </File>
-            <File>
-              <FileName>boot_symbol.obj</FileName>
-              <FileType>3</FileType>
-              <FilePath>..\..\common\boot_symbol.obj</FilePath>
             </File>
           </Files>
         </Group>

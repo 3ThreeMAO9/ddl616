@@ -5,7 +5,7 @@
  * @version 0.1
  * @date 2022-09-14
  * 
- * @copyright Copyright (c) 2022 ¹ãÖİ°º±¦µç×ÓÓĞÏŞ¹«Ë¾
+ * @copyright Copyright (c) 2022 å¹¿å·æ˜‚å®ç”µå­æœ‰é™å…¬å¸
  * 
  */
 
@@ -17,15 +17,15 @@
 
 #define SPI_FLASH_PAGE_SIZE (256)
 
-/* change io should also change related setting in user option */
-#define SPI_FLASH_IO_CS_PORT   OB_GPIO0
-#define SPI_FLASH_IO_CS_PIN    (1 << 8)
-#define SPI_FLASH_IO_CLK_PORT  OB_GPIO2
-#define SPI_FLASH_IO_CLK_PIN   (1 << 10)
-#define SPI_FLASH_IO_MISO_PORT OB_GPIO0
-#define SPI_FLASH_IO_MISO_PIN  (1 << 5)
-#define SPI_FLASH_IO_MOSI_PORT OB_GPIO0
-#define SPI_FLASH_IO_MOSI_PIN  (1 << 4)
+/* ä¸ board_RLSA120M_V1.h çš„ FLASH_CS/CLK/MOSI/MISO ä¿æŒä¸€è‡´ */
+#define SPI_FLASH_IO_CS_PORT   OB_GPIO3
+#define SPI_FLASH_IO_CS_PIN    (1 << 4)
+#define SPI_FLASH_IO_CLK_PORT  OB_GPIO3
+#define SPI_FLASH_IO_CLK_PIN   (1 << 5)
+#define SPI_FLASH_IO_MISO_PORT OB_GPIO3
+#define SPI_FLASH_IO_MISO_PIN  (1 << 7)
+#define SPI_FLASH_IO_MOSI_PORT OB_GPIO3
+#define SPI_FLASH_IO_MOSI_PIN  (1 << 6)
 
 __STATIC_INLINE void spi_flash_clk_set(void)
 {

@@ -25,20 +25,17 @@
 #define SPI_FLASH_WAIT_CYCLE (1000000)
 
 #ifdef BUILD_BOOTLOADER
+__attribute__((section("BL1")))
 void spi_flash_init(void)
 {
-    OB_GPIO0->MF0 = 0;
-    OB_GPIO0->MF1 = 0;
-    OB_GPIO0->MODE &= (uint32_t)~((3 << 4) | (3 << 5) | (3 << 8));
-    OB_GPIO0->MODE |= (0 << 4) | (2 << 5) | (2 << 8);
+    OB_GPIO3->MF0 = 0;
+    OB_GPIO3->MF1 = 0;
 
-    OB_GPIO2->MF0 = 0;
-    OB_GPIO2->MF1 = 0;
-    OB_GPIO2->MODE &= (uint32_t)~(3 << 10);
-    OB_GPIO2->MODE |= (2 << 10);
+    /* CS(4)/CLK(5)/MOSI(6) 推挽输出，MISO(7) 上拉输入 */
+    OB_GPIO3->MODE &= (uint32_t)~((3 << 4) | (3 << 5) | (3 << 6) | (3 << 7));
+    OB_GPIO3->MODE |= (2 << 4) | (2 << 5) | (2 << 6) | (0 << 7);
 
-    OB_GPIO0->DATA |= (1 << 4) | (1 << 5) | (1 << 8);
-    OB_GPIO2->DATA |= (1 << 10);
+    OB_GPIO3->DATA |= (1 << 4) | (1 << 5) | (1 << 6);
 }
 
 __attribute__((noinline))

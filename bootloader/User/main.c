@@ -146,6 +146,9 @@ __NO_RETURN void boot_main(void)
     g_boot_buffer = gs_main_buffer;
     g_boot_buffer_size = sizeof(gs_main_buffer);
 
+    /* SPI flash 引脚初始化：P3.4~P3.7 必须切成输出，否则 start_ota 读不到数据 */
+    spi_flash_init();
+
     gs_ota_context.info = ota_info_get(1);
 #ifdef FORCE_OTA_ENABLE
     if (gs_ota_context.info == NULL)
