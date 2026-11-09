@@ -1,6 +1,6 @@
 #! armcc -E
 
-#include "../common/Device/chip_config.h"
+#include "../../common/Device/chip_config.h"
 
 APP_IROM FLASH_APP_BEGIN_ADDR FLASH_APP_MAX_SIZE  {
   APP_IROM_HEADER +0 UNINIT { ; Reserve empty region for ota file header

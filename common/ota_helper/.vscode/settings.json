@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "ob90a64m1.h": "c",
+        "arm_compat.h": "c",
+        "limits": "c",
+        "type_traits": "c",
+        "main.h": "c",
+        "ota_file.h": "c",
+        "chip_config.h": "c"
+    }
+}

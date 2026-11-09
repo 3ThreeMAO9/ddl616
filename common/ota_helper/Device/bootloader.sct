@@ -1,0 +1,50 @@
+#! armclang -E --target=arm-arm-none-eabi -mcpu=cortex-m0 -xc
+
+#include "../../common/Device/chip_config.h"
+
+BL_IROM1 _BL1_BEGIN_ADDR _BL1_MAX_SIZE  {    ; load region size_region
+  BL_IROM1 _BL1_BEGIN_ADDR _BL1_MAX_SIZE  {  ; load address = execution address
+    *.o (RESET, +First)
+    system_OB90A64M1.o (+RO +XO)
+    bootloader_startup.o (+RO +XO)
+    main.o (+RO +XO)
+    fmc_flash.o (+RO +XO)
+    memcpya.o (+RO +XO)
+    memcmp.o (+RO +XO)
+
+    *.o (BL1)
+  }
+
+  BL_IRAM _RAM_BEGIN_ADDR UNINIT (_RAM_MAX_SIZE - _STACK_MAX_SIZE)  {  ; RW data
+   .ANY (+RW +ZI)
+  }
+
+  ARM_LIB_STACK _STACK_TOP_ADDR EMPTY -_STACK_MAX_SIZE {   ; Reserve empty region for stack
+  }
+}
+
+BL_IROM2 _BL2_BEGIN_ADDR _BL2_MAX_SIZE {
+  BL_IROM2 _BL2_BEGIN_ADDR _BL2_MAX_SIZE {
+    *.o (BL2)
+
+    .ANY (+RO)
+    .ANY (+XO)
+  }
+}
+
+APP_IROM FLASH_APP_BEGIN_ADDR _ROM_PAGE_SIZE  {
+  APP_IROM_HEADER +0 {  ; Reserve empty region for ota file header
+                                                    ; and address of stack & app entry
+    *.o (APP_TEST_HEADER, +First)
+  }
+
+  APP_IROM_ENTRY +0 FIXED {
+    *.o (APP_START_ADDR, +First)
+    vector_table.o (APP_ISR_ENTRY)
+  }
+
+  APP_IROM_CODE +0 FIXED { ; Place unused code here
+    app_entry.o (+RO)
+	  vector_table.o (+RO)
+  }
+}

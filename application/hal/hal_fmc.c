@@ -1,4 +1,5 @@
 #include "hal_fmc.h"
+#include "flash.h"
 
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE

@@ -33,8 +33,7 @@
 #ifdef BUILD_BOOTLOADER
 volatile uint32_t SystemCoreClock; // Current system core clock.
 #else // BUILD_BOOTLOADER
-/* app 也自己定义：boot 的符号表不导出 RAM 变量，不能依赖它 */
-volatile uint32_t SystemCoreClock = DEFAULT_SYS_CLOCK;
+extern volatile uint32_t SystemCoreClock; // Current system core clock.
 #endif // BUILD_BOOTLOADER
 
 #ifdef BUILD_BOOTLOADER

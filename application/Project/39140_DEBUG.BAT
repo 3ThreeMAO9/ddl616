@@ -1,7 +1,4 @@
-SET PATH=C:\Keil_v5\ARM\ARMCC\Bin;E:\CodeBuddy CN\resources\app\extensions\genie\out\vendor\shim\safe-bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Users\86158\AppData\Local\Microsoft\WindowsApps;E:\Microsoft VS Code\bin;C:\Program Files\Graphviz\bin;E:\CodeBuddy CN\bin
-SET ARMCC5_ASMOPT=--diag_suppress=9931
-SET ARMCC5_CCOPT=--diag_suppress=9931
-SET ARMCC5_LINKOPT=--diag_suppress=9931
+SET PATH=C:\Keil_v5\ARM\ARMCC\Bin;C:\Keil_v5\ARM\ARMCLANG\Bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Users\86158\AppData\Local\Microsoft\WindowsApps;E:\Microsoft VS Code\bin;C:\Program Files\Graphviz\bin;E:\CodeBuddy CN\bin
 SET CPU_TYPE=OB90A64M1B
 SET CPU_VENDOR=On-Bright
 SET UV2_TARGET=39140_debug
@@ -171,8 +168,8 @@ python ..\..\tools\gen_ide_config.py
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\user_key_test.__i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\app_entry.__i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ota_helper.__i"
-"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\vector_table.__i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ota_timer.__i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\vector_table.__i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmLink" --Via "..\Build\Objects\ota_app.lnp"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\system_ob90a64m1._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\main._2i"
@@ -332,8 +329,8 @@ python ..\..\tools\gen_ide_config.py
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\encrypt._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\app_entry._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ota_helper._2i"
-"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\vector_table._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ota_timer._2i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\vector_table._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmLink" --Via "..\Build\Objects\ota_app.l2p"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\system_ob90a64m1._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\main._2i"
@@ -493,8 +490,8 @@ python ..\..\tools\gen_ide_config.py
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\encrypt._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\app_entry._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ota_helper._2i"
-"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\vector_table._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\ota_timer._2i"
+"C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\vector_table._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmLink" --Via "..\Build\Objects\ota_app.l2p"
 "C:\Keil_v5\ARM\ARMCC\Bin\fromelf.exe" "..\Build\Objects\ota_app.axf" --i32combined --output "..\Build\Objects\ota_app.hex"
 .\packer.exe -a ..\Build\Objects\ota_app.hex -b ..\..\bootloader\Project\Objects\bootloader.hex -r 64k -s 2048 -c -v 0.0.1

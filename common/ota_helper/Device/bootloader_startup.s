@@ -23,42 +23,15 @@
 ; *
 ; ******************************************************************************/
 
-
-; <h> Stack Configuration
-;	<o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
-; </h>
-
-
-Stack_Size      EQU     0x00000600
-
-                AREA    STACK, NOINIT, READWRITE, ALIGN=3
-Stack_Mem       SPACE   Stack_Size
-__initial_sp
-
-
-; <h> Heap Configuration
-;	<o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
-; </h>
-
-Heap_Size		EQU     0x00000000
-
-                AREA    HEAP, NOINIT, READWRITE, ALIGN=3
-__heap_base
-Heap_Mem        SPACE   Heap_Size
-__heap_limit
-
-
                 PRESERVE8
                 THUMB
 
-
 ; Vector Table Mapped to Address 0 at Reset
                 AREA    RESET, DATA, READONLY
-                EXPORT  __Vectors
-                EXPORT  __Vectors_End
-                EXPORT  __Vectors_Size
 
-__Vectors       DCD     __initial_sp                ; Top of Stack
+                IMPORT  |Image$$ARM_LIB_STACK$$ZI$$Limit|
+
+__Vectors       DCD     |Image$$ARM_LIB_STACK$$ZI$$Limit|  ; Top of Stack
                 DCD     Reset_Handler               ; Reset Handler
                 DCD     NMI_Handler                 ; NMI Handler
                 DCD     HardFault_Handler           ; Hard Fault Handler
@@ -119,122 +92,79 @@ __Vectors_Size  EQU  __Vectors_End - __Vectors
 ; Reset Handler
 
 Reset_Handler   PROC
-                EXPORT  Reset_Handler               [WEAK]
                 IMPORT  SystemInit
-                IMPORT  __main
+                IMPORT  boot_main
+                
                 LDR     R0, =SystemInit
                 BLX     R0
-                LDR     R0, =__main
+                LDR     R0, =boot_main
                 BX      R0
                 ENDP
 
 
-; Dummy Exception Handlers (infinite loops which can be modified)
+; Go to app
+App_Go          PROC
+                IMPORT  |Image$$ARM_LIB_STACK$$ZI$$Limit|
+                IMPORT  g_app_start_addr
+                EXPORT  App_Go
 
-NMI_Handler     PROC
-                EXPORT  NMI_Handler                 [WEAK]
-                B       .
-                ENDP
-HardFault_Handler\
-                PROC
-                EXPORT  HardFault_Handler           [WEAK]
-                B       .
-                ENDP
-SVC_Handler     PROC
-                EXPORT  SVC_Handler                 [WEAK]
-                B       .
-                ENDP
-PendSV_Handler  PROC
-                EXPORT  PendSV_Handler              [WEAK]
-                B       .
-                ENDP
-SysTick_Handler PROC
-                EXPORT  SysTick_Handler             [WEAK]
-                B       .
+                LDR     R0, =|Image$$ARM_LIB_STACK$$ZI$$Limit|
+                MSR     MSP, R0
+                LDR     R0, =g_app_start_addr
+                LDR     R0, [R0]
+                BX      R0
                 ENDP
 
-Default_Handler PROC
 
-                EXPORT  I2C1_IRQHandler             [WEAK]
-                EXPORT  LVI_IRQHandler              [WEAK]
-                EXPORT  ACMP_IRQHandler             [WEAK]
-                EXPORT  RTC_IRQHandler              [WEAK]
-                EXPORT  I2C0_IRQHandler             [WEAK]
-                EXPORT  CT16B0_IRQHandler           [WEAK]
-                EXPORT  CT16B1_IRQHandler           [WEAK]
-                EXPORT  CT32B0_IRQHandler           [WEAK]
-                EXPORT  CT32B1_IRQHandler           [WEAK]
-                EXPORT  SPI_IRQHandler              [WEAK]
-                EXPORT  UART0_IRQHandler            [WEAK]
-                EXPORT  QEI_IRQHandler              [WEAK]
-                EXPORT  PDMA_IRQHandler             [WEAK]
-                EXPORT  PWM_IRQHandler              [WEAK]
-                EXPORT  WDT_IRQHandler              [WEAK]
-                EXPORT  ADC_IRQHandler              [WEAK]
-                EXPORT  UART1_IRQHandler            [WEAK]
-                EXPORT  GPIO0_IRQHandler            [WEAK]
-                EXPORT  GPIO1_IRQHandler            [WEAK]
-                EXPORT  GPIO2_IRQHandler            [WEAK]
-                EXPORT  GPIO3_IRQHandler            [WEAK]
-                EXPORT  PWMTM_IRQHandler            [WEAK]
+IRQ_Handler     PROC
+                IMPORT  irq_switch_handler
 
-
-I2C1_IRQHandler
-LVI_IRQHandler
-ACMP_IRQHandler
-RTC_IRQHandler
-I2C0_IRQHandler
-CT16B0_IRQHandler
-CT16B1_IRQHandler
-CT32B0_IRQHandler
-CT32B1_IRQHandler
-SPI_IRQHandler
-UART0_IRQHandler
-QEI_IRQHandler
-PDMA_IRQHandler
-PWM_IRQHandler
-WDT_IRQHandler
-ADC_IRQHandler
-UART1_IRQHandler
-GPIO0_IRQHandler
-GPIO1_IRQHandler
-GPIO2_IRQHandler
-GPIO3_IRQHandler
-PWMTM_IRQHandler
-
-
-                B       .
-
+                PUSH    {LR}
+                BL.W    irq_switch_handler
+                POP     {PC}
                 ENDP
 
+
+                MACRO
+                Set_Irq_Handler $Handler_Name, $index
+$Handler_Name   PROC
+                MOVS    R0, #$index
+                B       IRQ_Handler
+                ENDP
+                MEND
+
+
+; Set IRQ Handler for bootloader
+                Set_Irq_Handler NMI_Handler, 2
+                Set_Irq_Handler HardFault_Handler, 3
+                Set_Irq_Handler SVC_Handler, 11
+                Set_Irq_Handler PendSV_Handler, 14
+                Set_Irq_Handler SysTick_Handler, 15
+
+                Set_Irq_Handler I2C1_IRQHandler, 17
+                Set_Irq_Handler LVI_IRQHandler, 18
+                Set_Irq_Handler ACMP_IRQHandler, 19
+                Set_Irq_Handler RTC_IRQHandler, 20
+                Set_Irq_Handler I2C0_IRQHandler, 21
+                Set_Irq_Handler CT16B0_IRQHandler, 22
+                Set_Irq_Handler CT16B1_IRQHandler, 23
+                Set_Irq_Handler CT32B0_IRQHandler, 24
+                Set_Irq_Handler CT32B1_IRQHandler, 25
+                Set_Irq_Handler SPI_IRQHandler, 26
+                Set_Irq_Handler UART0_IRQHandler, 27
+                Set_Irq_Handler QEI_IRQHandler, 28
+                Set_Irq_Handler PDMA_IRQHandler, 29
+                Set_Irq_Handler PWM_IRQHandler, 30
+                Set_Irq_Handler WDT_IRQHandler, 31
+                Set_Irq_Handler ADC_IRQHandler, 32
+                Set_Irq_Handler UART1_IRQHandler, 33
+                Set_Irq_Handler GPIO0_IRQHandler, 34
+                Set_Irq_Handler GPIO1_IRQHandler, 35
+                Set_Irq_Handler GPIO2_IRQHandler, 36
+                Set_Irq_Handler GPIO3_IRQHandler, 37
+                Set_Irq_Handler PWMTM_IRQHandler, 38
 
                 ALIGN
-
-
-; User Initial Stack & Heap
-
-                IF      :DEF:__MICROLIB
-
-                EXPORT  __initial_sp
-                EXPORT  __heap_base
-                EXPORT  __heap_limit
-                
-                ELSE
-
-                IMPORT  __use_two_region_memory
-                EXPORT  __user_initial_stackheap
-
-__user_initial_stackheap PROC
-                LDR     R0, =  Heap_Mem
-                LDR     R1, =(Stack_Mem + Stack_Size)
-                LDR     R2, = (Heap_Mem +  Heap_Size)
-                LDR     R3, = Stack_Mem
-                BX      LR
-                ENDP
-
-                ALIGN
-
-                ENDIF
 
 
                 END

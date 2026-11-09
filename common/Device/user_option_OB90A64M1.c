@@ -8,7 +8,7 @@ User Options (Setting by User)
                                         // 0 = Enabled
                                         // 1 = Disabled
                             
-#define UOP_ISP_ENTRY       0x01        // ISP Entry.
+#define UOP_ISP_ENTRY       0x00        // ISP Entry.
                                         // 0x00   = CPU address start from user code. (APROM)
                                         // Others = CPU address start from ISP code.
                            

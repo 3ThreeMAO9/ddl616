@@ -93,10 +93,8 @@ typedef enum {
 #define __Vendor_SysTickConfig         0            /*!< Set to 1 if different SysTick Config is used                          */
 /** @} */ /* End of group Configuration_of_CMSIS */
 
-#ifndef BUILD_BOOTLOADER
-#include "system_OB90A64M1.h"
-#endif // BUILD_BOOTLOADER
 #include <core_cm0.h>                               /*!< Cortex-M0 processor and core peripherals                              */
+#include "system_OB90A64M1.h"                       /*!< OB90A64M1 System                                                      */
 
 
 /* ================================================================================ */
@@ -200,7 +198,7 @@ typedef struct {                                    /*!< I2C Structure          
                                                          time of the I2C clock.                                                */
     
     struct {
-      __IO uint32_t  SCLH       :  16;               /*!< Count for SCL HIGH time period selection.                             */
+      __IO uint32_t  SCLH       : 16;               /*!< Count for SCL HIGH time period selection.                             */
     } SCLH_b;                                       /*!< BitSize                                                               */
   };
   
@@ -211,7 +209,7 @@ typedef struct {                                    /*!< I2C Structure          
                                                           used in slave mode.                                                  */
     
     struct {
-      __IO uint32_t  SCLL       :  16;               /*!< Count for SCL low time period selection.                              */
+      __IO uint32_t  SCLL       : 16;               /*!< Count for SCL low time period selection.                              */
     } SCLL_b;                                       /*!< BitSize                                                               */
   };
   
