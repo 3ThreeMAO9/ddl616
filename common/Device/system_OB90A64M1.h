@@ -13,7 +13,7 @@ extern "C" {
 /**
  * System core clock
  */
-extern uint32_t SystemCoreClock;
+extern volatile uint32_t SystemCoreClock;
 
 /**
  * Initialize the system

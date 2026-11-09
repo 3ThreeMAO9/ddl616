@@ -432,11 +432,6 @@
               <FileType>1</FileType>
               <FilePath>..\..\common\Device\system_OB90A64M1.c</FilePath>
             </File>
-            <File>
-              <FileName>startup_OB90A64M1.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\..\common\Device\startup_OB90A64M1.s</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -1796,11 +1791,6 @@
               <FileName>system_OB90A64M1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\common\Device\system_OB90A64M1.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_OB90A64M1.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\..\common\Device\startup_OB90A64M1.s</FilePath>
             </File>
           </Files>
         </Group>

@@ -36,7 +36,7 @@
 #define _BL_RAM_SIZE     (16)
 
 /* 栈置于 RAM 顶部，boot 与 app 共用同一栈顶 */
-#define _STACK_MAX_SIZE  (0x600)
+#define _STACK_MAX_SIZE  (0x800)
 #define _STACK_TOP_ADDR  (_RAM_BEGIN_ADDR + _RAM_MAX_SIZE)
 #define _STACK_BOT_ADDR  (_STACK_TOP_ADDR - _STACK_MAX_SIZE)
 
