@@ -22,7 +22,6 @@
 
 #include "module_spi_flash.h"
 
-#include "ota_helper.h"
 #include "flash_data.h"
 #include "lock_log.h"
 #include "test.h"
@@ -76,12 +75,6 @@ static void device_init(void)
 static void task_init(void)
 {
     OB_LOGD(TAG, "[%s]",__func__);
-    ota_helper_init();
-    if (ota_helper_get_state() == OTA_STATE_IDLE)
-    {
-        
-    }
-
     module_spi_flash_init();
     module_spi_flash_self_test();
     // module_flash_test();

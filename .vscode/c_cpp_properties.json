@@ -124,6 +124,8 @@
                 "${workspaceFolder}/application/drive/produce_test",
                 "${workspaceFolder}/application/module/module_produce_test",
                 "${workspaceFolder}/application/task/task_produce_test",
+                "${workspaceFolder}/OTA_CODE",
+                "${workspaceFolder}/common/User/include",
                 "C:/Keil_v5/ARM/ARMCLANG/include",
                 "C:/Keil_v5/ARM/ARMCLANG/lib/clang/13.0.0/include"
             ]

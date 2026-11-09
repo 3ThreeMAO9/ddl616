@@ -19,7 +19,6 @@
 #define SPI_FLASH_CMD_WREN (0x06)
 #define SPI_FLASH_CMD_WRSR (0x01)
 #define SPI_FLASH_CMD_RDSR (0x05)
-#define SPI_FLASH_CMD_SECTOR_ERASE (0x20)
 
 #define SPI_FLASH_SR_BIT_WIP (1 << 0)
 
@@ -157,18 +156,6 @@ void spi_flash_64k_erase(uint32_t addr)
 
     spi_flash_cs_enable();
     spi_flash_tx_cmd_addr(SPI_FLASH_CMD_BE64, addr);
-    spi_flash_cs_disable();
-
-    spi_flash_wait_finish(SPI_FLASH_WAIT_CYCLE);
-    spi_flash_soft_protect_enable();
-}
-void spi_flash_sector_erase(uint32_t addr)
-{
-    spi_flash_soft_protect_disable();
-    spi_flash_write_enable();
-
-    spi_flash_cs_enable();
-    spi_flash_tx_cmd_addr(SPI_FLASH_CMD_SECTOR_ERASE, addr);
     spi_flash_cs_disable();
 
     spi_flash_wait_finish(SPI_FLASH_WAIT_CYCLE);

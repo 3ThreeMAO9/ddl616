@@ -59,10 +59,6 @@ void SystemInit (void)
     // Setting system clock
 
 #if (DEFAULT_SYS_CLOCK_TYPE == SYS_CLK_TYPE_HIRC)
-	uint32_t *pCPUCHIPCTR0;
-	pCPUCHIPCTR0 = (uint32_t *) 0x500100B0;	
-	*pCPUCHIPCTR0&=(~0x00000002);
-
     OB_SYSCON->CCLKCFG = OB_SYSCON->CCLKCFG & 0xFFFFF0FF;
     while((OB_SYSCON->CPUCHIPCTR0 & 0x00800000) != 0x00800000);     // Wait Ready
 #elif (DEFAULT_SYS_CLOCK_TYPE == SYS_CLK_TYPE_XTAL)

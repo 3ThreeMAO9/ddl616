@@ -1,0 +1,33 @@
+#! armcc -E
+
+#include "../common/Device/chip_config.h"
+
+APP_IROM FLASH_APP_BEGIN_ADDR FLASH_APP_MAX_SIZE  {
+  APP_IROM_HEADER +0 UNINIT { ; Reserve empty region for ota file header
+                       ; and address of stack & app entry
+    *.o (APP_HEADER, +First)
+  }
+
+  APP_IROM_S0 +0 FIXED {
+    *.o (APP_ENTRY, +First)
+    *.o (IRQ_ENTRY)
+  }
+
+  APP_IROM_S1 +0 FIXED {
+    app_entry.o (+RO +XO)
+  }
+
+  APP_IROM_CODE +0 FIXED SORTTYPE CallTree { ; Place unused code here
+    *(InRoot$$Sections)
+
+    .ANY (+RO)
+    .ANY (+XO)
+  }
+
+  RW_IRAM1 (_RAM_BEGIN_ADDR + _BL_RAM_SIZE) (_RAM_MAX_SIZE - _STACK_MAX_SIZE - _BL_RAM_SIZE)  {  ; RW data
+   .ANY (+RW +ZI)
+  }
+
+  ARM_LIB_STACK _STACK_TOP_ADDR EMPTY -_STACK_MAX_SIZE  {   ; Reserve empty region for stack
+  }
+}

@@ -114,6 +114,8 @@ CompileFlags:
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/drive/produce_test"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/module/module_produce_test"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/task/task_produce_test"
+    - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/OTA_CODE"
+    - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/common/User/include"
     - "-IC:/Keil_v5/ARM/ARMCLANG/include"
     - "-IC:/Keil_v5/ARM/ARMCLANG/lib/clang/13.0.0/include"
 

@@ -14,6 +14,15 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+#if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wzero-length-array"
+#endif
+
 #define OTA_FILE_MAGIC (0xBEEF)
 
 struct ota_file_t_def
@@ -41,20 +50,23 @@ struct ota_file_t_def
 };
 typedef struct ota_file_t_def ota_file_t;
 
-struct ota_file_check_param_t_def {
-    uint8_t *buffer;
-    uint32_t size;
-    uint32_t addr;
-    ota_file_t out_file;
-};
-typedef struct ota_file_check_param_t_def ota_file_check_param_t;
+#if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+    #pragma clang diagnostic pop
+#endif
 
 uint16_t ota_file_calc_checksum_u16(uint16_t *ptr, uint32_t size);
 uint32_t ota_file_calc_checksum_u32(uint32_t *ptr, uint32_t size);
 
-uint32_t ota_file_check_inner_flash(uint8_t *buffer, uint32_t size);
-uint32_t ota_file_check_outter_flash(ota_file_check_param_t *param);
-uint32_t ota_sflash_header_check(ota_file_check_param_t *param);
-void     ota_sflash_header_set(uint16_t magic);
+#if !defined(__linux) && !defined(_WIN32)
+uint32_t ota_file_validate(uint32_t addr,
+    uint32_t flag_inner_flash, ota_file_t *out_file);
+#endif
+
+extern uint8_t *g_boot_buffer;
+extern uint32_t g_boot_buffer_size;
+
+#ifdef __cplusplus
+};
+#endif // __cplusplus
 
 #endif // OTA_FILE_H

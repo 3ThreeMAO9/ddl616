@@ -46,14 +46,14 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>..\Build\</OutputDirectory>
+          <OutputDirectory>.\Objects\</OutputDirectory>
           <OutputName>bootloader</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
-          <ListingPath>..\Build\list\</ListingPath>
+          <ListingPath>.\Listings\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -125,7 +125,7 @@
             <Oh166RecLen>16</Oh166RecLen>
           </OPTHX>
           <Simulator>
-            <UseSimulator>1</UseSimulator>
+            <UseSimulator>0</UseSimulator>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
             <RunToMain>1</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
@@ -137,7 +137,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Simulator>
           <Target>
-            <UseTarget>0</UseTarget>
+            <UseTarget>1</UseTarget>
             <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
             <RunToMain>0</RunToMain>
             <RestoreBreakpoints>1</RestoreBreakpoints>
@@ -163,7 +163,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver></Driver>
+            <Driver>C:\Program Files (x86)\SyncMOS\ChipWatcher\SMLinkM\SMLinkM.dll</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -177,7 +177,7 @@
           </Flash1>
           <bUseTDR>0</bUseTDR>
           <Flash2></Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -314,13 +314,13 @@
               </OCR_RVCT3>
               <OCR_RVCT4>
                 <Type>1</Type>
-                <StartAddress>0xf000</StartAddress>
-                <Size>0xd40</Size>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x400</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
-                <StartAddress>0xfe00</StartAddress>
-                <Size>0x200</Size>
+                <StartAddress>0x100200</StartAddress>
+                <Size>0x400</Size>
               </OCR_RVCT5>
               <OCR_RVCT6>
                 <Type>0</Type>
@@ -363,9 +363,9 @@
             <Rwpi>0</Rwpi>
             <wLevel>2</wLevel>
             <uThumb>0</uThumb>
-            <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
-            <uGnu>0</uGnu>
+            <uSurpInc>1</uSurpInc>
+            <uC99>1</uC99>
+            <uGnu>1</uGnu>
             <useXO>0</useXO>
             <v6Lang>6</v6Lang>
             <v6LangP>3</v6LangP>
@@ -376,9 +376,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>BUILD_BOOTLOADER,UART_ENABLEx</Define>
+              <Define>BUILD_BOOTLOADER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\common\CMSIS\5.4.0;..\..\common\Device;..\..\common\Driver\include;..\..\common\User\include;..\Library;..\User;..\protocol;..\protocol\handler;..\ob_log;..\..\common\ota_helper;..\..\common\Library</IncludePath>
+              <IncludePath>..\Device;..\User\include;..\..\common\CMSIS\5.4.0;..\..\common\Device;..\..\common\Driver\include;..\..\common\User\include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -389,7 +389,7 @@
             <SplitLS>0</SplitLS>
             <SwStkChk>0</SwStkChk>
             <NoWarn>0</NoWarn>
-            <uSurpInc>0</uSurpInc>
+            <uSurpInc>1</uSurpInc>
             <useXO>0</useXO>
             <ClangAsOpt>1</ClangAsOpt>
             <VariousControls>
@@ -412,7 +412,7 @@
             <ScatterFile>..\Device\bootloader.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
-            <Misc>--pad=0xFF --diag_suppress=L6312W --symdefs=..\..\common\boot_symbol.obj --entry=boot_main --no_startup</Misc>
+            <Misc>--diag_suppress=L6329W --symdefs=..\..\common\boot_symbol.obj --entry=boot_main --no_startup</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
           </LDads>
@@ -423,9 +423,14 @@
           <GroupName>Device</GroupName>
           <Files>
             <File>
-              <FileName>startup.c</FileName>
+              <FileName>vector_table.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Device\startup.c</FilePath>
+              <FilePath>..\Device\vector_table.c</FilePath>
+            </File>
+            <File>
+              <FileName>bootloader_startup.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Device\bootloader_startup.s</FilePath>
             </File>
             <File>
               <FileName>system_OB90A64M1.c</FileName>
@@ -443,9 +448,19 @@
           <GroupName>Driver</GroupName>
           <Files>
             <File>
-              <FileName>utils.c</FileName>
+              <FileName>flash_util.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\User\utils.c</FilePath>
+              <FilePath>..\..\common\Driver\flash_util.c</FilePath>
+            </File>
+            <File>
+              <FileName>fmc_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\common\Driver\fmc_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>boot_spi_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\common\Driver\boot_spi_flash.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -458,74 +473,19 @@
               <FilePath>..\User\main.c</FilePath>
             </File>
             <File>
-              <FileName>ota_uart.c</FileName>
+              <FileName>app_entry.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\User\ota_uart.c</FilePath>
+              <FilePath>..\User\app_entry.c</FilePath>
             </File>
             <File>
-              <FileName>system_timer.c</FileName>
+              <FileName>ota_file.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\User\system_timer.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>Library</GroupName>
-          <Files>
-            <File>
-              <FileName>wdt.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Library\wdt.c</FilePath>
+              <FilePath>..\..\common\User\ota_file.c</FilePath>
             </File>
             <File>
-              <FileName>Uart.c</FileName>
+              <FileName>ota_info.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Library\Uart.c</FilePath>
-            </File>
-            <File>
-              <FileName>timer16.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Library\timer16.c</FilePath>
-            </File>
-            <File>
-              <FileName>fmc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\common\Library\fmc.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>protocol</GroupName>
-          <Files>
-            <File>
-              <FileName>ota_protocol.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\protocol\ota_protocol.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>ota</GroupName>
-          <Files>
-            <File>
-              <FileName>ota_helper.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\common\ota_helper\ota_helper.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>ob_log</GroupName>
-          <Files>
-            <File>
-              <FileName>ob_log.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ob_log\ob_log.c</FilePath>
-            </File>
-            <File>
-              <FileName>ob_log_port.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ob_log\ob_log_port.c</FilePath>
+              <FilePath>..\..\common\User\ota_info.c</FilePath>
             </File>
           </Files>
         </Group>

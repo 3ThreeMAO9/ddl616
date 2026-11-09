@@ -4,7 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/Device",
-                "${workspaceFolder}/User",
+                "${workspaceFolder}/User/include",
                 "${workspaceFolder}/../common/CMSIS/5.4.0",
                 "${workspaceFolder}/../common/Device",
                 "${workspaceFolder}/../common/Driver/include",
@@ -12,8 +12,7 @@
             ],
             "defines": [
                 "__UVISION_VERSION=\"536\"",
-                "BUILD_BOOTLOADER",
-                "UART_ENABLEx"
+                "BUILD_BOOTLOADER"
             ],
             "browse": {
                 "databaseFilename": "${workspaceFolder}/.vscode/db.db",
@@ -23,7 +22,7 @@
                     "${workspaceFolder}/../common"
                 ]
             },
-            "compilerPath": "Z:/Keil_v5.36/ARM/ARMCLANG/bin/armclang.exe",
+            "compilerPath": "C:/Keil_v5/ARM/ARMCLANG/bin/armclang.exe",
             "compilerArgs": [
                 "--target=arm-arm-none-eabi",
                 "-mcpu=cortex-m0",

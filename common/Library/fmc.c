@@ -2,10 +2,6 @@
 #include "fmc.h"
 #include <string.h>
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
-#include "ob_log.h"
-#define TAG "fmc"
-
 void FMC_Close()
 {
     OB_FMC->ISPCC = 0xE8000000;

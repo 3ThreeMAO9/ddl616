@@ -1,77 +1,197 @@
 /**
  * @file main.c
- * @author Xiangqian_Ren (Xiangqian_Ren@on-bright.com)
+ * @author Dandjinh Deng (Dandjinh_Deng@on-bright.com)
  * @brief 
  * @version 0.1
- * @date 2026-01-13
+ * @date 2022-08-31
  * 
- * @copyright Copyright (c) 2024 广州昂宝电子有限公司
+ * @copyright Copyright (c) 2022 广州昂宝电子有限公司
  * 
  */
 
 #include "OB90A64M1.h"
+#include "main.h"
 #include "chip_config.h"
-#include <assert.h>
+#include "ota_info.h"
+#include "flash_util.h"
+#include "boot_spi_flash.h"
+#include "app_entry.h"
+
+#include <stdio.h>
 #include <string.h>
-#include "ob_log.h"
-#include "ota_uart.h"
-#include "system_timer.h"
-#include "wdt.h"
-#include "ota_helper.h"
-#include "ota_protocol.h"
-#include "system_OB90A64M1.h"
 
-extern void boot_main(void);
+// #define FORCE_OTA_ENABLE
 
-// /**
-//  * @brief OTA参数默认配置（固化到FLASH指定地址）
-//  * @note 段属性：将该结构体存储到0x0000EE00地址
-//  */
-// /******** 前期固定参数（后期可通过脚本覆盖） **********/
-// const ota_fmc_area_t ota_core_param __attribute__((section(".ARM.__at_0x0000EE00"), used)) = {
-//     .checksum1 = (0x51d7),
-//     .magic = 0xBEEF,
-//     .file_type = 1,
-//     .version[0] = 0,
-//     .version[1] = 0,
-//     .version[2] = 0,
-//     .size = (0xd4b8),
-//     .checksum2 = (0x5700672f),
-//     .state     = 0,
-// };
+#if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdollar-in-identifier-extension"
+#endif
 
-#define BOOT_VERSION        (1)     // 1~15
+#define APP_OTA_FILE ((uint32_t)&g_app_file)
 
-const uint32_t boot_version   __attribute__((section(".ARM.__at_0x0000F000"), used)) = BOOT_VERSION;
+extern void App_Go(void);
 
-__NO_RETURN void boot_main(void)
+void boot_main(void);
+uint32_t start_backup(void);
+void start_ota(void);
+
+struct ota_context_t_def
 {
-    SystemInit();
-    SystemCoreClockUpdate();
-    WDT_Close();
-    // WDT_Open(WDT_PRESCALER_1024, 0x3F, 1, NULL);
-    ob_log_init();
-    system_timer_init();
-    ota_uart_init();
+    ota_info_t *info;
 
-    ota_helper_init();
+    ota_file_t app;
+    ota_file_t ota;
+    ota_file_t backup;
+};
+typedef struct ota_context_t_def ota_context_t;
 
-    // 检查是否需要OTA，不需要则区校验APP区，需要则直接进入OTA流程
-    uint32_t state = ota_helper_get_state();
-    if ((state == OTA_STATE_IDLE) || (state == OTA_STATE_END))
+static ota_context_t gs_ota_context;
+
+uint32_t start_backup(void)
+{
+    uint32_t flag_copied = 0;
+
+    uint32_t ret = ota_file_validate(SFLASH_BACKUP_BEGIN_ADDR, 0,
+        &gs_ota_context.backup);
+    if (ret) // backup is invalid
     {
-        for (uint8_t i = 0; i < 3; i++)
+do_backup:
+        flash_fmc_copy_to_spi(APP_OTA_FILE, SFLASH_BACKUP_BEGIN_ADDR,
+            gs_ota_context.app.size);
+        flag_copied = 1;
+
+        ret = ota_file_validate(SFLASH_BACKUP_BEGIN_ADDR, 0,
+            &gs_ota_context.backup);
+    }
+
+    if (!memcmp(&gs_ota_context.app, &gs_ota_context.backup,
+        sizeof(gs_ota_context.app)))
+    {
+        return 0;
+    }
+
+    if (!flag_copied)
+        goto do_backup;
+
+    return 1;
+}
+
+void start_ota(void)
+{
+    uint32_t ret;
+    ret = ota_file_validate(SFLASH_OTA_BEGIN_ADDR, 0,
+        &gs_ota_context.ota);
+    if (ret)
+    {
+        gs_ota_context.info->error = OTA_INFO_ERROR_CSUM;
+        return;
+    }
+
+    ret = ota_file_validate(APP_OTA_FILE, 1,
+        &gs_ota_context.app);
+    if (!ret) // app is valid, go backup
+    {
+        gs_ota_context.info->state = OTA_INFO_STATE_BKUP;
+        if (start_backup())
         {
-            if (1 == ota_helper_check_app_complete())// 校验APP区是否完整
-            {
-                ota_helper_set_boot(FMC_BOOT_TO_APP);
-            }
+            /* backup failed */
+            gs_ota_context.info->error = OTA_INFO_ERROR_BKUP;
+            return;
         }
     }
 
-    OB_LOGD("enter boot loop");
-    while(1) {
-        // WDT_ReloadCounter();
-        ota_uart_poll();
+    gs_ota_context.info->state = OTA_INFO_STATE_OTA;
+    flash_spi_copy_to_fmc(SFLASH_OTA_BEGIN_ADDR, APP_OTA_FILE,
+        gs_ota_context.ota.size);
+
+    gs_ota_context.info->state = OTA_INFO_STATE_DONE;
+    gs_ota_context.info->error = OTA_INFO_ERROR_NONE;
+}
+
+//static void uart_init(void)
+//{
+//    // rx
+//    OB_GPIO2->MF1_b.PORT_11 = 4;
+//    OB_GPIO2->MODE_b.MODEPIN11 = 3;
+//    // tx
+//    OB_GPIO0->MF0_b.PORT_3 = 4;
+//    OB_GPIO0->MODE_b.MODEPIN3 = 2;
+
+//    // OB_UART1->UDL = 416; // fsclk = 48M
+//    OB_UART1->UDL = 208; // fsclk = 24M
+//    OB_UART1->ULCR = (3 << 0) | (0 << 3) | (0 << 4);
+//}
+
+__attribute__((section("BL2")))
+void uart_write(char *str, uint32_t size)
+{
+    while (size)
+    {
+        OB_UART1->UTHR = (uint8_t)*str;
+        str++;
+        size--;
+
+        while (!(OB_UART1->ULSR & 0x40))
+            ;
     }
 }
+
+static uint8_t gs_main_buffer[4096] __attribute__((aligned (16)));
+__NO_RETURN void boot_main(void)
+{
+    // spi_flash_soft_protect_enable();
+
+    // uart_init();
+
+    g_boot_buffer = gs_main_buffer;
+    g_boot_buffer_size = sizeof(gs_main_buffer);
+
+    gs_ota_context.info = ota_info_get(1);
+#ifdef FORCE_OTA_ENABLE
+    if (gs_ota_context.info == NULL)
+    {
+        gs_ota_context.info = ota_info_get(0);
+        gs_ota_context.info->state = OTA_INFO_STATE_WAIT;
+    }
+#endif // FORCE_OTA_ENABLE
+    if (gs_ota_context.info)
+    {
+        if (gs_ota_context.info->state == OTA_INFO_STATE_WAIT)
+        {
+            start_ota();
+            ota_info_update(gs_ota_context.info);
+        }
+    }
+
+    uint32_t ret;
+    while (1)
+    {
+        ret = ota_file_validate(APP_OTA_FILE, 1, &gs_ota_context.app);
+        if (!ret) // app is valid, go app
+        {
+            App_Go();
+        }
+
+        ret = ota_file_validate(SFLASH_BACKUP_BEGIN_ADDR, 0, &gs_ota_context.backup);
+        if (!ret) // backup is valid, go restore
+        {
+            flash_spi_copy_to_fmc(SFLASH_BACKUP_BEGIN_ADDR, APP_OTA_FILE,
+                gs_ota_context.backup.size);
+            continue;
+        }
+
+        ret = ota_file_validate(SFLASH_OTA_BEGIN_ADDR, 0, &gs_ota_context.ota);
+        if (!ret) // ota is valid, copy ota
+        {
+            flash_spi_copy_to_fmc(SFLASH_OTA_BEGIN_ADDR, APP_OTA_FILE,
+                gs_ota_context.ota.size);
+            continue;
+        }
+
+        // Oops, a brick was born!!!
+    }
+}
+
+#if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+    #pragma clang diagnostic pop
+#endif

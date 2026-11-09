@@ -12,7 +12,6 @@
 #include "hal_uart.h"
 #include "uart_queue.h"
 #include "system_timer.h"
-#include "ota_helper.h"
 #include "task_sleep.h"
 #include "utils.h"
 #include "encrypt.h"
@@ -35,8 +34,8 @@
 
 static uint32_t protocol_time_out = HEART_TIME_OUT;
 
-static uint8_t ota_to_boot_flag = 0;
-static uint32_t ota_to_boot_time_out = 0;
+// static uint8_t ota_to_boot_flag = 0;
+// static uint32_t ota_to_boot_time_out = 0;
 
 
 // static uint8_t param_data_flag = false;// 参数同步
@@ -79,21 +78,21 @@ uint32_t uart_protocol_idle_ms(void)
     return (uint32_t)(system_ms_get() - s_uart_last_act);   // 无符号差值，天然处理回绕
 }
 
-void uart_protocol_ota_to_boot_inc_time_out(void)
-{
-    ota_to_boot_flag = 1;
-    ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
-}
+// void uart_protocol_ota_to_boot_inc_time_out(void)
+// {
+//     ota_to_boot_flag = 1;
+//     ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
+// }
 
 void uart_protocol_set_param_data_flag(uint8_t data)
 {
     // param_data_flag = data;
 }
 
-void uart_protocol_set_ota_to_boot_flag(uint8_t data)
-{
-    ota_to_boot_flag = data;
-}
+// void uart_protocol_set_ota_to_boot_flag(uint8_t data)
+// {
+//     ota_to_boot_flag = data;
+// }
 
 uint16_t get_tsn(void)
 {
@@ -251,13 +250,7 @@ void uart_protocol_poll(void)
 
 void uart_protocol_ota_poll(void)
 {
-    if (ota_to_boot_flag == 1)
-    {
-        if (system_out_time_cnt(ota_to_boot_time_out))
-        {
-            ota_helper_set_boot(1);
-        }
-    }
+    // 阶段一：跳 boot 的入口留到 OTA 流程接入后再实现
 }
 
 void uart_protocol_param_poll(void)
