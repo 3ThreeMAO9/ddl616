@@ -1,5 +1,0 @@
-.vscode/db.*
-
-Project/*
-!Project/bootloader.uvopt
-!Project/bootloader.uvproj

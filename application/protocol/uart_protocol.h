@@ -103,6 +103,37 @@
 #define UP_CMD_SEND_LOCK_KEY                (0x70)      // 密钥发送（门锁 → WiFi）
 #define UP_CMD_REQUEST_KEY                  (0x71)      // 密钥请求（WiFi → 门锁）
 
+/* ---- 4.6.1 OTA 升级（自定义命令）
+ *      流程：模组推送 + 逐包应答 + 零长包收尾
+ *      0x72 开始：[size 4B][checksum 4B][version 3B]  → 回 0xF2 + [status 1B][pkt_size 2B]
+ *      0x73 数据：[offset 4B][data N]，N == 0 表示传输结束
+ *                                                  → 回 0xF3 + [status 1B][offset 4B]
+ *      0x74 结果（门锁 → 模组）：[result 1B][version 3B]
+ *      OTA 帧不加密，attr 的加密位固定为 0 ---- */
+#define UP_CMD_OTA_START                    (0x72)      // 升级开始（模组 → 门锁）
+#define UP_CMD_OTA_DATA                     (0x73)      // 数据/结束（模组 → 门锁）
+#define UP_CMD_OTA_RESULT                   (0x74)      // 升级结果（门锁 → 模组）
+
+#define UP_CMD_OTA_DATA_ACK                 SET_UART_ACK_CMD(UP_CMD_OTA_DATA)   // 0xF3
+
+/* 0xF2：升级开始应答 */
+#define OTA_START_STATUS_READY              (0)         // 就绪，按应答里的 pkt_size 发数据
+#define OTA_START_STATUS_NO_SPACE           (1)         // 长度超限或 flash 不可用
+#define OTA_START_STATUS_BUSY               (2)         // 正在升级
+
+/* 0xF3：每包应答 */
+#define OTA_DATA_STATUS_OK                  (0)         // 写入成功，或重复包已忽略
+#define OTA_DATA_STATUS_OFFSET_ERROR        (1)         // 偏移不连续，按应答 offset 续传
+#define OTA_DATA_STATUS_WRITE_FAIL          (2)         // 写 flash 失败
+
+/* 0x74：升级结果 */
+#define OTA_RESULT_SUCCESS                  (0)         // 校验通过，约 1s 后重启
+#define OTA_RESULT_CSUM_FAIL                (1)         // 校验和/文件头错误
+#define OTA_RESULT_SIZE_FAIL                (2)         // 收到的字节数不符
+
+#define OTA_PKT_SIZE                        (240)       // 单包数据长度（payload ≤ 244）
+#define OTA_FLASH_MAX_SIZE                  (64 * 1024) // SPI flash OTA 区大小
+
 /* 后板(WiFi)版本：0x68 请求（空），WiFi 回 0xE8 + 4 字节 X.X.X.X */
 #define UP_CMD_GET_BACK_VERSION             (0x68)      // 获取后板版本（门锁 → WiFi）
 
@@ -173,6 +204,7 @@ uint32_t uart_protocol_idle_ms(void);                   // 距最近一次收发
 /* OTA */
 void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);
+void uart_ota_jump_to_boot(void);                       // 写 ota_info=WAIT 并跳 boot
 
 /* 参数同步 */
 void uart_protocol_set_param_data_flag(uint8_t data);

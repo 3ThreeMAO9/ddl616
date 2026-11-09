@@ -82,7 +82,6 @@ CompileFlags:
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/app/protocol_func_card"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/common/CMSIS/5.4.0"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/common/Library"
-    - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/common/ota_helper"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/drive/radar/iic_radar/include"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/drive/radar/io_radar/include"
     - "-IF:/word file/DDL616/ai_smlk_arm/ai_smlk_arm/application/drive/lock_uart"

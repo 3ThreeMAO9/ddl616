@@ -92,7 +92,6 @@
                 "${workspaceFolder}/application/app/protocol_func_card",
                 "${workspaceFolder}/common/CMSIS/5.4.0",
                 "${workspaceFolder}/common/Library",
-                "${workspaceFolder}/common/ota_helper",
                 "${workspaceFolder}/application/drive/radar/iic_radar/include",
                 "${workspaceFolder}/application/drive/radar/io_radar/include",
                 "${workspaceFolder}/application/drive/lock_uart",

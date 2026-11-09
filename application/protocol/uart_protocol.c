@@ -34,8 +34,8 @@
 
 static uint32_t protocol_time_out = HEART_TIME_OUT;
 
-// static uint8_t ota_to_boot_flag = 0;
-// static uint32_t ota_to_boot_time_out = 0;
+static uint8_t ota_to_boot_flag = 0;
+static uint32_t ota_to_boot_time_out = 0;
 
 
 // static uint8_t param_data_flag = false;// 参数同步
@@ -78,11 +78,11 @@ uint32_t uart_protocol_idle_ms(void)
     return (uint32_t)(system_ms_get() - s_uart_last_act);   // 无符号差值，天然处理回绕
 }
 
-// void uart_protocol_ota_to_boot_inc_time_out(void)
-// {
-//     ota_to_boot_flag = 1;
-//     ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
-// }
+void uart_protocol_ota_to_boot_inc_time_out(void)
+{
+    ota_to_boot_flag = 1;
+    ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
+}
 
 void uart_protocol_set_param_data_flag(uint8_t data)
 {
@@ -114,6 +114,8 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_SET_USER)         // (0x07)   // 设置用户
         HANDLER_IMPORT(UP_CMD_GET_USERLIST_TIMESTAMP) // (0x08)  // 获取用户列表时间戳
         HANDLER_IMPORT(UP_CMD_GET_RECORD_LOG)   // (0x09)   // 获取开锁记录
+        HANDLER_IMPORT(UP_CMD_OTA_START)        // (0x0A)   // OTA 开始
+        HANDLER_IMPORT(UP_CMD_OTA_DATA)         // (0x0B)   // OTA 数据 / 结束包
         HANDLER_IMPORT(UP_CMD_PROP_MODEL_SAFE)              // (0x16)   // 属性：双重验证模式（读写）
         HANDLER_IMPORT(UP_CMD_PROP_MODE_DEFENSE)            // (0x17)   // 属性：布防模式（读写）
         HANDLER_IMPORT(UP_CMD_PROP_LANGUAGE)                // (0x19)   // 属性：门锁语言（读写）
@@ -250,7 +252,14 @@ void uart_protocol_poll(void)
 
 void uart_protocol_ota_poll(void)
 {
-    // 阶段一：跳 boot 的入口留到 OTA 流程接入后再实现
+    if (ota_to_boot_flag == 1)
+    {
+        if (system_out_time_cnt(ota_to_boot_time_out))
+        {
+            ota_to_boot_flag = 0;
+            uart_ota_jump_to_boot();
+        }
+    }
 }
 
 void uart_protocol_param_poll(void)
