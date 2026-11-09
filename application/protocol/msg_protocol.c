@@ -234,7 +234,7 @@ void uart_msg_report_voice_version(void)
 
     uart_msg_property_report(UP_CMD_PROP_VOICE_VERSION, (uint8_t *)str, (uint16_t)(len + 1));
 }
-//再看看出差电脑的代码,这块还不对.
+
 void uart_msg_report_model_version(void)
 {
     char str[17]="1786331873954";
