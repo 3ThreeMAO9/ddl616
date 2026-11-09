@@ -59,6 +59,8 @@
 /* ---- 4.2 属性读写（命令字对齐 ob_lock.h 的 PROP_CMD_*）
  *      payload = [opt][value...]：opt 0=读取（value 为模组缓冲值，忽略）/ 1=设置
  *      应答统一：cmd|0x80 + 属性值（一包）---- */
+#define UP_CMD_PROP_MODEL_VERSION           (0x13)      // 基础属性（0x10~0x1F）
+#define UP_CMD_PROP_SUPPORT_LANGUAGE        (0x18)      // 支持的语言（只读）
 #define UP_CMD_PROP_MODEL_SAFE              (0x16)      // 双重验证模式（读写：0=通用 1=双重）
 #define UP_CMD_PROP_MODE_DEFENSE            (0x17)      // 布防模式（读写：0=撤防 1=布防）
 #define UP_CMD_PROP_LANGUAGE                (0x19)      // 门锁语言（读写："zh"/"en"/"sp"/"fr"）

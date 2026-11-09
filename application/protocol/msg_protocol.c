@@ -234,6 +234,26 @@ void uart_msg_report_voice_version(void)
 
     uart_msg_property_report(UP_CMD_PROP_VOICE_VERSION, (uint8_t *)str, (uint16_t)(len + 1));
 }
+//再看看出差电脑的代码,这块还不对.
+void uart_msg_report_model_version(void)
+{
+    char str[17]="1786331873954";
+    uint16_t len = sizeof(str);
+
+    OB_LOGI(TAG, "model ver: %s", str);
+    uart_msg_property_report(UP_CMD_PROP_MODEL_VERSION, (uint8_t *)str, (uint16_t)(len));
+}
+
+void uart_msg_report_support_language(void)
+{
+    kiot_tm_prop_p_support_language_stu_t value[2];
+    strcpy(value[0].p_support_language, "zh");
+    strcpy(value[1].p_support_language, "en");
+
+    OB_LOGI(TAG, "support lang: %s", value[0].p_support_language);
+    OB_LOGI(TAG, "support lang: %s", value[1].p_support_language);
+    uart_msg_property_report(UP_CMD_PROP_SUPPORT_LANGUAGE, (uint8_t *)value, (uint16_t)(sizeof(kiot_tm_prop_p_support_language_stu_t) * 2));
+}
 
 // 数字转字符，返回长度
 static uint16_t ver_put_num(char *p, uint8_t v)

@@ -26,3 +26,26 @@ HANDLER_DEFINE(UP_CMD_PROP_VOICE_VERSION)
 
     return 0;
 }
+
+HANDLER_DEFINE(UP_CMD_PROP_MODEL_VERSION)
+{
+    char str[17]="1786331873954";
+    uint16_t len = sizeof(str);
+
+    uart_msg_property_ack(packet->cmd, (uint8_t *)str, (uint16_t)(len));
+
+    OB_LOGI(TAG, "model ver: %s", str);
+    return 0;
+}
+
+HANDLER_DEFINE(UP_CMD_PROP_SUPPORT_LANGUAGE)
+{
+    kiot_tm_prop_p_support_language_stu_t value[2];
+    strcpy(value[0].p_support_language, "zh");
+    strcpy(value[1].p_support_language, "en");
+    
+    uart_msg_property_ack(packet->cmd, (uint8_t *)value, (sizeof(kiot_tm_prop_p_support_language_stu_t) * 2));
+    OB_LOGI(TAG, "support lang: %s", value[0].p_support_language);
+    OB_LOGI(TAG, "support lang: %s", value[1].p_support_language);
+    return 0;
+}

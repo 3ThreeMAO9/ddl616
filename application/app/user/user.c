@@ -1205,11 +1205,11 @@ uint8_t user_profile_add(uint16_t user_id, const char* name)
     profile.user_id        = (uint8_t)user_id;
     profile.policy         = 0;                              // 默认永久
     profile.timestamp      = hal_get_rtc_time();
-    profile.effective_date = 0xFFFFFFFF;
-    profile.expire_date    = 0xFFFFFFFF;
-    profile.valid_day      = 0xFF;
-    profile.effective_time = 0xFFFFFFFF;
-    profile.expire_time    = 0xFFFFFFFF;
+    profile.effective_date = 0;//0xFFFFFFFF;
+    profile.expire_date    = 0;//0xFFFFFFFF;
+    profile.valid_day      = 0;//0xFF;
+    profile.effective_time = 0;//0;//xFFFFFFFF;
+    profile.expire_time    = 0;//0;//xFFFFFFFF;
 
     if (name != NULL && name[0] != '\0') {
         strncpy(profile.user_name, name, PROFILE_NAME_LEN - 1);

@@ -129,8 +129,11 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_PROP_VOICE_VERSION)           // (0x30)   // 属性：语音包版本（只读）
         HANDLER_IMPORT(UP_CMD_PROP_BATTERY_INFO)            // (0x31)   // 属性：电池信息（只读）
         HANDLER_IMPORT(UP_CMD_PROP_SOLAR_PANELS_CONN_STATUS)// (0x33)   // 属性：太阳能板连接状态（只读）
-
+        HANDLER_IMPORT(UP_CMD_PROP_MODEL_VERSION)           // (0x13)   // 属性：模型版本（只读）
         HANDLER_IMPORT(UP_CMD_REQUEST_KEY)      // (0x71)   // 密钥请求（收到后重发 0x70）
+        HANDLER_IMPORT(UP_CMD_PROP_SUPPORT_LANGUAGE)        // (0x18)   // 属性：支持的语言（只读）
+       
+        
 
 
         HANDLER_IMPORT(UP_CMD_JOIN_NET_RESULT)  // (0x65)   // 入网(蓝牙绑定)结果：0=成功 1=失败

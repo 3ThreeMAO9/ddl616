@@ -111,6 +111,11 @@ uint16_t uart_msg_voice_version_str(char *buf, uint16_t size);
 // 上报语音包版本（0x30）
 void uart_msg_report_voice_version(void);
 
+void uart_msg_report_model_version(void);
+void uart_msg_report_support_language(void);
+
+
+
 // 前板版本串 "V39.140.118.003"，返回长度（不含 '\0'）
 uint16_t uart_msg_front_version_str(char *buf, uint16_t size);
 

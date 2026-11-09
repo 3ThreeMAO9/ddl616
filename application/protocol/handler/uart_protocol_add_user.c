@@ -33,11 +33,11 @@ static void add_user_default_profile(user_profile_t* profile, uint8_t user_id)
 
     profile->policy         = USER_POLICY_PERMANENT;
     profile->timestamp      = hal_get_rtc_time();
-    profile->effective_date = 0xFFFFFFFF;
-    profile->expire_date    = 0xFFFFFFFF;
-    profile->valid_day      = 0xFF;
-    profile->effective_time = 0xFFFFFFFF;
-    profile->expire_time    = 0xFFFFFFFF;
+    profile->effective_date = 0;//0xFFFFFFFF;
+    profile->expire_date    = 0;//0xFFFFFFFF;
+    profile->valid_day      = 0;//0xFF;
+    profile->effective_time = 0;//0xFFFFFFFF;
+    profile->expire_time    = 0;//0xFFFFFFFF;
 
     if (0 == user_id)
     {
