@@ -216,7 +216,7 @@ void module_player_start(void)
         HAL_GPIO_Write(PLAYER_EN_PORT,PLAYER_EN_PIN,1);
 		hal_timer_config_t config ={
 			.event_handler = event_handler,
-			.period        = 78,//78.125
+			.period        = 125,//78.125---12.8K   125---8k
 		};
 		hal_timer1_start(&config);
 		player_state = true;
