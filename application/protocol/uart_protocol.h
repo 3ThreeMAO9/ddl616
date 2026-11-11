@@ -28,7 +28,7 @@
  * 2. 时间常量（ms）
  *============================================================================*/
 #define HEART_TIME_OUT                      (3000)      // 心跳间隔（兼时间同步周期）
-#define OTA_TO_BOOT_TIME_OUT                (1000)      // OTA 重启延时
+#define OTA_TO_BOOT_TIME_OUT                (200)       // OTA 重启延时
 #define PARAM_DATA_TIME_OUT                 (1000)      // 参数数据同步
 
 /*==============================================================================
@@ -125,6 +125,7 @@
 #define OTA_DATA_STATUS_OK                  (0)         // 写入成功，或重复包已忽略
 #define OTA_DATA_STATUS_OFFSET_ERROR        (1)         // 偏移不连续，按应答 offset 续传
 #define OTA_DATA_STATUS_WRITE_FAIL          (2)         // 写 flash 失败
+#define OTA_DATA_STATUS_READBACK_FAIL       (3)         // 写后自检不通过，不跳 boot
 
 /* 0x74：升级结果 */
 #define OTA_RESULT_SUCCESS                  (0)         // 校验通过，约 1s 后重启

@@ -16,6 +16,7 @@
 #include "chip_config.h"
 #include "ota_info.h"
 #include "sfud.h"
+#include "hal_wdt.h"
 #include <string.h>
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
@@ -252,6 +253,12 @@ void uart_ota_jump_to_boot(void)
     info->error = OTA_INFO_ERROR_NONE;
     info->state = OTA_INFO_STATE_WAIT;
     ota_info_update(info);
+    WDT_CLOSE();
+
+    NVIC_DisableIRQ(SysTick_IRQn);
+    IRQn_Type irq = I2C1_IRQn;
+    for (irq = I2C1_IRQn; irq <= PWMTM_IRQn; irq++)
+        NVIC_DisableIRQ(irq);
 
     go_boot();
 }

@@ -87,10 +87,10 @@ User Options (Setting by User)
 #define UOP_MODE_P3_1       3U
 #define UOP_MODE_P3_2       3U
 #define UOP_MODE_P3_3       3U
-#define UOP_MODE_P3_4       3U
-#define UOP_MODE_P3_5       3U
-#define UOP_MODE_P3_6       3U
-#define UOP_MODE_P3_7       3U
+#define UOP_MODE_P3_4       2U // spi cs,   push pull
+#define UOP_MODE_P3_5       2U // spi clk,  push pull
+#define UOP_MODE_P3_6       2U // spi mosi, push pull
+#define UOP_MODE_P3_7       0U // spi miso, pullup input
 #define UOP_MODE_P3_8       3U
 #define UOP_MODE_P3_9       3U
 #define UOP_MODE_P3_10      3U

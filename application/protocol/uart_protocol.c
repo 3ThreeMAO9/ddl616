@@ -16,7 +16,7 @@
 #include "utils.h"
 #include "encrypt.h"
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "uart_protocol"
 

@@ -375,10 +375,10 @@
             <v6WtE>0</v6WtE>
             <v6Rtti>0</v6Rtti>
             <VariousControls>
-              <MiscControls></MiscControls>
+              <MiscControls>-fno-unwind-tables -fno-asynchronous-unwind-tables</MiscControls>
               <Define>BUILD_BOOTLOADER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\Device;..\User\include;..\..\common\CMSIS\5.4.0;..\..\common\Device;..\..\common\Driver\include;..\..\common\User\include</IncludePath>
+              <IncludePath>..\Device;..\User\include;..\..\application\chip\OB90A64M1\Library;..\..\application\config;..\..\application\config\item;..\..\application\Project\Source_Code\device;..\..\application\drive\utils;..\..\common\CMSIS\5.4.0;..\..\common\Device;..\..\common\Driver\include;..\..\common\User\include;..\Library</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
