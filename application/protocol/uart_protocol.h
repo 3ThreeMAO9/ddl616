@@ -132,7 +132,7 @@
 #define OTA_RESULT_CSUM_FAIL                (1)         // 校验和/文件头错误
 #define OTA_RESULT_SIZE_FAIL                (2)         // 收到的字节数不符
 
-#define OTA_PKT_SIZE                        (240)       // 单包数据长度（payload ≤ 244）
+#define OTA_PKT_SIZE                        (200)       // 单包数据长度（payload = 4 + 200）
 #define OTA_FLASH_MAX_SIZE                  (64 * 1024) // SPI flash OTA 区大小
 
 /* 后板(WiFi)版本：0x68 请求（空），WiFi 回 0xE8 + 4 字节 X.X.X.X */

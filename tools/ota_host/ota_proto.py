@@ -64,14 +64,11 @@ def _decrypt_key_for_cmd(cmd, session_key):
 OTA_MAGIC = 0xBEEF
 OTA_HEADER_SIZE = 16
 
-# 设备在 0xF2 里上报的是 protocol.h 的 OTA_PKT_SIZE = 240，
-# 但门锁的接收队列 UART_RX_QUEUE_SIZE = 256（环形缓冲可用 255），
-# 一帧 = 12(头) + 4(offset) + pkt，pkt=240 时正好 256 字节，最后一字节存不下，
-# 整帧会被丢弃 —— 表现为设备只回了 0xF2 就再无响应。
-# 所以实际必须 <= 239，默认取 224 留足余量。
-OTA_PKT_SIZE = 240          # 设备上报值，仅供参考
+# 门锁的接收队列 UART_RX_QUEUE_SIZE = 256（环形缓冲可用 255），
+# 一帧 = 12(头) + 4(offset) + pkt，包长必须 <= 239，否则整帧会被丢弃。
+OTA_PKT_SIZE = 200          # 设备上报值，仅供参考
 OTA_PKT_MAX = 239           # 受接收队列限制的实际上限
-OTA_PKT_DEFAULT = 224       # 实际使用的包长
+OTA_PKT_DEFAULT = 200       # 实际使用的包长
 
 class OtaError(Exception):
     """升级过程出错"""
@@ -98,8 +95,13 @@ def expected_patch(path):
 def log(msg=""):
     ts = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
     line = f"[{ts}] {msg}"
-    sys.stdout.write(line + "\n")
-    sys.stdout.flush()
+    # pythonw 启动时没有控制台，sys.stdout 为 None，只输出到日志文件和 GUI
+    if sys.stdout is not None:
+        try:
+            sys.stdout.write(line + "\n")
+            sys.stdout.flush()
+        except Exception:
+            pass
     if LOG_FP:
         LOG_FP.write(line + "\n")
         LOG_FP.flush()
@@ -343,6 +345,7 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
     TRACE = trace
     LOG_SINK = sink
     LAST_VERSION = None
+    t_start = time.time()
 
     try:
         import serial
@@ -503,7 +506,8 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
             die(f"{reasons.get(result, f'result={result}')}")
         # 设备上报的是本机真实版本（sn 拆分 + PATCH_VERSION），
         # 例 39.140.005，可用最后一段核对版本是否真的翻转
-        log(f"OTA 完成：成功，新固件版本 V{ver[0]}.{ver[1]}.{ver[2]:03d}")
+        log(f"OTA 完成：成功，新固件版本 V{ver[0]}.{ver[1]}.{ver[2]:03d}，"
+            f"总耗时 {time.time() - t_start:.1f} 秒")
 
         # 核对版本：0x74 是 boot 搬运完成后由新固件发出的，
         # 所以它报的 PATCH 必须等于目标文件的 PATCH，否则说明搬的是旧镜像

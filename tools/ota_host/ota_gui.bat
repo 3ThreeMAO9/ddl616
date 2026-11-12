@@ -13,13 +13,11 @@ rem ============================================================
 
 cd /d "%~dp0"
 
-python ota_gui.py
+rem Launch with pythonw so only the GUI is shown (no cmd console)
+start "" pythonw "%~dp0ota_gui.py"
 if errorlevel 1 (
-    echo.
-    echo [ERROR] failed to start, please install python and pyserial
-    echo         pip install pyserial
-    echo.
-    pause
+    rem Fall back to python if pythonw is unavailable (console will show)
+    python "%~dp0ota_gui.py"
 )
 
 endlocal

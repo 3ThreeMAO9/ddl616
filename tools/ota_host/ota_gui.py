@@ -108,8 +108,6 @@ class OtaGui(tk.Tk):
         self.target = tk.StringVar(value="A")
         self.rounds = tk.StringVar(value="20")
         self.stop_on_fail = tk.BooleanVar(value=False)
-        # 默认显示门锁自身的调试日志（和 TX/RX 一起显示，不是替换）
-        self.show_dev_log = tk.BooleanVar(value=True)
         self.save_log = tk.BooleanVar(value=True)
 
         self.stat_pass = tk.StringVar(value="-")
@@ -158,7 +156,6 @@ class OtaGui(tk.Tk):
         ttk.Spinbox(frm, from_=1, to=999, width=6,
                      textvariable=self.rounds).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="首败即停", variable=self.stop_on_fail).pack(side="left", **pad)
-        ttk.Checkbutton(frm, text="显示门锁日志", variable=self.show_dev_log).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="保存日志文件", variable=self.save_log).pack(side="left", **pad)
 
         frm = ttk.Frame(self)
@@ -235,7 +232,6 @@ class OtaGui(tk.Tk):
         except ValueError:
             messagebox.showwarning("提示", "波特率填错了")
             return
-        dev_log = self.show_dev_log.get()
         # 每次运行都写一份日志到 log\，取消勾选才不落盘
         log_dir = LOG_DIR if self.save_log.get() else None
         if log_dir:
@@ -252,7 +248,7 @@ class OtaGui(tk.Tk):
             self.log("单次升级: %s" % os.path.basename(fw))
             self.log("-" * 60)
             self.worker = threading.Thread(target=self._single_worker,
-                                          args=(port, fw, baud, dev_log, log_dir),
+                                          args=(port, fw, baud, log_dir),
                                           daemon=True)
             self.worker.start()
             return
@@ -284,7 +280,7 @@ class OtaGui(tk.Tk):
                                               os.path.basename(fb)))
         self.log("-" * 60)
         self.worker = threading.Thread(target=self._loop_worker,
-                                      args=(port, rounds, dev_log,
+                                      args=(port, rounds,
                                             fa, fb, va, vb, log_dir), daemon=True)
         self.worker.start()
 
@@ -298,11 +294,12 @@ class OtaGui(tk.Tk):
         self.btn_start.state(["disabled"])
         self.btn_stop.state(["!disabled"])
 
-    def _single_worker(self, port, fw, baud, dev_log, log_dir):
+    def _single_worker(self, port, fw, baud, log_dir):
         try:
+            # 只显示进度和结果：关闭 TX/RX 明细和门锁调试日志
             ota_proto.run_upload(port, fw, baud=baud,
-                                 log_dir=log_dir, dev_log=dev_log,
-                                 trace=True, quiet=False, sink=self._put_line)
+                                 log_dir=log_dir, dev_log=False,
+                                 trace=False, quiet=False, sink=self._put_line)
             self.q.put(("info", "升级成功"))
         except ota_proto.OtaError as exc:
             self.q.put(("info", "升级失败: %s" % exc))
@@ -310,10 +307,11 @@ class OtaGui(tk.Tk):
             self.q.put(("info", "异常: %s" % exc))
         self.q.put(("end", None))
 
-    def _loop_worker(self, port, rounds, dev_log, fa, fb, va, vb, log_dir):
+    def _loop_worker(self, port, rounds, fa, fb, va, vb, log_dir):
         cur = None
         unknown = True
         passed = failed = 0
+        t_loop = time.time()
         for i in range(1, rounds + 1):
             if self.stop_flag:
                 break
@@ -325,8 +323,9 @@ class OtaGui(tk.Tk):
                 fw, expect = (fb, vb) if (i % 2 == 1) else (fa, va)
             self.q.put(("round", (i, rounds, expect)))
             try:
+                # 只显示进度和结果：关闭 TX/RX 明细和门锁调试日志
                 ota_proto.run_upload(port, fw, log_dir=log_dir,
-                                     dev_log=dev_log, trace=True, quiet=False,
+                                     dev_log=False, trace=False, quiet=False,
                                      sink=self._put_line)
                 err = ""
             except ota_proto.OtaError as exc:
@@ -368,8 +367,8 @@ class OtaGui(tk.Tk):
             if i < rounds and not self.stop_flag:
                 self.q.put(("info", "等待 5 秒后开始下一轮..."))
                 time.sleep(5)
-        self.q.put(("info", "循环结束：共 %d 轮，通过 %d，失败 %d"
-                    % (passed + failed, passed, failed)))
+        self.q.put(("info", "循环结束：共 %d 轮，通过 %d，失败 %d，总耗时 %.1f 秒"
+                    % (passed + failed, passed, failed, time.time() - t_loop)))
         self.q.put(("end", None))
 
     def _put_line(self, line):
