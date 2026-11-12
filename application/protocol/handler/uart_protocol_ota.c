@@ -19,8 +19,6 @@
 #include "hal_flash.h"
 #include "sfud.h"
 #include "hal_wdt.h"
-#include <stddef.h>
-#include <string.h>
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -101,27 +99,18 @@ static uint32_t ota_checksum_add(uint32_t sum, const uint8_t *p, uint32_t size)
     return sum;
 }
 
-#define OTA_CHECK_BUF_SIZE      (256)
-
-static uint8_t s_check_buf[OTA_CHECK_BUF_SIZE];
-
-/* 第一包里留一份 16 字节镜像头，收尾时和 flash 回读结果对照 */
-static uint8_t s_expect_hdr[16];
-
-/* 回读 SPI flash，校验刚写进去的镜像是否完整。
+/* 回读 SPI flash 的镜像头，和本次 OTA 的期望值逐项比对。
  * 对应参考例程 ota_helper_check_data()：sfud 的写不做任何校验，
  * 写保护/时序问题时依然返回 SFUD_SUCCESS，只有回读才能发现。
- * 返回 0 = 通过，1 = 头/magic/checksum1 不对，3 = checksum2 不对。 */
+ *
+ * 逐包写入时已经由 ota_verify_write() 逐字节比对过，这里只确认头部：
+ * magic / size / checksum2 / 版本。必须比对期望值而不是只校验自洽 ——
+ * flash 里若残留上一次的镜像，它自己也是自洽的。
+ * 返回 0 = 通过。 */
 static uint32_t ota_check_flash(void)
 {
-    sfud_flash *flash = ota_flash();
     ota_file_t hdr;
-    uint32_t base, sum, addr, size, rd;
-
-    if (flash == NULL)
-        return 1;
-
-    base = ota_area_addr();
+    uint32_t base = ota_area_addr();
 
     /* 最后一个包的写入可能还在芯片内部进行，稍等一下再读 */
     for (volatile uint32_t d = 0; d < 20000u; d++)
@@ -130,20 +119,12 @@ static uint32_t ota_check_flash(void)
     if (hal_flash_read(base, &hdr, sizeof(hdr)) != 0)
         return 1;
 
-    /* 打印回读到的 16 字节头，以及第一包里留存的期望头，逐字节对照 */
-    OB_LOGI(TAG, "hdr read:");
-    OB_LOGI_DUMP((const uint8_t *)&hdr, 16);
-    OB_LOGI(TAG, "hdr expect:");
-    OB_LOGI_DUMP(s_expect_hdr, 16);
-
-    if ((hdr.magic != OTA_FILE_MAGIC) || (hdr.size < 4) || (hdr.size > OTA_FLASH_MAX_SIZE))
+    if (hdr.magic != OTA_FILE_MAGIC)
     {
-        OB_LOGE(TAG, "readback magic=%04X size=%u", hdr.magic, hdr.size);
+        OB_LOGE(TAG, "readback magic=%04X", hdr.magic);
         return 1;
     }
 
-    /* 只校验自洽是不够的：flash 里若还是上一次的镜像，它自己也是自洽的，
-     * 校验必然通过。必须和本次 OTA 的期望值逐项比对。 */
     if (hdr.size != (s_ota.total - sizeof(ota_file_t)))
     {
         OB_LOGE(TAG, "readback size=%u expect=%u",
@@ -167,43 +148,16 @@ static uint32_t ota_check_flash(void)
         return 2;
     }
 
-    /* checksum1 覆盖 magic ~ checksum2 之前的全部头部字段 */
-    sum = ota_file_calc_checksum_u16((uint16_t *)&hdr.magic,
-            offsetof(ota_file_t, data) - sizeof(hdr.checksum1));
-    if (sum != hdr.checksum1)
-    {
-        OB_LOGE(TAG, "readback sum1=%04X expect=%04X", sum, hdr.checksum1);
-        return 1;
-    }
-
-    /* checksum2 覆盖整个数据段 */
-    sum = 0;
-    addr = base + sizeof(hdr);
-    size = hdr.size;
-    while (size)
-    {
-        rd = (size > OTA_CHECK_BUF_SIZE) ? OTA_CHECK_BUF_SIZE : size;
-        if (hal_flash_read(addr, s_check_buf, rd) != 0)
-            return 1;
-        sum += ota_file_calc_checksum_u32((uint32_t *)s_check_buf, rd);
-        size -= rd;
-        addr += rd;
-    }
-
-    if (sum != hdr.checksum2)
-    {
-        OB_LOGE(TAG, "readback sum2=%08X expect=%08X", sum, hdr.checksum2);
-        return 3;
-    }
-
     return 0;
 }
 
+#define OTA_CHECK_BUF_SIZE      (256)
 /* 每写完一包立刻回读比对，确保真的落盘。
  * sfud_write 只负责发命令，写保护/时序问题时会静默失败并返回 SFUD_SUCCESS，
  * 只有回读才能确认。返回 0 = 一致。 */
 static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len)
 {
+    uint8_t check_buf[OTA_CHECK_BUF_SIZE];
     sfud_flash *flash = ota_flash();
     uint16_t i;
 
@@ -213,7 +167,7 @@ static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len
     if (len > OTA_CHECK_BUF_SIZE)
         len = OTA_CHECK_BUF_SIZE;
 
-    if (hal_flash_read(addr, s_check_buf, len) != 0)
+    if (hal_flash_read(addr, check_buf, len) != 0)
     {
         OB_LOGE(TAG, "w 0x%05X read fail", addr);
         return 1;
@@ -221,10 +175,10 @@ static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len
 
     for (i = 0; i < len; i++)
     {
-        if (s_check_buf[i] != src[i])
+        if (check_buf[i] != src[i])
         {
             OB_LOGE(TAG, "w 0x%05X mis @%u %02X!=%02X",
-                    addr, i, s_check_buf[i], src[i]);
+                    addr, i, check_buf[i], src[i]);
             return 1;
         }
     }
@@ -277,28 +231,17 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     s_ota.version[1] = p[9];
     s_ota.version[2] = p[10];
 
-    /* OTA 区地址：优先用语音包数据头里声明的 ota_address，
-     * 没有声明时才退回「容量末尾 64K」的旧算法。打印出来便于和
-     * boot 的 SFLASH_OTA_BEGIN_ADDR 对照。 */
-    OB_LOGI(TAG, "ota addr=0x%05X (hdr=0x%05X) cap=%u",
-            ota_area_addr(), read_ota_flash_address(),
-            (flash == NULL) ? 0 : flash->chip.capacity);
+    /* OTA 区地址：优先用语音包数据头里声明的 ota_address（域起始 + 域大小/2），
+     * 没有声明时才退回「容量末尾 64K」。打印出来便于和 boot 对照。 */
+    OB_LOGI(TAG, "ota addr=0x%05X", ota_area_addr());
 
-    /* 擦除 64K，耗时 1~2 秒，期间无应答属正常 */
     /* 擦除前清写保护。
      * boot 的 spi_flash_64k_erase / write 结尾都会 WRSR 0x7C 置 BP 位，
      * hal_flash_erase/write 内部只做 WREN，不会清 BP。
-     * BP 位置上后芯片静默忽略擦写（实测回读仍是旧镜像的字节，
-     * 如 0xB9 —— 旧 099 镜像头的 checksum1 低字节）。 */
-    {
-        uint8_t sr_before = 0xFF, sr_after = 0xFF;
+     * BP 位置上后芯片静默忽略擦写，hal_flash 仍返回成功。 */
+    hal_flash_write_status(0x00);
 
-        hal_flash_read_status(&sr_before);
-        hal_flash_write_status(0x00);
-        hal_flash_read_status(&sr_after);
-        OB_LOGI(TAG, "sr %02X -> %02X", sr_before, sr_after);
-    }
-
+    /* 擦除 64K，耗时 1~2 秒，期间无应答属正常 */
     if (hal_flash_erase(ota_area_addr(), OTA_FLASH_MAX_SIZE) != 0)
     {
         OB_LOGE(TAG, "erase fail");
@@ -403,10 +346,6 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
 
         if ((s_ota.expected + wr) > s_ota.total)
             wr = (uint16_t)(s_ota.total - s_ota.expected);
-
-        /* 第一包里带的就是完整镜像头，留一份，收尾时和 flash 回读对照 */
-        if ((s_ota.expected == 0) && (wr >= sizeof(s_expect_hdr)))
-            memcpy(s_expect_hdr, p + 4 + skip, sizeof(s_expect_hdr));
 
         if (hal_flash_write(ota_area_addr() + s_ota.expected,
                 p + 4 + skip, wr) != 0)
