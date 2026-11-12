@@ -19,8 +19,10 @@
 #include "hal_flash.h"
 #include "sfud.h"
 #include "hal_wdt.h"
+#include "item_config.h"
+#include <string.h>
 
-#define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
+#define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "uart_ota"
 
@@ -187,10 +189,23 @@ static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len
     return 0;
 }
 
-/* 0x0C 结果上报：[result 1B][version 3B] */
+/* 0x0C 结果上报：[result 1B][version 3B]
+ *
+ * version 填本机真实版本，不用镜像头里那个 0.0.1（那是 packer -v 写死的
+ * 常量，跟 PATCH_VERSION 无关，无法用来判断版本有没有翻转）。
+ * 编码与 uart_msg_front_version_str() 一致：
+ *   sn = 39140 → [39][140]，PATCH_VERSION → 最后一字节（5） */
 static void ota_send_result(uint8_t result)
 {
-    uint8_t buf[4] = { result, s_ota.version[0], s_ota.version[1], s_ota.version[2] };
+    uint16_t sn = readDeviceClientProjectSn();
+    uint16_t pv = readDeviceVersion();
+    uint8_t buf[4];
+
+    buf[0] = result;
+    buf[1] = (uint8_t)((sn / 1000) % 1000);   /* 39  */
+    buf[2] = (uint8_t)(sn % 1000);            /* 140 */
+    buf[3] = (uint8_t)pv;                     /* 5   */
+
     uart_msg_property_report(UP_CMD_OTA_RESULT, buf, sizeof(buf));
 }
 
@@ -305,10 +320,9 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
                 ret = OTA_DATA_STATUS_READBACK_FAIL;
                 ota_send_result(OTA_RESULT_CSUM_FAIL);
             }
-            else
-            {
-                ota_send_result(OTA_RESULT_SUCCESS);
-            }
+            /* 成功不在这里报！下载完成只说明数据到了 SPI，
+             * 真正的 OTA 完成是 boot 把镜像搬到 FMC、跳回 app 之后，
+             * 由 uart_ota_report_boot_done() 上报。*/
         }
 
         s_ota.active = 0;
@@ -390,6 +404,47 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
     ack[4] = (uint8_t)((s_ota.expected >> 24) & 0xFF);
 
     uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
+    return 0;
+}
+
+/* 由 uart_protocol_ota_poll 轮询调用：boot 把镜像搬到 FMC 并跳回 app 后，ota_info.state == DONE，
+ * 这才是 OTA 真正完成的时刻 —— 下载结束只说明数据到了 SPI，
+ * boot 搬运失败的话版本不会变，那时上报成功是骗人。
+ *
+ * 状态由 boot 在搬运结束后写入（OTA_INFO_STATE_DONE）；
+ * 搬运失败时 error != NONE 而 state 仍是 WAIT。
+ * 上报后把 state 复位成 IDLE，避免下次轮询重复上报。
+ * 返回 1 = 本次是 OTA 启动并已上报，0 = 普通启动。 */
+uint32_t uart_ota_report_boot_done(void)
+{
+    ota_info_t *info;
+
+    /* 正在接收新固件时不上报，避免把上一次遗留的 DONE 当成本次结果 */
+    if (s_ota.active)
+        return 0;
+
+    info = ota_info_get(0);
+    if (info->magic != OTA_INFO_MAGIC)
+        return 0;
+
+    if (info->state == OTA_INFO_STATE_DONE)
+    {
+        info->state = OTA_INFO_STATE_IDLE;
+        info->error = OTA_INFO_ERROR_NONE;
+        ota_info_update(info);
+        ota_send_result(OTA_RESULT_SUCCESS);
+        return 1;
+    }
+
+    /* boot 搬运失败：error 有值而 state 还停在 WAIT */
+    if ((info->state == OTA_INFO_STATE_WAIT) && (info->error != OTA_INFO_ERROR_NONE))
+    {
+        info->state = OTA_INFO_STATE_IDLE;
+        ota_info_update(info);
+
+        ota_send_result(OTA_RESULT_CSUM_FAIL);
+        return 1;
+    }
     return 0;
 }
 

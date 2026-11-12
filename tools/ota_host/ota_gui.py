@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 import threading
+import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
@@ -106,9 +107,9 @@ class OtaGui(tk.Tk):
         self.mode = tk.StringVar(value="single")
         self.target = tk.StringVar(value="A")
         self.rounds = tk.StringVar(value="20")
-        self.listen = tk.StringVar(value="18")
         self.stop_on_fail = tk.BooleanVar(value=False)
-        self.show_dev_log = tk.BooleanVar(value=False)
+        # 默认显示门锁自身的调试日志（和 TX/RX 一起显示，不是替换）
+        self.show_dev_log = tk.BooleanVar(value=True)
         self.save_log = tk.BooleanVar(value=True)
 
         self.stat_pass = tk.StringVar(value="-")
@@ -156,9 +157,6 @@ class OtaGui(tk.Tk):
         ttk.Label(frm, text="循环次数").pack(side="left", **pad)
         ttk.Spinbox(frm, from_=1, to=999, width=6,
                      textvariable=self.rounds).pack(side="left", **pad)
-        ttk.Label(frm, text="每轮监听(秒)").pack(side="left", **pad)
-        ttk.Spinbox(frm, from_=5, to=120, width=6,
-                     textvariable=self.listen).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="首败即停", variable=self.stop_on_fail).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="显示门锁日志", variable=self.show_dev_log).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="保存日志文件", variable=self.save_log).pack(side="left", **pad)
@@ -234,9 +232,8 @@ class OtaGui(tk.Tk):
             return
         try:
             baud = int(self.baud.get() or 230400)
-            listen = float(self.listen.get() or 18)
         except ValueError:
-            messagebox.showwarning("提示", "波特率/监听时间填错了")
+            messagebox.showwarning("提示", "波特率填错了")
             return
         dev_log = self.show_dev_log.get()
         # 每次运行都写一份日志到 log\，取消勾选才不落盘
@@ -255,8 +252,7 @@ class OtaGui(tk.Tk):
             self.log("单次升级: %s" % os.path.basename(fw))
             self.log("-" * 60)
             self.worker = threading.Thread(target=self._single_worker,
-                                          args=(port, fw, baud, listen, dev_log,
-                                                log_dir),
+                                          args=(port, fw, baud, dev_log, log_dir),
                                           daemon=True)
             self.worker.start()
             return
@@ -288,7 +284,7 @@ class OtaGui(tk.Tk):
                                               os.path.basename(fb)))
         self.log("-" * 60)
         self.worker = threading.Thread(target=self._loop_worker,
-                                      args=(port, rounds, listen, dev_log,
+                                      args=(port, rounds, dev_log,
                                             fa, fb, va, vb, log_dir), daemon=True)
         self.worker.start()
 
@@ -302,9 +298,9 @@ class OtaGui(tk.Tk):
         self.btn_start.state(["disabled"])
         self.btn_stop.state(["!disabled"])
 
-    def _single_worker(self, port, fw, baud, listen, dev_log, log_dir):
+    def _single_worker(self, port, fw, baud, dev_log, log_dir):
         try:
-            ota_proto.run_upload(port, fw, baud=baud, listen=listen,
+            ota_proto.run_upload(port, fw, baud=baud,
                                  log_dir=log_dir, dev_log=dev_log,
                                  trace=True, quiet=False, sink=self._put_line)
             self.q.put(("info", "升级成功"))
@@ -314,7 +310,7 @@ class OtaGui(tk.Tk):
             self.q.put(("info", "异常: %s" % exc))
         self.q.put(("end", None))
 
-    def _loop_worker(self, port, rounds, listen, dev_log, fa, fb, va, vb, log_dir):
+    def _loop_worker(self, port, rounds, dev_log, fa, fb, va, vb, log_dir):
         cur = None
         unknown = True
         passed = failed = 0
@@ -329,7 +325,7 @@ class OtaGui(tk.Tk):
                 fw, expect = (fb, vb) if (i % 2 == 1) else (fa, va)
             self.q.put(("round", (i, rounds, expect)))
             try:
-                ota_proto.run_upload(port, fw, listen=listen, log_dir=log_dir,
+                ota_proto.run_upload(port, fw, log_dir=log_dir,
                                      dev_log=dev_log, trace=True, quiet=False,
                                      sink=self._put_line)
                 err = ""
@@ -367,6 +363,11 @@ class OtaGui(tk.Tk):
                     break
             t = passed + failed
             self.q.put(("stat", (passed, failed, passed * 100.0 / t if t else 0.0)))
+
+            # 轮间隔 5 秒：给设备重启和链路恢复留时间
+            if i < rounds and not self.stop_flag:
+                self.q.put(("info", "等待 5 秒后开始下一轮..."))
+                time.sleep(5)
         self.q.put(("info", "循环结束：共 %d 轮，通过 %d，失败 %d"
                     % (passed + failed, passed, failed)))
         self.q.put(("end", None))

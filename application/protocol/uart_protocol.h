@@ -206,6 +206,7 @@ uint32_t uart_protocol_idle_ms(void);                   // 距最近一次收发
 void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);
 void uart_ota_jump_to_boot(void);                       // 写 ota_info=WAIT 并跳 boot
+uint32_t uart_ota_report_boot_done(void);                // 启动时：boot 搬完回到 app 才算 OTA 完成，返回1=已上报
 
 /* 参数同步 */
 void uart_protocol_set_param_data_flag(uint8_t data);

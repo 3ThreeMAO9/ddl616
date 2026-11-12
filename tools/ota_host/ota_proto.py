@@ -50,6 +50,17 @@ ACK_DATA = CMD_OTA_DATA | 0x80         # 0xF3
 KEY_FACTORY = 0xBA
 KEY_INDEX = 1                          # 4 字节密钥帧取下标 1
 
+# 需要用 K_F 解密的命令（密钥交换）；其余加密帧一律用当前会话密钥 K_L
+_KEY_EXCHANGE_RAW = {CMD_KEY_SEND, CMD_KEY_REQ}   # 0x70, 0x71
+_KEY_EXCHANGE_ALL = _KEY_EXCHANGE_RAW | {0xF0, 0xF1}   # 含应答 ACK_KEY_SEND, ACK_KEY_REQ
+
+
+def _decrypt_key_for_cmd(cmd, session_key):
+    """根据命令决定解密用哪个密钥：密钥交换帧用 K_F，其他加密帧用 session_key"""
+    if (cmd & 0x7F) in _KEY_EXCHANGE_RAW or cmd in {0xF0, 0xF1}:
+        return KEY_FACTORY
+    return session_key
+
 OTA_MAGIC = 0xBEEF
 OTA_HEADER_SIZE = 16
 
@@ -76,6 +87,12 @@ SHOW_DEV_LOG = False
 TRACE = True
 LAST_VERSION = None          # 从门锁日志里解析出的 outside_version
 VERSION_RE = re.compile(r"outside_version:\s*V39\.140\.(\d+)")
+
+
+def expected_patch(path):
+    """从文件名 V39_140_005.bin 里取 PATCH_VERSION = 5，取不到返回 None"""
+    m = re.search(r"_(\d{3})\.bin$", os.path.basename(path), re.IGNORECASE)
+    return int(m.group(1)) if m else None
 
 
 def log(msg=""):
@@ -167,9 +184,10 @@ def build_frame(cmd, payload, sn, key=None):
     return bytes([MARK, attr]) + struct.pack("<H", cs1) + body + body_payload
 
 
-def read_frame(ser, timeout, key=None):
-    """返回 (cmd, 明文 payload, sn)；超时返回 None。
-    非协议字节按行以 [dev] 前缀打印，方便看设备日志。"""
+def read_frame(ser, timeout, key=None, state=None):
+    """返回 (cmd, 明文 payload, sn, rnd)；超时返回 None。
+    state 可选：dict，解密后若发现设备用密钥帧 0x70/0xF1 广播了新 K_L，
+    则写 state['key'] = new_kL，供上层迭代更新会话密钥。"""
     deadline = time.time() + timeout
     stray = bytearray()
 
@@ -225,12 +243,10 @@ def read_frame(ser, timeout, key=None):
         if cs1 != calc1:
             continue
 
-        # 解密：密钥交换帧用 K_F，其余用 K_L
+        # 解密：密钥交换帧无论是否已有 K_L 都用 K_F，其余加密帧用当前会话密钥
         plain = payload
         if enc != 0:
-            use = key
-            if use is None and (cmd & 0x7F) == CMD_KEY_SEND:
-                use = KEY_FACTORY
+            use = _decrypt_key_for_cmd(cmd, key)
             if use is None:
                 continue                       # 还没协商到密钥，先丢弃
             plain = xor_crypt(payload, rnd, use)
@@ -238,6 +254,15 @@ def read_frame(ser, timeout, key=None):
         # checksum2 覆盖明文
         if checksum16(plain) != cs2:
             continue
+
+        # 解密成功：若是 0x70/0xF1 密钥帧，提取新 K_L 写进 state
+        if state is not None and cmd in (CMD_KEY_SEND, ACK_KEY_REQ) and len(plain) >= 4:
+            new_kl = plain[KEY_INDEX]
+            cur_kl = state.get('key', key)
+            if 0x00 < new_kl < 0xFF and new_kl != cur_kl:
+                state['key'] = new_kl
+                if TRACE:
+                    log(f"  [key] 发现新会话密钥 K_L = 0x{new_kl:02X}（来自 cmd=0x{cmd:02X}）")
 
         flush()
         if TRACE:
@@ -248,18 +273,27 @@ def read_frame(ser, timeout, key=None):
     return None
 
 
-def wait_for(ser, expect, timeout, key=None, also=None):
+def wait_for(ser, expect, timeout, key=None, also=None, state=None):
+    """等待 expect（或 also）命令到来。
+    state 可选；若期间发现 0x70/0xF1 广播了新 K_L，会自动更新 state['key']，
+    后续所有收发都用新密钥。返回 (cmd, payload)；超时返回 None。"""
     deadline = time.time() + timeout
     while time.time() < deadline:
-        f = read_frame(ser, max(0.05, deadline - time.time()), key)
+        effective_key = state['key'] if state else key
+        f = read_frame(ser, max(0.05, deadline - time.time()), effective_key, state)
         if f is None:
             break
         cmd, payload, sn, rnd = f
         if cmd == expect or (also is not None and cmd == also):
+            # ACK 匹配到的非 ACK 帧（含 0x74），避免对端重传耗尽重试次数
+            if not (cmd & 0x80):
+                use = _decrypt_key_for_cmd(cmd, effective_key)
+                send_frame(ser, cmd | 0x80, b"", sn, use)
+                ser.flush()
             return cmd, payload
-        # 设备的请求用 K_F 相关的回 ACK，其余用当前会话密钥
+        # 设备的其它请求（心跳 0x67、密钥帧 0x70 等）回 ACK，避免它重传到超时
         if not (cmd & 0x80):
-            use = KEY_FACTORY if (cmd & 0x7F) == CMD_KEY_SEND else key
+            use = _decrypt_key_for_cmd(cmd, effective_key)
             send_frame(ser, cmd | 0x80, b"", sn, use)
             ser.flush()
     return None
@@ -300,7 +334,7 @@ def negotiate_key(ser):
 
 
 def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
-               retry=3, listen=18.0, log_dir=None,
+               retry=3, log_dir=None,
                dev_log=False, trace=True, quiet=False, sink=None):
     """执行一次 OTA 升级。成功返回 None，失败抛 OtaError。
     sink 是每条日志的回调，GUI 用它刷新界面。"""
@@ -358,14 +392,18 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
     log(f"  门锁密钥 K_L = 0x{key:02X}")
     sn += 1
 
+    # 用可变 state 保存会话密钥；wait_for/read_frame 收到 0x70/0xF1 广播时
+    # 会自动更新 state['key']，这样设备重启后无需重新走 0x71 协商
+    state = {'key': key}
+
     try:
         # ---- 1. 0x72 开始（设备擦 64K，等久一点）----
         payload = struct.pack("<I", fw_size) + struct.pack("<I", fw_csum) + bytes(version)
         r = None
         for attempt in range(retry):
-            send_frame(ser, CMD_OTA_START, payload, sn, key)
+            send_frame(ser, CMD_OTA_START, payload, sn, state['key'])
             ser.flush()
-            r = wait_for(ser, ACK_START, 10.0, key)
+            r = wait_for(ser, ACK_START, 10.0, state=state)
             if r:
                 break
             log(f"  0x72 无应答，重试 {attempt + 1}/{retry}")
@@ -404,9 +442,9 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
             body = struct.pack("<I", offset) + fw[offset:offset + n]
             r = None
             for attempt in range(retry):
-                send_frame(ser, CMD_OTA_DATA, body, sn, key)
+                send_frame(ser, CMD_OTA_DATA, body, sn, state['key'])
                 ser.flush()
-                r = wait_for(ser, ACK_DATA, 5.0, key)
+                r = wait_for(ser, ACK_DATA, 5.0, state=state)
                 if r:
                     break
             if not r:
@@ -431,9 +469,9 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
         # ---- 3. 结束包 ----
         r = None
         for attempt in range(retry):
-            send_frame(ser, CMD_OTA_DATA, struct.pack("<I", fw_size), sn, key)
+            send_frame(ser, CMD_OTA_DATA, struct.pack("<I", fw_size), sn, state['key'])
             ser.flush()
-            r = wait_for(ser, ACK_DATA, 5.0, key, also=CMD_OTA_RESULT)
+            r = wait_for(ser, ACK_DATA, 5.0, state=state, also=CMD_OTA_RESULT)
             if r:
                 break
             log(f"  结束包无应答，重试 {attempt + 1}/{retry}")
@@ -441,28 +479,40 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
             die("结束包没有应答")
 
         if r[0] == CMD_OTA_RESULT:
-            res = r
+            res = r                       # 兼容：设备直接回了结果帧
         else:
+            # 结束包的 ACK 只表示「数据收齐并通过校验」，不代表 OTA 完成
             st = r[1][0]
             if st != 0:
-                reasons = {1: "偏移不连续", 2: "写 flash 失败"}
+                reasons = {1: "偏移不连续", 2: "写 flash 失败", 3: "回读校验失败"}
                 die(f"结束校验失败：{reasons.get(st, st)}")
-            res = wait_for(ser, CMD_OTA_RESULT, 8.0, key)
+
+            # 0x74 结果帧现在由「boot 把镜像搬到 FMC、跳回 app」之后上报，
+            # 中间隔着一次重启（约 10 秒），要给足超时。
+            # 重启后设备会用新的 K_L 广播 0x70，read_frame 会自动用 K_F 解出并更新 state。
+            log("下载完成，等待 boot 搬运并回到 app 后上报结果...")
+            res = wait_for(ser, CMD_OTA_RESULT, 40.0, state=state)
             if res is None:
-                die("没收到 0x74 结果")
+                die("没收到 0x74 结果（boot 搬运或重启失败）；"
+                    "若期间看到 [key] 打印说明密钥已更新但 0x74 仍没来")
 
         result = res[1][0]
         ver = res[1][1:4]
         if result != 0:
-            reasons = {1: "校验和错误", 2: "长度不符"}
+            reasons = {1: "校验和/回读/搬运失败", 2: "长度不符"}
             die(f"{reasons.get(result, f'result={result}')}")
-        log(f"OTA 完成：成功，新固件版本 {ver[0]}.{ver[1]}.{ver[2]}")
+        # 设备上报的是本机真实版本（sn 拆分 + PATCH_VERSION），
+        # 例 39.140.005，可用最后一段核对版本是否真的翻转
+        log(f"OTA 完成：成功，新固件版本 V{ver[0]}.{ver[1]}.{ver[2]:03d}")
 
-        # ---- 4. 监听重启与版本 ----
-        log(f"等待设备重启（跳 boot 搬运，继续监听 {listen:g} 秒）...")
-        deadline = time.time() + listen
-        while time.time() < deadline:
-            read_frame(ser, 0.3, key)
+        # 核对版本：0x74 是 boot 搬运完成后由新固件发出的，
+        # 所以它报的 PATCH 必须等于目标文件的 PATCH，否则说明搬的是旧镜像
+        want = expected_patch(fw_path)
+        if (want is not None) and (ver[2] != want):
+            die(f"设备仍在跑 V{ver[0]}.{ver[1]}.{ver[2]:03d}，"
+                f"目标 PATCH={want:03d}（boot 搬运未生效）")
+
+        # 0x74 成功即代表 boot 已搬运完成、app 已跑新固件，流程结束，不再监听
 
     finally:
         try:

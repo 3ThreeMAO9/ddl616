@@ -252,6 +252,7 @@ void uart_protocol_poll(void)
 
 void uart_protocol_ota_poll(void)
 {
+    // 下载完成且应答已发出：延时跳 boot
     if (ota_to_boot_flag == 1)
     {
         if (system_out_time_cnt(ota_to_boot_time_out))
@@ -259,7 +260,12 @@ void uart_protocol_ota_poll(void)
             ota_to_boot_flag = 0;
             uart_ota_jump_to_boot();
         }
+        return;                 // 跳转前不做结果上报
     }
+
+    // boot 把镜像搬到 FMC 并跳回 app 后，在这里统一通过 0x74 上报结果和版本号。
+    // FSM 初始化已把 0x70 密钥帧入队，模组先拿到新密钥，0x74 才能被正确解密。
+    uart_ota_report_boot_done();
 }
 
 void uart_protocol_param_poll(void)
