@@ -14,6 +14,10 @@ application/Project/ota_app.uvopt
 application/Project/22222.BAT
 tools/ota_host/log/
 
+# IDE 自动生成（含本机绝对路径，换机器需重新生成）
+.clangd
+application/Project/39140_DEBUG.BAT
+
 # Python bytecode cache
 __pycache__/
 *.pyc
