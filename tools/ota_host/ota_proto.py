@@ -25,10 +25,10 @@
     0x73 结束 [offset4]（N=0）      → 0xF3 + 0x74 [result1][ver3]
 """
 
-import argparse
 import datetime
 import os
 import random
+import re
 import struct
 import sys
 import time
@@ -62,9 +62,20 @@ OTA_PKT_SIZE = 240          # 设备上报值，仅供参考
 OTA_PKT_MAX = 239           # 受接收队列限制的实际上限
 OTA_PKT_DEFAULT = 224       # 实际使用的包长
 
+class OtaError(Exception):
+    """升级过程出错"""
+
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 LOG_FP = None
+LOG_SINK = None           # 额外的日志回调（GUI 用它刷新界面）
+
+# 显示控制：默认只显示串口收发，不显示门锁自身的调试日志
+SHOW_DEV_LOG = False
+TRACE = True
+LAST_VERSION = None          # 从门锁日志里解析出的 outside_version
+VERSION_RE = re.compile(r"outside_version:\s*V39\.140\.(\d+)")
 
 
 def log(msg=""):
@@ -75,20 +86,40 @@ def log(msg=""):
     if LOG_FP:
         LOG_FP.write(line + "\n")
         LOG_FP.flush()
+    if LOG_SINK:
+        try:
+            LOG_SINK(line)
+        except Exception:
+            pass
 
 
 def die(msg):
     log(f"OTA 失败：{msg}")
-    sys.exit(1)
+    raise OtaError(msg)
 
 
 def open_log(log_dir=None):
-    """日志目录可指定（压测脚本会用 ota_stress\\log），默认 ota_tool\\log"""
+    """日志目录可指定；不指定就不落盘（只输出到 stdout 和 GUI 的日志框）"""
     global LOG_FP
-    d = log_dir or os.path.join(HERE, "log")
+    if not log_dir:
+        LOG_FP = None
+        return
+    d = log_dir
     os.makedirs(d, exist_ok=True)
     name = datetime.datetime.now().strftime("ota_%Y%m%d_%H%M%S.log")
     LOG_FP = open(os.path.join(d, name), "w", encoding="utf-8")
+
+
+def send_frame(ser, cmd, payload, sn, key=None):
+    """发一帧并打印 TX 信息"""
+    data = build_frame(cmd, payload, sn, key)
+    ser.write(data)
+    if TRACE:
+        extra = ""
+        if (cmd & 0x7F) == CMD_OTA_DATA and len(payload) >= 4:
+            extra = " off=0x%06X" % struct.unpack_from("<I", payload, 0)[0]
+        log(f"  TX cmd=0x{cmd:02X} sn={sn} len={len(payload)}{extra}")
+    return data
 
 
 def checksum16(data):
@@ -143,11 +174,19 @@ def read_frame(ser, timeout, key=None):
     stray = bytearray()
 
     def flush():
+        global LAST_VERSION
         if not stray:
             return
         for line in stray.decode("utf-8", errors="replace").splitlines():
             line = line.strip()
-            if len(line) >= 2:
+            if len(line) < 2:
+                continue
+            # 门锁日志里带版本号，压测要靠它判断版本有没有翻转，
+            # 所以即使不显示也要先解析出来
+            m = VERSION_RE.search(line)
+            if m:
+                LAST_VERSION = int(m.group(1))
+            if SHOW_DEV_LOG:
                 log(f"  [dev] {line}")
         stray.clear()
 
@@ -201,6 +240,8 @@ def read_frame(ser, timeout, key=None):
             continue
 
         flush()
+        if TRACE:
+            log(f"  RX cmd=0x{cmd:02X} sn={sn} len={len(plain)}")
         return cmd, plain, sn, rnd
 
     flush()
@@ -219,7 +260,7 @@ def wait_for(ser, expect, timeout, key=None, also=None):
         # 设备的请求用 K_F 相关的回 ACK，其余用当前会话密钥
         if not (cmd & 0x80):
             use = KEY_FACTORY if (cmd & 0x7F) == CMD_KEY_SEND else key
-            ser.write(build_frame(cmd | 0x80, b"", sn, use))
+            send_frame(ser, cmd | 0x80, b"", sn, use)
             ser.flush()
     return None
 
@@ -230,7 +271,7 @@ def negotiate_key(ser):
     返回 (K_L, sn)，失败返回 (None, sn)。"""
     sn = 1
     for _ in range(3):
-        ser.write(build_frame(CMD_KEY_REQ, b"", sn, KEY_FACTORY))
+        send_frame(ser, CMD_KEY_REQ, b"", sn, KEY_FACTORY)
         ser.flush()
 
         deadline = time.time() + 3.0
@@ -244,7 +285,7 @@ def negotiate_key(ser):
             if cmd in (ACK_KEY_REQ, CMD_KEY_SEND) and len(payload) >= 4:
                 kl = payload[KEY_INDEX]
                 if cmd == CMD_KEY_SEND:
-                    ser.write(build_frame(ACK_KEY_SEND, b"", dev_sn, KEY_FACTORY))
+                    send_frame(ser, ACK_KEY_SEND, b"", dev_sn, KEY_FACTORY)
                     ser.flush()
                 if kl not in (0x00, 0xFF):
                     return kl, sn
@@ -252,34 +293,31 @@ def negotiate_key(ser):
 
             # 设备的其它请求（心跳等）→ 回 ACK，避免它重传到超时
             if not (cmd & 0x80):
-                ser.write(build_frame(cmd | 0x80, b"", dev_sn, KEY_FACTORY))
+                send_frame(ser, cmd | 0x80, b"", dev_sn, KEY_FACTORY)
                 ser.flush()
         sn += 1
     return None, sn
 
 
-def main():
-    ap = argparse.ArgumentParser(description="串口 OTA 上传（加密）")
-    ap.add_argument("--port", required=True, help="串口，如 COM7")
-    ap.add_argument("--file", required=True, help="带 16 字节头的 OTA bin")
-    ap.add_argument("--baud", type=int, default=230400)
-    ap.add_argument("--pkt", type=int, default=OTA_PKT_DEFAULT,
-                    help=f"单包数据长度，默认 {OTA_PKT_DEFAULT}，上限 {OTA_PKT_MAX}")
-    ap.add_argument("--retry", type=int, default=3)
-    ap.add_argument("--listen", type=float, default=30.0)
-    ap.add_argument("--quiet", action="store_true")
-    ap.add_argument("--log-dir", default=None,
-                    help="日志输出目录，默认 ota_tool\\log")
-    args = ap.parse_args()
+def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
+               retry=3, listen=18.0, log_dir=None,
+               dev_log=False, trace=True, quiet=False, sink=None):
+    """执行一次 OTA 升级。成功返回 None，失败抛 OtaError。
+    sink 是每条日志的回调，GUI 用它刷新界面。"""
+    global SHOW_DEV_LOG, TRACE, LOG_FP, LOG_SINK, LAST_VERSION
+    SHOW_DEV_LOG = dev_log
+    TRACE = trace
+    LOG_SINK = sink
+    LAST_VERSION = None
 
     try:
         import serial
     except ImportError:
         die("缺少 pyserial，请执行 pip install pyserial")
 
-    open_log(args.log_dir)
+    open_log(log_dir)
 
-    with open(args.file, "rb") as fp:
+    with open(fw_path, "rb") as fp:
         fw = fp.read()
     if len(fw) < OTA_HEADER_SIZE:
         die("固件太小")
@@ -299,17 +337,17 @@ def main():
     fw_size = len(fw)
     fw_csum = checksum32(fw[OTA_HEADER_SIZE:])
 
-    log(f"文件   : {args.file}")
+    log(f"文件   : {fw_path}")
     log(f"长度   : {len(fw)} 字节（头部 size 字段 = {hdr_size}，发送 {fw_size} 字节含头）")
     log(f"版本   : {version[0]}.{version[1]}.{version[2]}")
     log(f"校验和 : 0x{fw_csum:08X}  （仅数据段，不含 16 字节头）")
-    log(f"串口   : {args.port} @ {args.baud}, 每包 {args.pkt} 字节")
+    log(f"串口   : {port} @ {baud}, 每包 {pkt} 字节")
     log("-" * 56)
 
     try:
-        ser = serial.Serial(args.port, args.baud, timeout=0.05)
+        ser = serial.Serial(port, baud, timeout=0.05)
     except serial.SerialException as exc:
-        die(f"串口打开失败: {args.port}（{exc}）")
+        die(f"串口打开失败: {port}（{exc}）")
     ser.reset_input_buffer()
 
     # ---- 0. 密钥协商 ----
@@ -324,13 +362,13 @@ def main():
         # ---- 1. 0x72 开始（设备擦 64K，等久一点）----
         payload = struct.pack("<I", fw_size) + struct.pack("<I", fw_csum) + bytes(version)
         r = None
-        for attempt in range(args.retry):
-            ser.write(build_frame(CMD_OTA_START, payload, sn, key))
+        for attempt in range(retry):
+            send_frame(ser, CMD_OTA_START, payload, sn, key)
             ser.flush()
             r = wait_for(ser, ACK_START, 10.0, key)
             if r:
                 break
-            log(f"  0x72 无应答，重试 {attempt + 1}/{args.retry}")
+            log(f"  0x72 无应答，重试 {attempt + 1}/{retry}")
         if not r:
             die("升级开始无应答（检查串口/波特率/设备是否在跑）")
 
@@ -343,25 +381,30 @@ def main():
                 "       a) 断电重上电后重试；b) 看设备日志里的 sr / write fail 行")
         if status != 0:
             die(f"升级开始被拒绝，status={status}（1=长度超限/flash 不可用）")
+        dev_pkt = pkt
         if pkt:
-            args.pkt = min(args.pkt, pkt)
+            pkt = min(pkt, pkt)
         # 设备上报的 240 会撑爆它自己的接收队列，必须压到 239 以内
-        if args.pkt > OTA_PKT_MAX:
-            log(f"  包长 {args.pkt} 超过接收队列上限，压到 {OTA_PKT_MAX}")
-            args.pkt = OTA_PKT_MAX
-        log(f"设备就绪，建议包长 {pkt}，实际使用 {args.pkt}")
+        if pkt > OTA_PKT_MAX:
+            log(f"  包长 {pkt} 超过接收队列上限，压到 {OTA_PKT_MAX}")
+            pkt = OTA_PKT_MAX
+        # 再向下取整到 4 的倍数：设备端的校验和是 4 字节小端累加，
+        # 每包各自对齐时包长不是 4 的倍数会与整块连续累加不一致。
+        # 新固件已做跨包对齐，但老固件没有，这里对齐可兼容两者。
+        pkt = (pkt // 4) * 4
+        log(f"设备就绪，建议包长 {dev_pkt}，实际使用 {pkt}")
         sn += 1
 
         # ---- 2. 0x73 数据 ----
         offset = 0
         last_pct = -1
         while offset < fw_size:
-            n = min(args.pkt, fw_size - offset)
+            n = min(pkt, fw_size - offset)
             # 从文件偏移 0 开始发，包含 16 字节头
             body = struct.pack("<I", offset) + fw[offset:offset + n]
             r = None
-            for attempt in range(args.retry):
-                ser.write(build_frame(CMD_OTA_DATA, body, sn, key))
+            for attempt in range(retry):
+                send_frame(ser, CMD_OTA_DATA, body, sn, key)
                 ser.flush()
                 r = wait_for(ser, ACK_DATA, 5.0, key)
                 if r:
@@ -382,18 +425,18 @@ def main():
             pct = offset * 100 // fw_size
             if pct // 10 != last_pct // 10:
                 last_pct = pct
-                if not args.quiet:
+                if not quiet:
                     log(f"  进度 {pct:3d}%  ({offset}/{fw_size})")
 
         # ---- 3. 结束包 ----
         r = None
-        for attempt in range(args.retry):
-            ser.write(build_frame(CMD_OTA_DATA, struct.pack("<I", fw_size), sn, key))
+        for attempt in range(retry):
+            send_frame(ser, CMD_OTA_DATA, struct.pack("<I", fw_size), sn, key)
             ser.flush()
             r = wait_for(ser, ACK_DATA, 5.0, key, also=CMD_OTA_RESULT)
             if r:
                 break
-            log(f"  结束包无应答，重试 {attempt + 1}/{args.retry}")
+            log(f"  结束包无应答，重试 {attempt + 1}/{retry}")
         if not r:
             die("结束包没有应答")
 
@@ -416,8 +459,8 @@ def main():
         log(f"OTA 完成：成功，新固件版本 {ver[0]}.{ver[1]}.{ver[2]}")
 
         # ---- 4. 监听重启与版本 ----
-        log(f"等待设备重启（跳 boot 搬运，继续监听 {args.listen:g} 秒）...")
-        deadline = time.time() + args.listen
+        log(f"等待设备重启（跳 boot 搬运，继续监听 {listen:g} 秒）...")
+        deadline = time.time() + listen
         while time.time() < deadline:
             read_frame(ser, 0.3, key)
 
@@ -427,9 +470,8 @@ def main():
         except Exception:
             pass
 
-    log("结束")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    if LAST_VERSION is not None:
+        log(f"最终版本: V39.140.{LAST_VERSION:03d}")
+    else:
+        log("最终版本: 未知")
+    return None
