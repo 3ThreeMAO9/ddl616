@@ -153,36 +153,45 @@ static uint32_t ota_check_flash(void)
     return 0;
 }
 
-#define OTA_CHECK_BUF_SIZE      (256)
+#define OTA_CHECK_BUF_SIZE      (64)
 /* 每写完一包立刻回读比对，确保真的落盘。
  * sfud_write 只负责发命令，写保护/时序问题时会静默失败并返回 SFUD_SUCCESS，
- * 只有回读才能确认。返回 0 = 一致。 */
+ * 只有回读才能确认。按 64 字节分段回读：栈占用小，且不受单包长度限制。
+ * 返回 0 = 一致。 */
 static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len)
 {
     uint8_t check_buf[OTA_CHECK_BUF_SIZE];
     sfud_flash *flash = ota_flash();
-    uint16_t i;
+    uint16_t done = 0;
 
     if (flash == NULL)
         return 1;
 
-    if (len > OTA_CHECK_BUF_SIZE)
-        len = OTA_CHECK_BUF_SIZE;
-
-    if (hal_flash_read(addr, check_buf, len) != 0)
+    while (done < len)
     {
-        OB_LOGE(TAG, "w 0x%05X read fail", addr);
-        return 1;
-    }
+        uint16_t chunk = (uint16_t)(len - done);
+        uint16_t i;
 
-    for (i = 0; i < len; i++)
-    {
-        if (check_buf[i] != src[i])
+        if (chunk > OTA_CHECK_BUF_SIZE)
+            chunk = OTA_CHECK_BUF_SIZE;
+
+        if (hal_flash_read(addr + done, check_buf, chunk) != 0)
         {
-            OB_LOGE(TAG, "w 0x%05X mis @%u %02X!=%02X",
-                    addr, i, check_buf[i], src[i]);
+            OB_LOGE(TAG, "w 0x%05X read fail", addr + done);
             return 1;
         }
+
+        for (i = 0; i < chunk; i++)
+        {
+            if (check_buf[i] != src[done + i])
+            {
+                OB_LOGE(TAG, "w 0x%05X mis @%u %02X!=%02X",
+                        addr + done, i, check_buf[i], src[done + i]);
+                return 1;
+            }
+        }
+
+        done = (uint16_t)(done + chunk);
     }
 
     OB_LOGD(TAG, "w 0x%05X %u ok", addr, len);
