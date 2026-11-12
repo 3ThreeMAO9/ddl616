@@ -1,4 +1,4 @@
-SET PATH=C:\Keil_v5\ARM\ARMCC\Bin;C:\Keil_v5\ARM\ARMCLANG\Bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Users\86158\AppData\Local\Microsoft\WindowsApps;E:\Microsoft VS Code\bin;C:\Program Files\Graphviz\bin;E:\CodeBuddy CN\bin
+SET PATH=C:\Keil_v5\ARM\ARMCC\Bin;C:\Keil_v5\ARM\ARMCLANG\Bin;C:\Program Files\Eclipse Adoptium\jdk-25.0.5.8-hotspot\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\TortoiseGit\bin;C:\Program Files (x86)\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\Tools\Binn\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\160\DTS\Binn\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Users\86158\AppData\Local\Microsoft\WindowsApps;E:\Microsoft VS Code\bin;C:\Program Files\Graphviz\bin;E:\CodeBuddy CN\bin;E:\Microsoft VS Code\bin\copilot-shim
 SET CPU_TYPE=OB90A64M1B
 SET CPU_VENDOR=On-Bright
 SET UV2_TARGET=39140_debug
@@ -491,4 +491,5 @@ python ..\..\tools\gen_ide_config.py
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmCC" --Via "..\build\objects\vector_table._2i"
 "C:\Keil_v5\ARM\ARMCC\Bin\ArmLink" --Via "..\Build\Objects\ota_app.l2p"
 "C:\Keil_v5\ARM\ARMCC\Bin\fromelf.exe" "..\Build\Objects\ota_app.axf" --i32combined --output "..\Build\Objects\ota_app.hex"
-.\packer.exe -a ..\Build\Objects\ota_app.hex -b ..\..\bootloader\Project\Objects\bootloader.hex -r 64k -s 2560 -c -v 0.0.1
+.\packer.exe -a ..\Build\Objects\ota_app.hex -b ..\..\bootloader\Project\Objects\bootloader.hex -r 64k -s 2048 -c -v 0.0.1
+python make_fw.py

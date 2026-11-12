@@ -15,8 +15,11 @@
 #include "module_spi_flash.h"
 #include "chip_config.h"
 #include "ota_info.h"
+#include "ota_file.h"
+#include "hal_flash.h"
 #include "sfud.h"
 #include "hal_wdt.h"
+#include <stddef.h>
 #include <string.h>
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
@@ -54,7 +57,19 @@ static sfud_flash *ota_flash(void)
 /* OTA 区在 SPI flash 末尾，按实际容量算，避免芯片容量与宏不一致 */
 static uint32_t ota_area_addr(void)
 {
+    uint32_t base = read_ota_flash_address();
+    uint32_t size = read_ota_flash_size();
     sfud_flash *flash = ota_flash();
+
+    /* 语音包数据头给的是整块 OTA 域（含备份槽），域被对半分：
+     * 前半备份、后半待升级。所以待升级区 = 域起始 + 域大小/2。
+     * ota_size 单位是 KB（实测 128 → 128KB = 0x20000），
+     * 0x3E0000 + 128/2*1024 = 0x3F0000，正好是 boot 的 SFLASH_OTA_BEGIN_ADDR。
+     * 这样换 flash 或改布局时只要语音包头下发对了，app 自动跟随。 */
+    if (base && size)
+        return base + (size / 2u) * 1024u;
+
+    /* 语音包头不可用时退回「容量末尾 64K」，与 boot 的 SFLASH_OTA_BEGIN_ADDR 一致 */
     return (flash == NULL) ? 0 : (flash->chip.capacity - OTA_FLASH_MAX_SIZE);
 }
 
@@ -84,6 +99,138 @@ static uint32_t ota_checksum_add(uint32_t sum, const uint8_t *p, uint32_t size)
     }
 
     return sum;
+}
+
+#define OTA_CHECK_BUF_SIZE      (256)
+
+static uint8_t s_check_buf[OTA_CHECK_BUF_SIZE];
+
+/* 第一包里留一份 16 字节镜像头，收尾时和 flash 回读结果对照 */
+static uint8_t s_expect_hdr[16];
+
+/* 回读 SPI flash，校验刚写进去的镜像是否完整。
+ * 对应参考例程 ota_helper_check_data()：sfud 的写不做任何校验，
+ * 写保护/时序问题时依然返回 SFUD_SUCCESS，只有回读才能发现。
+ * 返回 0 = 通过，1 = 头/magic/checksum1 不对，3 = checksum2 不对。 */
+static uint32_t ota_check_flash(void)
+{
+    sfud_flash *flash = ota_flash();
+    ota_file_t hdr;
+    uint32_t base, sum, addr, size, rd;
+
+    if (flash == NULL)
+        return 1;
+
+    base = ota_area_addr();
+
+    /* 最后一个包的写入可能还在芯片内部进行，稍等一下再读 */
+    for (volatile uint32_t d = 0; d < 20000u; d++)
+        ;
+
+    if (hal_flash_read(base, &hdr, sizeof(hdr)) != 0)
+        return 1;
+
+    /* 打印回读到的 16 字节头，以及第一包里留存的期望头，逐字节对照 */
+    OB_LOGI(TAG, "hdr read:");
+    OB_LOGI_DUMP((const uint8_t *)&hdr, 16);
+    OB_LOGI(TAG, "hdr expect:");
+    OB_LOGI_DUMP(s_expect_hdr, 16);
+
+    if ((hdr.magic != OTA_FILE_MAGIC) || (hdr.size < 4) || (hdr.size > OTA_FLASH_MAX_SIZE))
+    {
+        OB_LOGE(TAG, "readback magic=%04X size=%u", hdr.magic, hdr.size);
+        return 1;
+    }
+
+    /* 只校验自洽是不够的：flash 里若还是上一次的镜像，它自己也是自洽的，
+     * 校验必然通过。必须和本次 OTA 的期望值逐项比对。 */
+    if (hdr.size != (s_ota.total - sizeof(ota_file_t)))
+    {
+        OB_LOGE(TAG, "readback size=%u expect=%u",
+                hdr.size, s_ota.total - (uint32_t)sizeof(ota_file_t));
+        return 2;
+    }
+
+    if (hdr.checksum2 != s_ota.calc)
+    {
+        OB_LOGE(TAG, "readback csum=%08X expect=%08X", hdr.checksum2, s_ota.calc);
+        return 2;
+    }
+
+    if ((hdr.version[0] != s_ota.version[0])
+            || (hdr.version[1] != s_ota.version[1])
+            || (hdr.version[2] != s_ota.version[2]))
+    {
+        OB_LOGE(TAG, "readback ver=%u.%u.%u expect=%u.%u.%u",
+                hdr.version[0], hdr.version[1], hdr.version[2],
+                s_ota.version[0], s_ota.version[1], s_ota.version[2]);
+        return 2;
+    }
+
+    /* checksum1 覆盖 magic ~ checksum2 之前的全部头部字段 */
+    sum = ota_file_calc_checksum_u16((uint16_t *)&hdr.magic,
+            offsetof(ota_file_t, data) - sizeof(hdr.checksum1));
+    if (sum != hdr.checksum1)
+    {
+        OB_LOGE(TAG, "readback sum1=%04X expect=%04X", sum, hdr.checksum1);
+        return 1;
+    }
+
+    /* checksum2 覆盖整个数据段 */
+    sum = 0;
+    addr = base + sizeof(hdr);
+    size = hdr.size;
+    while (size)
+    {
+        rd = (size > OTA_CHECK_BUF_SIZE) ? OTA_CHECK_BUF_SIZE : size;
+        if (hal_flash_read(addr, s_check_buf, rd) != 0)
+            return 1;
+        sum += ota_file_calc_checksum_u32((uint32_t *)s_check_buf, rd);
+        size -= rd;
+        addr += rd;
+    }
+
+    if (sum != hdr.checksum2)
+    {
+        OB_LOGE(TAG, "readback sum2=%08X expect=%08X", sum, hdr.checksum2);
+        return 3;
+    }
+
+    return 0;
+}
+
+/* 每写完一包立刻回读比对，确保真的落盘。
+ * sfud_write 只负责发命令，写保护/时序问题时会静默失败并返回 SFUD_SUCCESS，
+ * 只有回读才能确认。返回 0 = 一致。 */
+static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len)
+{
+    sfud_flash *flash = ota_flash();
+    uint16_t i;
+
+    if (flash == NULL)
+        return 1;
+
+    if (len > OTA_CHECK_BUF_SIZE)
+        len = OTA_CHECK_BUF_SIZE;
+
+    if (hal_flash_read(addr, s_check_buf, len) != 0)
+    {
+        OB_LOGE(TAG, "w 0x%05X read fail", addr);
+        return 1;
+    }
+
+    for (i = 0; i < len; i++)
+    {
+        if (s_check_buf[i] != src[i])
+        {
+            OB_LOGE(TAG, "w 0x%05X mis @%u %02X!=%02X",
+                    addr, i, s_check_buf[i], src[i]);
+            return 1;
+        }
+    }
+
+    OB_LOGD(TAG, "w 0x%05X %u ok", addr, len);
+    return 0;
 }
 
 /* 0x0C 结果上报：[result 1B][version 3B] */
@@ -116,7 +263,7 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     uint32_t size = (uint32_t)p[0] | ((uint32_t)p[1] << 8)
                   | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
 
-    if ((size < 4) || (size > OTA_FLASH_MAX_SIZE))
+    if ((size < 4) || (size > FLASH_APP_MAX_SIZE))
     {
         uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
         return 0;
@@ -130,8 +277,29 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     s_ota.version[1] = p[9];
     s_ota.version[2] = p[10];
 
+    /* OTA 区地址：优先用语音包数据头里声明的 ota_address，
+     * 没有声明时才退回「容量末尾 64K」的旧算法。打印出来便于和
+     * boot 的 SFLASH_OTA_BEGIN_ADDR 对照。 */
+    OB_LOGI(TAG, "ota addr=0x%05X (hdr=0x%05X) cap=%u",
+            ota_area_addr(), read_ota_flash_address(),
+            (flash == NULL) ? 0 : flash->chip.capacity);
+
     /* 擦除 64K，耗时 1~2 秒，期间无应答属正常 */
-    if (sfud_erase(flash, ota_area_addr(), OTA_FLASH_MAX_SIZE) != SFUD_SUCCESS)
+    /* 擦除前清写保护。
+     * boot 的 spi_flash_64k_erase / write 结尾都会 WRSR 0x7C 置 BP 位，
+     * hal_flash_erase/write 内部只做 WREN，不会清 BP。
+     * BP 位置上后芯片静默忽略擦写（实测回读仍是旧镜像的字节，
+     * 如 0xB9 —— 旧 099 镜像头的 checksum1 低字节）。 */
+    {
+        uint8_t sr_before = 0xFF, sr_after = 0xFF;
+
+        hal_flash_read_status(&sr_before);
+        hal_flash_write_status(0x00);
+        hal_flash_read_status(&sr_after);
+        OB_LOGI(TAG, "sr %02X -> %02X", sr_before, sr_after);
+    }
+
+    if (hal_flash_erase(ota_area_addr(), OTA_FLASH_MAX_SIZE) != 0)
     {
         OB_LOGE(TAG, "erase fail");
         ack[0] = OTA_START_STATUS_BUSY;
@@ -184,7 +352,20 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         }
         else
         {
-            ota_send_result(OTA_RESULT_SUCCESS);
+            /* 回读校验：sfud 的写不校验，写保护/时序问题也会返回成功，
+             * 只有回读才能发现「报了成功但 flash 里还是旧镜像」。
+             * 参考例程 ota_timer.c 也是校验通过才允许重启。 */
+            uint32_t chk = ota_check_flash();
+
+            if (chk)
+            {
+                ret = OTA_DATA_STATUS_READBACK_FAIL;
+                ota_send_result(OTA_RESULT_CSUM_FAIL);
+            }
+            else
+            {
+                ota_send_result(OTA_RESULT_SUCCESS);
+            }
         }
 
         s_ota.active = 0;
@@ -223,14 +404,42 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         if ((s_ota.expected + wr) > s_ota.total)
             wr = (uint16_t)(s_ota.total - s_ota.expected);
 
-        if (sfud_write(flash, ota_area_addr() + s_ota.expected, wr,
-                p + 4 + skip) != SFUD_SUCCESS)
+        /* 第一包里带的就是完整镜像头，留一份，收尾时和 flash 回读对照 */
+        if ((s_ota.expected == 0) && (wr >= sizeof(s_expect_hdr)))
+            memcpy(s_expect_hdr, p + 4 + skip, sizeof(s_expect_hdr));
+
+        if (hal_flash_write(ota_area_addr() + s_ota.expected,
+                p + 4 + skip, wr) != 0)
         {
             ret = OTA_DATA_STATUS_WRITE_FAIL;
         }
+        else if (ota_verify_write(ota_area_addr() + s_ota.expected,
+                    p + 4 + skip, wr))
+        {
+            ret = OTA_DATA_STATUS_WRITE_FAIL;   /* 回读不一致 */
+        }
+
+        /* 一旦写失败就清掉本次升级会话，避免 s_ota.active 卡在 1，
+         * 下一次 0x72 被拒绝（status=2）永远重试不了 */
+        if (ret == OTA_DATA_STATUS_WRITE_FAIL)
+        {
+            OB_LOGE(TAG, "write fail @0x%05X, abort", s_ota.expected);
+            s_ota.active = 0;
+        }
         else
         {
-            s_ota.calc = ota_checksum_add(s_ota.calc, p + 4 + skip, wr);
+            /* 累加时跳过 16 字节文件头，使 s_ota.calc 与镜像头的 checksum2 同口径
+             * （checksum2 只覆盖数据段，不含文件头） */
+            {
+                uint32_t head_skip = 0;
+
+                if (s_ota.expected < sizeof(ota_file_t))
+                    head_skip = sizeof(ota_file_t) - s_ota.expected;
+
+                if (head_skip < wr)
+                    s_ota.calc = ota_checksum_add(s_ota.calc,
+                            p + 4 + skip + head_skip, wr - head_skip);
+            }
             s_ota.expected += wr;
         }
     }

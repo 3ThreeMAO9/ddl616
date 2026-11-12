@@ -12,3 +12,9 @@ bw-output/
 *.obj
 application/Project/ota_app.uvopt
 application/Project/22222.BAT
+tools/ota_tool/log
+
+# OTA 压测的运行产物
+tools/ota_stress/log/
+tools/ota_stress/fw_a/
+tools/ota_stress/fw_b/

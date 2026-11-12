@@ -16,7 +16,19 @@
 
 
 static uint32_t end_flag_address;
-static uint8_t self_test_flag=0;
+static uint32_t ota_flash_address;      /* 语音包数据头里声明的 OTA 域起始地址 */
+static uint32_t ota_flash_size;         /* 语音包数据头里声明的 OTA 域大小，单位 KB */
+static uint8_t self_test_flag = 0;
+
+uint32_t read_ota_flash_address(void)
+{
+    return ota_flash_address;
+}
+
+uint32_t read_ota_flash_size(void)
+{
+    return ota_flash_size;
+}
 
 
 static voice_info_t voice_info = {
@@ -156,15 +168,17 @@ void flash_addr_update_handler(const sfud_flash *flash,const spi_flash_frame_t  
 
     int32_t offset = get_offset_addr(flash_info_frame.data_type);
 
-	if(flash_info_frame.data_type == FLASH_DATA_CONTENT)
-	{
-		//基础数据内容，如果读到该类型，语音版本按照这个为准
-		voice_info.version = flash_info_frame.version;
-    	flash_pack_head_t flash_head_info = {0};
+    if(flash_info_frame.data_type == FLASH_DATA_CONTENT)
+    {
+        //基础数据内容，如果读到该类型，语音版本按照这个为准
+        voice_info.version = flash_info_frame.version;
+        flash_pack_head_t flash_head_info = {0};
 
-		hal_flash_read(addr,(uint8_t*)&flash_head_info,sizeof(flash_pack_head_t));
-		end_flag_address= flash_head_info.end_address;
-	}
+        hal_flash_read(addr,(uint8_t*)&flash_head_info,sizeof(flash_pack_head_t));
+        end_flag_address   = flash_head_info.end_address;
+        ota_flash_address  = flash_head_info.ota_address;
+        ota_flash_size     = flash_head_info.ota_size;      /* 单位 KB */
+    }
 
     if(offset >= 0) {
         OB_LOGD(TAG,"/***************************************************/");

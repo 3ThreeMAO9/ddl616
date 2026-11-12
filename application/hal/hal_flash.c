@@ -37,3 +37,15 @@ uint32_t hal_flash_read(uint32_t addr, void *buf, uint32_t size)
     sfud_read(flash, addr, size, buf);
     return 0;
 }
+
+uint32_t hal_flash_write_status(uint8_t status)
+{
+    const sfud_flash *flash = sfud_get_device_table() + 0;
+    return sfud_write_status(flash, false, status);
+}
+
+uint32_t hal_flash_read_status(uint8_t *status)
+{
+    const sfud_flash *flash = sfud_get_device_table() + 0;
+    return sfud_read_status(flash, status);
+}

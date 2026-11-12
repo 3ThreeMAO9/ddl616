@@ -65,6 +65,9 @@ typedef struct
 }flash_addr_info_t;
 
 void module_spi_flash_init(void);
+/* 语音包数据头里声明的 OTA 域起始地址与大小（单位 KB），未解析到时返回 0 */
+uint32_t read_ota_flash_address(void);
+uint32_t read_ota_flash_size(void);
 uint32_t read_player_data_addr(uint16_t type,uint32_t index,flash_addr_info_t *outdata);
 uint32_t read_player_data(uint32_t addr,uint32_t length,uint8_t *outdata);
 uint16_t read_voice_version(uint16_t language);

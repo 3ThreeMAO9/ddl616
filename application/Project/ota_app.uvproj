@@ -79,9 +79,9 @@
           </BeforeMake>
           <AfterMake>
             <RunUserProg1>1</RunUserProg1>
-            <RunUserProg2>0</RunUserProg2>
-            <UserProg1Name>.\packer.exe -a ..\Build\Objects\ota_app.hex -b ..\..\bootloader\Project\Objects\bootloader.hex -r 64k -s 2560 -c -v 0.0.1</UserProg1Name>
-            <UserProg2Name></UserProg2Name>
+            <RunUserProg2>1</RunUserProg2>
+            <UserProg1Name>.\packer.exe -a ..\Build\Objects\ota_app.hex -b ..\..\bootloader\Project\Objects\bootloader.hex -r 64k -s 2048 -c -v 0.0.1</UserProg1Name>
+            <UserProg2Name>python make_fw.py</UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
             <nStopA1X>0</nStopA1X>

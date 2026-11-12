@@ -31,4 +31,8 @@ uint32_t hal_flash_write(uint32_t addr, const void *buf, uint32_t size);
 
 uint32_t hal_flash_read(uint32_t addr, void *buf, uint32_t size);
 
+/* 状态寄存器：写保护位在 BP 位上，volatile 方式只对本次上电有效 */
+uint32_t hal_flash_write_status(uint8_t status);
+uint32_t hal_flash_read_status(uint8_t *status);
+
 #endif // _HAL_FLASH_H
