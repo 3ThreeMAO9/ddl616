@@ -16,7 +16,7 @@
  *   - 固件先落 SPI flash，再由 boot 搬到 FMC
  *
  * 协议细节见 doc/串口OTA升级对接说明_v1.2.md
- * Version 1.4.1
+ * Version 1.4.2
  * Date: 2026-11-13
  */
 
@@ -24,7 +24,6 @@
 
 #include "uart_protocol.h"
 #include "msg_protocol.h"
-#include "module_spi_flash.h"
 #include "chip_config.h"
 #include "ota_info.h"
 #include "ota_file.h"
@@ -41,11 +40,11 @@
 
 typedef struct {
     uint8_t  active;        /* 1 = 正在接收固件 */
-    uint8_t  version[3];
     uint32_t total;         /* 对端声明的固件长度 */
     uint32_t expected;      /* 下一个包的偏移，也是已写入字节数 */
     uint32_t checksum;      /* 对端给的 32 位累加和 */
     uint32_t calc;          /* 本地边收边算的累加和 */
+    uint32_t base;          /* OTA 区起始地址，0x72 建会话时算一次 */
     uint32_t last_ms;       /* 最近一次收到 0x73 的时刻，用于会话超时 */
 } ota_ctx_t;
 
@@ -66,22 +65,6 @@ __ASM void go_boot(void)
     MSR   MSP, R1
     LDR   R1, =boot_main
     BX    R1
-}
-
-/* OTA 区地址：优先用语音包头声明的 OTA 域（域起始 + 域大小/2，即后半区）；
- * 没有声明时退回「容量末尾 64K」，与 boot 的 SFLASH_OTA_BEGIN_ADDR 一致。
- * 按实际容量计算，换 flash 或改分区布局时 app 自动跟随。 */
-static uint32_t ota_area_addr(void)
-{
-    uint32_t base = read_ota_flash_address();
-    uint32_t size = read_ota_flash_size();
-
-    if (base && size)
-        return base + (size / 2u) * 1024u;      /* ota_size 单位 KB，域被对半分 */
-
-    /* sfud 设备表静态分配，sfud_get_device(0) 恒非 NULL；
-     * 若 sfud 未初始化成功 capacity 为 0，算出的地址会让擦除失败兜住 */
-    return sfud_get_device(0)->chip.capacity - OTA_FLASH_MAX_SIZE;
 }
 
 /* 32 位累加和：4 字节一组小端累加，尾部不足 4 字节补零，
@@ -114,17 +97,17 @@ static uint32_t ota_checksum_add(uint32_t sum, const uint8_t *p, uint32_t size)
 }
 
 /* 结束包后回读镜像头，与本次下发的期望值逐项比对：
- * magic / size / checksum2 / version。
- * sfud 写失败会静默返回 SFUD_SUCCESS，只有回读才可信；
- * 必须比对期望值而不能只做自洽校验 —— flash 里残留的旧镜像也是自洽的。
+ * magic / size / checksum2。checksum2 是全量累加和、碰撞可忽略，
+ * 同版本又被 SAME_VER 拦截，故不再比对 version。
+ * 必须比对期望值而不能只做自洽校验 —— flash 里残留的旧镜像也是自洽的；
+ * sfud 写失败会静默返回 SFUD_SUCCESS，只有回读才可信。
  * 返回 0 = 通过。 */
 static uint32_t ota_check_flash(void)
 {
     ota_file_t hdr;
-    uint32_t base = ota_area_addr();
 
     /* sfud_write 返回前已在内部轮询 WIP 等写完成，无需额外延时 */
-    if (hal_flash_read(base, &hdr, sizeof(hdr)) != 0)
+    if (hal_flash_read(s_ota.base, &hdr, sizeof(hdr)) != 0)
         return 1;
 
     if (hdr.magic != OTA_FILE_MAGIC)
@@ -143,16 +126,6 @@ static uint32_t ota_check_flash(void)
     if (hdr.checksum2 != s_ota.calc)
     {
         OB_LOGE(TAG, "readback csum=%08X expect=%08X", hdr.checksum2, s_ota.calc);
-        return 2;
-    }
-
-    if ((hdr.version[0] != s_ota.version[0])
-            || (hdr.version[1] != s_ota.version[1])
-            || (hdr.version[2] != s_ota.version[2]))
-    {
-        OB_LOGE(TAG, "readback ver=%u.%u.%u expect=%u.%u.%u",
-                hdr.version[0], hdr.version[1], hdr.version[2],
-                s_ota.version[0], s_ota.version[1], s_ota.version[2]);
         return 2;
     }
 
@@ -230,13 +203,10 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     s_ota.total    = size;
     s_ota.checksum = (uint32_t)p[4] | ((uint32_t)p[5] << 8)
                    | ((uint32_t)p[6] << 16) | ((uint32_t)p[7] << 24);
-    s_ota.version[0] = p[8];
-    s_ota.version[1] = p[9];
-    s_ota.version[2] = p[10];
-
-    /* OTA 区地址：优先用语音包数据头里声明的 ota_address（域起始 + 域大小/2），
-     * 没有声明时才退回「容量末尾 64K」。打印出来便于和 boot 对照。 */
-    OB_LOGI(TAG, "ota addr=0x%05X", ota_area_addr());
+    /* OTA 区 = 容量末尾 64K，与 boot 的 SFLASH_OTA_BEGIN_ADDR 同口径
+     * （boot 用固定宏，app 若按语音包声明改地址反而会搬错区）。
+     * 一次性算好存会话，0x73 数据包与结束包回读直接用。 */
+    s_ota.base = sfud_get_device(0)->chip.capacity - OTA_FLASH_MAX_SIZE;
 
     /* 擦除前清写保护。
      * boot 的 spi_flash_64k_erase / write 结尾都会 WRSR 0x7C 置 BP 位，
@@ -245,7 +215,7 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     hal_flash_write_status(0x00);
 
     /* 擦除 64K，耗时 1~2 秒，期间无应答属正常 */
-    if (hal_flash_erase(ota_area_addr(), OTA_FLASH_MAX_SIZE) != 0)
+    if (hal_flash_erase(s_ota.base, OTA_FLASH_MAX_SIZE) != 0)
     {
         OB_LOGE(TAG, "erase fail");
         ack[0] = OTA_START_STATUS_ERASE_FAIL;
@@ -344,7 +314,7 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         if ((s_ota.expected + wr) > s_ota.total)
             wr = (uint16_t)(s_ota.total - s_ota.expected);
 
-        uint32_t waddr = ota_area_addr() + s_ota.expected;
+        uint32_t waddr = s_ota.base + s_ota.expected;
 
         if (hal_flash_write(waddr, p + 4 + skip, wr) != 0)
         {
