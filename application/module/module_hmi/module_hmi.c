@@ -103,6 +103,31 @@ static void hmi_key_board_led_config(uint8_t nowState, uint8_t nextState, uint32
 }
 
 
+/* —— module_hmi_handle 里的高频组合，提取成小函数减小主函数体积 —— */
+static void kb_led_on(void)  { hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0); }
+static void kb_led_off(void) { hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0); }
+
+/* 第二参数恒为 LOGO_LED_COLOR_IDLE 的包装 */
+static void logo_led(uint8_t color, uint32_t halfPeriod, uint32_t halfPeriodCnt)
+{
+    hmi_logo_led_config(color, LOGO_LED_COLOR_IDLE, halfPeriod, halfPeriodCnt);
+}
+
+/* 定长逐位播数字（保留前导零），替代大段 VOICE_Zero + (x/n)%10 手拆 */
+static void play_digits(uint32_t v, uint8_t digits)
+{
+    uint32_t d = 1;
+
+    for (uint8_t i = 1; i < digits; i++)
+        d *= 10;
+
+    for (uint8_t i = 0; i < digits; i++)
+    {
+        PLAYER_LIST_ADD(VOICE_Zero + (v / d) % 10);
+        d /= 10;
+    }
+}
+
 uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 {
 //    struct tm *time_info;
@@ -128,17 +153,17 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_POWER_ON:
         case HMI_STATE_KEY_BOARD_WAKE_UP:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            logo_led(LOGO_LED_COLOR_BLUE, HMI_STATE_KEEP_TIME_2s, 1);
+            kb_led_on();
             keepTime = HMI_STATE_KEEP_TIME_250ms;
             break;
 
         case HMI_STATE_BELL:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_3s, 1);
+            logo_led(LOGO_LED_COLOR_BLUE, HMI_STATE_KEEP_TIME_3s, 1);
             break;
 
         case HMI_STATE_JOIN_NET:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 2);
+            logo_led(LOGO_LED_COLOR_BLUE, HMI_STATE_KEEP_TIME_500ms, 2);
             break;
         
         case HMI_STATE_JOIN_NET_START:
@@ -146,69 +171,69 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_JOIN_NET_SUCCESS:        // 配网成功：绿灯亮，播"配网成功"
-            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_2s, 1);
+            kb_led_off();
             PLAYER_LIST_CLEAR_ADD(VOICE_Network_pairing_successful);
             keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
         case HMI_STATE_JOIN_NET_FAIL:           // 配网失败：红灯闪，播"配网失败"
-            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_RED, HMI_STATE_KEEP_TIME_100ms, 4);
+            kb_led_off();
             PLAYER_LIST_CLEAR_ADD(VOICE_Network_pairing_failed);
             keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
         case HMI_STATE_LINKED_UNLOCK_WAIT:      // 联动开锁：配对码已下发，蓝灯慢闪，播"配对中请稍候"
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 2);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_BLUE, HMI_STATE_KEEP_TIME_500ms, 2);
+            kb_led_off();
             PLAYER_LIST_CLEAR_ADD(VOICE_Pairing_in_progress_please_wait);
             keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
         case HMI_STATE_LINKED_UNLOCK_FAIL:      // 联动开锁失败：红灯闪，播"设置失败"
-            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_RED, HMI_STATE_KEEP_TIME_100ms, 4);
+            kb_led_off();
             PLAYER_LIST_CLEAR_ADD(VOICE_Setup_failed);
             keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
         case HMI_STATE_KEY_BOARD_LED_ON:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             break;
 
         case HMI_STATE_KEY_BOARD_LED_OFF:
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            kb_led_off();
             break;
 
         case HMI_STATE_ALL_LED_OFF:
-            hmi_logo_led_config(LOGO_LED_COLOR_IDLE, LOGO_LED_COLOR_IDLE, 0, 0);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_IDLE, 0, 0);
+            kb_led_off();
             break;
 
         case HMI_STATE_KEY_BOARD_LED_BLUE_OB:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, 0, 0);
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            logo_led(LOGO_LED_COLOR_BLUE, 0, 0);
+            kb_led_on();
             break;
         case HMI_STATE_VERIFY_SUCCESS:
-            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_2s, 1);
+            kb_led_off();
             keepTime = 6000;
             break;
         case HMI_STATE_DEMO_VERIFY_SUCCESS:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_BLUE, HMI_STATE_KEEP_TIME_2s, 1);
+            kb_led_off();
             keepTime = 6000;
             break;
         case HMI_STATE_LOW_PWOER_VERIFY_SUCCESS:
             hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_1s, 2);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            kb_led_off();
             keepTime = 6000;
             break;
 
         case HMI_STATE_ACTIVECODE_SUCCESS:
         case HMI_STATE_RESET_SUCCESS:
-            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_2s, 1);
             break;
         case HMI_STATE_VERIFY_ADMIN_SUCCESS:
             break;
@@ -216,7 +241,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         case HMI_STATE_INPUT_ERROR:
         case HMI_STATE_HANDLE_FAIL:
         case HMI_STATE_VERIFY_FAIL:
-            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
+            logo_led(LOGO_LED_COLOR_RED, HMI_STATE_KEEP_TIME_100ms, 4);
             hmi_key_board_led_config(TRUN_ON, TRUN_OFF, HMI_STATE_KEEP_TIME_100ms, 4);
             // if (!silentFlag)
             //     PLAYER_LIST_CLEAR_ADD(VOICE_Verification_failed);
@@ -230,30 +255,30 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
 
         case HMI_STATE_SYSTEM_LOCK:
-            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_500ms, 6);
+            logo_led(LOGO_LED_COLOR_RED, HMI_STATE_KEEP_TIME_500ms, 6);
             hmi_key_board_led_config(TRUN_ON, TRUN_OFF, HMI_STATE_KEEP_TIME_500ms, 6);
             PLAYER_LIST_CLEAR_ADD(SOUND_WARN);
             keepTime = HMI_STATE_KEEP_TIME_2s;
             break;
 
         case HMI_STATE_ENTER_ADMIN_MODE:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_Entered_management_mode);
             break;
 
         case HMI_STATE_EXIT_ADMIN_MODE:             //已退出管理模式：灭灯（随后进入休眠）+ 播报
-            hmi_logo_led_config(LOGO_LED_COLOR_IDLE, LOGO_LED_COLOR_IDLE, 0, 0);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_IDLE, 0, 0);
+            kb_led_off();
             PLAYER_LIST_CLEAR_ADD(VOICE_Exited_from_master_mode);
             break;
 
         case HMI_STATE_VERIFY_ADMIN_CODE:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_ADD(VOICE_Please_verify_master_access_method, VOICE_To_cancel_please_press_the_asterisk_key);
             break;
 
         case HMI_STATE_ADMIN:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_To_add_a_user_please_press, VOICE_One,
                                   VOICE_To_change_the_master_PIN_code_please_press, VOICE_Two,
                                   VOICE_To_delete_a_general_user_please_press, VOICE_Three,
@@ -261,11 +286,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             break;
         
         case HMI_STATE_CHANGE_MASTER_CODE:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_ADD(VOICE_To_add_a_master_user, VOICE_Please_enter_a_6_to_12_digit_master_PIN_code, VOICE_End_with_pound_key, VOICE_To_cancel_please_press_the_asterisk_key);
             break;
         case HMI_STATE_MENU_CHANGE_MASTER_CODE:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_ADD(VOICE_Please_enter_a_6_to_12_digit_master_PIN_code, VOICE_End_with_pound_key, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
@@ -283,29 +308,27 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             // 本次录入的密码/指纹/卡片都归它）
             uint16_t user_id = read_user_id();
             PLAYER_LIST_CLEAR_ADD(VOICE_User_number);          // "用户编号"
-            PLAYER_LIST_ADD(VOICE_Zero + user_id / 100);       // 百位
-            PLAYER_LIST_ADD(VOICE_Zero + (user_id / 10) % 10); // 十位
-            PLAYER_LIST_ADD(VOICE_Zero + user_id % 10);        // 个位
+            play_digits(user_id, 3);                           // 三位编号（保留前导零）
             PLAYER_LIST_ADD(VOICE_To_add_a_PIN_code_please_press, VOICE_One, VOICE_To_add_a_fingerprint_please_press, VOICE_Two, VOICE_To_add_a_key_tag_please_press, VOICE_Three);
             break;
         }
 
         case HMI_STATE_DELETE_NORMAL_USER:
             // 删除用户菜单：1=删除单个 2=删除全部，星号键返回上级
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_To_delete_a_user_please_press, VOICE_One,
                                   VOICE_Delete_all_users_please_press, VOICE_Two,
                                   VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
         case HMI_STATE_DELETE_NORMAL_USER_INPUT_ID:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_enter_the_user_number_to_delete, VOICE_End_with_pound_key,
                                   VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
         case HMI_STATE_DELETE_ALL_NORMAL_USER_CONFIRM:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_To_delete_all_general_users, VOICE_Please_press_the_star_key_to_return_to_the_previous_menu);
             break;
 
@@ -374,7 +397,7 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_SYSTEM_SETTINGS:
             // 从"设置成功/失败"返回本菜单时，灯效状态仍是熄灭，这里必须重新点亮键盘灯
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_Create_linked_unlocking_please_press, VOICE_One, VOICE_Join_linked_unlocking_please_press, VOICE_Two, VOICE_Exit_linked_unlocking_please_press, VOICE_Three);
             break;
 
@@ -413,11 +436,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         case HMI_STATE_HANDLE_VOICE_SUCCESS:
             if (readUserParameter(USER_PARA_SILENT_MODE_ID)){
-                hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
+                logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_1s, 1);
                 PLAYER_LIST_CLEAR_ADD(VOICE_Voice_mode);
             }
             else{
-                hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_1s, 1);
+                logo_led(LOGO_LED_COLOR_BLUE, HMI_STATE_KEEP_TIME_1s, 1);
                 PLAYER_LIST_CLEAR_ADD(VOICE_Mute_mode);
             }
             break;
@@ -441,30 +464,30 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         // 整机测试(258#)第二步：指纹识别，只播"请按手指"（不带"返回上级菜单请按*号键"）
         case HMI_STATE_DEVICE_TEST_FINGER_ENROLL:
-            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);  // 触摸测试通过：绿灯闪
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_100ms, 4);  // 触摸测试通过：绿灯闪
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_touch_the_fingerprint_sensor);
             break;
 
         // 整机测试(258#)第三步：NFC 检卡，只播"请刷卡"（不带"返回上级菜单请按*号键"）
         case HMI_STATE_DEVICE_TEST_NFC:
-            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);  // 指纹识别通过：绿灯闪
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_100ms, 4);  // 指纹识别通过：绿灯闪
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_swipe_the_key_tag);
             break;
 
         // 整机测试(258#)第四步：实体按键测试，绿灯闪 + 提示音（不动键盘灯，区别于第一步的触摸按键反馈）
         case HMI_STATE_DEVICE_TEST_KEY_TEST:
-            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);  // 绿灯闪
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_100ms, 4);  // 绿灯闪
             PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
             break;
 
         // 双重验证：第一重通过，蓝灯长亮提示继续第二重（不播语音）
         case HMI_STATE_DUAL_VERIFY_FIRST_OK:
-            hmi_logo_led_config(LOGO_LED_COLOR_BLUE, LOGO_LED_COLOR_IDLE, 0, 0);
+            logo_led(LOGO_LED_COLOR_BLUE, 0, 0);
             break;
 
         // 双重验证：第二重失败（类型与第一重相同），红灯 0.1s 闪 2 次
         case HMI_STATE_DUAL_VERIFY_FAIL:
-            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_100ms, 4);
+            logo_led(LOGO_LED_COLOR_RED, HMI_STATE_KEEP_TIME_100ms, 4);
             keepTime = HMI_STATE_KEEP_TIME_500ms;
             break;
 
@@ -489,15 +512,15 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         // 整机测试(258#)进入：键盘灯全亮 + 指示灯灭 + 按键配色从头开始
         case HMI_STATE_DEVICE_TEST_START:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
-            hmi_logo_led_config(LOGO_LED_COLOR_IDLE, LOGO_LED_COLOR_IDLE, 0, 0);
+            kb_led_on();
+            logo_led(LOGO_LED_COLOR_IDLE, 0, 0);
             device_test_logo_color_idx = 0;
             break;
 
         // 整机测试(258#)第一步：触摸按键反馈：键盘灯"灭 100ms 再亮起" + 指示灯换下一个颜色
         case HMI_STATE_DEVICE_TEST_KEY_PRESS:
             hmi_key_board_led_config(TRUN_OFF, TRUN_ON, HMI_STATE_KEY_BOARD_LED_TIME, 1);
-            hmi_logo_led_config(device_test_logo_color_tab[device_test_logo_color_idx], LOGO_LED_COLOR_IDLE, 0, 0);
+            logo_led(device_test_logo_color_tab[device_test_logo_color_idx], 0, 0);
             PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DI);
             device_test_logo_color_idx++;
             if (device_test_logo_color_idx >= (sizeof(device_test_logo_color_tab) / sizeof(device_test_logo_color_tab[0])))
@@ -509,12 +532,12 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
 
         // 联动子菜单：用 CLEAR_ADD 重建播放队列，入口只播 1 声按键音
         case HMI_STATE_CREATE_LINKED_UNLOCK:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_enter_a_random_4_digit_pairing_code, VOICE_End_with_pound_key);
             break;
 
         case HMI_STATE_JOIN_LINKED_UNLOCK:
-            hmi_key_board_led_config(TRUN_ON, TRUN_ON, 0, 0);
+            kb_led_on();
             PLAYER_LIST_CLEAR_ADD(VOICE_Please_enter_a_4_digit_pairing_code, VOICE_End_with_pound_key);
             break;
 
@@ -523,17 +546,9 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             uint16_t sn        = CLIENT_ITEM_SN;
             uint16_t voice_ver = readVoiceInfoVersion();
 
-            PLAYER_LIST_ADD(VOICE_Zero + (sn / 10000) % 10);        // 39
-            PLAYER_LIST_ADD(VOICE_Zero + (sn / 1000) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (sn / 100) % 10);          // 140
-            PLAYER_LIST_ADD(VOICE_Zero + (sn / 10) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (sn % 10));
-            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 100) % 10);   // 118
-            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver / 10) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (voice_ver % 10));
-            PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION / 100) % 10);   // 003
-            PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION / 10) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (PATCH_VERSION % 10));
+            play_digits(sn, 5);              // 39140
+            play_digits(voice_ver, 3);       // 118
+            play_digits(PATCH_VERSION, 3);   // 003（保留前导零）
             break;
         }
 #ifdef DEFINE_299_CHECK_TIME
@@ -541,16 +556,11 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         {
             struct tm *time_info = timestamp_to_data_time(hal_get_rtc_time());
             play_num(time_info->tm_year + 1900);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mon + 1) / 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mon + 1) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mday + 1) / 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_mday + 1) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_hour + 1) / 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_hour + 1) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_min + 1) / 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_min + 1) % 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_sec + 1) / 10);
-            PLAYER_LIST_ADD(VOICE_Zero + (time_info->tm_sec + 1) % 10);
+            play_digits(time_info->tm_mon + 1, 2);
+            play_digits(time_info->tm_mday + 1, 2);
+            play_digits(time_info->tm_hour + 1, 2);
+            play_digits(time_info->tm_min + 1, 2);
+            play_digits(time_info->tm_sec + 1, 2);
             break;
         }
 #endif
@@ -562,14 +572,14 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
         }
 
         case HMI_STATE_AGING_TEST_OPEN:
-            hmi_logo_led_config(LOGO_LED_COLOR_GREEN, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_2s, 1);
+            kb_led_off();
             // 新语音表里没有"门已打开"，老化测试不再播报语音
             break;
 
         case HMI_STATE_AGING_TEST_CLOSE:
-            hmi_logo_led_config(LOGO_LED_COLOR_RED, LOGO_LED_COLOR_IDLE, HMI_STATE_KEEP_TIME_2s, 1);
-            hmi_key_board_led_config(TRUN_OFF, TRUN_OFF, 0, 0);
+            logo_led(LOGO_LED_COLOR_RED, HMI_STATE_KEEP_TIME_2s, 1);
+            kb_led_off();
             // 新语音表里没有"门已关好"，老化测试不再播报语音
             break;
         default:
