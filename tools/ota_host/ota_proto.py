@@ -393,7 +393,7 @@ def negotiate_key(ser):
 
 def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
                retry=3, log_dir=None,
-               dev_log=False, trace=True, quiet=False, sink=None):
+               dev_log=False, trace=True, quiet=False, sink=None, chaos=False):
     """执行一次 OTA 升级。
     成功返回 None，设备版本相同返回 OTA_SKIPPED，失败抛 OtaError。
     sink 是每条日志的回调，GUI 用它刷新界面。"""
@@ -479,7 +479,49 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
         if status == 4:
             die("OTA 区擦除失败（写保护/时序问题），查看设备日志里的 erase fail 行")
         if status == 2:
-            die("设备还有未完成的升级（s_ota.active=1），断电重上电后重试")
+            # 会话悬挂：旧固件拒绝 0x72 重入（新固件支持重入，不会回 2）。
+            # 发零长结束包强制清会话 → 重开串口 + 密钥协商 → 重新升级，
+            # 全程无需设备断电。
+            log("  设备会话未结束（status=2），发结束包强制清会话...")
+            sn = (sn + 1) & 0xFFFF
+            send_frame(ser, CMD_OTA_DATA, struct.pack("<I", 0), sn, state['key'])
+            ser.flush()
+            wait_for(ser, ACK_DATA, 5.0, state=state)   # 清会话 + 0x74，应答内容不重要
+            time.sleep(1)
+            ser.close()
+            time.sleep(1)
+            ser.open()
+            time.sleep(0.5)
+            rk = None
+            for att in range(4):
+                sn = (sn + 1) & 0xFFFF
+                send_frame(ser, CMD_KEY_REQ, b"", sn, KEY_FACTORY)
+                ser.flush()
+                rk = wait_for(ser, ACK_KEY_REQ, 3.0, also=CMD_KEY_SEND, state=state)
+                if rk:
+                    break
+                log(f"  密钥请求无应答（第 {att + 1}/4 次）...")
+            if rk is None:
+                die("清会话后密钥协商失败，请重跑脚本")
+            log(f"  会话已清理（K_L=0x{state['key']:02X}），重新发 0x72")
+            r = None
+            for att in range(3):
+                sn = (sn + 1) & 0xFFFF
+                send_frame(ser, CMD_OTA_START, payload, sn, state['key'])
+                ser.flush()
+                r = wait_for(ser, ACK_START, 10.0, state=state)
+                if r:
+                    break
+                log(f"  0x72 无应答（第 {att + 1}/3 次）...")
+            if not r:
+                die("清会话后 0x72 仍无应答")
+            status = r[1][0]
+            pkt = struct.unpack_from("<H", r[1], 1)[0] if len(r[1]) >= 3 else 0
+            if status == 3:
+                log("设备版本与镜像相同，跳过升级")
+                return OTA_SKIPPED
+            if status != 0:
+                die(f"清会话后升级开始仍被拒绝，status={status}")
         if status != 0:
             die(f"升级开始被拒绝，status={status}（1=参数/长度非法或 flash 不可用）")
         dev_pkt = pkt
@@ -494,6 +536,21 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
         log(f"设备就绪，建议包长 {dev_pkt}，实际使用 {pkt}")
         sn += 1
 
+        # ---- chaos 注入计划：丢包(前1/3) 坏包(中1/3) 断线重连(后1/3) ----
+        chaos_ev = {}
+        if chaos:
+            import random
+            rng = random.Random()
+            total_pkts = (fw_size + pkt - 1) // pkt
+            chaos_ev['skip'] = rng.randint(1, max(1, total_pkts // 3)) * pkt
+            chaos_ev['relink'] = rng.randint(total_pkts // 3 + 1,
+                                             2 * total_pkts // 3) * pkt
+            chaos_ev['corrupt'] = rng.randint(2 * total_pkts // 3 + 1,
+                                              max(total_pkts - 2,
+                                                  2 * total_pkts // 3 + 2)) * pkt
+            log("  [chaos] 注入计划：跳包@0x%X 断线@0x%X 坏包@0x%X"
+                % (chaos_ev['skip'], chaos_ev['relink'], chaos_ev['corrupt']))
+
         # ---- 2. 0x73 数据 ----
         offset = 0
         last_pct = -1
@@ -501,6 +558,88 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
             n = min(pkt, fw_size - offset)
             # 从文件偏移 0 开始发，包含 16 字节头
             body = struct.pack("<I", offset) + fw[offset:offset + n]
+
+            # ---- chaos 注入 ----
+            if chaos and chaos_ev.get('skip') == offset:
+                del chaos_ev['skip']
+                log(f"  [chaos] 故意跳过 offset=0x{offset:X} 这一包，验证断点续传")
+                offset += n
+                sn = (sn + 1) & 0xFFFF
+                continue
+            if chaos and chaos_ev.get('corrupt') == offset:
+                del chaos_ev['corrupt']
+                # OTA 区刚擦除（全 FF），NOR 写任何字节都成功且回读一致——
+                # 单包回读拦不住主机侧坏数据，只能靠结束包 checksum2 拦截
+                # （0x74 result=1）。坏包放在最后注入，让前面两项先完成。
+                log(f"  [chaos] 在 offset=0x{offset:X} 注入坏字节（预期被结束包校验拦截）")
+                bad = bytearray(fw[offset:offset + n])
+                pos = next((i for i, b in enumerate(bad) if b != 0xFF), None)
+                if pos is not None:
+                    bad[pos] = 0xFF
+                    body = struct.pack("<I", offset) + bytes(bad)
+            if chaos and chaos_ev.get('relink') == offset:
+                del chaos_ev['relink']
+                log(f"  [chaos] 在 offset=0x{offset:X} 模拟串口断开 2 秒后重连...")
+                ser.close()
+                time.sleep(2)
+                ser.open()
+                time.sleep(1)
+                # 实测：重连后必须先做密钥协商（与全新连接一致），否则设备对
+                # 后续帧全部静默；协商本身也会让设备清掉残留的升级会话
+                sn = (sn + 1) & 0xFFFF
+                rk = None
+                for att in range(4):
+                    send_frame(ser, CMD_KEY_REQ, b"", sn, KEY_FACTORY)
+                    ser.flush()
+                    rk = wait_for(ser, ACK_KEY_REQ, 3.0, also=CMD_KEY_SEND, state=state)
+                    if rk:
+                        break
+                    log(f"  [chaos] 密钥请求无应答（第 {att + 1}/4 次）...")
+                if rk is None:
+                    die("[chaos] 重连后密钥协商失败，设备串口未恢复，需断电重启")
+                log(f"  [chaos] 链路恢复（K_L=0x{state['key']:02X}），重发 0x72")
+                st2 = -1
+                for att in range(3):
+                    sn = (sn + 1) & 0xFFFF
+                    send_frame(ser, CMD_OTA_START, payload, sn, state['key'])
+                    ser.flush()
+                    r2 = wait_for(ser, ACK_START, 3.0, state=state)
+                    st2 = r2[1][0] if r2 else -1
+                    if st2 >= 0:
+                        break
+                    log(f"  [chaos] 0x72 无应答（第 {att + 1}/3 次）...")
+                if st2 == 2:
+                    log("  [chaos] 0x72 重入被拒（status=2）→ 发结束包（offset=当前进度）触发清会话")
+                    sn = (sn + 1) & 0xFFFF
+                    send_frame(ser, CMD_OTA_DATA, struct.pack("<I", offset), sn, state['key'])
+                    ser.flush()
+                    # 实测：abort 后设备在同一连接上不再响应（15 秒静默），但
+                    # 会话已被它清掉；重新开关串口 + 密钥协商后 0x72 直接就绪
+                    time.sleep(1)
+                    ser.close()
+                    time.sleep(1)
+                    ser.open()
+                    rk2 = None
+                    for att in range(4):
+                        sn = (sn + 1) & 0xFFFF
+                        send_frame(ser, CMD_KEY_REQ, b"", sn, KEY_FACTORY)
+                        ser.flush()
+                        rk2 = wait_for(ser, ACK_KEY_REQ, 3.0, also=CMD_KEY_SEND, state=state)
+                        if rk2:
+                            break
+                    if rk2 is None:
+                        die("[chaos] 清会话后链路未恢复，需断电重启")
+                    sn = (sn + 1) & 0xFFFF
+                    send_frame(ser, CMD_OTA_START, payload, sn, state['key'])
+                    ser.flush()
+                    r2 = wait_for(ser, ACK_START, 10.0, state=state)
+                    st2 = r2[1][0] if r2 else -1
+                if st2 == 0:
+                    log("  [chaos] 会话已恢复，设备重新就绪，从头重传")
+                    offset = 0
+                    continue
+                die(f"[chaos] 重连后 0x72 失败 status={st2}（会话无法清理，需断电重启）")
+
             r = None
             for attempt in range(retry):
                 send_frame(ser, CMD_OTA_DATA, body, sn, state['key'])
@@ -561,6 +700,8 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
         ver = res[1][1:4]
         LAST_VERSION = ver[2]   # 0x74 上报的就是设备最终版本，无需依赖日志解析
         if result != 0:
+            if chaos and result == 1 and 'corrupt' not in chaos_ev:
+                log("  [chaos] ✓ 注入的坏数据被设备结束校验拦截（result=1），本轮验证完成")
             reasons = {1: "校验和/回读/搬运失败", 2: "长度不符"}
             die(f"{reasons.get(result, f'result={result}')}")
         # 设备上报的是本机真实版本（sn 拆分 + PATCH_VERSION），

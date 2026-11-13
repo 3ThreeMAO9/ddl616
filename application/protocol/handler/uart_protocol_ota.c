@@ -16,8 +16,8 @@
  *   - 固件先落 SPI flash，再由 boot 搬到 FMC
  *
  * 协议细节见 doc/串口OTA升级对接说明_v1.2.md
- * Version 1.4.0
- * Date: 2026-11-12
+ * Version 1.4.1
+ * Date: 2026-11-13
  */
 
 #if (OTA_ENABLE == 1)   /* OTA 整体开关：未启用时本文件编译为空，boot_symbol 依赖随之消失 */
@@ -32,6 +32,7 @@
 #include "sfud.h"
 #include "hal_wdt.h"
 #include "item_config.h"
+#include "system_timer.h"
 #include <string.h>
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
@@ -45,9 +46,15 @@ typedef struct {
     uint32_t expected;      /* 下一个包的偏移，也是已写入字节数 */
     uint32_t checksum;      /* 对端给的 32 位累加和 */
     uint32_t calc;          /* 本地边收边算的累加和 */
+    uint32_t last_ms;       /* 最近一次收到 0x73 的时刻，用于会话超时 */
 } ota_ctx_t;
 
 static ota_ctx_t s_ota;
+
+/* 会话超时：这段时间没收到任何 0x73 就视为对端已死，清掉悬挂会话，
+ * 让下一次 0x72 能重新开始（模组复位/串口中断后无需设备断电）。
+ * 整包下载约 10 秒，单包重试链路最长约 15 秒，2 分钟不会误伤正常会话 */
+#define OTA_SESSION_TIME_OUT_MS     (120u * 1000u)
 
 /* boot 入口地址由 common/boot_symbol.obj 固定，切 MSP 后直接跳转 */
 __ASM void go_boot(void)
@@ -223,7 +230,9 @@ static void ota_send_result(uint8_t result)
 
 /* ================= 0x72 升级开始 =================
  * 校验长度/容量 → 清写保护 → 擦除 64K OTA 区 → 回 0xF2(status + pkt_size)。
- * 擦除耗时 1~2 秒，期间不应答属正常。 */
+ * 擦除耗时 1~2 秒，期间不应答属正常。
+ * 会话 2 分钟没收到 0x73 自动作废（uart_ota_session_poll），模组恢复后
+ * 发零长结束包清会话再重发 0x72，或等超时后直接重发 0x72。 */
 HANDLER_DEFINE(UP_CMD_OTA_START)
 {
     uint8_t ack[3] = { OTA_START_STATUS_NO_SPACE, 0, 0 };
@@ -236,6 +245,9 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
         return 0;
     }
 
+    /* 会话进行中拒绝重入（status=2）。会话 30 秒没收到 0x73 会被
+     * uart_ota_session_poll 自动清除，之后 0x72 即可重新开始；
+     * 模组也可发零长结束包强制清会话，不必断电。 */
     if (s_ota.active)
     {
         ack[0] = OTA_START_STATUS_BUSY;
@@ -292,6 +304,7 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     }
 
     s_ota.active = 1;
+    s_ota.last_ms = system_ms_get();
     ack[0] = OTA_START_STATUS_READY;
     ack[1] = (uint8_t)(OTA_PKT_SIZE & 0xFF);
     ack[2] = (uint8_t)(OTA_PKT_SIZE >> 8);
@@ -326,6 +339,8 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
         return 0;
     }
+
+    s_ota.last_ms = system_ms_get();        /* 对端还活着，刷新会话保活 */
 
     offset = (uint32_t)p[0] | ((uint32_t)p[1] << 8)
            | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
@@ -425,6 +440,19 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         uart_protocol_ota_to_boot_inc_time_out();
 
     return 0;
+}
+
+/* 会话超时检查：2 分钟没收到任何 0x73 视为对端已死（模组复位/串口中断），
+ * 清掉悬挂的会话，下一次 0x72 即可重新开始，无需设备断电。
+ * 由 uart_protocol_ota_poll 周期调用；无符号差值天然处理 ms 计数回绕。 */
+void uart_ota_session_poll(void)
+{
+    if (s_ota.active &&
+        (system_ms_get() - s_ota.last_ms) >= OTA_SESSION_TIME_OUT_MS)
+    {
+        memset(&s_ota, 0, sizeof(s_ota));
+        OB_LOGI(TAG, "ota session timeout");
+    }
 }
 
 /* 由 uart_protocol_ota_poll 轮询调用：boot 搬运完跳回 app 后，

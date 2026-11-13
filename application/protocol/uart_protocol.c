@@ -270,6 +270,9 @@ void uart_protocol_ota_poll(void)
         return;                 // 跳转前不做结果上报
     }
 
+    // OTA 会话保活检查：30 秒没收到 0x73 清掉悬挂会话
+    uart_ota_session_poll();
+
     // boot 把镜像搬到 FMC 并跳回 app 后，在这里统一通过 0x74 上报结果和版本号。
     // FSM 初始化已把 0x70 密钥帧入队，模组先拿到新密钥，0x74 才能被正确解密。
     uart_ota_report_boot_done();

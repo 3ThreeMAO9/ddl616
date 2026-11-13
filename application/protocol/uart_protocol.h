@@ -119,7 +119,7 @@
 /* 0xF2：升级开始应答 [status 1B][pkt_size 2B] */
 #define OTA_START_STATUS_READY              (0)         // 就绪，按应答里的 pkt_size 发数据
 #define OTA_START_STATUS_NO_SPACE           (1)         // payload 太短 / size 越界 / SPI flash 不可用
-#define OTA_START_STATUS_BUSY               (2)         // 已有升级在进行（s_ota.active）
+#define OTA_START_STATUS_BUSY               (2)         // 已有升级在进行（会话 2 分钟无 0x73 自动清除）
 #define OTA_START_STATUS_SAME_VER           (3)         // 与本地版本相同，无需升级
 #define OTA_START_STATUS_ERASE_FAIL         (4)         // OTA 区擦除失败（写保护/硬件异常）
 
@@ -209,6 +209,7 @@ uint32_t uart_protocol_idle_ms(void);                   // 距最近一次收发
 /* OTA */
 void uart_protocol_ota_to_boot_inc_time_out(void);
 void uart_protocol_ota_poll(void);
+void uart_ota_session_poll(void);                       // OTA 会话 30s 无 0x73 自动清除
 void uart_ota_jump_to_boot(void);                       // 写 ota_info=WAIT 并跳 boot
 uint32_t uart_ota_report_boot_done(void);                // 启动时：boot 搬完回到 app 才算 OTA 完成，返回1=已上报
 

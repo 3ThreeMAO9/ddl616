@@ -91,8 +91,9 @@ class OtaGui(tk.Tk):
         self.rounds = tk.StringVar(value="20")
         self.stop_on_fail = tk.BooleanVar(value=False)
         self.save_log = tk.BooleanVar(value=True)
-        self.trace_on = tk.BooleanVar(value=True)    # 显示串口原始收发
+        self.trace_on = tk.BooleanVar(value=False)    # 显示串口原始收发
         self.dev_log = tk.BooleanVar(value=False)    # 显示门锁 [dev] 调试日志
+        self.chaos = tk.BooleanVar(value=False)      # 混沌注入：丢包/坏包/断线重连
 
         self.stat_pass = tk.StringVar(value="-")
         self.stat_fail = tk.StringVar(value="-")
@@ -143,6 +144,7 @@ class OtaGui(tk.Tk):
         ttk.Checkbutton(frm, text="保存日志文件", variable=self.save_log).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="串口数据", variable=self.trace_on).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="门锁日志", variable=self.dev_log).pack(side="left", **pad)
+        ttk.Checkbutton(frm, text="混沌注入", variable=self.chaos).pack(side="left", **pad)
 
         frm = ttk.Frame(self)
         frm.pack(fill="x", padx=8, pady=4)
@@ -286,6 +288,7 @@ class OtaGui(tk.Tk):
             return ota_proto.run_upload(port, fw, baud=baud, log_dir=log_dir,
                                         trace=self.trace_on.get(),
                                         dev_log=self.dev_log.get(),
+                                        chaos=self.chaos.get(),
                                         sink=self._put_line)
 
         try:
@@ -330,6 +333,7 @@ class OtaGui(tk.Tk):
                 ret = ota_proto.run_upload(port, fw, log_dir=None,
                                            trace=self.trace_on.get(),
                                            dev_log=self.dev_log.get(),
+                                           chaos=self.chaos.get(),
                                            sink=self._put_line)
                 if ret == ota_proto.OTA_SKIPPED:
                     self.q.put(("info", "[%d/%d] 目标 V39.140.%03d 已是当前版本，跳过"

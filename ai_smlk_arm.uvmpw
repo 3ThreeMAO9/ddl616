@@ -9,6 +9,7 @@
 
   <project>
     <PathAndName>.\bootloader\Project\bootloader.uvproj</PathAndName>
+    <NodeIsExpanded>1</NodeIsExpanded>
     <NodeIsCheckedInBatchBuild>1</NodeIsCheckedInBatchBuild>
   </project>
 
