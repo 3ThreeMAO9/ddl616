@@ -20,7 +20,7 @@
 模组 ──0x72 开始（size/checksum/version）──> 门锁
      <──0xF2 应答（status + pkt_size=200）──          门锁擦除 64K，1~2 秒
 模组 ──0x73 数据（offset + N 字节）──> 门锁
-     <──0xF3 应答（status + expected）──              重复 N 次，逐包写 flash + 回读
+     <──0xF3 应答（status + expected）──              重复 N 次，逐包写 flash
 模组 ──0x73 结束（offset + 0 字节）──> 门锁
      <──0xF3 应答（status + expected）──              校验长度/累加和/镜像头
 

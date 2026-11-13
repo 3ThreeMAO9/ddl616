@@ -5,7 +5,7 @@
  *
  * 流程：
  *   0x72 开始   → 0xF2(status + pkt_size)，同时擦除 SPI flash 的 64K OTA 区
- *   0x73 数据   → 0xF3(status + expected)，逐包写 flash 并回读比对
+ *   0x73 数据   → 0xF3(status + expected)，逐包写 flash，结束包回读校验
  *   0x73 零长包 → 0xF3，校验失败时立即上报 0x74
  *   校验通过    → 置 ota_info=WAIT，200ms 后跳 boot
  *   boot 搬运   → 跳回新 app，app 启动后上报 0x74 成功 + 新版本号
@@ -68,11 +68,6 @@ __ASM void go_boot(void)
     BX    R1
 }
 
-static sfud_flash *ota_flash(void)
-{
-    return sfud_get_device(0);      /* OTA 用 sfud 设备表的第 0 个 SPI flash */
-}
-
 /* OTA 区地址：优先用语音包头声明的 OTA 域（域起始 + 域大小/2，即后半区）；
  * 没有声明时退回「容量末尾 64K」，与 boot 的 SFLASH_OTA_BEGIN_ADDR 一致。
  * 按实际容量计算，换 flash 或改分区布局时 app 自动跟随。 */
@@ -80,12 +75,13 @@ static uint32_t ota_area_addr(void)
 {
     uint32_t base = read_ota_flash_address();
     uint32_t size = read_ota_flash_size();
-    sfud_flash *flash = ota_flash();
 
     if (base && size)
         return base + (size / 2u) * 1024u;      /* ota_size 单位 KB，域被对半分 */
 
-    return (flash == NULL) ? 0 : (flash->chip.capacity - OTA_FLASH_MAX_SIZE);
+    /* sfud 设备表静态分配，sfud_get_device(0) 恒非 NULL；
+     * 若 sfud 未初始化成功 capacity 为 0，算出的地址会让擦除失败兜住 */
+    return sfud_get_device(0)->chip.capacity - OTA_FLASH_MAX_SIZE;
 }
 
 /* 32 位累加和：4 字节一组小端累加，尾部不足 4 字节补零，
@@ -163,51 +159,6 @@ static uint32_t ota_check_flash(void)
     return 0;
 }
 
-#define OTA_CHECK_BUF_SIZE      (64)
-/* 每写完一包立刻回读比对，确保真的落盘。
- * sfud_write 只负责发命令，写保护/时序问题时会静默失败并返回 SFUD_SUCCESS，
- * 只有回读才能确认。按 64 字节分段回读：栈占用小，且不受单包长度限制。
- * 返回 0 = 一致。 */
-static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len)
-{
-    uint8_t check_buf[OTA_CHECK_BUF_SIZE];
-    sfud_flash *flash = ota_flash();
-    uint16_t done = 0;
-
-    if (flash == NULL)
-        return 1;
-
-    while (done < len)
-    {
-        uint16_t chunk = (uint16_t)(len - done);
-        uint16_t i;
-
-        if (chunk > OTA_CHECK_BUF_SIZE)
-            chunk = OTA_CHECK_BUF_SIZE;
-
-        if (hal_flash_read(addr + done, check_buf, chunk) != 0)
-        {
-            OB_LOGE(TAG, "w 0x%05X read fail", addr + done);
-            return 1;
-        }
-
-        for (i = 0; i < chunk; i++)
-        {
-            if (check_buf[i] != src[done + i])
-            {
-                OB_LOGE(TAG, "w 0x%05X mis @%u %02X!=%02X",
-                        addr + done, i, check_buf[i], src[done + i]);
-                return 1;
-            }
-        }
-
-        done = (uint16_t)(done + chunk);
-    }
-
-    OB_LOGD(TAG, "w 0x%05X %u ok", addr, len);
-    return 0;
-}
-
 /* 0x74 结果上报：[result 1B][version 3B]
  *
  * version 用本机真实版本，编码与镜像头、uart_msg_front_version_str() 一致
@@ -236,16 +187,15 @@ static void ota_send_result(uint8_t result)
 HANDLER_DEFINE(UP_CMD_OTA_START)
 {
     uint8_t ack[3] = { OTA_START_STATUS_NO_SPACE, 0, 0 };
-    sfud_flash *flash = ota_flash();
     uint8_t *p = packet->payload;
 
-    if ((packet->length < 11) || (flash == NULL))
+    if (packet->length < 11)
     {
         uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
         return 0;
     }
 
-    /* 会话进行中拒绝重入（status=2）。会话 30 秒没收到 0x73 会被
+    /* 会话进行中拒绝重入（status=2）。会话 2 分钟没收到 0x73 会被
      * uart_ota_session_poll 自动清除，之后 0x72 即可重新开始；
      * 模组也可发零长结束包强制清会话，不必断电。 */
     if (s_ota.active)
@@ -396,10 +346,9 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
 
         uint32_t waddr = ota_area_addr() + s_ota.expected;
 
-        if ((hal_flash_write(waddr, p + 4 + skip, wr) != 0)
-                || ota_verify_write(waddr, p + 4 + skip, wr))
+        if (hal_flash_write(waddr, p + 4 + skip, wr) != 0)
         {
-            ret = OTA_DATA_STATUS_WRITE_FAIL;   /* 写失败或回读不一致 */
+            ret = OTA_DATA_STATUS_WRITE_FAIL;
         }
 
         /* 一旦写失败就清掉本次升级会话，避免 s_ota.active 卡在 1，
@@ -506,10 +455,8 @@ void uart_ota_jump_to_boot(void)
     ota_info_update(info);
     WDT_CLOSE();
 
-    NVIC_DisableIRQ(SysTick_IRQn);
-    IRQn_Type irq;
-    for (irq = I2C1_IRQn; irq <= PWMTM_IRQn; irq++)
-        NVIC_DisableIRQ(irq);
+    SysTick->CTRL = 0;              /* 关 SysTick */
+    NVIC->ICER[0] = 0xFFFFFFFF;     /* 直写关全部外设中断（外设 IRQ 均在 ≤31 范围内） */
 
     go_boot();
 }
