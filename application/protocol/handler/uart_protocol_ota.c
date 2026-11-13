@@ -118,10 +118,7 @@ static uint32_t ota_check_flash(void)
     ota_file_t hdr;
     uint32_t base = ota_area_addr();
 
-    /* 最后一个包的写入可能还在芯片内部进行，稍等一下再读 */
-    for (volatile uint32_t d = 0; d < 20000u; d++)
-        ;
-
+    /* sfud_write 返回前已在内部轮询 WIP 等写完成，无需额外延时 */
     if (hal_flash_read(base, &hdr, sizeof(hdr)) != 0)
         return 1;
 
@@ -310,12 +307,12 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
 HANDLER_DEFINE(UP_CMD_OTA_DATA)
 {
     uint8_t ack[5] = { OTA_DATA_STATUS_WRITE_FAIL, 0, 0, 0, 0 };
-    sfud_flash *flash = ota_flash();
     uint8_t *p = packet->payload;
     uint32_t offset, ret = OTA_DATA_STATUS_OK;
     uint16_t len;
 
-    if ((packet->length < 4) || (flash == NULL))
+    /* flash 有效性已在 0x72 建会话时确认，这里无需再查 */
+    if (packet->length < 4)
     {
         uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
         return 0;
@@ -360,23 +357,8 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         }
 
         s_ota.active = 0;
-
-        ack[0] = (uint8_t)ret;
-        ack[1] = (uint8_t)(s_ota.expected & 0xFF);
-        ack[2] = (uint8_t)((s_ota.expected >> 8) & 0xFF);
-        ack[3] = (uint8_t)((s_ota.expected >> 16) & 0xFF);
-        ack[4] = (uint8_t)((s_ota.expected >> 24) & 0xFF);
-        uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
-
-        if (ret == OTA_DATA_STATUS_OK)
-        {
-            /* 留出 200ms 让 0xF3 发完，由 uart_protocol_ota_poll 触发跳 boot */
-            uart_protocol_ota_to_boot_inc_time_out();
-        }
-        return 0;
     }
-
-    if (offset > s_ota.expected)
+    else if (offset > s_ota.expected)
     {
         /* 跳包：回填期望偏移，让对端续传 */
         ret = OTA_DATA_STATUS_OFFSET_ERROR;
@@ -395,13 +377,13 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         if ((s_ota.expected + wr) > s_ota.total)
             wr = (uint16_t)(s_ota.total - s_ota.expected);
 
-        if (hal_flash_write(ota_area_addr() + s_ota.expected,
-                p + 4 + skip, wr) != 0)
+        uint32_t waddr = ota_area_addr() + s_ota.expected;
+
+        if (hal_flash_write(waddr, p + 4 + skip, wr) != 0)
         {
             ret = OTA_DATA_STATUS_WRITE_FAIL;
         }
-        else if (ota_verify_write(ota_area_addr() + s_ota.expected,
-                    p + 4 + skip, wr))
+        else if (ota_verify_write(waddr, p + 4 + skip, wr))
         {
             ret = OTA_DATA_STATUS_WRITE_FAIL;   /* 回读不一致 */
         }
@@ -431,13 +413,18 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         }
     }
 
+    /* 统一构建应答：[status][expected offset 4B] */
     ack[0] = (uint8_t)ret;
     ack[1] = (uint8_t)(s_ota.expected & 0xFF);
     ack[2] = (uint8_t)((s_ota.expected >> 8) & 0xFF);
     ack[3] = (uint8_t)((s_ota.expected >> 16) & 0xFF);
     ack[4] = (uint8_t)((s_ota.expected >> 24) & 0xFF);
-
     uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
+
+    /* 结束包成功：留出 200ms 让 0xF3 发完，由 uart_protocol_ota_poll 触发跳 boot */
+    if ((len == 0) && (ret == OTA_DATA_STATUS_OK))
+        uart_protocol_ota_to_boot_inc_time_out();
+
     return 0;
 }
 
@@ -493,7 +480,7 @@ void uart_ota_jump_to_boot(void)
     WDT_CLOSE();
 
     NVIC_DisableIRQ(SysTick_IRQn);
-    IRQn_Type irq = I2C1_IRQn;
+    IRQn_Type irq;
     for (irq = I2C1_IRQn; irq <= PWMTM_IRQn; irq++)
         NVIC_DisableIRQ(irq);
 
