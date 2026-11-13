@@ -50,31 +50,22 @@ ACK_DATA = CMD_OTA_DATA | 0x80         # 0xF3
 KEY_FACTORY = 0xBA
 KEY_INDEX = 1                          # 4 字节密钥帧取下标 1
 
-# 需要用 K_F 解密的命令（密钥交换）；其余加密帧一律用当前会话密钥 K_L
-_KEY_EXCHANGE_RAW = {CMD_KEY_SEND, CMD_KEY_REQ}   # 0x70, 0x71
-_KEY_EXCHANGE_ALL = _KEY_EXCHANGE_RAW | {0xF0, 0xF1}   # 含应答 ACK_KEY_SEND, ACK_KEY_REQ
-
 
 def _decrypt_key_for_cmd(cmd, session_key):
-    """根据命令决定解密用哪个密钥：密钥交换帧用 K_F，其他加密帧用 session_key"""
-    if (cmd & 0x7F) in _KEY_EXCHANGE_RAW or cmd in {0xF0, 0xF1}:
-        return KEY_FACTORY
-    return session_key
+    """密钥交换帧（0x70/0x71 及其应答）用 K_F，其余加密帧用会话密钥"""
+    return KEY_FACTORY if (cmd & 0x7F) in (CMD_KEY_SEND, CMD_KEY_REQ) else session_key
 
 OTA_MAGIC = 0xBEEF
 OTA_HEADER_SIZE = 16
 
 # 门锁的接收队列 UART_RX_QUEUE_SIZE = 256（环形缓冲可用 255），
 # 一帧 = 12(头) + 4(offset) + pkt，包长必须 <= 239，否则整帧会被丢弃。
-OTA_PKT_SIZE = 200          # 设备上报值，仅供参考
 OTA_PKT_MAX = 239           # 受接收队列限制的实际上限
 OTA_PKT_DEFAULT = 200       # 实际使用的包长
 
 class OtaError(Exception):
     """升级过程出错"""
 
-
-HERE = os.path.dirname(os.path.abspath(__file__))
 
 LOG_FP = None
 LOG_SINK = None           # 额外的日志回调（GUI 用它刷新界面）
@@ -83,6 +74,7 @@ LOG_SINK = None           # 额外的日志回调（GUI 用它刷新界面）
 SHOW_DEV_LOG = False
 TRACE = True
 LAST_VERSION = None          # 从门锁日志里解析出的 outside_version
+OTA_SKIPPED = 2              # run_upload 返回值：版本相同，未执行升级
 VERSION_RE = re.compile(r"outside_version:\s*V39\.140\.(\d+)")
 
 
@@ -338,7 +330,8 @@ def negotiate_key(ser):
 def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
                retry=3, log_dir=None,
                dev_log=False, trace=True, quiet=False, sink=None):
-    """执行一次 OTA 升级。成功返回 None，失败抛 OtaError。
+    """执行一次 OTA 升级。
+    成功返回 None，设备版本相同返回 OTA_SKIPPED，失败抛 OtaError。
     sink 是每条日志的回调，GUI 用它刷新界面。"""
     global SHOW_DEV_LOG, TRACE, LOG_FP, LOG_SINK, LAST_VERSION
     SHOW_DEV_LOG = dev_log
@@ -415,16 +408,16 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
 
         status = r[1][0]
         pkt = struct.unpack_from("<H", r[1], 1)[0] if len(r[1]) >= 3 else 0
+        if status == 3:
+            log("设备版本与镜像相同，跳过升级")
+            return OTA_SKIPPED
+        if status == 4:
+            die("OTA 区擦除失败（写保护/时序问题），查看设备日志里的 erase fail 行")
         if status == 2:
-            die("status=2 有两种含义：\n"
-                "       a) 设备还停留在上一次未完成的升级（s_ota.active=1）\n"
-                "       b) OTA 区擦除失败（写保护/时序问题），固件里两种都回 2\n"
-                "       a) 断电重上电后重试；b) 看设备日志里的 sr / write fail 行")
+            die("设备还有未完成的升级（s_ota.active=1），断电重上电后重试")
         if status != 0:
-            die(f"升级开始被拒绝，status={status}（1=长度超限/flash 不可用）")
+            die(f"升级开始被拒绝，status={status}（1=参数/长度非法或 flash 不可用）")
         dev_pkt = pkt
-        if pkt:
-            pkt = min(pkt, pkt)
         # 设备上报的 240 会撑爆它自己的接收队列，必须压到 239 以内
         if pkt > OTA_PKT_MAX:
             log(f"  包长 {pkt} 超过接收队列上限，压到 {OTA_PKT_MAX}")
@@ -460,7 +453,7 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
             elif st == 1:
                 offset = dev_off
             else:
-                die(f"写 flash 失败，status={st}，停在 0x{offset:X}")
+                die(f"数据被拒绝，status={st}（2=写失败 3=回读失败 4=无升级会话），停在 0x{offset:X}")
 
             sn = (sn + 1) & 0xFFFF
             pct = offset * 100 // fw_size

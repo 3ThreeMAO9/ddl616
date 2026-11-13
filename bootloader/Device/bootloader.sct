@@ -10,7 +10,6 @@ BL_IROM1 _BL1_BEGIN_ADDR _BL1_MAX_SIZE  {    ; load region size_region
     main.o (+RO +XO)
     fmc_flash.o (+RO +XO)
     memcpya.o (+RO +XO)
-    memcmp.o (+RO +XO)
 
     *.o (BL1)
   }

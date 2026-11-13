@@ -116,21 +116,25 @@
 
 #define UP_CMD_OTA_DATA_ACK                 SET_UART_ACK_CMD(UP_CMD_OTA_DATA)   // 0xF3
 
-/* 0xF2：升级开始应答 */
+/* 0xF2：升级开始应答 [status 1B][pkt_size 2B] */
 #define OTA_START_STATUS_READY              (0)         // 就绪，按应答里的 pkt_size 发数据
-#define OTA_START_STATUS_NO_SPACE           (1)         // 长度超限或 flash 不可用
-#define OTA_START_STATUS_BUSY               (2)         // 正在升级
+#define OTA_START_STATUS_NO_SPACE           (1)         // payload 太短 / size 越界 / SPI flash 不可用
+#define OTA_START_STATUS_BUSY               (2)         // 已有升级在进行（s_ota.active）
+#define OTA_START_STATUS_SAME_VER           (3)         // 与本地版本相同，无需升级
+#define OTA_START_STATUS_ERASE_FAIL         (4)         // OTA 区擦除失败（写保护/硬件异常）
 
-/* 0xF3：每包应答 */
+/* 0xF3：每包应答 [status 1B][expected offset 4B] */
 #define OTA_DATA_STATUS_OK                  (0)         // 写入成功，或重复包已忽略
-#define OTA_DATA_STATUS_OFFSET_ERROR        (1)         // 偏移不连续，按应答 offset 续传
+#define OTA_DATA_STATUS_OFFSET_ERROR        (1)         // 偏移不连续，或结束包长度不符
 #define OTA_DATA_STATUS_WRITE_FAIL          (2)         // 写 flash 失败
-#define OTA_DATA_STATUS_READBACK_FAIL       (3)         // 写后自检不通过，不跳 boot
+#define OTA_DATA_STATUS_READBACK_FAIL       (3)         // 写后自检或收尾回读校验失败
+#define OTA_DATA_STATUS_NO_SESSION          (4)         // 没有进行中的升级（未发 0x72 或已结束）
 
-/* 0x74：升级结果 */
-#define OTA_RESULT_SUCCESS                  (0)         // 校验通过，约 1s 后重启
-#define OTA_RESULT_CSUM_FAIL                (1)         // 校验和/文件头错误
-#define OTA_RESULT_SIZE_FAIL                (2)         // 收到的字节数不符
+/* 0x74：升级结果 [result 1B][version 3B] */
+#define OTA_RESULT_SUCCESS                  (0)         // boot 搬运完成，app 重启后上报
+#define OTA_RESULT_CSUM_FAIL                (1)         // 校验和/文件头/回读失败
+#define OTA_RESULT_SIZE_FAIL                (2)         // 收到的字节数不符（结束包立即上报）
+#define OTA_RESULT_BACKUP_FAIL              (3)         // boot 备份失败，未执行搬运（仍在旧固件）
 
 #define OTA_PKT_SIZE                        (200)       // 单包数据长度（payload = 4 + 200）
 #define OTA_FLASH_MAX_SIZE                  (64 * 1024) // SPI flash OTA 区大小

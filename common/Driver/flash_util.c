@@ -20,23 +20,26 @@
     #pragma clang diagnostic ignored "-Wcast-align"
 #endif
 
-void flash_spi_copy_to_fmc(uint32_t spi_addr, uint32_t fmc_addr, uint32_t size)
+uint32_t flash_spi_copy_to_fmc(uint32_t spi_addr, uint32_t fmc_addr, uint32_t size)
 {
-    fmc_flash_erase_pages(fmc_addr, fmc_addr + size);
-
     uint32_t n;
+
+    if (fmc_flash_erase_pages(fmc_addr, fmc_addr + size))
+        return 1;
+
     while (size)
     {
         n = (size > g_boot_buffer_size) ? g_boot_buffer_size : size;
         spi_flash_read(spi_addr, g_boot_buffer, n);
-        fmc_flash_program(fmc_addr, (uint32_t *)g_boot_buffer, n);
+        if (fmc_flash_program(fmc_addr, (uint32_t *)g_boot_buffer, n))
+            return 1;
 
         spi_addr += n;
         fmc_addr += n;
         size -= n;
     }
 
-    fmc_flash_reload();
+    return fmc_flash_reload();
 }
 
 #if defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)

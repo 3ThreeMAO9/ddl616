@@ -1,13 +1,23 @@
 ﻿/**
  * Copyright (c) 2026 GZ-OB, All rights reserved.
  * File name: uart_protocol_ota.c
- * Desc: 串口 OTA 升级：
- *       0x72 开始（要分包大小）→ 0x73 逐包推送 + 应答 → 零长包收尾 → 0x74 结果上报
- *       固件先落到 SPI flash 的 OTA 区，再由 boot 搬运到 FMC
- * Version 1.3.0
- * Date: 2026-11-09
+ * Desc: 串口 OTA 升级（模组 → 门锁）
  *
- * 协议细节见 doc/串口OTA升级对接说明_v1.1.md
+ * 流程：
+ *   0x72 开始   → 0xF2(status + pkt_size)，同时擦除 SPI flash 的 64K OTA 区
+ *   0x73 数据   → 0xF3(status + expected)，逐包写 flash 并回读比对
+ *   0x73 零长包 → 0xF3，校验失败时立即上报 0x74
+ *   校验通过    → 置 ota_info=WAIT，200ms 后跳 boot
+ *   boot 搬运   → 跳回新 app，app 启动后上报 0x74 成功 + 新版本号
+ *
+ * 关键约束：
+ *   - 下载方向（0x72/0x73）明文；0x74 由门锁用会话密钥加密上报
+ *   - 整帧 = 12(头) + 4(offset) + OTA_PKT_SIZE，须小于 UART0_BUF_LEN
+ *   - 固件先落 SPI flash，再由 boot 搬到 FMC
+ *
+ * 协议细节见 doc/串口OTA升级对接说明_v1.2.md
+ * Version 1.4.0
+ * Date: 2026-11-12
  */
 
 #include "uart_protocol.h"
@@ -37,7 +47,7 @@ typedef struct {
 
 static ota_ctx_t s_ota;
 
-/* boot 入口，地址由 common/boot_symbol.obj 解析 */
+/* boot 入口地址由 common/boot_symbol.obj 固定，切 MSP 后直接跳转 */
 __ASM void go_boot(void)
 {
     IMPORT boot_main
@@ -51,29 +61,26 @@ __ASM void go_boot(void)
 
 static sfud_flash *ota_flash(void)
 {
-    return sfud_get_device(0);
+    return sfud_get_device(0);      /* OTA 用 sfud 设备表的第 0 个 SPI flash */
 }
 
-/* OTA 区在 SPI flash 末尾，按实际容量算，避免芯片容量与宏不一致 */
+/* OTA 区地址：优先用语音包头声明的 OTA 域（域起始 + 域大小/2，即后半区）；
+ * 没有声明时退回「容量末尾 64K」，与 boot 的 SFLASH_OTA_BEGIN_ADDR 一致。
+ * 按实际容量计算，换 flash 或改分区布局时 app 自动跟随。 */
 static uint32_t ota_area_addr(void)
 {
     uint32_t base = read_ota_flash_address();
     uint32_t size = read_ota_flash_size();
     sfud_flash *flash = ota_flash();
 
-    /* 语音包数据头给的是整块 OTA 域（含备份槽），域被对半分：
-     * 前半备份、后半待升级。所以待升级区 = 域起始 + 域大小/2。
-     * ota_size 单位是 KB（实测 128 → 128KB = 0x20000），
-     * 0x3E0000 + 128/2*1024 = 0x3F0000，正好是 boot 的 SFLASH_OTA_BEGIN_ADDR。
-     * 这样换 flash 或改布局时只要语音包头下发对了，app 自动跟随。 */
     if (base && size)
-        return base + (size / 2u) * 1024u;
+        return base + (size / 2u) * 1024u;      /* ota_size 单位 KB，域被对半分 */
 
-    /* 语音包头不可用时退回「容量末尾 64K」，与 boot 的 SFLASH_OTA_BEGIN_ADDR 一致 */
     return (flash == NULL) ? 0 : (flash->chip.capacity - OTA_FLASH_MAX_SIZE);
 }
 
-/* 32 位累加和，与 ota_file_calc_checksum_u32 一致（4 字节小端累加，尾部补零） */
+/* 32 位累加和：4 字节一组小端累加，尾部不足 4 字节补零，
+ * 与 ota_file_calc_checksum_u32 同口径（只覆盖数据段，不含 16 字节文件头） */
 static uint32_t ota_checksum_add(uint32_t sum, const uint8_t *p, uint32_t size)
 {
     while (size >= 4)
@@ -101,13 +108,10 @@ static uint32_t ota_checksum_add(uint32_t sum, const uint8_t *p, uint32_t size)
     return sum;
 }
 
-/* 回读 SPI flash 的镜像头，和本次 OTA 的期望值逐项比对。
- * 对应参考例程 ota_helper_check_data()：sfud 的写不做任何校验，
- * 写保护/时序问题时依然返回 SFUD_SUCCESS，只有回读才能发现。
- *
- * 逐包写入时已经由 ota_verify_write() 逐字节比对过，这里只确认头部：
- * magic / size / checksum2 / 版本。必须比对期望值而不是只校验自洽 ——
- * flash 里若残留上一次的镜像，它自己也是自洽的。
+/* 结束包后回读镜像头，与本次下发的期望值逐项比对：
+ * magic / size / checksum2 / version。
+ * sfud 写失败会静默返回 SFUD_SUCCESS，只有回读才可信；
+ * 必须比对期望值而不能只做自洽校验 —— flash 里残留的旧镜像也是自洽的。
  * 返回 0 = 通过。 */
 static uint32_t ota_check_flash(void)
 {
@@ -198,12 +202,12 @@ static uint32_t ota_verify_write(uint32_t addr, const uint8_t *src, uint16_t len
     return 0;
 }
 
-/* 0x0C 结果上报：[result 1B][version 3B]
+/* 0x74 结果上报：[result 1B][version 3B]
  *
- * version 填本机真实版本，不用镜像头里那个 0.0.1（那是 packer -v 写死的
- * 常量，跟 PATCH_VERSION 无关，无法用来判断版本有没有翻转）。
- * 编码与 uart_msg_front_version_str() 一致：
- *   sn = 39140 → [39][140]，PATCH_VERSION → 最后一字节（5） */
+ * version 用本机真实版本，编码与镜像头、uart_msg_front_version_str() 一致
+ * （镜像头的 0.0.1 已在打包时被 make_fw.py 换成真实版本）：
+ *   sn = 39140 → [39][140]，PATCH_VERSION → 最后一字节
+ *   例：成功 + V39.140.005 → [00][39][140][05] */
 static void ota_send_result(uint8_t result)
 {
     uint16_t sn = readDeviceClientProjectSn();
@@ -218,7 +222,9 @@ static void ota_send_result(uint8_t result)
     uart_msg_property_report(UP_CMD_OTA_RESULT, buf, sizeof(buf));
 }
 
-/* 0x72：升级开始 */
+/* ================= 0x72 升级开始 =================
+ * 校验长度/容量 → 清写保护 → 擦除 64K OTA 区 → 回 0xF2(status + pkt_size)。
+ * 擦除耗时 1~2 秒，期间不应答属正常。 */
 HANDLER_DEFINE(UP_CMD_OTA_START)
 {
     uint8_t ack[3] = { OTA_START_STATUS_NO_SPACE, 0, 0 };
@@ -247,6 +253,18 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
         return 0;
     }
 
+    /* 版本与本地一致时不升级，避免同版本重复擦写、白白重启一次 */
+    uint16_t sn = readDeviceClientProjectSn();
+    if ((p[8] == (uint8_t)((sn / 1000) % 1000)) &&
+        (p[9] == (uint8_t)(sn % 1000)) &&
+        (p[10] == (uint8_t)readDeviceVersion()))
+    {
+        ack[0] = OTA_START_STATUS_SAME_VER;
+        uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
+        OB_LOGI(TAG, "same version %u.%u.%u, skip ota", p[8], p[9], p[10]);
+        return 0;
+    }
+
     memset(&s_ota, 0, sizeof(s_ota));
     s_ota.total    = size;
     s_ota.checksum = (uint32_t)p[4] | ((uint32_t)p[5] << 8)
@@ -269,7 +287,7 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     if (hal_flash_erase(ota_area_addr(), OTA_FLASH_MAX_SIZE) != 0)
     {
         OB_LOGE(TAG, "erase fail");
-        ack[0] = OTA_START_STATUS_BUSY;
+        ack[0] = OTA_START_STATUS_ERASE_FAIL;
         uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
         return 0;
     }
@@ -285,7 +303,10 @@ HANDLER_DEFINE(UP_CMD_OTA_START)
     return 0;
 }
 
-/* 0x73：数据包 / 结束包（data 长度为 0 表示结束） */
+/* ================= 0x73 数据 / 结束包 =================
+ * payload = [offset 4B][data N]，N == 0 表示结束包。
+ * 结束包：校验长度与累加和 → 回读镜像头 → 回 0xF3；
+ *         失败立即上报 0x74，成功不在这里报（等 boot 搬完由 app 上报）。 */
 HANDLER_DEFINE(UP_CMD_OTA_DATA)
 {
     uint8_t ack[5] = { OTA_DATA_STATUS_WRITE_FAIL, 0, 0, 0, 0 };
@@ -294,8 +315,15 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
     uint32_t offset, ret = OTA_DATA_STATUS_OK;
     uint16_t len;
 
-    if ((packet->length < 4) || (!s_ota.active) || (flash == NULL))
+    if ((packet->length < 4) || (flash == NULL))
     {
+        uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
+        return 0;
+    }
+
+    if (!s_ota.active)
+    {
+        ack[0] = OTA_DATA_STATUS_NO_SESSION;
         uart_msg_property_ack(packet->cmd, ack, sizeof(ack));
         return 0;
     }
@@ -319,9 +347,7 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
         }
         else
         {
-            /* 回读校验：sfud 的写不校验，写保护/时序问题也会返回成功，
-             * 只有回读才能发现「报了成功但 flash 里还是旧镜像」。
-             * 参考例程 ota_timer.c 也是校验通过才允许重启。 */
+            /* 回读镜像头，确认 flash 里确实是本次下发的镜像 */
             uint32_t chk = ota_check_flash();
 
             if (chk)
@@ -329,9 +355,8 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
                 ret = OTA_DATA_STATUS_READBACK_FAIL;
                 ota_send_result(OTA_RESULT_CSUM_FAIL);
             }
-            /* 成功不在这里报！下载完成只说明数据到了 SPI，
-             * 真正的 OTA 完成是 boot 把镜像搬到 FMC、跳回 app 之后，
-             * 由 uart_ota_report_boot_done() 上报。*/
+            /* 成功不在这里上报：下载完成只说明数据到了 SPI，
+             * 真正完成是 boot 搬运后 app 启动时（uart_ota_report_boot_done） */
         }
 
         s_ota.active = 0;
@@ -345,7 +370,7 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
 
         if (ret == OTA_DATA_STATUS_OK)
         {
-            /* 留出时间把应答和结果发出去，由 uart_protocol_ota_poll 触发跳转 */
+            /* 留出 200ms 让 0xF3 发完，由 uart_protocol_ota_poll 触发跳 boot */
             uart_protocol_ota_to_boot_inc_time_out();
         }
         return 0;
@@ -416,13 +441,10 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
     return 0;
 }
 
-/* 由 uart_protocol_ota_poll 轮询调用：boot 把镜像搬到 FMC 并跳回 app 后，ota_info.state == DONE，
- * 这才是 OTA 真正完成的时刻 —— 下载结束只说明数据到了 SPI，
- * boot 搬运失败的话版本不会变，那时上报成功是骗人。
- *
- * 状态由 boot 在搬运结束后写入（OTA_INFO_STATE_DONE）；
- * 搬运失败时 error != NONE 而 state 仍是 WAIT。
- * 上报后把 state 复位成 IDLE，避免下次轮询重复上报。
+/* 由 uart_protocol_ota_poll 轮询调用：boot 搬运完跳回 app 后，
+ * ota_info.state == DONE 才算 OTA 真正完成，此时上报 0x74 成功 + 新版本；
+ * 搬运失败时 state 仍是 WAIT 且 error != NONE，上报 0x74 失败。
+ * 上报后状态复位为 IDLE，避免重复上报。
  * 返回 1 = 本次是 OTA 启动并已上报，0 = 普通启动。 */
 uint32_t uart_ota_report_boot_done(void)
 {
@@ -445,19 +467,22 @@ uint32_t uart_ota_report_boot_done(void)
         return 1;
     }
 
-    /* boot 搬运失败：error 有值而 state 还停在 WAIT */
+    /* boot 搬运失败：error 有值而 state 还停在 WAIT。
+     * error==BKUP 表示备份阶段就失败、根本没搬镜像，旧固件还在跑 */
     if ((info->state == OTA_INFO_STATE_WAIT) && (info->error != OTA_INFO_ERROR_NONE))
     {
         info->state = OTA_INFO_STATE_IDLE;
         ota_info_update(info);
 
-        ota_send_result(OTA_RESULT_CSUM_FAIL);
+        ota_send_result((info->error == OTA_INFO_ERROR_BKUP)
+                        ? OTA_RESULT_BACKUP_FAIL : OTA_RESULT_CSUM_FAIL);
         return 1;
     }
     return 0;
 }
 
-/* 写 ota_info 并跳 boot，由 uart_protocol_ota_poll 在应答发出后调用 */
+/* 写 ota_info（WAIT + error 清零）→ 关看门狗和中断 → 跳 boot。
+ * 由 uart_protocol_ota_poll 在 0xF3 发出 200ms 后调用。 */
 void uart_ota_jump_to_boot(void)
 {
     ota_info_t *info = ota_info_get(0);

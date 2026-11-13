@@ -56,24 +56,31 @@ uint32_t start_backup(void)
     if (ret) // backup is invalid
     {
 do_backup:
+        /* 同 OTA 拷贝：size 是数据长度，备份要连 16 字节文件头一起写 */
         flash_fmc_copy_to_spi(APP_OTA_FILE, SFLASH_BACKUP_BEGIN_ADDR,
-            gs_ota_context.app.size);
+            gs_ota_context.app.size + sizeof(ota_file_t));
         flag_copied = 1;
 
         ret = ota_file_validate(SFLASH_BACKUP_BEGIN_ADDR, 0,
             &gs_ota_context.backup);
     }
 
-    if (!memcmp(&gs_ota_context.app, &gs_ota_context.backup,
-        sizeof(gs_ota_context.app)))
+    /* 头结构只有 16 字节，按字比较即可，避免把 memcmp 拉进 1KB 的 BL1 */
+    uint32_t *a = (uint32_t *)&gs_ota_context.app;
+    uint32_t *b = (uint32_t *)&gs_ota_context.backup;
+    uint32_t i;
+    for (i = 0; i < sizeof(gs_ota_context.app) / 4; i++)
     {
-        return 0;
+        if (a[i] != b[i])
+        {
+            if (!flag_copied)
+                goto do_backup;
+
+            return 1;
+        }
     }
 
-    if (!flag_copied)
-        goto do_backup;
-
-    return 1;
+    return 0;
 }
 
 void start_ota(void)
@@ -100,9 +107,14 @@ void start_ota(void)
         }
     }
 
-    gs_ota_context.info->state = OTA_INFO_STATE_OTA;
-    flash_spi_copy_to_fmc(SFLASH_OTA_BEGIN_ADDR, APP_OTA_FILE,
-        gs_ota_context.ota.size);
+    /* OTA 区是「16 字节文件头 + 数据」，size 只是数据长度，要把头一起搬 */
+    if (flash_spi_copy_to_fmc(SFLASH_OTA_BEGIN_ADDR, APP_OTA_FILE,
+        gs_ota_context.ota.size + sizeof(ota_file_t)))
+    {
+        /* 失败时 state 仍是 WAIT，只置 error：回退到旧固件的 app 会上报失败 */
+        gs_ota_context.info->error = OTA_INFO_ERROR_CSUM;
+        return;
+    }
 
     gs_ota_context.info->state = OTA_INFO_STATE_DONE;
     gs_ota_context.info->error = OTA_INFO_ERROR_NONE;
@@ -155,18 +167,24 @@ __NO_RETURN void boot_main(void)
     {
         gs_ota_context.info = ota_info_get(0);
         gs_ota_context.info->state = OTA_INFO_STATE_WAIT;
+        gs_ota_context.info->error = OTA_INFO_ERROR_NONE;
     }
 #endif // FORCE_OTA_ENABLE
-    if (gs_ota_context.info)
+    if (gs_ota_context.info &&
+        (gs_ota_context.info->state == OTA_INFO_STATE_WAIT))
     {
-        if (gs_ota_context.info->state == OTA_INFO_STATE_WAIT)
-        {
-            start_ota();
-            ota_info_update(gs_ota_context.info);
-        }
+        start_ota();
+        ota_info_update(gs_ota_context.info);
     }
 
-    uint32_t ret;
+    /* 固件区校验失败时，按「备份区 → OTA 区」的顺序找可恢复镜像 */
+    static const uint32_t fallback_addr[] =
+    {
+        SFLASH_BACKUP_BEGIN_ADDR,
+        SFLASH_OTA_BEGIN_ADDR,
+    };
+
+    uint32_t ret, i;
     while (1)
     {
         ret = ota_file_validate(APP_OTA_FILE, 1, &gs_ota_context.app);
@@ -175,20 +193,24 @@ __NO_RETURN void boot_main(void)
             App_Go();
         }
 
-        ret = ota_file_validate(SFLASH_BACKUP_BEGIN_ADDR, 0, &gs_ota_context.backup);
-        if (!ret) // backup is valid, go restore
+        for (i = 0; i < sizeof(fallback_addr) / sizeof(fallback_addr[0]); i++)
         {
-            flash_spi_copy_to_fmc(SFLASH_BACKUP_BEGIN_ADDR, APP_OTA_FILE,
-                gs_ota_context.backup.size);
-            continue;
-        }
+            ret = ota_file_validate(fallback_addr[i], 0, &gs_ota_context.backup);
+            if (ret)
+                continue;
 
-        ret = ota_file_validate(SFLASH_OTA_BEGIN_ADDR, 0, &gs_ota_context.ota);
-        if (!ret) // ota is valid, copy ota
-        {
-            flash_spi_copy_to_fmc(SFLASH_OTA_BEGIN_ADDR, APP_OTA_FILE,
-                gs_ota_context.ota.size);
-            continue;
+            /* 从备份回退说明新固件没跑起来，把状态改成失败，
+             * 避免旧 app 启动后误报升级成功 */
+            if ((i == 0) && gs_ota_context.info)
+            {
+                gs_ota_context.info->state = OTA_INFO_STATE_WAIT;
+                gs_ota_context.info->error = OTA_INFO_ERROR_CSUM;
+                ota_info_update(gs_ota_context.info);
+            }
+
+            flash_spi_copy_to_fmc(fallback_addr[i], APP_OTA_FILE,
+                gs_ota_context.backup.size + sizeof(ota_file_t));
+            break;
         }
 
         // Oops, a brick was born!!!

@@ -12,8 +12,8 @@ OTA 上位机
     * 循环升级：反复在 A / B 之间切换，逐轮统计
     * 设置循环次数，实时显示成功率
 
-单次升级调用 tools\\ota_tool\\ota_upload.py；
-循环升级调用 tools\\ota_stress\\ota_stress.py（判定标准是版本号是否真的翻转）。
+单次 / 循环升级都直接调用同目录的 ota_proto.run_upload；
+循环升级的判定标准是版本号是否真的翻转。
 
 依赖：python + pyserial
 """
@@ -21,7 +21,6 @@ OTA 上位机
 import os
 import queue
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -46,28 +45,11 @@ try:
 except ImportError:                                          # 没装 pyserial 也能启动，只是没有串口列表
     list_ports = None
 
-VERSION_RE = re.compile(r"(?:outside_version|最终版本):\s*V39\.140\.(\d+)")
-RATE_RE = re.compile(r"通过率\s*:\s*([\d.]+)\s*%")
-PASS_RE = re.compile(r"通过\s*:\s*(\d+)")
-FAIL_RE = re.compile(r"失败\s*:\s*(\d+)")
-ROUND_RE = re.compile(r"\[(\d+)/(\d+)\]")
-
 
 def expected_patch(path):
     """从文件名 V39_140_005.bin 里取 PATCH_VERSION = 5"""
     m = re.search(r"_(\d{3})\.bin$", os.path.basename(path), re.IGNORECASE)
     return int(m.group(1)) if m else None
-
-
-def pick_newest(d):
-    """取目录里最新的一个 .bin"""
-    if not os.path.isdir(d):
-        return None
-    files = [os.path.join(d, n) for n in os.listdir(d) if n.lower().endswith(".bin")]
-    if not files:
-        return None
-    files.sort(key=os.path.getmtime, reverse=True)
-    return files[0]
 
 
 def pick_two(d):
@@ -295,12 +277,26 @@ class OtaGui(tk.Tk):
         self.btn_stop.state(["!disabled"])
 
     def _single_worker(self, port, fw, baud, log_dir):
+        def _once():
+            # 只显示进度和结果；dev_log=True 用于输出门锁日志（排查 OTA 问题时打开）
+            return ota_proto.run_upload(port, fw, baud=baud, log_dir=log_dir,
+                                        trace=False, dev_log=True,
+                                        sink=self._put_line)
+
         try:
-            # 只显示进度和结果：关闭 TX/RX 明细和门锁调试日志
-            ota_proto.run_upload(port, fw, baud=baud,
-                                 log_dir=log_dir, dev_log=False,
-                                 trace=False, quiet=False, sink=self._put_line)
-            self.q.put(("info", "升级成功"))
+            try:
+                ret = _once()
+            except ota_proto.OtaError as exc:
+                # 偶发擦写异常：自动从头再来一次（和手工再点一次升级等效）
+                if self.stop_flag:
+                    raise
+                self.q.put(("info", "首次升级失败（%s），自动重试一次..." % exc))
+                ret = _once()
+
+            if ret == ota_proto.OTA_SKIPPED:
+                self.q.put(("info", "跳过升级（设备已是相同版本）"))
+            else:
+                self.q.put(("info", "升级成功"))
         except ota_proto.OtaError as exc:
             self.q.put(("info", "升级失败: %s" % exc))
         except Exception as exc:
@@ -323,10 +319,15 @@ class OtaGui(tk.Tk):
                 fw, expect = (fb, vb) if (i % 2 == 1) else (fa, va)
             self.q.put(("round", (i, rounds, expect)))
             try:
-                # 只显示进度和结果：关闭 TX/RX 明细和门锁调试日志
-                ota_proto.run_upload(port, fw, log_dir=log_dir,
-                                     dev_log=False, trace=False, quiet=False,
-                                     sink=self._put_line)
+                # 只显示进度和结果；dev_log=True 用于输出门锁日志
+                ret = ota_proto.run_upload(port, fw, log_dir=log_dir,
+                                           trace=False, dev_log=True,
+                                           sink=self._put_line)
+                if ret == ota_proto.OTA_SKIPPED:
+                    self.q.put(("info", "[%d/%d] 目标 V39.140.%03d 已是当前版本，跳过"
+                                % (i, rounds, expect)))
+                    cur = expect
+                    continue
                 err = ""
             except ota_proto.OtaError as exc:
                 err = str(exc)
