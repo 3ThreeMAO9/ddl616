@@ -91,6 +91,8 @@ class OtaGui(tk.Tk):
         self.rounds = tk.StringVar(value="20")
         self.stop_on_fail = tk.BooleanVar(value=False)
         self.save_log = tk.BooleanVar(value=True)
+        self.trace_on = tk.BooleanVar(value=True)    # 显示串口原始收发
+        self.dev_log = tk.BooleanVar(value=False)    # 显示门锁 [dev] 调试日志
 
         self.stat_pass = tk.StringVar(value="-")
         self.stat_fail = tk.StringVar(value="-")
@@ -139,6 +141,8 @@ class OtaGui(tk.Tk):
                      textvariable=self.rounds).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="首败即停", variable=self.stop_on_fail).pack(side="left", **pad)
         ttk.Checkbutton(frm, text="保存日志文件", variable=self.save_log).pack(side="left", **pad)
+        ttk.Checkbutton(frm, text="串口数据", variable=self.trace_on).pack(side="left", **pad)
+        ttk.Checkbutton(frm, text="门锁日志", variable=self.dev_log).pack(side="left", **pad)
 
         frm = ttk.Frame(self)
         frm.pack(fill="x", padx=8, pady=4)
@@ -278,9 +282,10 @@ class OtaGui(tk.Tk):
 
     def _single_worker(self, port, fw, baud, log_dir):
         def _once():
-            # 只显示进度和结果；dev_log=True 用于输出门锁日志（排查 OTA 问题时打开）
+            # 串口数据=trace 显示每帧原始收发；门锁日志=dev_log 输出门锁 [dev] 调试行
             return ota_proto.run_upload(port, fw, baud=baud, log_dir=log_dir,
-                                        trace=False, dev_log=True,
+                                        trace=self.trace_on.get(),
+                                        dev_log=self.dev_log.get(),
                                         sink=self._put_line)
 
         try:
@@ -308,6 +313,8 @@ class OtaGui(tk.Tk):
         unknown = True
         passed = failed = 0
         t_loop = time.time()
+        if log_dir:
+            ota_proto.open_log(log_dir)     # 循环模式所有轮写进同一个日志文件
         for i in range(1, rounds + 1):
             if self.stop_flag:
                 break
@@ -319,9 +326,10 @@ class OtaGui(tk.Tk):
                 fw, expect = (fb, vb) if (i % 2 == 1) else (fa, va)
             self.q.put(("round", (i, rounds, expect)))
             try:
-                # 只显示进度和结果；dev_log=True 用于输出门锁日志
-                ret = ota_proto.run_upload(port, fw, log_dir=log_dir,
-                                           trace=False, dev_log=True,
+                # log_dir=None：复用循环开始时打开的同一个日志文件
+                ret = ota_proto.run_upload(port, fw, log_dir=None,
+                                           trace=self.trace_on.get(),
+                                           dev_log=self.dev_log.get(),
                                            sink=self._put_line)
                 if ret == ota_proto.OTA_SKIPPED:
                     self.q.put(("info", "[%d/%d] 目标 V39.140.%03d 已是当前版本，跳过"
@@ -368,6 +376,8 @@ class OtaGui(tk.Tk):
             if i < rounds and not self.stop_flag:
                 self.q.put(("info", "等待 5 秒后开始下一轮..."))
                 time.sleep(5)
+        if log_dir:
+            ota_proto.close_log()
         self.q.put(("info", "循环结束：共 %d 轮，通过 %d，失败 %d，总耗时 %.1f 秒"
                     % (passed + failed, passed, failed, time.time() - t_loop)))
         self.q.put(("end", None))

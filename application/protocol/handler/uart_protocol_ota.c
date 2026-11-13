@@ -20,6 +20,8 @@
  * Date: 2026-11-12
  */
 
+#if (OTA_ENABLE == 1)   /* OTA 整体开关：未启用时本文件编译为空，boot_symbol 依赖随之消失 */
+
 #include "uart_protocol.h"
 #include "msg_protocol.h"
 #include "module_spi_flash.h"
@@ -379,13 +381,10 @@ HANDLER_DEFINE(UP_CMD_OTA_DATA)
 
         uint32_t waddr = ota_area_addr() + s_ota.expected;
 
-        if (hal_flash_write(waddr, p + 4 + skip, wr) != 0)
+        if ((hal_flash_write(waddr, p + 4 + skip, wr) != 0)
+                || ota_verify_write(waddr, p + 4 + skip, wr))
         {
-            ret = OTA_DATA_STATUS_WRITE_FAIL;
-        }
-        else if (ota_verify_write(waddr, p + 4 + skip, wr))
-        {
-            ret = OTA_DATA_STATUS_WRITE_FAIL;   /* 回读不一致 */
+            ret = OTA_DATA_STATUS_WRITE_FAIL;   /* 写失败或回读不一致 */
         }
 
         /* 一旦写失败就清掉本次升级会话，避免 s_ota.active 卡在 1，
@@ -486,3 +485,5 @@ void uart_ota_jump_to_boot(void)
 
     go_boot();
 }
+
+#endif  /* OTA_ENABLE */

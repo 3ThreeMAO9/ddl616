@@ -813,6 +813,11 @@ sfud_err sfud_write_status(const sfud_flash *flash, bool is_volatile, uint8_t st
         result = spi->wr(spi, cmd_data, 2, NULL, 0);
     }
 
+    /* 状态寄存器写周期期间 WIP=1，不等待的话调用方紧跟的下一条命令*/
+    if (result == SFUD_SUCCESS) {
+        result = wait_busy(flash);
+    }
+
     if (result != SFUD_SUCCESS) {
         SFUD_INFO("Error: Write_status register failed.");
     }

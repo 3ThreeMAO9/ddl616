@@ -34,8 +34,10 @@
 
 static uint32_t protocol_time_out = HEART_TIME_OUT;
 
+#if (OTA_ENABLE == 1)
 static uint8_t ota_to_boot_flag = 0;
 static uint32_t ota_to_boot_time_out = 0;
+#endif
 
 
 // static uint8_t param_data_flag = false;// 参数同步
@@ -80,8 +82,10 @@ uint32_t uart_protocol_idle_ms(void)
 
 void uart_protocol_ota_to_boot_inc_time_out(void)
 {
+#if (OTA_ENABLE == 1)
     ota_to_boot_flag = 1;
     ota_to_boot_time_out = system_inc_time_cnt(OTA_TO_BOOT_TIME_OUT);
+#endif
 }
 
 void uart_protocol_set_param_data_flag(uint8_t data)
@@ -114,8 +118,10 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_SET_USER)         // (0x07)   // 设置用户
         HANDLER_IMPORT(UP_CMD_GET_USERLIST_TIMESTAMP) // (0x08)  // 获取用户列表时间戳
         HANDLER_IMPORT(UP_CMD_GET_RECORD_LOG)   // (0x09)   // 获取开锁记录
+#if (OTA_ENABLE == 1)
         HANDLER_IMPORT(UP_CMD_OTA_START)        // (0x0A)   // OTA 开始
         HANDLER_IMPORT(UP_CMD_OTA_DATA)         // (0x0B)   // OTA 数据 / 结束包
+#endif
         HANDLER_IMPORT(UP_CMD_PROP_MODEL_SAFE)              // (0x16)   // 属性：双重验证模式（读写）
         HANDLER_IMPORT(UP_CMD_PROP_MODE_DEFENSE)            // (0x17)   // 属性：布防模式（读写）
         HANDLER_IMPORT(UP_CMD_PROP_LANGUAGE)                // (0x19)   // 属性：门锁语言（读写）
@@ -252,6 +258,7 @@ void uart_protocol_poll(void)
 
 void uart_protocol_ota_poll(void)
 {
+#if (OTA_ENABLE == 1)
     // 下载完成且应答已发出：延时跳 boot
     if (ota_to_boot_flag == 1)
     {
@@ -266,6 +273,7 @@ void uart_protocol_ota_poll(void)
     // boot 把镜像搬到 FMC 并跳回 app 后，在这里统一通过 0x74 上报结果和版本号。
     // FSM 初始化已把 0x70 密钥帧入队，模组先拿到新密钥，0x74 才能被正确解密。
     uart_ota_report_boot_done();
+#endif
 }
 
 void uart_protocol_param_poll(void)

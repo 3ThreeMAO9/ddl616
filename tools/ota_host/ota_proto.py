@@ -73,7 +73,7 @@ LOG_SINK = None           # 额外的日志回调（GUI 用它刷新界面）
 # 显示控制：默认只显示串口收发，不显示门锁自身的调试日志
 SHOW_DEV_LOG = False
 TRACE = True
-LAST_VERSION = None          # 从门锁日志里解析出的 outside_version
+LAST_VERSION = None          # 最终版本（PATCH 段）：0x74 结果帧上报，dev_log 开启时也解析门锁日志
 OTA_SKIPPED = 2              # run_upload 返回值：版本相同，未执行升级
 VERSION_RE = re.compile(r"outside_version:\s*V39\.140\.(\d+)")
 
@@ -110,10 +110,16 @@ def die(msg):
 
 
 def open_log(log_dir=None):
-    """日志目录可指定；不指定就不落盘（只输出到 stdout 和 GUI 的日志框）"""
+    """日志目录可指定；不指定就不落盘（只输出到 stdout 和 GUI 的日志框）。
+    重复调用会先关闭旧文件。循环模式由 GUI 打开一次、每轮传 None 复用同一文件。"""
     global LOG_FP
-    if not log_dir:
+    if LOG_FP:
+        try:
+            LOG_FP.close()
+        except Exception:
+            pass
         LOG_FP = None
+    if not log_dir:
         return
     d = log_dir
     os.makedirs(d, exist_ok=True)
@@ -121,15 +127,67 @@ def open_log(log_dir=None):
     LOG_FP = open(os.path.join(d, name), "w", encoding="utf-8")
 
 
+def close_log():
+    """关闭当前日志文件"""
+    open_log(None)
+
+
+# TX/RX 每帧的命令名（trace 模式显示完整通信流程）
+CMD_NAMES = {
+    0x67: "时间查询", 0xE7: "时间应答",
+    0x70: "密钥发送", 0xF0: "密钥回执",
+    0x71: "密钥请求", 0xF1: "密钥帧",
+    0x72: "OTA开始", 0xF2: "OTA开始应答",
+    0x73: "OTA数据", 0xF3: "OTA数据应答",
+    0x74: "OTA结果", 0xF4: "OTA结果回执",
+}
+
+OTA_F2_STATUS = {0: "就绪", 1: "长度超限", 2: "升级中", 3: "版本相同", 4: "擦除失败"}
+OTA_F3_STATUS = {0: "OK", 1: "偏移不连续", 2: "写失败", 3: "回读失败", 4: "无会话"}
+OTA_R74_RESULT = {0: "成功", 1: "校验失败", 2: "长度不符", 3: "备份失败"}
+
+
+def _hex_preview(b, n=8):
+    return " ".join("%02X" % v for v in b[:n]) + ("…" if len(b) > n else "")
+
+
+def _payload_detail(cmd, p):
+    """解码关键帧的 payload，供 TX/RX 行显示。
+    ACK 帧(0xF2/0xF3/0xF4)经 cmd & 0x7F 后与请求命令同分支，按长度区分。"""
+    c = cmd & 0x7F
+    if c == 0x72 and len(p) >= 11:          # 0x72 开始请求
+        size, cs = struct.unpack_from("<II", p, 0)
+        return "size=%d csum=0x%08X ver=%d.%d.%d" % (size, cs, p[8], p[9], p[10])
+    if c == 0x72 and len(p) >= 3:           # 0xF2 开始应答
+        pkt = struct.unpack_from("<H", p, 1)[0]
+        return "status=%d(%s) pkt=%d" % (p[0], OTA_F2_STATUS.get(p[0], "?"), pkt)
+    if c == 0x73 and len(p) == 5:           # 0xF3 数据应答
+        off = struct.unpack_from("<I", p, 1)[0]
+        return "status=%d(%s) offset=0x%06X" % (p[0], OTA_F3_STATUS.get(p[0], "?"), off)
+    if c == 0x73 and len(p) == 4:           # 0x73 结束包
+        return "off=0x%06X <结束包>" % struct.unpack_from("<I", p, 0)[0]
+    if c == 0x73 and len(p) > 8:            # 0x73 数据包
+        off = struct.unpack_from("<I", p, 0)[0]
+        return "off=0x%06X data=%d %s" % (off, len(p) - 4, _hex_preview(p[4:]))
+    if c == 0x74 and len(p) >= 4:           # 0x74 结果帧
+        return "result=%d(%s) ver=V%d.%d.%03d" % (
+            p[0], OTA_R74_RESULT.get(p[0], "?"), p[1], p[2], p[3])
+    if c in (0x70, 0x71) and len(p) >= 4:
+        return "K_L=0x%02X" % p[1]
+    if 0 < len(p) <= 16:
+        return _hex_preview(p, 16)
+    return ""
+
+
 def send_frame(ser, cmd, payload, sn, key=None):
-    """发一帧并打印 TX 信息"""
+    """发一帧并打印 TX 信息（原始字节 + 解码摘要）"""
     data = build_frame(cmd, payload, sn, key)
     ser.write(data)
     if TRACE:
-        extra = ""
-        if (cmd & 0x7F) == CMD_OTA_DATA and len(payload) >= 4:
-            extra = " off=0x%06X" % struct.unpack_from("<I", payload, 0)[0]
-        log(f"  TX cmd=0x{cmd:02X} sn={sn} len={len(payload)}{extra}")
+        log("  TX %dB: %s" % (len(data), data.hex(" ").upper()))
+        log("  TX 0x%02X %s sn=%d len=%d %s" % (
+            cmd, CMD_NAMES.get(cmd, ""), sn, len(payload),
+            _payload_detail(cmd, payload)))
     return data
 
 
@@ -232,6 +290,10 @@ def read_frame(ser, timeout, key=None, state=None):
         if len(payload) != length:
             continue
 
+        if TRACE:
+            raw = bytes([MARK]) + rest + payload
+            log("  RX %dB: %s" % (len(raw), raw.hex(" ").upper()))
+
         # checksum1 覆盖密文
         calc1 = (checksum16(bytes([attr])) + checksum16(rest[3:] + payload)) & 0xFFFF
         if cs1 != calc1:
@@ -260,7 +322,9 @@ def read_frame(ser, timeout, key=None, state=None):
 
         flush()
         if TRACE:
-            log(f"  RX cmd=0x{cmd:02X} sn={sn} len={len(plain)}")
+            log("  RX 0x%02X %s sn=%d len=%d %s" % (
+                cmd, CMD_NAMES.get(cmd, ""), sn, len(plain),
+                _payload_detail(cmd, plain)))
         return cmd, plain, sn, rnd
 
     flush()
@@ -345,7 +409,8 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
     except ImportError:
         die("缺少 pyserial，请执行 pip install pyserial")
 
-    open_log(log_dir)
+    if log_dir:
+        open_log(log_dir)
 
     with open(fw_path, "rb") as fp:
         fw = fp.read()
@@ -494,6 +559,7 @@ def run_upload(port, fw_path, baud=230400, pkt=OTA_PKT_DEFAULT,
 
         result = res[1][0]
         ver = res[1][1:4]
+        LAST_VERSION = ver[2]   # 0x74 上报的就是设备最终版本，无需依赖日志解析
         if result != 0:
             reasons = {1: "校验和/回读/搬运失败", 2: "长度不符"}
             die(f"{reasons.get(result, f'result={result}')}")

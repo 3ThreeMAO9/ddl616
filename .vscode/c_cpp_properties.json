@@ -16,7 +16,8 @@
                 "PROJECT_NUMBER=140",
                 "CONFIG_SEL=39",
                 "OB_LOG_ENABLE=1",
-                "UART_PRINTF_ENABLE=1"
+                "UART_PRINTF_ENABLE=1",
+                "OTA_ENABLE=1"
             ],
             "includePath": [
                 "${workspaceFolder}/common/Device",

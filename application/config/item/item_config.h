@@ -26,6 +26,10 @@
 #define UART_PRINTF_ENABLE                          (Disabled)   // 串口打印开关
 #endif
 
+#ifndef OTA_ENABLE
+#define OTA_ENABLE                                  (Disabled)   // OTA升级开关（正式/调试工程在 Keil 目标宏里置 1）
+#endif
+
 /*****************************************************************************/
 
 /***********Macro***********/
