@@ -75,7 +75,7 @@ typedef struct{
 typedef struct{
     tamper_key_handle_t tamper_key;
     key_board_handle_t keyBoard;
-    struct Button keyBtn[KEY_CNT + 2];
+    struct Button keyBtn[KEY_CNT + 1];
     uint32_t timeOut;
 }key_handle_t;
 

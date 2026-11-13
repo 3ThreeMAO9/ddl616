@@ -22,16 +22,6 @@
 
 static uart_event_callback_t uart_callback;
 
-#if (BACK_UART_SEL == UART0)
-uint8_t g_uart_packet[UART0_BUF_LEN];
-const uint16_t g_uart_buf_len = UART0_BUF_LEN; // 记录当前缓冲区长度
-#elif (BACK_UART_SEL == UART1)
-uint8_t g_uart_packet[UART1_BUF_LEN];
-const uint16_t g_uart_buf_len = UART1_BUF_LEN; // 记录当前缓冲区长度
-#else
-#error "BACK_UART_SEL must be UART0 or UART1! Please check the macro definition."
-#endif
-
 static void uartEvent_callback(uint8_t uartType, uint8_t uartEvent, uint8_t uartState, uint8_t uartValue)
 {
     if (NULL != uart_callback)
@@ -53,16 +43,16 @@ void uartEventRegister_callback(uart_event_callback_t callback)
 void uartReceiveDeal_callback(void)
 {
     uint16_t len;
-    uint8_t *pt = g_uart_packet;
 
     if (uart_rx_queue_get_handle_busy())
         return;
 
-    len = hal_uart_receive_deal(BACK_UART_SEL, pt);
+    len = hal_uart_receive_len(BACK_UART_SEL);
 
-    if ((len > 0) && (len <= g_uart_buf_len))
+    if (len > 0)
     {
-        uart_rx_queue_put(pt, len); // 存放到队列中
+        uart_rx_queue_put(hal_uart_receive_buf(BACK_UART_SEL), len); // 直接入队，省去中间缓冲
+        hal_uart_receive_clear(BACK_UART_SEL);                       // 入队完成后再清零
     }
 }
 
@@ -143,7 +133,6 @@ static void uart_poll_tx(void)
 
     uint16_t data_len;
     UartTxCtrlInfo tx_ctrl_info = {0};
-    uint8_t tx_buf[UART0_BUF_LEN]; // 栈缓冲区
 
     // 队列里至少要有 ctrl 头
     if (uart_queue_get_len() < sizeof(UartTxCtrlInfo))
@@ -160,15 +149,12 @@ static void uart_poll_tx(void)
         return;
     }
 
-    // 读取对应长度的数据并发送
-    if (uart_queue_get_bulk(tx_buf, data_len) == data_len){
+    // 直接读入重传缓冲后发送，省去一份栈缓冲（UART_Write 为阻塞发送）
+    if (uart_queue_get_bulk(s_uart_tx.data, data_len) == data_len){
         // OB_LOGI(TAG, "[%s] data_len=%d", __func__, data_len);
-        // OB_LOGW_DUMP(tx_buf, data_len);
-        hal_uartSendBuff(BACK_UART_SEL, tx_buf, data_len); // 串口硬件发送
+        // OB_LOGW_DUMP(s_uart_tx.data, data_len);
+        hal_uartSendBuff(BACK_UART_SEL, s_uart_tx.data, data_len); // 串口硬件发送
 
-        // 还没做应答，取消重发
-        memset(s_uart_tx.data, 0, sizeof(s_uart_tx.data)); // 清空待重传数据
-        s_uart_tx.tx_state = UART_TX_STATE_IDLE;           // 状态置为空闲
         // ACK指令跳过重传配置
         if (IS_UART_ACK_CMD(tx_ctrl_info.cmd)){
             // 清空重发逻辑：重置结构体字段
@@ -177,7 +163,6 @@ static void uart_poll_tx(void)
         }
         else{
             s_uart_tx.tx_state = UART_TX_STATE_WAIT_ACK;
-            memcpy(s_uart_tx.data, tx_buf, data_len);
             s_uart_tx.ctrl.len = data_len;
             s_uart_tx.ctrl.tsn = tx_ctrl_info.tsn;
             s_uart_tx.ctrl.cmd = tx_ctrl_info.cmd;

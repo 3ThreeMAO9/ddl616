@@ -84,20 +84,29 @@ static uint8_t hal_uart_read_receive_state(Uart_Group_t uart_group)
     return false;
 }
 
-uint8_t hal_uart_receive_deal(Uart_Group_t uart_group, uint8_t *buf)
+/* 返回指定串口的 ISR 收包缓冲首地址，配合 receive_len / receive_clear 使用，省去中间拷贝 */
+uint8_t *hal_uart_receive_buf(Uart_Group_t uart_group)
 {
-    uint16_t len;
-    if (true == hal_uart_read_receive_state(uart_group))
+    if (uart_group >= UART_GROUP_CNT)
     {
-        memcpy((uint8_t *)buf, (uint8_t *)pt[uart_group], uart_len[uart_group]);
-        len = uart_len[uart_group];
+        return NULL;
+    }
+    return (uint8_t *)pt[uart_group];
+}
+
+/* 一帧接收完成时返回长度（不清零），未完成或耗时未到返回 0 */
+uint16_t hal_uart_receive_len(Uart_Group_t uart_group)
+{
+    return (true == hal_uart_read_receive_state(uart_group)) ? uart_len[uart_group] : 0;
+}
+
+/* 数据取走后清零长度，允许接收下一帧 */
+void hal_uart_receive_clear(Uart_Group_t uart_group)
+{
+    if (uart_group < UART_GROUP_CNT)
+    {
         uart_len[uart_group] = 0;
     }
-    else
-    {
-        len = 0;
-    }
-    return len;
 }
 
 void hal_uartSendBuff(Uart_Group_t uart_group, uint8_t *data, uint16_t len)
