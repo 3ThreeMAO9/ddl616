@@ -155,6 +155,8 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_LINKED_UNLOCK_RESULT)     // (0x6C) // 联动开锁结果上报
         HANDLER_IMPORT(UP_CMD_LINKED_UNLOCK_EXIT_ACK)   // (0xED) // 退出联动指令应答
         HANDLER_IMPORT(UP_CMD_LINKED_UNLOCK_OPEN)       // (0x6E) // 联动开锁执行（背板 → 门锁）
+        HANDLER_IMPORT(UP_CMD_WIFI_TEST_START_ACK)      // (0xF6) // WiFi 测试开始 ACK
+        HANDLER_IMPORT(UP_CMD_WIFI_TEST_RSSI)           // (0x77) // WiFi RSSI 结果上报
 
     default:
         return 0;
@@ -248,6 +250,7 @@ void uart_protocol_poll(void)
 {
     uart_totp_poll();                       // 一次性密码校验超时判定
     uart_linked_unlock_poll();              // 联动开锁背板应答超时判定
+    uart_wifi_test_poll();                  // WiFi RSSI 产测超时判定
 
     // 心跳：串口静默 HEART_TIME_OUT（3s）就发一包时间查询，兼作 WiFi 保活
     if (system_out_time_cnt(protocol_time_out))

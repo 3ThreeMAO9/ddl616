@@ -48,6 +48,8 @@ typedef enum{
     DEVICE_TEST_STEP_SLEEP,
     DEVICE_TEST_STEP_RESET,
     DEVICE_TEST_STEP_LOCK_KEY,
+    DEVICE_TEST_STEP_WIFI_TEST,                   // 第五步：WiFi RSSI 产测（258#）
+    DEVICE_TEST_STEP_MAX,
 }device_test_step_t;
 
 typedef enum{

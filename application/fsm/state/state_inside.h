@@ -50,6 +50,8 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e);       // 整机测试
 QState lockFsmDualVerifyFail(LockFsm *me, QEvent const *e);       // 双重验证：第二重类型与第一重相同，红灯提示
 QState lockFsmDeviceTestSuccess(LockFsm *me, QEvent const *e);     // 整机测试：播"测试成功"，播完回 me->branch
 QState lockFsmDeviceTestFail(LockFsm *me, QEvent const *e);       // 整机测试：播"测试失败"，播完回 me->branch
+QState lockFsmDeviceTestWifiPass(LockFsm *me, QEvent const *e);   // WiFi RSSI 合格：绿灯闪+嘀，等播完→写PASS→factory_reset→Success
+QState lockFsmDeviceTestWifiFail(LockFsm *me, QEvent const *e);   // WiFi RSSI 不合格：红灯闪+嘀嘀，等播完→factory_reset→Fail
 QState lockFsmHandleWakeUpSuccess(LockFsm *me, QEvent const *e);
 QState lock_fsm_system_lock(LockFsm *me, QEvent const *e);
 QState lockFsmHandleVoiceModeSuccess(LockFsm *me, QEvent const *e);

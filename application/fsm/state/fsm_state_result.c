@@ -12,6 +12,8 @@
 #include "parameter.h"
 #include "user.h"
 #include "lock_log.h"
+#include "flash_data.h"
+#include "uart_protocol.h"
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
@@ -181,6 +183,48 @@ QState lockFsmDeviceTestSuccess(LockFsm *me, QEvent const *e)
 QState lockFsmDeviceTestFail(LockFsm *me, QEvent const *e)
 {
     return lockFsmFailDeal(me, e, HMI_STATE_DEVICE_TEST_STEP_FAIL, false);
+}
+
+// WiFi RSSI 合格过渡：等 500ms 绿灯闪+嘀播完，写 PASS → 恢复出厂 → 转最终 Success 播报
+QState lockFsmDeviceTestWifiPass(LockFsm *me, QEvent const *e)
+{
+    switch (e->sig) {
+        case Q_ENTRY_SIG:
+            // 什么都不做，HMI 和定时已在上一状态设好
+            break;
+        case Q_FUNCTION_TIME_OUT_SIG:
+            writeDeviceTestResult(DEVICE_TEST_RESULT_PASS);
+            flash_page_system_init();
+            flash_data_init();
+            lock_log_flash_clear();
+            me->branch = (QStateHandler)(lock_fsm_sleep);
+            return Q_TRAN(lockFsmDeviceTestSuccess);
+        case Q_EXIT_SIG:
+            break;
+        default:
+            break;
+    }
+    return Q_IGNORED();
+}
+
+// WiFi RSSI 不合格过渡：等 500ms 红灯闪+嘀嘀播完，恢复出厂 → 转最终 Fail 播报
+QState lockFsmDeviceTestWifiFail(LockFsm *me, QEvent const *e)
+{
+    switch (e->sig) {
+        case Q_ENTRY_SIG:
+            break;
+        case Q_FUNCTION_TIME_OUT_SIG:
+            flash_page_system_init();
+            flash_data_init();
+            lock_log_flash_clear();
+            me->branch = (QStateHandler)(lock_fsm_sleep);
+            return Q_TRAN(lockFsmDeviceTestFail);
+        case Q_EXIT_SIG:
+            break;
+        default:
+            break;
+    }
+    return Q_IGNORED();
 }
 
 // ---- 删除普通用户的几种结果语音（播完回 me->branch，调用方指向删除用户菜单）----

@@ -143,6 +143,12 @@ void uart_msg_linked_unlock_exit(void)
     uart_msg_common_send(UP_CMD_LINKED_UNLOCK_EXIT, NULL, 0);
 }
 
+// WiFi 产测开始（0x76）：空 payload，背板回 0xF6 ACK 后测 RSSI 上报 0x77
+void uart_msg_wifi_test_start(void)
+{
+    uart_msg_common_send(UP_CMD_WIFI_TEST_START, NULL, 0);
+}
+
 // 本地验证开锁成功通知（0x6F）：空 payload，触发配对锁联动开锁
 void uart_msg_linked_unlock_notify(void)
 {

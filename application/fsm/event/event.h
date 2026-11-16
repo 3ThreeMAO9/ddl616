@@ -137,6 +137,8 @@ typedef enum{
     EVENT_RESULT_LINKED_UNLOCK_SUCCESS, // 联动开锁配对成功（0x6C result=0）
     EVENT_RESULT_LINKED_UNLOCK_FAIL,    // 联动开锁配对失败（0xEA/0xEB status!=0 或 0x6C result!=0 或应答超时）
     EVENT_RESULT_LINKED_UNLOCK_OPEN,    // 背板下发联动开锁指令（0x6E）：前板执行开锁
+    EVENT_RESULT_WIFI_TEST_SUCCESS,     // WiFi RSSI 测试合格（0x77 RSSI >= -30dBm）
+    EVENT_RESULT_WIFI_TEST_FAIL,        // WiFi RSSI 测试失败（不合格 / 背板超时无应答）
 
 
     USER_EVENT_CNT,

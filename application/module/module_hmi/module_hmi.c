@@ -480,6 +480,24 @@ uint32_t module_hmi_handle(uint8_t state, uint8_t silentFlag)
             PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
             break;
 
+        // 整机测试(258#)第五步：WiFi RSSI 产测，蓝灯慢闪 + 一声提示，等背板测完上报 0x77
+        case HMI_STATE_DEVICE_TEST_WIFI:
+            logo_led(LOGO_LED_COLOR_BLUE, HMI_STATE_KEEP_TIME_100ms, 8);
+            PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
+            break;
+
+        // 整机测试 WiFi RSSI 合格：绿灯闪 + 一声"嘀"，让测试员立即看到
+        case HMI_STATE_DEVICE_TEST_WIFI_PASS:
+            logo_led(LOGO_LED_COLOR_GREEN, HMI_STATE_KEEP_TIME_100ms, 4);
+            PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DO);
+            break;
+
+        // 整机测试 WiFi RSSI 不合格：红灯闪 + 两声"嘀嘀"，让测试员立即看到
+        case HMI_STATE_DEVICE_TEST_WIFI_FAIL:
+            logo_led(LOGO_LED_COLOR_RED, HMI_STATE_KEEP_TIME_100ms, 4);
+            PLAYER_LIST_CLEAR_ADD(SOUND_BUTTON_DI_DI);
+            break;
+
         // 双重验证：第一重通过，蓝灯长亮提示继续第二重（不播语音）
         case HMI_STATE_DUAL_VERIFY_FIRST_OK:
             logo_led(LOGO_LED_COLOR_BLUE, 0, 0);

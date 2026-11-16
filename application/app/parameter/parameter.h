@@ -43,6 +43,7 @@ typedef enum{
     DEVICE_TEST_FLAG_CURRENT_ID,
     DEVICE_TEST_FLAG_BLE_ID,
     DEVICE_TEST_FLAG_NFC_ID,
+    DEVICE_TEST_FLAG_WIFI_RSSI_ID,                  // WiFi RSSI 测试
     DEVICE_TEST_FLAG_CNT,                       // <=32
 
 }device_test_flag_id_e;

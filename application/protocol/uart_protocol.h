@@ -173,7 +173,16 @@
  *      参数区被擦除（新板/整片擦除/恢复出厂）时恢复默认开启；
  *      已保存过则以保存值为准，只能由 0x75 改变。
  *      注意：0x72~0x74 已分配给 OTA，勿占用 ---- */
-#define UP_CMD_PRODUCE_TEST_ONOFF           (0x75)
+#define UP_CMD_PRODUCE_TEST_ONOFF           (0x75)      // 产测通道下发（WiFi → 门锁）
+
+/* ---- 4.6.3 WiFi RSSI 产测（258# 第五步）
+ *      门锁完成前四步后发 0x76 让背板做 WiFi RSSI 测试（payload 空），
+ *      背板回 0xF6 + [status 1B]（0=开始测试，其它=失败）；
+ *      背板测完主动上报 0x77 + [rssi_dbm 1B 有符号，如 -35 发 0xDD]，门锁回 0xF7。
+ *      RSSI >= -30dBm（即有符号比较 payload >= WIFI_TEST_RSSI_PASS_DBM）视为合格。 ---- */
+#define UP_CMD_WIFI_TEST_START              (0x76)      // WiFi 测试开始（门锁 → 背板）
+#define UP_CMD_WIFI_TEST_RSSI               (0x77)      // WiFi RSSI 结果上报（背板 → 门锁）
+#define WIFI_TEST_RSSI_PASS_DBM             (-30)       // RSSI 合格阈值（dBm）
 
 /* 产测通道当前是否开启（key_event 用它决定 258#/555# 是否响应） */
 uint8_t uart_produce_test_enabled(void);
@@ -184,6 +193,8 @@ uint8_t uart_produce_test_enabled(void);
 #define UP_CMD_TIME_QUERY_ACK               SET_UART_ACK_CMD(UP_CMD_TIME_QUERY)     // 0xE7
 #define UP_CMD_GET_BACK_VERSION_ACK         SET_UART_ACK_CMD(UP_CMD_GET_BACK_VERSION) // 0xE8
 #define UP_CMD_TOTP_VERIFY_ACK              SET_UART_ACK_CMD(UP_CMD_TOTP_VERIFY)    // 0xE9
+#define UP_CMD_WIFI_TEST_START_ACK          SET_UART_ACK_CMD(UP_CMD_WIFI_TEST_START)  // 0xF6
+#define UP_CMD_WIFI_TEST_RSSI_ACK           SET_UART_ACK_CMD(UP_CMD_WIFI_TEST_RSSI)   // 0xF7
 #define UP_CMD_LINKED_UNLOCK_CREATE_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_CREATE) // 0xEA
 #define UP_CMD_LINKED_UNLOCK_JOIN_ACK       SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_JOIN)   // 0xEB
 #define UP_CMD_LINKED_UNLOCK_RESULT_ACK     SET_UART_ACK_CMD(UP_CMD_LINKED_UNLOCK_RESULT) // 0xEC
@@ -203,7 +214,11 @@ void     uart_protocol_poll(void);
 void uart_protocol_heart_inc_time_out(void);            // 重置心跳计时
 void uart_protocol_heart_expire(void);                  // 让心跳立刻到期（唤醒后补发）
 
-/* 一次性密码校验（0x69 → 0xE9） */
+/* WiFi RSSI 产测（0x76 → 0xF6 → 0x77） */
+void    uart_wifi_test_start(void);         // 发起 WiFi 测试
+void    uart_wifi_test_cancel(void);        // 状态机退出时清理
+uint8_t uart_wifi_test_is_waiting(void);    // 是否还在等背板（ACK 或 RSSI）
+void    uart_wifi_test_poll(void);          // 超时检查
 void    uart_totp_verify_start(const uint8_t *pwd6);    // 发起校验
 void    uart_totp_poll(void);                           // 超时检查
 

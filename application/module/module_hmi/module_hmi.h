@@ -130,6 +130,9 @@ typedef enum{
     HMI_STATE_DEVICE_TEST_KEY_PRESS,    //整机测试第一步：触摸按键反馈：键盘灯闪一下 + 指示灯换一个颜色
     HMI_STATE_DEVICE_TEST_NFC,          //整机测试第三步：NFC 检卡，播"请刷卡"
     HMI_STATE_DEVICE_TEST_KEY_TEST,     //整机测试第四步：实体按键（防撬/后板RESET/后板SETTING）测试提示：只播"嘀"，不动键盘灯
+    HMI_STATE_DEVICE_TEST_WIFI,         //整机测试第五步：WiFi RSSI 产测（等背板回 0x77）
+    HMI_STATE_DEVICE_TEST_WIFI_PASS,    //整机测试 WiFi 合格：绿灯闪 + 一声"嘀"
+    HMI_STATE_DEVICE_TEST_WIFI_FAIL,    //整机测试 WiFi 不合格：红灯闪 + 两声"嘀嘀"
     HMI_STATE_DEVICE_TEST_RESULT,       //257# 产测结果查询：播报 100(未测试) / 102(未通过) / 103(通过)
     HMI_STATE_DUAL_VERIFY_FIRST_OK,     //双重验证：第一重通过，蓝灯长亮等第二重
     HMI_STATE_DUAL_VERIFY_FAIL,         //双重验证：第二重失败，红灯 0.1s 闪 2 次

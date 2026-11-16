@@ -6,8 +6,9 @@
  * Revision: James_Zhang
  * Date: 2026-10-15
  *
- * 流程：触摸键盘(13键,严格顺序) -> 指纹 -> [电机开锁] -> 刷卡 -> [电机关锁] -> 实体按键3个 -> 成功
- *      任一步失败 -> 失败播报；成功/失败都先恢复出厂设置再播报，语音播完自动休眠（不干等 30s 超时）。
+ * 流程：触摸键盘(13键,严格顺序) -> 指纹 -> [电机开锁] -> 刷卡 -> [电机关锁]
+ *       -> 实体按键3个 -> WiFi RSSI 测试 -> 成功
+ *       任一步失败 -> 失败播报；成功/失败都先恢复出厂设置再播报，语音播完自动休眠。
  */
 
 #include "fsm_state.h"
@@ -26,6 +27,7 @@
 #include "flash_data.h"
 #include "lock_log.h"
 #include "msg_protocol.h"       // uart_msg_bell（门铃命令 0x61，发给 WiFi 模块转后板）
+#include "uart_protocol.h"      // WiFi 产测 0x76/0x77
 
 #define OB_LOG_LEVEL OB_LOG_LEVEL_DEFAULT
 #include "ob_log.h"
@@ -90,6 +92,16 @@ static void device_test_back_key_start(void)
     system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);
 }
 
+// 进入第五步：WiFi RSSI 产测（发 0x76 给背板，背板回 0xF6 ACK 后测 RSSI 上报 0x77）
+static void device_test_wifi_start(void)
+{
+    device_test_step = DEVICE_TEST_STEP_WIFI_TEST;
+    keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);     // 关防撬，别把报警事件带出去
+    hmiTaskSetState(HMI_STATE_DEVICE_TEST_WIFI);
+    system_time_task_set_work_time(PRODUCE_DEVICE_TEST_TIME_OUT_MAX);  // 重置总超时
+    uart_wifi_test_start();
+}
+
 // 离合电机：只驱动电机（250ms），不等待不提示，测试员在随后的人工操作中顺手拧把手判断
 static void device_test_motor_handle(uint8_t handle)
 {
@@ -114,7 +126,7 @@ static void device_test_fail(LockFsm *me, QState *state)
     *state = Q_TRAN(lockFsmDeviceTestFail);
 }
 
-// 第四步某个实体按键被按下；三个都按过 -> 本步通过并转"测试成功"播报
+// 第四步某个实体按键被按下；三个都按过 -> 进入第五步 WiFi 测试
 static void device_test_back_key_press(LockFsm *me, QState *state, uint8_t bit)
 {
     if (device_test_key_flag & bit)
@@ -128,13 +140,7 @@ static void device_test_back_key_press(LockFsm *me, QState *state, uint8_t bit)
     if (DEVICE_TEST_KEY_BIT_ALL == device_test_key_flag)
     {
         setDeviceTestFlagBit(DEVICE_TEST_FLAG_RESET_KEY_ID);  // 本步三个键统一用这个已有位
-        device_test_step = DEVICE_TEST_STEP_IDLE;
-        keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);     // 关防撬，别把报警事件带出去
-        writeDeviceTestResult(DEVICE_TEST_RESULT_PASS);
-        device_test_factory_reset();
-        me->branch = (QStateHandler)(lock_fsm_sleep);
-        *state = Q_TRAN(lockFsmDeviceTestSuccess);
-        // TODO: 门磁/过流/电流/BLE 接齐后在这里继续判结果
+        device_test_wifi_start();                            // 第五步：WiFi RSSI 测试
     }
 }
 
@@ -166,6 +172,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             device_test_step = DEVICE_TEST_STEP_IDLE;
             device_test_key_flag = 0;
             keyTaskHandle(KEY_TYPE_TAMPER_KEY, false);
+            uart_wifi_test_cancel();
             break;
         case Q_KEY_BOARD_PRESS_SIG:
             if ((DEVICE_TEST_STEP_KEY_BOARD == device_test_step) && (KEY_CNT > e->dynamic_[0]))
@@ -232,6 +239,25 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 {
                     nfc_task_set_state(NFC_STATE_IDLE);
                     device_test_fail(me, &state);
+                }
+            }
+            else if (DEVICE_TEST_STEP_WIFI_TEST == device_test_step)
+            {
+                if (EVENT_RESULT_WIFI_TEST_SUCCESS == e->dynamic_[0])
+                {
+                    setDeviceTestFlagBit(DEVICE_TEST_FLAG_WIFI_RSSI_ID);
+                    device_test_step = DEVICE_TEST_STEP_IDLE;
+                    // WiFi 合格：切 WIFI_PASS HMI 状态（绿灯闪 + 一声"嘀"），等播完再恢复出厂 + 最终播报
+                    hmiTaskSetState(HMI_STATE_DEVICE_TEST_WIFI_PASS);
+                    system_time_task_set_function_time(500);
+                    state = Q_TRAN(lockFsmDeviceTestWifiPass);
+                }
+                else if (EVENT_RESULT_WIFI_TEST_FAIL == e->dynamic_[0])
+                {
+                    // WiFi 不合格：切 WIFI_FAIL HMI 状态（红灯闪 + 两声"嘀嘀"），等播完再恢复出厂 + 最终播报
+                    hmiTaskSetState(HMI_STATE_DEVICE_TEST_WIFI_FAIL);
+                    system_time_task_set_function_time(500);
+                    state = Q_TRAN(lockFsmDeviceTestWifiFail);
                 }
             }
             break;

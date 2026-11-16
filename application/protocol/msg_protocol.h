@@ -77,6 +77,8 @@ void uart_msg_linked_unlock_create(const uint8_t *pin4);
 void uart_msg_linked_unlock_join(const uint8_t *pin4);
 // 退出联动开锁（0x6D）：空 payload
 void uart_msg_linked_unlock_exit(void);
+
+void uart_msg_wifi_test_start(void);                 // WiFi 产测开始（0x76，空 payload）
 // 本地验证开锁成功通知（0x6F）：空 payload，触发配对锁联动开锁
 void uart_msg_linked_unlock_notify(void);
 
