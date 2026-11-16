@@ -166,6 +166,18 @@
 #define LINKED_UNLOCK_RESULT_SUCCESS        (0)         // 0x6C result：成功
 #define LINKED_UNLOCK_RESULT_FAIL           (1)         // 0x6C result：失败
 
+/* ---- 4.6.2 产测通道开关（自定义命令）
+ *      0x75 WiFi → 门锁：payload 2 字节 [enable(0=关 1=开)][type(0=全部 1=仅日志)]
+ *      门锁同步开关 258#（整机测试）、555#（老化测试）等快捷测试功能，
+ *      并回 0xF5 + [status 1B]（0=成功 1=失败）。状态存 Flash，掉电保存。
+ *      参数区被擦除（新板/整片擦除/恢复出厂）时恢复默认开启；
+ *      已保存过则以保存值为准，只能由 0x75 改变。
+ *      注意：0x72~0x74 已分配给 OTA，勿占用 ---- */
+#define UP_CMD_PRODUCE_TEST_ONOFF           (0x75)
+
+/* 产测通道当前是否开启（key_event 用它决定 258#/555# 是否响应） */
+uint8_t uart_produce_test_enabled(void);
+
 /* ---- 4.7 需要单独写 handler 的 ACK（其余 ACK 由 uart_protocol.c 统一清重传）
  *      HANDLER_DEFINE 需要完整标识符做 token 粘贴，故在此命名 ---- */
 #define UP_CMD_BLUE_MAC_ACK                 SET_UART_ACK_CMD(UP_CMD_BLUE_MAC)       // 0xE3

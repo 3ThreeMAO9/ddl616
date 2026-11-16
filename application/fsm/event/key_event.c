@@ -132,16 +132,30 @@ static uint8_t keyEventCombineFunctionHandle(void)
     {
         if (COMBINE_KEY_BOARD_AGING_TEST == value)
         {
+            // 产测通道关闭后，555#（老化测试）不响应
+            if (!uart_produce_test_enabled())
+            {
+                return false;
+            }
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_AGING_TEST);
             return true;
         }
         else if (COMBINE_KEY_BOARD_DEVICE_TEST == value)
         {
+            // 产测通道关闭后，258#（整机测试）不响应
+            if (!uart_produce_test_enabled())
+            {
+                return false;
+            }
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DEVICE_TEST_STEP1);
             return true;
         }
         else if (COMBINE_KEY_BOARD_DEVICE_TEST_RESULT == value)
         {
+            if (!uart_produce_test_enabled())
+            {
+                return false;
+            }
             baseEventPush(Q_HANDLE_SIG, EVENT_RESULT_DEVICE_TEST_RESULT);
             return true;
         }

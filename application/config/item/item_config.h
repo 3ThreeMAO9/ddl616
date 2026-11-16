@@ -159,6 +159,12 @@ typedef enum{
 #define CHANNEL_MODE_MAX                            Enabled
 #define CHANNEL_MODE_DEFAULT                        Disabled
 
+//produce test channel（bit0=开关 0=关/1=开，bit1=类型 0=全部/1=仅日志）
+//参数区被擦除时（新板/整片擦除）恢复为默认开启
+#define PRODUCE_TEST_MIN                            0
+#define PRODUCE_TEST_MAX                            3
+#define PRODUCE_TEST_DEFAULT                        1
+
 //system lock flag
 #define SYSTEM_LOCK_FLAG_MIN                        Disabled
 #define SYSTEM_LOCK_FLAG_MAX                        Enabled

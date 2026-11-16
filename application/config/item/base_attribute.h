@@ -51,6 +51,7 @@ typedef enum
     USER_PARA_VACATION_WARM_ID     = 0x09,  // 假期模式
     USER_PARA_LOCKED_ROTOR_WARM_ID = 0x0A,  // 堵转/锁死
     USER_PARA_CHANNEL_MODE_ID      = 0x0B,  // 通道(常开)模式开关
+    USER_PARA_PRODUCE_TEST_ID      = 0x0C,  // 产测通道（bit0=开关 0=关/1=开，bit1=类型 0=全部/1=仅日志）
 
     /* ---------- BLE 参数 (0x20 ~ 0x2F) ---------- */
     BLE_ACTIVATION_FLAG_ID         = 0x20,  // BLE 激活标志
