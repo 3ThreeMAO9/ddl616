@@ -1208,6 +1208,11 @@
               <FilePath>..\protocol\handler\uart_protocol_produce_test.c</FilePath>
             </File>
             <File>
+              <FileName>uart_protocol_version_report.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_version_report.c</FilePath>
+            </File>
+            <File>
               <FileName>uart_protocol_linked_unlock.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_linked_unlock.c</FilePath>
@@ -2571,6 +2576,11 @@
               <FileName>uart_protocol_produce_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\protocol\handler\uart_protocol_produce_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart_protocol_version_report.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\protocol\handler\uart_protocol_version_report.c</FilePath>
             </File>
             <File>
               <FileName>uart_protocol_linked_unlock.c</FileName>

@@ -184,6 +184,18 @@
 #define UP_CMD_WIFI_TEST_RSSI               (0x77)      // WiFi RSSI 结果上报（背板 → 门锁）
 #define WIFI_TEST_RSSI_PASS_DBM             (-30)       // RSSI 合格阈值（dBm）
 
+/* ---- 4.6.4 版本主动上报（门锁 → 背板，背板缓存后供产测 0x0B devnum=6/8 读取）
+ *      上电后门锁主动发 0x7A（前板版本）/ 0x7B（语音包版本），payload = ASCII 版本串；
+ *      背板回 ACK 0xFA/0xFB；1s 内没收到 ACK 就重发，直到应答为止。
+ *      与属性 0x20/0x30 的区别：那两条是云端订阅触发的上报，这两条是上电即推。 ---- */
+#define UP_CMD_REPORT_FRONT_VERSION         (0x7A)      // 前板版本上报（门锁 → WiFi）
+#define UP_CMD_REPORT_VOICE_VERSION         (0x7B)      // 语音包版本上报（门锁 → WiFi）
+#define UP_CMD_REPORT_FRONT_VERSION_ACK     (0xFA)      // WiFi 对 0x7A 的 ACK
+#define UP_CMD_REPORT_VOICE_VERSION_ACK     (0xFB)      // WiFi 对 0x7B 的 ACK
+
+/* 版本上报重发轮询（uart_protocol_poll 里调用） */
+void    uart_version_report_poll(void);
+
 /* 产测通道当前是否开启（key_event 用它决定 258#/555# 是否响应） */
 uint8_t uart_produce_test_enabled(void);
 

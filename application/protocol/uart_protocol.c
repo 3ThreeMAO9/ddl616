@@ -146,6 +146,8 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_JOIN_NET_RESULT)  // (0x65)   // 入网(蓝牙绑定)结果：0=成功 1=失败
         HANDLER_IMPORT(UP_CMD_TIME_PUSH)        // (0x66)   // 时间下发（WiFi -> 门锁）
         HANDLER_IMPORT(UP_CMD_PRODUCE_TEST_ONOFF) // (0x75) // 产测通道开关（WiFi -> 门锁）
+        HANDLER_IMPORT(UP_CMD_REPORT_FRONT_VERSION_ACK) // (0xFA) // 前板版本上报 ACK
+        HANDLER_IMPORT(UP_CMD_REPORT_VOICE_VERSION_ACK) // (0xFB) // 语音包版本上报 ACK
         HANDLER_IMPORT(UP_CMD_BLUE_MAC_ACK)     // (0xE3)   // 蓝牙 MAC 应答
         HANDLER_IMPORT(UP_CMD_TIME_QUERY_ACK)   // (0xE7)   // 时间查询应答
         HANDLER_IMPORT(UP_CMD_GET_BACK_VERSION_ACK) // (0xE8)  // 后板版本应答
@@ -251,6 +253,7 @@ void uart_protocol_poll(void)
     uart_totp_poll();                       // 一次性密码校验超时判定
     uart_linked_unlock_poll();              // 联动开锁背板应答超时判定
     uart_wifi_test_poll();                  // WiFi RSSI 产测超时判定
+    uart_version_report_poll();             // 前板/语音包版本上报，未应答则重发
 
     // 心跳：串口静默 HEART_TIME_OUT（3s）就发一包时间查询，兼作 WiFi 保活
     if (system_out_time_cnt(protocol_time_out))
