@@ -278,7 +278,6 @@ uint16_t uart_msg_front_version_str(char *buf, uint16_t size)
 {
     uint16_t sn    = readDeviceClientProjectSn();
     uint16_t ver   = readDeviceVersion();
-    uint16_t voice = readVoiceInfoVersion();
     uint16_t n = 0;
 
     if ((NULL == buf) || (size < 16)) {
@@ -289,10 +288,6 @@ uint16_t uart_msg_front_version_str(char *buf, uint16_t size)
     n += ver_put_num(&buf[n], (uint8_t)((sn / 1000) % 1000));
     buf[n++] = '.';
     n += ver_put_num(&buf[n], (uint8_t)(sn % 1000));
-    buf[n++] = '.';
-    buf[n++] = (char)('0' + (voice / 100) % 10);
-    buf[n++] = (char)('0' + (voice / 10) % 10);
-    buf[n++] = (char)('0' + voice % 10);
     buf[n++] = '.';
     buf[n++] = (char)('0' + (ver / 100) % 10);
     buf[n++] = (char)('0' + (ver / 10) % 10);
