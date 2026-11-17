@@ -148,6 +148,7 @@ uint8_t uart_protocol_try_handle(uart_packet_t *packet)
         HANDLER_IMPORT(UP_CMD_PRODUCE_TEST_ONOFF) // (0x75) // 产测通道开关（WiFi -> 门锁）
         HANDLER_IMPORT(UP_CMD_REPORT_FRONT_VERSION_ACK) // (0xFA) // 前板版本上报 ACK
         HANDLER_IMPORT(UP_CMD_REPORT_VOICE_VERSION_ACK) // (0xFB) // 语音包版本上报 ACK
+        HANDLER_IMPORT(UP_CMD_QUERY_TEST_RESULT)        // (0x7D) // 258# 产测结果查询
         HANDLER_IMPORT(UP_CMD_BLUE_MAC_ACK)     // (0xE3)   // 蓝牙 MAC 应答
         HANDLER_IMPORT(UP_CMD_TIME_QUERY_ACK)   // (0xE7)   // 时间查询应答
         HANDLER_IMPORT(UP_CMD_GET_BACK_VERSION_ACK) // (0xE8)  // 后板版本应答

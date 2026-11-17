@@ -193,8 +193,28 @@
 #define UP_CMD_REPORT_FRONT_VERSION_ACK     (0xFA)      // WiFi 对 0x7A 的 ACK
 #define UP_CMD_REPORT_VOICE_VERSION_ACK     (0xFB)      // WiFi 对 0x7B 的 ACK
 
+/* ---- 4.6.5 258# 产测结果读取（背板 → 门锁，ATE 0x0D 触发）
+ *      0x7D 查询：payload 空；门锁回 0xFD + 20 字节结果。
+ *      每项：0=失败/未测试，1=通过，2=跳过。
+ *      结果在 258# 每完成一项时就写入产测区 Flash，掉电保存。 ---- */
+#define UP_CMD_QUERY_TEST_RESULT            (0x7D)      // 产测结果查询（WiFi → 门锁）
+#define UP_CMD_QUERY_TEST_RESULT_ACK        (0xFD)      // 产测结果应答（门锁 → WiFi）
+#define SELF_TEST_RESULT_COUNT              (20)
+#define SELF_TEST_ITEM_KEYPAD               (2)
+#define SELF_TEST_ITEM_TAMPER               (3)
+#define SELF_TEST_ITEM_DOORBELL             (4)
+#define SELF_TEST_ITEM_FINGERPRINT          (5)
+#define SELF_TEST_ITEM_NFC                  (6)
+#define SELF_TEST_ITEM_BACK_KEY             (11)
+#define SELF_TEST_ITEM_WIFI                 (14)
+#define SELF_TEST_ITEM_CLUTCH_MOTOR         (20)
+
 /* 版本上报重发轮询（uart_protocol_poll 里调用） */
 void    uart_version_report_poll(void);
+
+/* 258# 产测结果记录（每项变化即写 Flash） */
+void    uart_self_test_result_start(void);
+void    uart_self_test_result_set(uint8_t item, uint8_t result);
 
 /* 产测通道当前是否开启（key_event 用它决定 258#/555# 是否响应） */
 uint8_t uart_produce_test_enabled(void);

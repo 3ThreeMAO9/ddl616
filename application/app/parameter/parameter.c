@@ -315,6 +315,68 @@ uint32_t readDeviceTestFlag(void)
     return produceInfo.deviceTest.flag;
 }
 
+// 258# 逐项结果整页保存；index 19（离合电机）固定跳过
+void writeSelfTestResultAll(const uint8_t *result)
+{
+    uint8_t i;
+
+    if (result)
+    {
+        memcpy(produceInfo.self_test, result, DEVICE_SELF_TEST_ITEM_CNT);
+    }
+    else
+    {
+        memset(produceInfo.self_test, 0, sizeof(produceInfo.self_test));
+    }
+
+    for (i = 0; i < DEVICE_SELF_TEST_ITEM_CNT; i++)
+    {
+        if (produceInfo.self_test[i] > 2)
+        {
+            produceInfo.self_test[i] = 0;
+        }
+    }
+    produceInfo.self_test[DEVICE_SELF_TEST_ITEM_CNT - 1] = 2;
+
+    OB_LOGW(TAG, "write self test result");
+
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
+}
+
+void writeSelfTestResultItem(uint8_t index, uint8_t result)
+{
+    if ((index >= DEVICE_SELF_TEST_ITEM_CNT) || (result > 2))
+    {
+        OB_LOGE(TAG, "fail: self test index[%u] result[%u]", index, result);
+        return;
+    }
+
+    if (produceInfo.self_test[index] == result)
+    {
+        return;     // 无变化不擦写，减少 Flash 损耗
+    }
+
+    produceInfo.self_test[index] = result;
+    OB_LOGW(TAG, "write self test item[%u] result[%u]", index, result);
+
+    user_flash_erase(PRODUCE_DATA_PAGE_START_ADDR, FLASH_ERASE_SIZE);
+    user_flash_write(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produceInfo));
+}
+
+void readSelfTestResult(uint8_t *result)
+{
+    uint8_t i;
+
+    user_flash_read(PRODUCE_DATA_PAGE_START_ADDR, (uint8_t *)(&produceInfo), sizeof(produce_info_t));
+
+    for (i = 0; i < DEVICE_SELF_TEST_ITEM_CNT; i++)
+    {
+        result[i] = (produceInfo.self_test[i] <= 2) ? produceInfo.self_test[i] : 0;
+    }
+    result[DEVICE_SELF_TEST_ITEM_CNT - 1] = 2;
+}
+
 uint8_t isPassDeviceTestItem(uint8_t id)
 {
     if (produceInfo.deviceTest.flag & (0x00000001 << id))

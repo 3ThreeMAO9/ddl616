@@ -71,3 +71,32 @@ uint8_t uart_produce_test_enabled(void)
     return (((param & PRODUCE_TEST_PARA_ENABLE) != 0) &&
             ((param & PRODUCE_TEST_PARA_TYPE_LOG) == 0)) ? 1 : 0;
 }
+
+// 每次 258# 开始清空记录；未测项为 0，离合电机按协议固定为跳过
+void uart_self_test_result_start(void)
+{
+    writeSelfTestResultAll(NULL);
+}
+
+// item 为协议中的 1~20 序号；result 为 0=失败/未测试、1=通过、2=跳过
+void uart_self_test_result_set(uint8_t item, uint8_t result)
+{
+    if ((item < 1) || (item > SELF_TEST_RESULT_COUNT) || (result > 2)) {
+        OB_LOGW(TAG, "invalid self test result: item=%u result=%u", item, result);
+        return;
+    }
+
+    writeSelfTestResultItem((uint8_t)(item - 1), result);
+}
+
+// 0x7D：背板（ATE 0x0D）查询 258# 产测结果，回 0xFD + 20 字节
+HANDLER_DEFINE(UP_CMD_QUERY_TEST_RESULT)
+{
+    uint8_t result[SELF_TEST_RESULT_COUNT];
+
+    readSelfTestResult(result);
+    OB_LOGI(TAG, "query 258# result");
+    uart_msg_self_test_result(result);
+
+    return 0;
+}

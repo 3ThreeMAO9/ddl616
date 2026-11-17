@@ -53,6 +53,9 @@ typedef enum{
 #define DEVICE_TEST_RESULT_FAIL          (102)    // 锁端功能测试未通过
 #define DEVICE_TEST_RESULT_PASS          (103)    // 锁端功能测试通过
 
+// 258# 产测逐项结果（与上位机 ATE 0x0D 的 20 项一一对应）
+#define DEVICE_SELF_TEST_ITEM_CNT        (20)
+
 
 /****************Struct****************/
 // 以下结构体均按 1 字节对齐（Flash 存储用，布局必须固定可预测）
@@ -114,6 +117,7 @@ typedef struct{
     int16_t bat_cali;                   // 废弃
     uint8_t allow_motor_test;
     device_code_t activecode;           //激活码
+    uint8_t self_test[DEVICE_SELF_TEST_ITEM_CNT];   // 258# 逐项结果：0=失败/未测试 1=通过 2=跳过
 
 }produce_info_t;
 
@@ -137,6 +141,11 @@ uint8_t saveChannelPlan(void);
 void produceInfoInit(void);
 uint8_t writeProduceSn(uint8_t sn_id, uint8_t* sn, uint8_t len);
 uint8_t readProduceSn(uint8_t sn_id, uint8_t* sn, uint8_t* len);
+
+// 258# 逐项结果（掉电保存）
+void writeSelfTestResultAll(const uint8_t *result);         // result=NULL 时全部清零
+void writeSelfTestResultItem(uint8_t index, uint8_t result); // index 0~19
+void readSelfTestResult(uint8_t *result);                   // 读出 20 字节，非法值按 0 处理
 uint8_t isProduceReboot(void);
 void setProduceReboot(uint8_t flag);
 

@@ -117,9 +117,41 @@ static void device_test_factory_reset(void)
     lock_log_flash_clear();
 }
 
+// 记录当前阶段未通过的实测项；其余未开始的项保持 0（未测试）
+static void device_test_save_fail_result(void)
+{
+    switch (device_test_step)
+    {
+        case DEVICE_TEST_STEP_KEY_BOARD:
+            uart_self_test_result_set(SELF_TEST_ITEM_KEYPAD, 0);
+            if (0 == key_step)
+                uart_self_test_result_set(SELF_TEST_ITEM_DOORBELL, 0);
+            break;
+        case DEVICE_TEST_STEP_VERIFY_FINGER:
+            uart_self_test_result_set(SELF_TEST_ITEM_FINGERPRINT, 0);
+            break;
+        case DEVICE_TEST_STEP_VERIFY_NFC:
+            uart_self_test_result_set(SELF_TEST_ITEM_NFC, 0);
+            break;
+        case DEVICE_TEST_STEP_LOCK_KEY:
+            if (!(device_test_key_flag & DEVICE_TEST_KEY_BIT_TAMPER))
+                uart_self_test_result_set(SELF_TEST_ITEM_TAMPER, 0);
+            if ((device_test_key_flag & (DEVICE_TEST_KEY_BIT_RESET | DEVICE_TEST_KEY_BIT_SETTING)) !=
+                (DEVICE_TEST_KEY_BIT_RESET | DEVICE_TEST_KEY_BIT_SETTING))
+                uart_self_test_result_set(SELF_TEST_ITEM_BACK_KEY, 0);
+            break;
+        case DEVICE_TEST_STEP_WIFI_TEST:
+            uart_self_test_result_set(SELF_TEST_ITEM_WIFI, 0);
+            break;
+        default:
+            break;
+    }
+}
+
 // 某步失败：转"测试失败"播报，语音播完自动回休眠
 static void device_test_fail(LockFsm *me, QState *state)
 {
+    device_test_save_fail_result();
     device_test_step = DEVICE_TEST_STEP_IDLE;
     device_test_factory_reset();
     me->branch = (QStateHandler)(lock_fsm_sleep);
@@ -135,6 +167,16 @@ static void device_test_back_key_press(LockFsm *me, QState *state, uint8_t bit)
     }
 
     device_test_key_flag |= bit;
+    if (DEVICE_TEST_KEY_BIT_TAMPER == bit)
+    {
+        uart_self_test_result_set(SELF_TEST_ITEM_TAMPER, 1);
+    }
+    else if ((device_test_key_flag & (DEVICE_TEST_KEY_BIT_RESET | DEVICE_TEST_KEY_BIT_SETTING)) ==
+             (DEVICE_TEST_KEY_BIT_RESET | DEVICE_TEST_KEY_BIT_SETTING))
+    {
+        // 门内按键：RESET 与 SETTING 都按过才算通过
+        uart_self_test_result_set(SELF_TEST_ITEM_BACK_KEY, 1);
+    }
     hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_TEST);   // 每按对一个键播一声"嘀"
 
     if (DEVICE_TEST_KEY_BIT_ALL == device_test_key_flag)
@@ -163,6 +205,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
             // 新一轮测试：进度清零，结果先置"未通过"，全通过时才改 103
             clearDeviceTestFlagAllBit();
             writeDeviceTestResult(DEVICE_TEST_RESULT_FAIL);
+            uart_self_test_result_start();
 
             device_test_key_board_start();
             OB_LOGD(TAG, "device test start");
@@ -180,7 +223,10 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 if (device_test_key_seq[key_step] == e->dynamic_[0])
                 {
                     if (KEY_NUM_13 == e->dynamic_[0])
+                    {
                         uart_msg_bell(1, 0);     // 门铃：发命令给后板响铃
+                        uart_self_test_result_set(SELF_TEST_ITEM_DOORBELL, 1);
+                    }
 
                     hmiTaskSetState(HMI_STATE_DEVICE_TEST_KEY_PRESS);
                     key_step++;
@@ -189,6 +235,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                     {
                         key_step = 0;
                         setDeviceTestFlagBit(DEVICE_TEST_FLAG_KEYPAD_ID);
+                        uart_self_test_result_set(SELF_TEST_ITEM_KEYPAD, 1);
                         device_test_finger_start();
                     }
                 }
@@ -219,6 +266,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 if (EVENT_RESULT_SUCCESS_VERIFY_USER == e->dynamic_[0])
                 {
                     setDeviceTestFlagBit(DEVICE_TEST_FLAG_VERIFY_FINGERPRINT_ID);
+                    uart_self_test_result_set(SELF_TEST_ITEM_FINGERPRINT, 1);
                     device_test_motor_handle(MOTOR_HANDLE_OPEN);   // 开锁，此时拧把手应能动
                     device_test_nfc_start();
                 }
@@ -232,6 +280,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
                 if (EVENT_RESULT_SUCCESS_VERIFY_USER == e->dynamic_[0])
                 {
                     setDeviceTestFlagBit(DEVICE_TEST_FLAG_NFC_ID);
+                    uart_self_test_result_set(SELF_TEST_ITEM_NFC, 1);
                     device_test_motor_handle(MOTOR_HANDLE_CLOSE);  // 关锁，此时拧把手应拧不动
                     device_test_back_key_start();
                 }
@@ -264,6 +313,7 @@ QState lock_fsm_device_test(LockFsm *me, QEvent const *e)
         case Q_FUNCTION_TIME_OUT_SIG:
             break;
         case Q_WORK_TIME_OUT_SIG:
+            device_test_save_fail_result();
             state = Q_TRAN(lock_fsm_sleep);
             break;
         default:

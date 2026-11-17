@@ -32,6 +32,7 @@ static uint32_t s_deadline;
 static void wifi_test_push_result(uint8_t pass)
 {
     s_state = WIFI_TEST_STATE_IDLE;
+    uart_self_test_result_set(SELF_TEST_ITEM_WIFI, pass ? 1 : 0);
     userHandleEventPush(pass ? EVENT_RESULT_WIFI_TEST_SUCCESS : EVENT_RESULT_WIFI_TEST_FAIL, 0);
 }
 

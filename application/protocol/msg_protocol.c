@@ -149,6 +149,13 @@ void uart_msg_wifi_test_start(void)
     uart_msg_common_send(UP_CMD_WIFI_TEST_START, NULL, 0);
 }
 
+// 258# 产测结果应答（0xFD）：20 字节，每项 0=失败/未测试 1=通过 2=跳过
+void uart_msg_self_test_result(uint8_t *result)
+{
+    uart_msg_common_send(SET_UART_ACK_CMD(UP_CMD_QUERY_TEST_RESULT),
+                         result, SELF_TEST_RESULT_COUNT);
+}
+
 // 本地验证开锁成功通知（0x6F）：空 payload，触发配对锁联动开锁
 void uart_msg_linked_unlock_notify(void)
 {
