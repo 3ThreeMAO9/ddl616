@@ -6,7 +6,7 @@
 #include "hal_rtc.h"
 #include "hal_adc.h"
 #include "system_timer.h"
-
+#include "hal_gpio.h"
 #define OB_LOG_LEVEL OB_LOG_LEVEL_NONE
 #include "ob_log.h"
 #define TAG "NFC_API"
@@ -114,10 +114,24 @@ uint8_t nfc_set_mode(uint8_t mode) {
 
     return true;
 }
-
+static void nfc_init_adc(void)
+{
+    HAL_GPIO_Init(NFC_NSS_GPIO,NFC_NSS_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_NSS_GPIO,NFC_NSS_PIN,1);
+    HAL_GPIO_Init(NFC_CLK_GPIO,NFC_CLK_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_CLK_GPIO,NFC_CLK_PIN,1);
+    HAL_GPIO_Init(NFC_MOSI_GPIO,NFC_MOSI_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_MOSI_GPIO,NFC_MOSI_PIN,1);
+    HAL_GPIO_Init(NFC_MISO_GPIO,NFC_MISO_PIN,HAL_GPIO_MODE_INPUT_PULLUP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_MISO_GPIO,NFC_MISO_PIN,1);
+    HAL_GPIO_Init(NFC_NRST_GPIO, NFC_NRST_PIN, HAL_GPIO_MODE_OUTPUT_PP, HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_NRST_GPIO, NFC_NRST_PIN, 1);
+    HAL_GPIO_Init(NFC_IRQ_GPIO, NFC_IRQ_PIN, HAL_GPIO_MODE_ANALOG, HAL_GPIO_PULL_NONE);
+}
 uint8_t nfc_adc_wake_up(void)
 {
     uint8_t ret = FM17622_READING;
+    nfc_init_adc();
     hal_adc_start_up(NFC_ADC_CHANNEL , 20);
 
     FM17622_Initial_ReaderA();

@@ -34,6 +34,20 @@ static uint8_t sleep_event_callback(uint8_t event)
     return sleep_callback(event);
 }
 
+static void nfc_deinit(void)
+{
+    HAL_GPIO_Init(NFC_NSS_GPIO,NFC_NSS_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_NSS_GPIO,NFC_NSS_PIN,0);
+    HAL_GPIO_Init(NFC_CLK_GPIO,NFC_CLK_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_CLK_GPIO,NFC_CLK_PIN,0);
+    HAL_GPIO_Init(NFC_MOSI_GPIO,NFC_MOSI_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_MOSI_GPIO,NFC_MOSI_PIN,0);
+    HAL_GPIO_Init(NFC_MISO_GPIO,NFC_MISO_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_MISO_GPIO,NFC_MISO_PIN,0);
+    HAL_GPIO_Init(NFC_NRST_GPIO,NFC_NRST_PIN,HAL_GPIO_MODE_OUTPUT_PP,HAL_GPIO_PULL_NONE);
+    HAL_GPIO_Write(NFC_NRST_GPIO,NFC_NRST_PIN,0);
+}
+
 //  @brief 注册回调函数
 //  @param callback 
 void sleep_event_register_callback(sleep_event_callback_t callback)
@@ -73,6 +87,7 @@ void sleep_loop(void)
 
     do{
         clear_feed_dog_cnt();
+        nfc_deinit();
         mcuSleep();
 
     }while(!sleep_event_callback(EXIT_SLEEP));
@@ -81,7 +96,15 @@ void sleep_loop(void)
 void unused_gpio_init(void)
 {
     // <不使用IO
-
+    HAL_GPIO_Write(HAL_GPIO_PORT0,HAL_GPIO_PIN2,1);
+    HAL_GPIO_Init(HAL_GPIO_PORT0,HAL_GPIO_PIN2,HAL_GPIO_MODE_INPUT_PULLUP,HAL_GPIO_PULL_NONE);
+    
+    HAL_GPIO_Write(HAL_GPIO_PORT1,HAL_GPIO_PIN0,1);
+    HAL_GPIO_Init(HAL_GPIO_PORT1,HAL_GPIO_PIN0,HAL_GPIO_MODE_INPUT_PULLUP,HAL_GPIO_PULL_NONE);
+    
+    HAL_GPIO_Write(HAL_GPIO_PORT1,HAL_GPIO_PIN4,1);
+    HAL_GPIO_Init(HAL_GPIO_PORT1,HAL_GPIO_PIN4,HAL_GPIO_MODE_INPUT_PULLUP,HAL_GPIO_PULL_NONE);
+    
     // HAL_GPIO_Write(HAL_GPIO_PORT1, HAL_GPIO_PIN1, 0); // 防撬
     // HAL_GPIO_Init(HAL_GPIO_PORT1, HAL_GPIO_PIN1, HAL_GPIO_MODE_INPUT, HAL_GPIO_PULL_NONE);
 
